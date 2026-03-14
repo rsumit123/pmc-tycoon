@@ -29,6 +29,7 @@ interface UnitTemplate {
   id: number;
   name: string;
   unit_type: string;
+  base_cost: number;
   base_attack: number;
   base_defense: number;
   base_speed: number;
@@ -62,13 +63,16 @@ export const Hangar = () => {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [showMarketplace, setShowMarketplace] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [balance, setBalance] = useState(0);
 
   const fetchUnits = useCallback(async () => {
     try {
-      const [ownedRes, templateRes] = await Promise.all([
+      const [ownedRes, templateRes, userRes] = await Promise.all([
         apiService.getOwnedUnits(),
         apiService.getUnitTemplates(),
+        apiService.getUser(1),
       ]);
+      setBalance(userRes.data.balance);
 
       const owned = Array.isArray(ownedRes.data) ? ownedRes.data : [];
       const tmpls: UnitTemplate[] = Array.isArray(templateRes.data) ? templateRes.data : [];
@@ -128,14 +132,20 @@ export const Hangar = () => {
   };
 
   const handleAcquire = async (template: UnitTemplate) => {
+    if (balance < template.base_cost) return;
     setActionLoading(template.id);
     try {
-      await apiService.createOwnedUnit({
-        user_id: 1,
-        template_id: template.id,
-        condition: 100,
-        current_upgrades: '[]',
-      });
+      const newBalance = balance - template.base_cost;
+      await Promise.all([
+        apiService.createOwnedUnit({
+          user_id: 1,
+          template_id: template.id,
+          condition: 100,
+          current_upgrades: '[]',
+        }),
+        apiService.updateUser(1, { balance: newBalance }),
+      ]);
+      setBalance(newBalance);
       await fetchUnits();
       setShowMarketplace(false);
     } catch (err) {
@@ -160,13 +170,16 @@ export const Hangar = () => {
     <div className="px-4 py-5 lg:px-8 lg:py-6 max-w-4xl mx-auto">
       {/* Marketplace Modal */}
       {showMarketplace && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center" onClick={() => setShowMarketplace(false)}>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center" onClick={() => setShowMarketplace(false)}>
           <div
             className="bg-gray-900 rounded-t-2xl sm:rounded-2xl border-t sm:border border-gray-800 w-full sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-gray-800">
-              <h2 className="text-lg font-bold text-white">Acquire Unit</h2>
+              <div>
+                <h2 className="text-lg font-bold text-white">Acquire Unit</h2>
+                <p className="text-xs text-gray-500">Balance: ${balance.toLocaleString()}</p>
+              </div>
               <button onClick={() => setShowMarketplace(false)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400">
                 <X className="w-4 h-4" />
               </button>
@@ -208,14 +221,21 @@ export const Hangar = () => {
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">${tmpl.base_maintenance_cost}/day upkeep</span>
+                        <div>
+                          <span className="text-xs text-white font-semibold">${tmpl.base_cost.toLocaleString()}</span>
+                          <span className="text-xs text-gray-500 ml-1">· ${tmpl.base_maintenance_cost}/day</span>
+                        </div>
                         <button
                           onClick={() => handleAcquire(tmpl)}
-                          disabled={isLoading}
-                          className="flex items-center gap-1.5 bg-emerald-500 text-white font-semibold text-xs py-2 px-4 rounded-lg active:bg-emerald-600 disabled:opacity-60 transition-colors"
+                          disabled={isLoading || balance < tmpl.base_cost}
+                          className={`flex items-center gap-1.5 font-semibold text-xs py-2 px-4 rounded-lg transition-colors ${
+                            balance >= tmpl.base_cost
+                              ? 'bg-emerald-500 text-white active:bg-emerald-600 disabled:opacity-60'
+                              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                          }`}
                         >
                           {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShoppingCart className="w-3.5 h-3.5" />}
-                          Acquire
+                          {balance >= tmpl.base_cost ? 'Buy' : 'Can\'t afford'}
                         </button>
                       </div>
                     </div>

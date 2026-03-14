@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from typing import Dict
+from typing import Dict, Optional
 
 from app.db.session import engine, SessionLocal
 from app.db.base import Base
@@ -26,18 +27,11 @@ app = FastAPI(title="PMC Tycoon API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:5174",  # Alternative Vite port
-        "http://localhost:5175",  # Alternative Vite port
-        "http://localhost:5176",  # Alternative Vite port
-        "http://localhost:5177",  # Alternative Vite port
-        "http://localhost:5178",  # Alternative Vite port
-        "http://localhost:5179",  # Alternative Vite port
-        "http://localhost:5180",  # Alternative Vite port
-        "http://localhost:5181",  # Alternative Vite port
-        "http://localhost:5182",  # Alternative Vite port
-        "http://localhost:5183",  # Alternative Vite port
-        "http://localhost:5190",  # Alternative Vite port
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "https://pmc-tycoon.skdev.one",
+        "https://pmc-tycoon.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -72,6 +66,34 @@ def get_user_stats(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": user.id,
+        "username": user.username,
+        "balance": user.balance,
+        "reputation": user.reputation,
+        "tech_level": user.tech_level
+    }
+
+class UserUpdate(BaseModel):
+    balance: Optional[int] = None
+    reputation: Optional[int] = None
+    tech_level: Optional[int] = None
+
+@app.put("/api/user/{user_id}")
+def update_user_stats(user_id: int, update: UserUpdate, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if update.balance is not None:
+        user.balance = update.balance
+    if update.reputation is not None:
+        user.reputation = update.reputation
+    if update.tech_level is not None:
+        user.tech_level = update.tech_level
+
+    db.commit()
+    db.refresh(user)
     return {
         "id": user.id,
         "username": user.username,

@@ -3,7 +3,6 @@ import {
   Clock,
   DollarSign,
   AlertTriangle,
-  ChevronRight,
   Zap,
   X,
   Check,
@@ -13,6 +12,10 @@ import {
   Skull,
   Sparkles,
   RefreshCw,
+  Plane,
+  Radio,
+  Anchor,
+  User,
 } from 'lucide-react';
 import { apiService } from '../../services/api';
 
@@ -43,17 +46,56 @@ interface ActiveContractData {
   completed_at: string | null;
 }
 
+interface UnitReport {
+  name: string;
+  type: string;
+  condition_before: number;
+  condition_after: number;
+  damage_taken: number;
+}
+
+interface ContractorReport {
+  name: string;
+  specialization: string;
+  fatigue_before: number;
+  fatigue_after: number;
+  fatigue_gained: number;
+}
+
 interface SimulationResult {
   contract_id: number;
   mission_title: string;
+  mission_description: string | null;
+  faction: string;
+  risk_level: number;
   success: boolean;
   payout: number;
   reputation_change: number;
   ally_strength: number;
   enemy_strength: number;
+  success_probability: number;
   random_events: Array<{ type: string; description: string; impact: number }>;
+  unit_report: UnitReport[];
+  contractor_report: ContractorReport[];
   new_balance: number;
   new_reputation: number;
+}
+
+interface OwnedUnit {
+  id: number;
+  template_id: number;
+  condition: number;
+  name: string;
+  type: string;
+}
+
+interface OwnedContractor {
+  id: number;
+  template_id: number;
+  skill_level: number;
+  fatigue_level: number;
+  name: string;
+  specialization: string;
 }
 
 const factionDisplayName: Record<string, string> = {
@@ -68,6 +110,12 @@ const factionColors: Record<string, { bg: string; text: string; dot: string }> =
   desert_bloc: { bg: 'bg-amber-500/10', text: 'text-amber-400', dot: 'bg-amber-400' },
   pacific_alliance: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', dot: 'bg-cyan-400' },
   sahara_sindicate: { bg: 'bg-orange-500/10', text: 'text-orange-400', dot: 'bg-orange-400' },
+};
+
+const typeIcons: Record<string, typeof Plane> = {
+  fighter: Plane,
+  drone: Radio,
+  submarine: Anchor,
 };
 
 const riskBadge = (risk: number) => {
@@ -88,11 +136,22 @@ export const Contracts = () => {
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Deploy modal state
+  const [deployTemplate, setDeployTemplate] = useState<MissionTemplate | null>(null);
+  const [ownedUnits, setOwnedUnits] = useState<OwnedUnit[]>([]);
+  const [ownedContractors, setOwnedContractors] = useState<OwnedContractor[]>([]);
+  const [selectedUnitIds, setSelectedUnitIds] = useState<Set<number>>(new Set());
+  const [selectedContractorIds, setSelectedContractorIds] = useState<Set<number>>(new Set());
+
   const fetchData = useCallback(async () => {
     try {
-      const [templatesRes, activeRes] = await Promise.all([
+      const [templatesRes, activeRes, unitsRes, unitTmplRes, contractorsRes, contractorTmplRes] = await Promise.all([
         apiService.getMissionTemplates(),
         apiService.getActiveContracts(),
+        apiService.getOwnedUnits(),
+        apiService.getUnitTemplates(),
+        apiService.getOwnedContractors(),
+        apiService.getContractorTemplates(),
       ]);
 
       const templates: MissionTemplate[] = Array.isArray(templatesRes.data) ? templatesRes.data : [];
@@ -104,6 +163,22 @@ export const Contracts = () => {
       const map: Record<number, MissionTemplate> = {};
       templates.forEach((t) => { map[t.id] = t; });
       setTemplateMap(map);
+
+      // Enrich units
+      const rawUnits = Array.isArray(unitsRes.data) ? unitsRes.data : [];
+      const unitTemplates = Array.isArray(unitTmplRes.data) ? unitTmplRes.data : [];
+      setOwnedUnits(rawUnits.map((u: any) => {
+        const tmpl = unitTemplates.find((t: any) => Number(t.id) === Number(u.template_id));
+        return { id: u.id, template_id: u.template_id, condition: u.condition, name: tmpl?.name ?? 'Unknown', type: tmpl?.unit_type ?? 'unknown' };
+      }));
+
+      // Enrich contractors
+      const rawContractors = Array.isArray(contractorsRes.data) ? contractorsRes.data : [];
+      const contractorTemplates = Array.isArray(contractorTmplRes.data) ? contractorTmplRes.data : [];
+      setOwnedContractors(rawContractors.map((c: any) => {
+        const tmpl = contractorTemplates.find((t: any) => Number(t.id) === Number(c.template_id));
+        return { id: c.id, template_id: c.template_id, skill_level: c.skill_level, fatigue_level: c.fatigue_level, name: tmpl?.name ?? 'Unknown', specialization: tmpl?.specialization ?? 'unknown' };
+      }));
     } catch {
       // Keep whatever state we have
     } finally {
@@ -121,24 +196,48 @@ export const Contracts = () => {
     fetchData();
   };
 
-  const handleAccept = async (template: MissionTemplate) => {
-    setActionLoading(template.id);
+  const openDeployModal = (template: MissionTemplate) => {
+    setDeployTemplate(template);
+    setSelectedUnitIds(new Set());
+    setSelectedContractorIds(new Set());
+  };
+
+  const toggleUnit = (id: number) => {
+    setSelectedUnitIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleContractor = (id: number) => {
+    setSelectedContractorIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleAcceptWithDeployment = async () => {
+    if (!deployTemplate) return;
+    setActionLoading(deployTemplate.id);
     try {
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + template.estimated_duration_hours);
+      expiresAt.setHours(expiresAt.getHours() + deployTemplate.estimated_duration_hours);
 
       await apiService.createActiveContract({
         user_id: 1,
-        mission_template_id: template.id,
+        mission_template_id: deployTemplate.id,
         status: 'active',
         expires_at: expiresAt.toISOString(),
-        assigned_units: null,
-        assigned_contractors: null,
+        assigned_units: JSON.stringify(Array.from(selectedUnitIds)),
+        assigned_contractors: JSON.stringify(Array.from(selectedContractorIds)),
         payout_received: 0,
         reputation_change: 0,
         political_impact_change: 0,
       });
 
+      setDeployTemplate(null);
       await fetchData();
       setTab('active');
     } catch (err: any) {
@@ -174,11 +273,8 @@ export const Contracts = () => {
   };
 
   const parseRequiredUnits = (jsonStr: string): string[] => {
-    try {
-      return JSON.parse(jsonStr);
-    } catch {
-      return [jsonStr];
-    }
+    try { return JSON.parse(jsonStr); }
+    catch { return [jsonStr]; }
   };
 
   if (loading) {
@@ -194,68 +290,345 @@ export const Contracts = () => {
 
   return (
     <div className="px-4 py-5 lg:px-8 lg:py-6 max-w-4xl mx-auto">
-      {/* Mission Result Modal */}
+      {/* Deploy Modal */}
+      {deployTemplate && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center" onClick={() => setDeployTemplate(null)}>
+          <div
+            className="bg-gray-900 rounded-t-2xl sm:rounded-2xl border-t sm:border border-gray-800 w-full sm:max-w-md max-h-[80vh] mb-[env(safe-area-inset-bottom)] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <div>
+                <h2 className="text-lg font-bold text-white">Deploy Forces</h2>
+                <p className="text-xs text-gray-500">{deployTemplate.title}</p>
+              </div>
+              <button onClick={() => setDeployTemplate(null)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1">
+              {/* Select Units */}
+              <div className="p-4 border-b border-gray-800/60">
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-3">
+                  Select Units ({selectedUnitIds.size} selected)
+                </p>
+                {ownedUnits.length === 0 ? (
+                  <p className="text-xs text-gray-600 py-2">No units available. Visit the Hangar to acquire units.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {ownedUnits.map((unit) => {
+                      const Icon = typeIcons[unit.type] ?? Plane;
+                      const selected = selectedUnitIds.has(unit.id);
+                      return (
+                        <button
+                          key={unit.id}
+                          onClick={() => toggleUnit(unit.id)}
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
+                            selected ? 'bg-emerald-500/15 border border-emerald-500/30' : 'bg-gray-800/50 border border-transparent'
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                            selected ? 'bg-emerald-500/20' : 'bg-gray-700'
+                          }`}>
+                            <Icon className={`w-4 h-4 ${selected ? 'text-emerald-400' : 'text-gray-400'}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white font-medium truncate">{unit.name}</p>
+                            <p className="text-xs text-gray-500 capitalize">{unit.type} · {unit.condition}% condition</p>
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                            selected ? 'border-emerald-400 bg-emerald-400' : 'border-gray-600'
+                          }`}>
+                            {selected && <Check className="w-3 h-3 text-gray-900" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Select Contractors */}
+              <div className="p-4">
+                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-3">
+                  Assign Personnel ({selectedContractorIds.size} selected)
+                </p>
+                {ownedContractors.length === 0 ? (
+                  <p className="text-xs text-gray-600 py-2">No personnel available. Visit Personnel to hire contractors.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {ownedContractors.map((c) => {
+                      const selected = selectedContractorIds.has(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          onClick={() => toggleContractor(c.id)}
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
+                            selected ? 'bg-emerald-500/15 border border-emerald-500/30' : 'bg-gray-800/50 border border-transparent'
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                            selected ? 'bg-emerald-500/20' : 'bg-gray-700'
+                          }`}>
+                            <User className={`w-4 h-4 ${selected ? 'text-emerald-400' : 'text-gray-400'}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white font-medium truncate">{c.name}</p>
+                            <p className="text-xs text-gray-500 capitalize">{c.specialization} · Skill {c.skill_level} · Fatigue {c.fatigue_level}%</p>
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                            selected ? 'border-emerald-400 bg-emerald-400' : 'border-gray-600'
+                          }`}>
+                            {selected && <Check className="w-3 h-3 text-gray-900" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Deploy button */}
+            <div className="p-4 pb-6 sm:pb-4 border-t border-gray-800">
+              <button
+                onClick={handleAcceptWithDeployment}
+                disabled={actionLoading === deployTemplate.id || (selectedUnitIds.size === 0 && selectedContractorIds.size === 0)}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-white font-semibold text-sm py-3 rounded-xl active:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {actionLoading === deployTemplate.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Target className="w-4 h-4" />
+                    Deploy & Accept Mission
+                  </>
+                )}
+              </button>
+              {selectedUnitIds.size === 0 && selectedContractorIds.size === 0 && (
+                <p className="text-xs text-gray-600 text-center mt-2">Select at least one unit or contractor</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* After-Action Report Modal */}
       {simResult && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSimResult(null)}>
-          <div className="bg-gray-900 rounded-2xl border border-gray-800 max-w-sm w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            {/* Result header */}
-            <div className={`p-6 text-center ${simResult.success ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
-              <div className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 ${
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center" onClick={() => setSimResult(null)}>
+          <div
+            className="bg-gray-900 rounded-t-2xl sm:rounded-2xl border-t sm:border border-gray-800 w-full sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header banner */}
+            <div className={`p-5 text-center relative overflow-hidden ${simResult.success ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+              <div className={`w-14 h-14 rounded-full mx-auto flex items-center justify-center mb-2.5 ${
                 simResult.success ? 'bg-emerald-500/20' : 'bg-red-500/20'
               }`}>
                 {simResult.success
-                  ? <Trophy className="w-8 h-8 text-emerald-400" />
-                  : <Skull className="w-8 h-8 text-red-400" />
+                  ? <Trophy className="w-7 h-7 text-emerald-400" />
+                  : <Skull className="w-7 h-7 text-red-400" />
                 }
               </div>
-              <h2 className="text-xl font-bold text-white">
-                {simResult.success ? 'Mission Success!' : 'Mission Failed'}
+              <h2 className="text-lg font-bold text-white">
+                {simResult.success ? 'Mission Success' : 'Mission Failed'}
               </h2>
-              <p className="text-sm text-gray-400 mt-1">{simResult.mission_title}</p>
+              <p className="text-sm text-gray-400 mt-0.5">{simResult.mission_title}</p>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                  riskBadge(simResult.risk_level).bg
+                } ${riskBadge(simResult.risk_level).text}`}>
+                  {riskBadge(simResult.risk_level).label} Risk
+                </span>
+                <span className="text-[10px] text-gray-500">
+                  {simResult.success_probability}% success chance
+                </span>
+              </div>
             </div>
 
-            {/* Stats */}
-            <div className="p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">Payout</p>
-                  <p className="text-lg font-bold text-emerald-400">${simResult.payout.toLocaleString()}</p>
-                </div>
-                <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">Reputation</p>
-                  <p className={`text-lg font-bold ${simResult.reputation_change >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
-                    {simResult.reputation_change >= 0 ? '+' : ''}{simResult.reputation_change}
-                  </p>
+            {/* Scrollable content */}
+            <div className="overflow-y-auto flex-1 p-4 space-y-4">
+
+              {/* Rewards */}
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Rewards</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-800/50 rounded-xl p-3 text-center">
+                    <DollarSign className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-emerald-400">${simResult.payout.toLocaleString()}</p>
+                    <p className="text-[10px] text-gray-500">Payout earned</p>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-xl p-3 text-center">
+                    <Zap className="w-4 h-4 text-blue-400 mx-auto mb-1" />
+                    <p className={`text-lg font-bold ${simResult.reputation_change >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
+                      {simResult.reputation_change >= 0 ? '+' : ''}{simResult.reputation_change}
+                    </p>
+                    <p className="text-[10px] text-gray-500">Reputation</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">New Balance</p>
-                  <p className="text-sm font-bold text-white">${simResult.new_balance.toLocaleString()}</p>
-                </div>
-                <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">Reputation</p>
-                  <p className="text-sm font-bold text-white">{simResult.new_reputation}%</p>
+              {/* Battle strength comparison */}
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Battle Overview</p>
+                <div className="bg-gray-800/50 rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-emerald-400 font-semibold">Allied Forces</span>
+                    <span className="text-xs text-red-400 font-semibold">Enemy Forces</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-white w-12 text-left">{simResult.ally_strength}</span>
+                    <div className="flex-1 h-3 bg-gray-700 rounded-full overflow-hidden flex">
+                      {(() => {
+                        const total = simResult.ally_strength + simResult.enemy_strength;
+                        const allyPct = total > 0 ? (simResult.ally_strength / total) * 100 : 50;
+                        return (
+                          <>
+                            <div className="h-full bg-emerald-500 rounded-l-full" style={{ width: `${allyPct}%` }} />
+                            <div className="h-full bg-red-500 rounded-r-full" style={{ width: `${100 - allyPct}%` }} />
+                          </>
+                        );
+                      })()}
+                    </div>
+                    <span className="text-sm font-bold text-white w-12 text-right">{simResult.enemy_strength}</span>
+                  </div>
                 </div>
               </div>
 
               {/* Random events */}
               {simResult.random_events.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider">Events</p>
-                  {simResult.random_events.map((event, i) => (
-                    <div key={i} className="flex items-start gap-2 bg-gray-800/50 rounded-xl px-3 py-2">
-                      <Sparkles className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${event.impact > 0 ? 'text-emerald-400' : 'text-red-400'}`} />
-                      <p className="text-xs text-gray-300">{event.description}</p>
-                    </div>
-                  ))}
+                <div>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Battlefield Events</p>
+                  <div className="space-y-1.5">
+                    {simResult.random_events.map((event, i) => (
+                      <div key={i} className={`flex items-start gap-2.5 rounded-xl px-3 py-2.5 ${
+                        event.impact > 0 ? 'bg-emerald-500/10' : 'bg-red-500/10'
+                      }`}>
+                        <Sparkles className={`w-4 h-4 mt-0.5 shrink-0 ${event.impact > 0 ? 'text-emerald-400' : 'text-red-400'}`} />
+                        <div>
+                          <p className="text-xs text-white font-medium">
+                            {event.type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">{event.description}</p>
+                          <span className={`text-[10px] font-bold ${event.impact > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {event.impact > 0 ? '+' : ''}{(event.impact * 100).toFixed(0)}% success modifier
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
+              {/* Unit damage report */}
+              {simResult.unit_report.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Unit Damage Report</p>
+                  <div className="space-y-2">
+                    {simResult.unit_report.map((unit, i) => {
+                      const Icon = typeIcons[unit.type] ?? Plane;
+                      const critical = unit.condition_after < 30;
+                      return (
+                        <div key={i} className="bg-gray-800/50 rounded-xl p-3">
+                          <div className="flex items-center gap-2.5 mb-2">
+                            <Icon className={`w-4 h-4 ${critical ? 'text-red-400' : 'text-gray-400'}`} />
+                            <span className="text-xs font-semibold text-white flex-1">{unit.name}</span>
+                            {unit.damage_taken > 0 && (
+                              <span className="text-[10px] font-bold text-red-400">-{unit.damage_taken}% dmg</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                              {/* Show before (faded) and after (solid) */}
+                              <div className="h-full relative">
+                                <div
+                                  className="absolute inset-y-0 left-0 bg-gray-600 rounded-full"
+                                  style={{ width: `${unit.condition_before}%` }}
+                                />
+                                <div
+                                  className={`absolute inset-y-0 left-0 rounded-full ${
+                                    unit.condition_after >= 70 ? 'bg-emerald-500' :
+                                    unit.condition_after >= 40 ? 'bg-amber-500' : 'bg-red-500'
+                                  }`}
+                                  style={{ width: `${unit.condition_after}%` }}
+                                />
+                              </div>
+                            </div>
+                            <span className="text-xs text-gray-400 w-16 text-right shrink-0">
+                              {unit.condition_before}% → {unit.condition_after}%
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Contractor fatigue report */}
+              {simResult.contractor_report.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Crew Fatigue Report</p>
+                  <div className="space-y-2">
+                    {simResult.contractor_report.map((c, i) => {
+                      const exhausted = c.fatigue_after > 75;
+                      return (
+                        <div key={i} className="bg-gray-800/50 rounded-xl p-3">
+                          <div className="flex items-center gap-2.5 mb-2">
+                            <User className={`w-4 h-4 ${exhausted ? 'text-red-400' : 'text-gray-400'}`} />
+                            <div className="flex-1 min-w-0">
+                              <span className="text-xs font-semibold text-white">{c.name}</span>
+                              <span className="text-[10px] text-gray-500 ml-1.5 capitalize">{c.specialization}</span>
+                            </div>
+                            {c.fatigue_gained > 0 && (
+                              <span className="text-[10px] font-bold text-amber-400">+{c.fatigue_gained}% fatigue</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                              <div className="h-full relative">
+                                <div
+                                  className={`absolute inset-y-0 left-0 rounded-full ${
+                                    c.fatigue_after <= 30 ? 'bg-emerald-500' :
+                                    c.fatigue_after <= 60 ? 'bg-amber-500' : 'bg-red-500'
+                                  }`}
+                                  style={{ width: `${c.fatigue_after}%` }}
+                                />
+                              </div>
+                            </div>
+                            <span className="text-xs text-gray-400 w-16 text-right shrink-0">
+                              {c.fatigue_before}% → {c.fatigue_after}%
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Updated stats */}
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Updated Stats</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-800/50 rounded-xl p-3 text-center">
+                    <p className="text-[10px] text-gray-500">Balance</p>
+                    <p className="text-sm font-bold text-white">${simResult.new_balance.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-xl p-3 text-center">
+                    <p className="text-[10px] text-gray-500">Reputation</p>
+                    <p className="text-sm font-bold text-white">{simResult.new_reputation}%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Dismiss button */}
+            <div className="p-4 pb-6 sm:pb-4 border-t border-gray-800">
               <button
                 onClick={() => setSimResult(null)}
-                className="w-full bg-gray-800 text-white font-semibold text-sm py-3 rounded-xl active:bg-gray-700 transition-colors mt-2"
+                className="w-full bg-gray-800 text-white font-semibold text-sm py-3 rounded-xl active:bg-gray-700 transition-colors"
               >
                 Dismiss
               </button>
@@ -313,7 +686,6 @@ export const Contracts = () => {
               const fName = factionDisplayName[template.faction] ?? template.faction;
               const risk = riskBadge(template.risk_level);
               const requiredUnits = parseRequiredUnits(template.required_unit_types);
-              const isLoading = actionLoading === template.id;
               const alreadyAccepted = activeContracts.some((c) => c.mission_template_id === template.id);
 
               return (
@@ -322,7 +694,6 @@ export const Contracts = () => {
                   className="bg-gray-900 rounded-2xl border border-gray-800/60 overflow-hidden card-press"
                 >
                   <div className="p-4">
-                    {/* Top row */}
                     <div className="flex items-center justify-between mb-2.5">
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${faction.dot}`} />
@@ -338,7 +709,6 @@ export const Contracts = () => {
                       <p className="text-xs text-gray-500 mb-3">{template.description}</p>
                     )}
 
-                    {/* Stats grid */}
                     <div className="grid grid-cols-3 gap-2 mb-3">
                       <div className="bg-gray-800/50 rounded-xl px-3 py-2">
                         <div className="flex items-center gap-1 mb-0.5">
@@ -365,7 +735,6 @@ export const Contracts = () => {
                       </div>
                     </div>
 
-                    {/* Required units */}
                     <div className="flex items-center gap-1.5 mb-4 flex-wrap">
                       <Target className="w-3 h-3 text-gray-600 shrink-0" />
                       <span className="text-[10px] text-gray-500 uppercase tracking-wider mr-1">Requires</span>
@@ -376,21 +745,18 @@ export const Contracts = () => {
                       ))}
                     </div>
 
-                    {/* Accept button */}
                     <button
-                      onClick={() => handleAccept(template)}
-                      disabled={isLoading || alreadyAccepted}
+                      onClick={() => alreadyAccepted ? null : openDeployModal(template)}
+                      disabled={alreadyAccepted}
                       className={`
                         w-full flex items-center justify-center gap-2 font-semibold text-sm py-3 rounded-xl transition-colors
                         ${alreadyAccepted
                           ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                          : 'bg-emerald-500 text-white active:bg-emerald-600 disabled:opacity-60'
+                          : 'bg-emerald-500 text-white active:bg-emerald-600'
                         }
                       `}
                     >
-                      {isLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : alreadyAccepted ? (
+                      {alreadyAccepted ? (
                         <>
                           <Check className="w-4 h-4" />
                           Already Accepted
@@ -432,19 +798,22 @@ export const Contracts = () => {
               const minutesLeft = Math.max(0, Math.floor((msLeft % 3600000) / 60000));
               const timeStr = `${hoursLeft}h ${minutesLeft}m`;
 
+              // Parse assigned resources
+              const assignedUnitIds: number[] = contract.assigned_units ? JSON.parse(contract.assigned_units) : [];
+              const assignedContractorIds: number[] = contract.assigned_contractors ? JSON.parse(contract.assigned_contractors) : [];
+              const assignedUnitNames = assignedUnitIds.map((id) => ownedUnits.find((u) => u.id === id)?.name ?? `Unit #${id}`);
+              const assignedContractorNames = assignedContractorIds.map((id) => ownedContractors.find((c) => c.id === id)?.name ?? `Contractor #${id}`);
+
               return (
                 <div
                   key={contract.id}
                   className="bg-gray-900 rounded-2xl border border-gray-800/60 overflow-hidden"
                 >
                   <div className="p-4">
-                    {/* Status bar */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-400 animate-subtle-pulse" />
-                        <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-                          {contract.status === 'active' ? 'Ready to Deploy' : contract.status}
-                        </span>
+                        <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Ready to Deploy</span>
                       </div>
                       <div className="flex items-center gap-1.5 bg-gray-800 rounded-lg px-2.5 py-1">
                         <Clock className="w-3 h-3 text-amber-400" />
@@ -452,9 +821,8 @@ export const Contracts = () => {
                       </div>
                     </div>
 
-                    {/* Title + faction */}
                     <h3 className="text-base font-bold text-white">{template.title}</h3>
-                    <div className="flex items-center gap-2 mt-1 mb-4">
+                    <div className="flex items-center gap-2 mt-1 mb-3">
                       <div className={`w-1.5 h-1.5 rounded-full ${faction.dot}`} />
                       <span className={`text-xs ${faction.text}`}>{fName}</span>
                       <span className="text-gray-700">·</span>
@@ -463,7 +831,32 @@ export const Contracts = () => {
                       <span className="text-xs text-emerald-400">${template.base_payout.toLocaleString()}</span>
                     </div>
 
-                    {/* Actions */}
+                    {/* Assigned resources */}
+                    {(assignedUnitNames.length > 0 || assignedContractorNames.length > 0) && (
+                      <div className="space-y-2 mb-4">
+                        {assignedUnitNames.length > 0 && (
+                          <div>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Deployed Units</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {assignedUnitNames.map((name, i) => (
+                                <span key={i} className="text-xs bg-blue-500/15 text-blue-300 px-2.5 py-1 rounded-lg font-medium">{name}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {assignedContractorNames.length > 0 && (
+                          <div>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Personnel</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {assignedContractorNames.map((name, i) => (
+                                <span key={i} className="text-xs bg-violet-500/15 text-violet-300 px-2.5 py-1 rounded-lg font-medium">{name}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleRunMission(contract.id)}

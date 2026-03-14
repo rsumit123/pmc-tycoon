@@ -312,17 +312,61 @@ def run_mission_simulation(
     db.refresh(user)
     db.refresh(mission_log)
     
+    # Build unit damage report
+    unit_report = []
+    for unit_data in assigned_units:
+        unit = unit_data["unit"]
+        template = unit_data["template"]
+        old_condition = next(
+            (d["condition"] for d in result["unit_details"] if d["unit_id"] == unit.id),
+            float(unit.condition)
+        )
+        new_condition = unit_data.get("new_condition", old_condition)
+        damage_taken = round(old_condition - new_condition, 1)
+        unit_report.append({
+            "name": template.name,
+            "type": template.unit_type,
+            "condition_before": round(old_condition),
+            "condition_after": round(new_condition),
+            "damage_taken": round(damage_taken),
+        })
+
+    # Build contractor fatigue report
+    contractor_report = []
+    for contractor_data in assigned_contractors:
+        contractor = contractor_data["contractor"]
+        template = contractor_data["template"]
+        old_fatigue = next(
+            (d["fatigue_level"] for d in result["contractor_details"] if d["contractor_id"] == contractor.id),
+            float(contractor.fatigue_level)
+        )
+        new_fatigue = contractor_data.get("new_fatigue", old_fatigue)
+        fatigue_gained = round(new_fatigue - old_fatigue, 1)
+        contractor_report.append({
+            "name": template.name,
+            "specialization": template.specialization,
+            "fatigue_before": round(old_fatigue),
+            "fatigue_after": round(new_fatigue),
+            "fatigue_gained": round(fatigue_gained),
+        })
+
     return {
         "contract_id": contract.id,
         "mission_title": mission_template.title,
+        "mission_description": mission_template.description,
+        "faction": mission_template.faction.value,
+        "risk_level": mission_template.risk_level,
         "success": result["success"],
         "payout": result["payout"],
         "reputation_change": result["reputation_change"],
-        "ally_strength": result["ally_strength"],
-        "enemy_strength": result["enemy_strength"],
+        "ally_strength": round(result["ally_strength"], 1),
+        "enemy_strength": round(result["enemy_strength"], 1),
+        "success_probability": round(result["final_success_probability"] * 100, 1),
         "random_events": result["random_events"],
+        "unit_report": unit_report,
+        "contractor_report": contractor_report,
         "new_balance": user.balance,
-        "new_reputation": user.reputation
+        "new_reputation": user.reputation,
     }
 
 @router.get("/mission-history/{user_id}")

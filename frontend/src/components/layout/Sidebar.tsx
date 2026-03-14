@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Warehouse,
+  Users,
   Crosshair,
   FlaskConical,
   Shield,
@@ -10,6 +11,7 @@ import {
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/hangar', label: 'Hangar', icon: Warehouse },
+  { path: '/personnel', label: 'Personnel', icon: Users },
   { path: '/contracts', label: 'Contracts', icon: Crosshair },
   { path: '/research', label: 'R&D', icon: FlaskConical },
 ];

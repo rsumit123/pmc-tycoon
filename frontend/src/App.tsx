@@ -3,6 +3,7 @@ import { BottomNav } from './components/layout/BottomNav';
 import { Sidebar } from './components/layout/Sidebar';
 import { Dashboard } from './components/pages/Dashboard';
 import { Hangar } from './components/pages/Hangar';
+import { Personnel } from './components/pages/Personnel';
 import { Contracts } from './components/pages/Contracts';
 import { RAndD } from './components/pages/RAndD';
 
@@ -22,6 +23,7 @@ function AppShell() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/hangar" element={<Hangar />} />
+            <Route path="/personnel" element={<Personnel />} />
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/research" element={<RAndD />} />
           </Routes>

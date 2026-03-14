@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
 });
 
 // Add request logging
@@ -56,6 +56,7 @@ api.interceptors.response.use(
 export const apiService = {
   // User endpoints
   getUser: (userId: number) => api.get(`/api/user/${userId}`),
+  updateUser: (userId: number, data: any) => api.put(`/api/user/${userId}`, data),
   
   // Units endpoints
   getUnitTemplates: () => api.get('/units/templates'),

@@ -1,0 +1,14 @@
+services:
+  pmc-backend:
+    build: .
+    container_name: pmc-tycoon-backend
+    restart: unless-stopped
+    ports:
+      - "8010:8010"
+    volumes:
+      - pmc-data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:///data/pmc_tycoon.db
+
+volumes:
+  pmc-data:
