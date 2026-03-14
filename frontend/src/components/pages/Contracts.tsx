@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Clock,
   DollarSign,
@@ -16,6 +17,7 @@ import {
   Radio,
   Anchor,
   User,
+  Swords,
 } from 'lucide-react';
 import { apiService } from '../../services/api';
 
@@ -30,6 +32,9 @@ interface MissionTemplate {
   required_unit_types: string;
   political_impact: number;
   is_active: boolean;
+  battle_type: string | null;
+  enemy_aircraft_id: number | null;
+  enemy_ship_id: number | null;
 }
 
 interface ActiveContractData {
@@ -127,6 +132,7 @@ const riskBadge = (risk: number) => {
 type Tab = 'available' | 'active';
 
 export const Contracts = () => {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('available');
   const [missionTemplates, setMissionTemplates] = useState<MissionTemplate[]>([]);
   const [activeContracts, setActiveContracts] = useState<ActiveContractData[]>([]);
@@ -140,19 +146,26 @@ export const Contracts = () => {
   const [deployTemplate, setDeployTemplate] = useState<MissionTemplate | null>(null);
   const [ownedUnits, setOwnedUnits] = useState<OwnedUnit[]>([]);
   const [ownedContractors, setOwnedContractors] = useState<OwnedContractor[]>([]);
+  const [aircraftList, setAircraftList] = useState<Array<{id: number; name: string; origin: string}>>([]);
+  const [shipList, setShipList] = useState<Array<{id: number; name: string; class_name: string}>>([]);
   const [selectedUnitIds, setSelectedUnitIds] = useState<Set<number>>(new Set());
   const [selectedContractorIds, setSelectedContractorIds] = useState<Set<number>>(new Set());
 
   const fetchData = useCallback(async () => {
     try {
-      const [templatesRes, activeRes, unitsRes, unitTmplRes, contractorsRes, contractorTmplRes] = await Promise.all([
+      const [templatesRes, activeRes, unitsRes, unitTmplRes, contractorsRes, contractorTmplRes, aircraftRes, shipsRes] = await Promise.all([
         apiService.getMissionTemplates(),
         apiService.getActiveContracts(),
         apiService.getOwnedUnits(),
         apiService.getUnitTemplates(),
         apiService.getOwnedContractors(),
         apiService.getContractorTemplates(),
+        apiService.getAircraft().catch(() => ({ data: [] })),
+        apiService.getShips().catch(() => ({ data: [] })),
       ]);
+
+      setAircraftList(Array.isArray(aircraftRes.data) ? aircraftRes.data : []);
+      setShipList(Array.isArray(shipsRes.data) ? shipsRes.data : []);
 
       const templates: MissionTemplate[] = Array.isArray(templatesRes.data) ? templatesRes.data : [];
       const active: ActiveContractData[] = Array.isArray(activeRes.data) ? activeRes.data : [];
@@ -248,6 +261,27 @@ export const Contracts = () => {
   };
 
   const handleRunMission = async (contractId: number) => {
+    // Check if this is a battle-type mission
+    const contract = activeContracts.find((c) => c.id === contractId);
+    if (contract) {
+      const template = templateMap[contract.mission_template_id];
+      if (template?.battle_type) {
+        // Navigate to battle screen
+        const params = new URLSearchParams({ contract: contractId.toString() });
+        if (template.battle_type === 'air' && aircraftList.length > 0) {
+          params.set('aircraft', aircraftList[0].id.toString());
+        } else if (template.battle_type === 'naval' && shipList.length > 0) {
+          params.set('ship', shipList[0].id.toString());
+        }
+        if (ownedContractors.length > 0) {
+          params.set('contractor', ownedContractors[0].id.toString());
+        }
+        navigate(`/battle/new?${params.toString()}`);
+        return;
+      }
+    }
+
+    // Legacy simulation for non-battle missions
     setActionLoading(contractId);
     try {
       const res = await apiService.runMissionSimulation(contractId);
@@ -699,9 +733,16 @@ export const Contracts = () => {
                         <div className={`w-2 h-2 rounded-full ${faction.dot}`} />
                         <span className={`text-xs font-medium ${faction.text}`}>{fName}</span>
                       </div>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${risk.bg} ${risk.text}`}>
-                        {risk.label} Risk
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {template.battle_type && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-violet-500/15 text-violet-400">
+                            {template.battle_type === 'air' ? '✈ Tactical' : '🚢 Naval'}
+                          </span>
+                        )}
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${risk.bg} ${risk.text}`}>
+                          {risk.label} Risk
+                        </span>
+                      </div>
                     </div>
 
                     <h3 className="text-base font-bold text-white mb-1">{template.title}</h3>
@@ -865,6 +906,11 @@ export const Contracts = () => {
                       >
                         {isLoading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : template?.battle_type ? (
+                          <>
+                            <Swords className="w-4 h-4" />
+                            Enter Battle
+                          </>
                         ) : (
                           <>
                             <Target className="w-4 h-4" />

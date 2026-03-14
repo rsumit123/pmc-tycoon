@@ -81,9 +81,21 @@ export const apiService = {
   getMissionLogs: () => api.get('/contracts/logs'),
   createMissionLog: (logData: any) => api.post('/contracts/logs', logData),
   
-  // Simulation endpoints
+  // Simulation endpoints (legacy)
   runMissionSimulation: (contractId: number) => api.post(`/simulation/run-mission/${contractId}`),
   getMissionHistory: (userId: number) => api.get(`/simulation/mission-history/${userId}`),
+
+  // Hardware catalog
+  getAircraft: () => api.get('/aircraft/'),
+  getWeapons: (type?: string) => api.get('/weapons/', { params: type ? { type } : {} }),
+  getShips: () => api.get('/ships/'),
+
+  // Battle system
+  startBattle: (data: any) => api.post('/battle/start', data),
+  submitLoadout: (battleId: number, data: any) => api.post(`/battle/${battleId}/loadout`, data),
+  getBattleState: (battleId: number) => api.get(`/battle/${battleId}/state`),
+  submitChoice: (battleId: number, choice: string) => api.post(`/battle/${battleId}/choose`, { choice }),
+  getBattleReport: (battleId: number) => api.get(`/battle/${battleId}/report`),
 };
 
 export default apiService;
