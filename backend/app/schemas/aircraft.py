@@ -9,6 +9,7 @@ class AircraftBase(BaseModel):
     role: str
     generation: str
     image_silhouette: Optional[str] = None
+    image_url: Optional[str] = None
     max_speed_mach: float
     max_speed_loaded_mach: float
     combat_radius_km: int

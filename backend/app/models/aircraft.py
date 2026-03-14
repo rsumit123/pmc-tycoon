@@ -12,6 +12,7 @@ class Aircraft(Base):
     role = Column(String, nullable=False)  # multirole, air_superiority, interceptor, strike
     generation = Column(String, nullable=False)  # "4", "4.5", "5"
     image_silhouette = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)  # Photo URL for UI
 
     # Performance
     max_speed_mach = Column(Float, nullable=False)

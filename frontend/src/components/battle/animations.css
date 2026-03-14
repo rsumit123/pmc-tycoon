@@ -1,4 +1,51 @@
-/* Radar sweep animation */
+/* ═══ HUD CORE ═══ */
+
+.hud-text {
+  font-family: 'Courier New', 'Lucida Console', monospace;
+  letter-spacing: 0.06em;
+}
+
+.hud-glow {
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.hud-glow-amber {
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.hud-glow-red {
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.hud-glow-cyan {
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.4);
+}
+
+.hud-border {
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.08), inset 0 0 12px rgba(34, 197, 94, 0.04);
+}
+
+.hud-border-amber {
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.08);
+}
+
+.hud-border-red {
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.08);
+}
+
+/* Grid background for HUD */
+.hud-grid {
+  background-image:
+    linear-gradient(rgba(34, 197, 94, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 197, 94, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ═══ RADAR SWEEP ═══ */
+
 @keyframes radarSweep {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -7,67 +54,167 @@
   animation: radarSweep 3s linear infinite;
 }
 
-/* Missile trail */
-@keyframes missileTrail {
-  from { stroke-dashoffset: 200; }
-  to { stroke-dashoffset: 0; }
+/* ═══ MISSILE TRAIL ═══ */
+
+@keyframes missileTrailFwd {
+  0% { width: 0; opacity: 0; }
+  10% { opacity: 1; }
+  100% { width: 100%; opacity: 0.6; }
 }
-.missile-trail {
-  stroke-dasharray: 8 4;
-  animation: missileTrail 1.5s ease-out forwards;
+.missile-trail-fwd {
+  animation: missileTrailFwd 1.5s ease-out forwards;
 }
 
-/* Hit flash */
+@keyframes missileTrailRev {
+  0% { width: 0; right: 0; left: auto; opacity: 0; }
+  10% { opacity: 1; }
+  100% { width: 100%; opacity: 0.6; }
+}
+.missile-trail-rev {
+  animation: missileTrailRev 1.2s ease-out forwards;
+}
+
+/* ═══ SCREEN EFFECTS ═══ */
+
+@keyframes screenShake {
+  0%, 100% { transform: translate(0); }
+  10% { transform: translate(-3px, 2px); }
+  20% { transform: translate(3px, -1px); }
+  30% { transform: translate(-2px, 3px); }
+  40% { transform: translate(2px, -3px); }
+  50% { transform: translate(-1px, 1px); }
+}
+.screen-shake {
+  animation: screenShake 0.4s ease-out;
+}
+
 @keyframes hitFlash {
-  0% { opacity: 0; transform: scale(0.8); }
-  20% { opacity: 1; transform: scale(1.1); }
-  100% { opacity: 0; transform: scale(1.3); }
-}
-.hit-flash {
-  animation: hitFlash 0.8s ease-out forwards;
-}
-
-/* Miss flash */
-@keyframes missFlash {
   0% { opacity: 0; }
-  30% { opacity: 0.6; }
+  15% { opacity: 0.4; }
   100% { opacity: 0; }
 }
-.miss-flash {
-  animation: missFlash 0.6s ease-out forwards;
+.hit-flash-green {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.3), transparent 70%);
+  animation: hitFlash 0.8s ease-out forwards;
+  pointer-events: none;
+  z-index: 100;
+}
+.hit-flash-red {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.3), transparent 70%);
+  animation: hitFlash 0.6s ease-out forwards;
+  pointer-events: none;
+  z-index: 100;
 }
 
-/* Dice roll counter */
-@keyframes diceRoll {
-  0% { opacity: 0; transform: translateY(10px); }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { transform: translateY(0); }
+/* Red vignette for damage */
+@keyframes damageVignette {
+  0% { opacity: 0; }
+  20% { opacity: 0.5; }
+  100% { opacity: 0; }
 }
-.dice-roll {
-  animation: diceRoll 0.4s ease-out forwards;
+.damage-vignette {
+  position: fixed;
+  inset: 0;
+  box-shadow: inset 0 0 80px rgba(239, 68, 68, 0.6);
+  animation: damageVignette 1s ease-out forwards;
+  pointer-events: none;
+  z-index: 100;
 }
 
-/* Fade slide up for narrative text */
+/* ═══ LOCK ON ═══ */
+
+@keyframes lockOn {
+  0% { transform: scale(2); opacity: 0; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.lock-on {
+  animation: lockOn 0.6s ease-out forwards;
+}
+
+/* ═══ TEXT ANIMATIONS ═══ */
+
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .fade-slide-up {
-  animation: fadeSlideUp 0.5s ease-out forwards;
+  animation: fadeSlideUp 0.4s ease-out forwards;
 }
 
-/* Pulse glow for active elements */
-@keyframes pulseGlow {
-  0%, 100% { filter: drop-shadow(0 0 4px currentColor); }
-  50% { filter: drop-shadow(0 0 12px currentColor); }
-}
-.pulse-glow {
-  animation: pulseGlow 2s ease-in-out infinite;
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
 }
 
-/* Range closing animation */
-@keyframes rangeClose {
-  from { transform: translateX(0); }
-  to { transform: translateX(-20px); }
+/* ═══ COMBAT LOG ═══ */
+
+@keyframes logEntry {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.log-entry {
+  animation: logEntry 0.3s ease-out forwards;
+}
+
+/* ═══ CHOICE CARDS ═══ */
+
+@keyframes cardPulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+.card-selected {
+  animation: cardPulse 0.5s ease-out;
+}
+
+/* ═══ RESULT COUNTER ═══ */
+
+@keyframes resultReveal {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.result-reveal {
+  animation: resultReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ═══ PHASE TRANSITION ═══ */
+
+@keyframes phaseSlide {
+  0% { transform: translateY(100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.phase-slide-in {
+  animation: phaseSlide 0.4s ease-out forwards;
+}
+
+/* ═══ SUBTLE PULSE ═══ */
+
+@keyframes subtlePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.subtle-pulse {
+  animation: subtlePulse 2s ease-in-out infinite;
+}
+
+/* ═══ SCANLINE EFFECT ═══ */
+
+.hud-scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
 }

@@ -218,6 +218,7 @@ def start_battle(data: BattleCreate, db: Session = Depends(get_db)):
                 if w:
                     weapons.append({
                         "id": w.id, "name": w.name, "type": w.weapon_type.value,
+                        "image_url": w.image_url,
                         "weight_kg": w.weight_kg, "max_range_km": w.max_range_km,
                         "no_escape_range_km": w.no_escape_range_km,
                         "base_pk": w.base_pk, "guidance": w.guidance,
@@ -229,6 +230,7 @@ def start_battle(data: BattleCreate, db: Session = Depends(get_db)):
             "battle_type": "air",
             "player_aircraft": {
                 "id": player_ac.id, "name": player_ac.name,
+                "image_url": player_ac.image_url,
                 "max_payload_kg": player_ac.max_payload_kg,
                 "hardpoints": player_ac.hardpoints,
                 "radar_type": player_ac.radar_type,
@@ -236,9 +238,12 @@ def start_battle(data: BattleCreate, db: Session = Depends(get_db)):
                 "rcs_m2": player_ac.rcs_m2,
                 "ecm_suite": player_ac.ecm_suite,
                 "ecm_rating": player_ac.ecm_rating,
+                "internal_fuel_kg": player_ac.internal_fuel_kg,
+                "thrust_to_weight_clean": player_ac.thrust_to_weight_clean,
             },
             "enemy_aircraft": {
                 "id": enemy_ac.id, "name": enemy_ac.name,
+                "image_url": enemy_ac.image_url,
                 "origin": enemy_ac.origin, "generation": enemy_ac.generation,
             },
             "available_weapons": weapons,

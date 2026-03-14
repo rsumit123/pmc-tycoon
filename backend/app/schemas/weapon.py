@@ -19,6 +19,7 @@ class WeaponBase(BaseModel):
     warhead_kg: int
     eccm_rating: int = 50
     maneuverability_g: int = 20
+    image_url: Optional[str] = None
     cost_per_unit: int
     is_active: bool = True
 

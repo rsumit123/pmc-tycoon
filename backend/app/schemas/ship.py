@@ -10,6 +10,7 @@ class ShipBase(BaseModel):
     origin: str
     ship_type: ShipType
     image_silhouette: Optional[str] = None
+    image_url: Optional[str] = None
     displacement_tons: int
     max_speed_knots: int
     crew: int

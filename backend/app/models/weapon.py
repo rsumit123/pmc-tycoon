@@ -41,6 +41,7 @@ class Weapon(Base):
     maneuverability_g = Column(Integer, default=20)  # terminal maneuver G
 
     # Game meta
+    image_url = Column(String, nullable=True)  # Photo URL for UI
     cost_per_unit = Column(Integer, nullable=False)
 
     is_active = Column(Boolean, default=True)

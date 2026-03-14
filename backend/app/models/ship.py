@@ -21,6 +21,7 @@ class Ship(Base):
     origin = Column(String, nullable=False)
     ship_type = Column(Enum(ShipType), nullable=False)
     image_silhouette = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)  # Photo URL for UI
 
     # Specs
     displacement_tons = Column(Integer, nullable=False)
