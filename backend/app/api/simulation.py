@@ -238,7 +238,14 @@ def run_mission_simulation(
     mission_template = db.query(MissionTemplate).filter(MissionTemplate.id == contract.mission_template_id).first()
     if not mission_template:
         raise HTTPException(status_code=404, detail="Mission template not found")
-    
+
+    # Guard: battle-type missions must use the battle system
+    if mission_template.battle_type:
+        raise HTTPException(
+            status_code=400,
+            detail=f"This is a {mission_template.battle_type} battle mission. Use POST /battle/start instead."
+        )
+
     # Get user (assuming user_id = 1 for now, in real app this would come from auth)
     user = db.query(User).filter(User.id == 1).first()
     if not user:

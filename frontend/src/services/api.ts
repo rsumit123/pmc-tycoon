@@ -89,6 +89,10 @@ export const apiService = {
   getAircraft: () => api.get('/aircraft/'),
   getWeapons: (type?: string) => api.get('/weapons/', { params: type ? { type } : {} }),
   getShips: () => api.get('/ships/'),
+  getOwnedAircraft: () => api.get('/aircraft/owned/list'),
+  purchaseAircraft: (aircraftId: number) => api.post(`/aircraft/owned/purchase?aircraft_id=${aircraftId}`),
+  getOwnedShips: () => api.get('/ships/owned/list'),
+  purchaseShip: (shipId: number) => api.post(`/ships/owned/purchase?ship_id=${shipId}`),
 
   // Battle system
   startBattle: (data: any) => api.post('/battle/start', data),

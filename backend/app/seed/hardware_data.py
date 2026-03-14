@@ -813,3 +813,27 @@ def seed_hardware(db: Session) -> None:
             db.add(MissionTemplate(**m_data))
 
     db.commit()
+
+    # ── STARTING OWNED AIRCRAFT & SHIP FOR DEFAULT USER ──
+
+    from app.models.owned_aircraft import OwnedAircraft
+    from app.models.owned_ship import OwnedShip
+    from app.models.user import User
+
+    user = db.query(User).filter(User.username == "commander").first()
+    if user:
+        # Give starting aircraft if none owned
+        existing_ac = db.query(OwnedAircraft).filter(OwnedAircraft.user_id == user.id).count()
+        if existing_ac == 0:
+            rafale_id = get_ac_id("Dassault Rafale")
+            if rafale_id:
+                db.add(OwnedAircraft(user_id=user.id, aircraft_id=rafale_id, condition=100))
+
+        # Give starting ship if none owned
+        existing_ship = db.query(OwnedShip).filter(OwnedShip.user_id == user.id).count()
+        if existing_ship == 0:
+            chennai_id = get_ship_id("INS Chennai")
+            if chennai_id:
+                db.add(OwnedShip(user_id=user.id, ship_id=chennai_id, condition=100))
+
+        db.commit()

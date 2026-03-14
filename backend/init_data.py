@@ -9,6 +9,8 @@ from app.models.aircraft import Aircraft
 from app.models.weapon import Weapon
 from app.models.ship import Ship
 from app.models.battle import Battle, BattlePhase
+from app.models.owned_aircraft import OwnedAircraft
+from app.models.owned_ship import OwnedShip
 from app.seed.hardware_data import seed_hardware
 
 def init_db(db: Session) -> None:
