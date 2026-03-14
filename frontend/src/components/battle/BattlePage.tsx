@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
 import { LoadoutScreen } from './LoadoutScreen';
 import { BattleScreen } from './BattleScreen';
 import { AfterActionReport } from './AfterActionReport';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle, ArrowLeft } from 'lucide-react';
 
-type Phase = 'loading' | 'loadout' | 'battle' | 'report';
+type Phase = 'loading' | 'loadout' | 'battle' | 'report' | 'error';
 
 export const BattlePage = () => {
   const { battleId: battleIdParam } = useParams();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>('loading');
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Data for each phase
   const [battleId, setBattleId] = useState<number>(0);
@@ -31,19 +33,16 @@ export const BattlePage = () => {
           const data = stateRes.data;
           setBattleType(data.battle_type || 'air');
           if (data.status === 'loadout') {
-            // Need to re-fetch start data — not ideal but works
             setPhase('loading');
           } else if (data.status === 'in_progress') {
             setBattleState(data);
             setPhase('battle');
           } else {
-            // Completed — show report
             const reportRes = await apiService.getBattleReport(bid);
             setReportData(reportRes.data);
             setPhase('report');
           }
         } catch {
-          // Battle not started yet, try starting
           setPhase('loading');
         }
         return;
@@ -56,8 +55,8 @@ export const BattlePage = () => {
       const contractorId = searchParams.get('contractor');
 
       if (!aircraftId && !shipId) {
-        // No params — can't start
-        setPhase('loading');
+        setErrorMsg('No aircraft or ship selected. Return to Contracts and select a vehicle.');
+        setPhase('error');
         return;
       }
 
@@ -75,15 +74,17 @@ export const BattlePage = () => {
         setLoadoutData(data);
 
         if (data.battle_type === 'naval') {
-          // Naval loadout is fixed — auto-submit empty loadout and go to battle
+          // Naval loadout is fixed by ship class — auto-submit and go to battle
           const loadoutRes = await apiService.submitLoadout(data.battle_id, { weapons: [] });
           setBattleState(loadoutRes.data);
           setPhase('battle');
         } else {
           setPhase('loadout');
         }
-      } catch (err) {
-        console.error('Failed to start battle:', err);
+      } catch (err: any) {
+        const detail = err?.response?.data?.detail || 'Failed to start battle. Check your network and try again.';
+        setErrorMsg(detail);
+        setPhase('error');
       }
     };
 
@@ -96,6 +97,25 @@ export const BattlePage = () => {
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
           <p className="text-sm text-gray-500">Preparing battle...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'error') {
+    return (
+      <div className="min-h-[100dvh] bg-gray-950 flex items-center justify-center px-6">
+        <div className="max-w-sm w-full text-center">
+          <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-lg font-bold text-white mb-2">Battle Failed to Start</h2>
+          <p className="text-sm text-gray-400 mb-6">{errorMsg}</p>
+          <button
+            onClick={() => navigate('/contracts')}
+            className="flex items-center justify-center gap-2 mx-auto bg-emerald-500 text-black font-bold text-sm py-3 px-6 rounded-xl active:bg-emerald-400 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Return to Operations
+          </button>
         </div>
       </div>
     );
@@ -136,7 +156,16 @@ export const BattlePage = () => {
 
   return (
     <div className="min-h-[100dvh] bg-gray-950 flex items-center justify-center">
-      <p className="text-sm text-gray-500">Something went wrong. Return to Operations.</p>
+      <div className="text-center">
+        <p className="text-sm text-gray-500 mb-4">Something went wrong.</p>
+        <button
+          onClick={() => navigate('/contracts')}
+          className="flex items-center justify-center gap-2 mx-auto bg-gray-800 text-gray-300 font-semibold text-sm py-2.5 px-5 rounded-xl active:bg-gray-700"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Return to Operations
+        </button>
+      </div>
     </div>
   );
 };

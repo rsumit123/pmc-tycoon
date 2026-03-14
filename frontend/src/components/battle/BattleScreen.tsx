@@ -3,6 +3,8 @@ import {
   Crosshair,
   Fuel,
   Loader2,
+  AlertTriangle,
+  RotateCw,
 } from 'lucide-react';
 import { apiService } from '../../services/api';
 import './animations.css';
@@ -70,13 +72,16 @@ export const BattleScreen = ({ battleId, battleType: _battleType, initialState, 
   const [state, setState] = useState<BattleState>(initialState);
   const [phaseResult, setPhaseResult] = useState<PhaseResultData | null>(null);
   const [choosing, setChoosing] = useState(false);
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [showingResult, setShowingResult] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [combatLog, setCombatLog] = useState<LogEntry[]>([
     { prefix: 'SYS', color: 'text-emerald-400', text: `BATTLE INITIATED — ${initialState.player_name} vs ${initialState.enemy_name}` },
     { prefix: 'SYS', color: 'text-gray-500', text: `Range: ${initialState.range_km}km — Awaiting orders...` },
   ]);
   const [screenEffect, setScreenEffect] = useState<string | null>(null);
   const [missileAnim, setMissileAnim] = useState<'fwd' | 'rev' | null>(null);
+  const [nextPhaseLoading, setNextPhaseLoading] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -91,6 +96,8 @@ export const BattleScreen = ({ battleId, battleType: _battleType, initialState, 
 
   const handleChoice = async (choiceKey: string) => {
     setChoosing(true);
+    setSelectedChoice(choiceKey);
+    setError(null);
     addLog('CMD', 'text-cyan-400', `Order: ${choiceKey.replace(/_/g, ' ').toUpperCase()}`);
 
     try {
@@ -136,7 +143,33 @@ export const BattleScreen = ({ battleId, battleType: _battleType, initialState, 
         }, 1500);
       }
 
-      // Incoming missile
+      // Naval salvo hits
+      if (data.outcome?.hits !== undefined && data.outcome?.damage !== undefined) {
+        if (data.outcome.hits > 0) {
+          setMissileAnim('fwd');
+          setTimeout(() => {
+            setMissileAnim(null);
+            setScreenEffect('hit-flash-green');
+            addLog('HIT', 'text-emerald-400', `${data.outcome.hits} missile(s) struck target — ${data.outcome.damage.toFixed(0)}% damage`);
+            setTimeout(() => setScreenEffect(null), 800);
+          }, 1500);
+        }
+      }
+
+      // Naval incoming hits
+      if (data.outcome?.hits_taken !== undefined && data.outcome.hits_taken > 0) {
+        setTimeout(() => {
+          setMissileAnim('rev');
+          setTimeout(() => {
+            setMissileAnim(null);
+            setScreenEffect('damage-vignette');
+            addLog('DMG', 'text-red-400', `${data.outcome.hits_taken} missile(s) hit — ${data.outcome.damage?.toFixed(0) || '?'}% damage taken`);
+            setTimeout(() => setScreenEffect(null), 1000);
+          }, 1200);
+        }, 500);
+      }
+
+      // Incoming missile (air combat)
       if (data.outcome?.enemy_shot?.hit && !data.outcome?.survived) {
         setTimeout(() => {
           setMissileAnim('rev');
@@ -156,22 +189,40 @@ export const BattleScreen = ({ battleId, battleType: _battleType, initialState, 
       if (data.outcome?.enemy_damage_pct !== undefined) {
         setState((prev) => ({ ...prev, enemy_damage_pct: data.outcome.enemy_damage_pct }));
       }
+      // Update damage from naval "damage" field
+      if (data.outcome?.damage !== undefined && data.outcome?.hits !== undefined) {
+        setState((prev) => ({ ...prev, enemy_damage_pct: prev.enemy_damage_pct + data.outcome.damage }));
+      }
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Choice failed:', err);
-      addLog('ERR', 'text-red-400', 'Communication error — retry');
+      const msg = err?.response?.data?.detail || 'Connection error — check your network';
+      setError(msg);
+      addLog('ERR', 'text-red-400', `COMMS FAILURE: ${msg}`);
     } finally {
       setChoosing(false);
+      setSelectedChoice(null);
     }
+  };
+
+  const handleRetry = () => {
+    setError(null);
   };
 
   const handleNextPhase = async () => {
     if (phaseResult?.battle_complete) {
-      const reportRes = await apiService.getBattleReport(battleId);
-      onComplete(reportRes.data);
+      setNextPhaseLoading(true);
+      try {
+        const reportRes = await apiService.getBattleReport(battleId);
+        onComplete(reportRes.data);
+      } catch {
+        addLog('ERR', 'text-red-400', 'Failed to load report — retrying...');
+        setNextPhaseLoading(false);
+      }
       return;
     }
 
+    setNextPhaseLoading(true);
     try {
       const res = await apiService.getBattleState(battleId);
       setState(res.data);
@@ -188,6 +239,7 @@ export const BattleScreen = ({ battleId, battleType: _battleType, initialState, 
     }
     setPhaseResult(null);
     setShowingResult(false);
+    setNextPhaseLoading(false);
   };
 
   const playerHp = Math.max(0, 100 - state.player_damage_pct);
@@ -325,9 +377,27 @@ export const BattleScreen = ({ battleId, battleType: _battleType, initialState, 
 
       {/* ═══ CHOICE PANEL / RESULT ═══ */}
       <div className="flex-1 px-3 py-2 flex flex-col min-h-0">
+        {/* Error banner */}
+        {error && !showingResult && (
+          <div className="mb-2 rounded-xl bg-red-500/10 border border-red-500/30 p-3 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-red-400 font-semibold">COMMS FAILURE</p>
+              <p className="text-[10px] text-red-300/70 mt-0.5">{error}</p>
+            </div>
+            <button
+              onClick={handleRetry}
+              className="shrink-0 flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-500/20 px-3 py-1.5 rounded-lg active:bg-red-500/30"
+            >
+              <RotateCw className="w-3 h-3" />
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {showingResult && phaseResult ? (
           <div className="flex-1 flex flex-col phase-slide-in">
-            {/* Result summary */}
+            {/* Result summary — player shot (air) */}
             {phaseResult.outcome?.player_shot && (
               <div className={`rounded-xl p-3 mb-2 text-center ${phaseResult.outcome.player_shot.hit ? 'bg-emerald-500/10 hud-border' : 'bg-red-500/10 hud-border-red'}`}>
                 <p className="text-2xl font-black hud-text result-reveal">
@@ -337,15 +407,51 @@ export const BattleScreen = ({ battleId, battleType: _battleType, initialState, 
                   }
                 </p>
                 <p className="text-xs text-gray-400 hud-text mt-1">
-                  Pk {(phaseResult.outcome.player_shot.pk * 100).toFixed(0)}% — Roll {phaseResult.outcome.player_shot.roll} vs {phaseResult.outcome.player_shot.needed}
+                  {phaseResult.outcome.player_shot.weapon} — Pk {(phaseResult.outcome.player_shot.pk * 100).toFixed(0)}% — Roll {phaseResult.outcome.player_shot.roll} vs {phaseResult.outcome.player_shot.needed}
                 </p>
               </div>
             )}
 
-            {/* Factors (collapsed) */}
+            {/* Result summary — salvo (naval) */}
+            {phaseResult.outcome?.hits !== undefined && phaseResult.outcome?.leakers !== undefined && (
+              <div className={`rounded-xl p-3 mb-2 text-center ${phaseResult.outcome.hits > 0 ? 'bg-emerald-500/10 hud-border' : 'bg-amber-500/10 hud-border-amber'}`}>
+                <p className="text-2xl font-black hud-text result-reveal">
+                  {phaseResult.outcome.hits > 0
+                    ? <span className="text-emerald-400 hud-glow">{phaseResult.outcome.hits} HIT{phaseResult.outcome.hits > 1 ? 'S' : ''}</span>
+                    : <span className="text-amber-400 hud-glow-amber">ALL INTERCEPTED</span>
+                  }
+                </p>
+                {phaseResult.outcome.damage !== undefined && (
+                  <p className="text-xs text-gray-400 hud-text mt-1">
+                    {phaseResult.outcome.leakers} leaker{phaseResult.outcome.leakers !== 1 ? 's' : ''} — {phaseResult.outcome.damage.toFixed(0)}% damage dealt
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Result summary — incoming hits taken (naval) */}
+            {phaseResult.outcome?.hits_taken !== undefined && (
+              <div className={`rounded-xl p-3 mb-2 text-center ${phaseResult.outcome.hits_taken > 0 ? 'bg-red-500/10 hud-border-red' : 'bg-emerald-500/10 hud-border'}`}>
+                <p className="text-2xl font-black hud-text result-reveal">
+                  {phaseResult.outcome.hits_taken > 0
+                    ? <span className="text-red-400 hud-glow-red">{phaseResult.outcome.hits_taken} HIT{phaseResult.outcome.hits_taken > 1 ? 'S' : ''} TAKEN</span>
+                    : <span className="text-emerald-400 hud-glow">ALL INTERCEPTED</span>
+                  }
+                </p>
+              </div>
+            )}
+
+            {/* Narrative */}
+            {phaseResult.narrative && !phaseResult.outcome?.player_shot && phaseResult.outcome?.hits === undefined && phaseResult.outcome?.hits_taken === undefined && (
+              <div className="rounded-xl bg-gray-900/60 p-3 mb-2">
+                <p className="text-xs text-gray-300 hud-text leading-relaxed">{phaseResult.narrative}</p>
+              </div>
+            )}
+
+            {/* Factors */}
             {phaseResult.factors.length > 0 && (
               <div className="space-y-1 mb-2 max-h-24 overflow-y-auto">
-                {phaseResult.factors.slice(0, 4).map((f, i) => (
+                {phaseResult.factors.slice(0, 6).map((f, i) => (
                   <div key={i} className="flex items-center gap-2 text-[10px] hud-text">
                     <span className={f.impact === 'positive' ? 'text-emerald-400' : f.impact === 'negative' ? 'text-red-400' : 'text-gray-500'}>
                       {f.impact === 'positive' ? '▲' : f.impact === 'negative' ? '▼' : '●'}
@@ -360,37 +466,55 @@ export const BattleScreen = ({ battleId, battleType: _battleType, initialState, 
             <div className="mt-auto">
               <button
                 onClick={handleNextPhase}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-black font-bold text-sm py-3 rounded-xl active:bg-emerald-400 transition-colors hud-text tracking-wider"
+                disabled={nextPhaseLoading}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-black font-bold text-sm py-3 rounded-xl active:bg-emerald-400 disabled:opacity-60 transition-colors hud-text tracking-wider"
               >
-                {phaseResult.battle_complete ? '▶ VIEW REPORT' : `▶ PHASE ${phaseResult.phase_number + 1}`}
+                {nextPhaseLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  phaseResult.battle_complete ? '▶ VIEW REPORT' : `▶ PHASE ${phaseResult.phase_number + 1}`
+                )}
               </button>
             </div>
           </div>
         ) : (
           <div className="flex-1 flex flex-col">
+            {/* Sending indicator */}
+            {choosing && (
+              <div className="mb-2 rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-2.5 flex items-center gap-2">
+                <Loader2 className="w-4 h-4 text-emerald-400 animate-spin shrink-0" />
+                <span className="text-xs text-emerald-400 hud-text">TRANSMITTING ORDERS...</span>
+              </div>
+            )}
+
             <div className="flex-1 space-y-2">
-              {state.available_choices.map((choice) => (
-                <button
-                  key={choice.key}
-                  onClick={() => handleChoice(choice.key)}
-                  disabled={choosing}
-                  className={`w-full rounded-xl p-3 text-left transition-all active:scale-[0.98] disabled:opacity-40 hud-border bg-gray-950/80 ${riskColors[choice.risk_hint] || ''}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl shrink-0">{choiceIcons[choice.key] || '⚡'}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white hud-text">{choice.label.toUpperCase()}</span>
-                        <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded border hud-text ${riskColors[choice.risk_hint] || 'border-gray-600 text-gray-400'}`}>
-                          {choice.risk_hint}
-                        </span>
+              {state.available_choices.map((choice) => {
+                const isSelected = selectedChoice === choice.key;
+                return (
+                  <button
+                    key={choice.key}
+                    onClick={() => handleChoice(choice.key)}
+                    disabled={choosing}
+                    className={`w-full rounded-xl p-3 text-left transition-all active:scale-[0.98] disabled:opacity-40 hud-border bg-gray-950/80 ${
+                      isSelected ? 'border-emerald-500/60 bg-emerald-500/10' : riskColors[choice.risk_hint] || ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl shrink-0">{choiceIcons[choice.key] || '⚡'}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-white hud-text">{choice.label.toUpperCase()}</span>
+                          <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded border hud-text ${riskColors[choice.risk_hint] || 'border-gray-600 text-gray-400'}`}>
+                            {choice.risk_hint}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-gray-500 mt-0.5 hud-text">{choice.description}</p>
                       </div>
-                      <p className="text-[10px] text-gray-500 mt-0.5 hud-text">{choice.description}</p>
+                      {isSelected && choosing && <Loader2 className="w-4 h-4 text-emerald-400 animate-spin shrink-0" />}
                     </div>
-                    {choosing && <Loader2 className="w-4 h-4 text-emerald-400 animate-spin shrink-0" />}
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
