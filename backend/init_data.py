@@ -98,51 +98,8 @@ def init_db(db: Session) -> None:
             template = ContractorTemplate(**template_data)
             db.add(template)
     
-    # Create mission templates if they don't exist
-    mission_templates = [
-        {
-            "title": "Coastal Patrol",
-            "description": "Patrol coastal waters for hostile activity",
-            "faction": Faction.ATLANTIC_COALITION,
-            "required_unit_types": '["submarine", "drone"]',
-            "min_unit_count": 2,
-            "max_unit_count": 4,
-            "base_payout": 15000,
-            "risk_level": 30,
-            "political_impact": 10,
-            "estimated_duration_hours": 12
-        },
-        {
-            "title": "Border Strike",
-            "description": "Conduct precision strike on enemy border outpost",
-            "faction": Faction.DESERT_BLOC,
-            "required_unit_types": '["fighter", "drone"]',
-            "min_unit_count": 2,
-            "max_unit_count": 3,
-            "base_payout": 25000,
-            "risk_level": 60,
-            "political_impact": -15,
-            "estimated_duration_hours": 8
-        },
-        {
-            "title": "Island Invasion Defense",
-            "description": "Defend strategic island from amphibious assault",
-            "faction": Faction.PACIFIC_ALLIANCE,
-            "required_unit_types": '["fighter", "submarine"]',
-            "min_unit_count": 3,
-            "max_unit_count": 5,
-            "base_payout": 40000,
-            "risk_level": 75,
-            "political_impact": 20,
-            "estimated_duration_hours": 24
-        }
-    ]
-    
-    for template_data in mission_templates:
-        existing = db.query(MissionTemplate).filter(MissionTemplate.title == template_data["title"]).first()
-        if not existing:
-            template = MissionTemplate(**template_data)
-            db.add(template)
+    # Legacy mission templates removed — all missions now use the battle system
+    # Battle-type missions are seeded in seed/hardware_data.py
     
     # Create a default user if none exists
     default_user = db.query(User).filter(User.username == "commander").first()
