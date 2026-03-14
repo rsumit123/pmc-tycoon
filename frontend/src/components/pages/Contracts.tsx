@@ -209,7 +209,46 @@ export const Contracts = () => {
     fetchData();
   };
 
-  const openDeployModal = (template: MissionTemplate) => {
+  const openDeployModal = async (template: MissionTemplate) => {
+    // Battle-type missions skip the old deploy modal — go straight to battle
+    if (template.battle_type) {
+      setActionLoading(template.id);
+      try {
+        // Create the contract first
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + template.estimated_duration_hours);
+        await apiService.createActiveContract({
+          user_id: 1,
+          mission_template_id: template.id,
+          status: 'active',
+          expires_at: expiresAt.toISOString(),
+          assigned_units: null,
+          assigned_contractors: null,
+          payout_received: 0,
+          reputation_change: 0,
+          political_impact_change: 0,
+        });
+
+        // Navigate to battle
+        const params = new URLSearchParams();
+        if (template.battle_type === 'air' && aircraftList.length > 0) {
+          params.set('aircraft', aircraftList[0].id.toString());
+        } else if (template.battle_type === 'naval' && shipList.length > 0) {
+          params.set('ship', shipList[0].id.toString());
+        }
+        if (ownedContractors.length > 0) {
+          params.set('contractor', ownedContractors[0].id.toString());
+        }
+        navigate(`/battle/new?${params.toString()}`);
+      } catch (err) {
+        console.error('Failed to start battle mission:', err);
+      } finally {
+        setActionLoading(null);
+      }
+      return;
+    }
+
+    // Legacy missions use the old deploy modal
     setDeployTemplate(template);
     setSelectedUnitIds(new Set());
     setSelectedContractorIds(new Set());
@@ -788,7 +827,7 @@ export const Contracts = () => {
 
                     <button
                       onClick={() => alreadyAccepted ? null : openDeployModal(template)}
-                      disabled={alreadyAccepted}
+                      disabled={alreadyAccepted || actionLoading === template.id}
                       className={`
                         w-full flex items-center justify-center gap-2 font-semibold text-sm py-3 rounded-xl transition-colors
                         ${alreadyAccepted
@@ -797,10 +836,17 @@ export const Contracts = () => {
                         }
                       `}
                     >
-                      {alreadyAccepted ? (
+                      {actionLoading === template.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : alreadyAccepted ? (
                         <>
                           <Check className="w-4 h-4" />
                           Already Accepted
+                        </>
+                      ) : template.battle_type ? (
+                        <>
+                          <Swords className="w-4 h-4" />
+                          Enter Battle
                         </>
                       ) : (
                         <>
