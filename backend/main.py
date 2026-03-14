@@ -12,11 +12,18 @@ from app.models.user import User
 from app.models.unit import OwnedUnit, BaseUnitTemplate
 from app.models.contractor import OwnedContractor, ContractorTemplate
 from app.models.contract import MissionTemplate, ActiveContract, MissionLog, Faction, MissionStatus
+from app.models.aircraft import Aircraft
+from app.models.weapon import Weapon
+from app.models.ship import Ship
+from app.models.battle import Battle, BattlePhase
 
 from app.api.units import router as units_router
 from app.api.contractors import router as contractors_router
 from app.api.contracts import router as contracts_router
 from app.api.simulation import router as simulation_router
+from app.api.aircraft import router as aircraft_router
+from app.api.weapons import router as weapons_router
+from app.api.ships import router as ships_router
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -51,6 +58,9 @@ app.include_router(units_router)
 app.include_router(contractors_router)
 app.include_router(contracts_router)
 app.include_router(simulation_router)
+app.include_router(aircraft_router)
+app.include_router(weapons_router)
+app.include_router(ships_router)
 
 @app.get("/")
 async def root():

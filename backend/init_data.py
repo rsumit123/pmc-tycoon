@@ -5,6 +5,11 @@ from app.models.unit import BaseUnitTemplate, OwnedUnit
 from app.models.contractor import ContractorTemplate, OwnedContractor
 from app.models.contract import MissionTemplate, ActiveContract, MissionLog, Faction
 from app.models.user import User
+from app.models.aircraft import Aircraft
+from app.models.weapon import Weapon
+from app.models.ship import Ship
+from app.models.battle import Battle, BattlePhase
+from app.seed.hardware_data import seed_hardware
 
 def init_db(db: Session) -> None:
     # Create tables if they don't exist
@@ -216,6 +221,10 @@ def init_db(db: Session) -> None:
             db.add(contractor)
     
     db.commit()
+
+    # Seed real military hardware (aircraft, weapons, ships)
+    seed_hardware(db)
+    print("Hardware data seeded.")
 
 if __name__ == "__main__":
     db = SessionLocal()
