@@ -849,4 +849,18 @@ def seed_hardware(db: Session) -> None:
             if chennai_id:
                 db.add(OwnedShip(user_id=user.id, ship_id=chennai_id, condition=100))
 
+        # Give starting weapons if none owned
+        from app.models.owned_weapon import OwnedWeapon
+        existing_weapons = db.query(OwnedWeapon).filter(OwnedWeapon.user_id == user.id).count()
+        if existing_weapons == 0:
+            starting_weapons = {
+                "MICA EM": 8,
+                "MICA IR": 4,
+                "Meteor": 4,
+            }
+            for wname, qty in starting_weapons.items():
+                wid = weapon_id_map.get(wname)
+                if wid:
+                    db.add(OwnedWeapon(user_id=user.id, weapon_id=wid, quantity=qty))
+
         db.commit()

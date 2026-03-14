@@ -146,10 +146,14 @@ export const Contracts = () => {
   const [deployTemplate, setDeployTemplate] = useState<MissionTemplate | null>(null);
   const [ownedUnits, setOwnedUnits] = useState<OwnedUnit[]>([]);
   const [ownedContractors, setOwnedContractors] = useState<OwnedContractor[]>([]);
-  const [aircraftList, setAircraftList] = useState<Array<{id: number; name: string; origin: string}>>([]);
-  const [shipList, setShipList] = useState<Array<{id: number; name: string; class_name: string}>>([]);
+  const [aircraftList, setAircraftList] = useState<Array<{id: number; aircraft_id: number; name: string; origin: string; condition: number}>>([]);
+  const [shipList, setShipList] = useState<Array<{id: number; ship_id: number; name: string; origin: string; condition: number}>>([]);
   const [selectedUnitIds, setSelectedUnitIds] = useState<Set<number>>(new Set());
   const [selectedContractorIds, setSelectedContractorIds] = useState<Set<number>>(new Set());
+
+  // Battle picker state
+  const [battlePickerTemplate, setBattlePickerTemplate] = useState<MissionTemplate | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -160,8 +164,8 @@ export const Contracts = () => {
         apiService.getUnitTemplates(),
         apiService.getOwnedContractors(),
         apiService.getContractorTemplates(),
-        apiService.getAircraft().catch(() => ({ data: [] })),
-        apiService.getShips().catch(() => ({ data: [] })),
+        apiService.getOwnedAircraft().catch(() => ({ data: [] })),
+        apiService.getOwnedShips().catch(() => ({ data: [] })),
       ]);
 
       setAircraftList(Array.isArray(aircraftRes.data) ? aircraftRes.data : []);
@@ -210,41 +214,15 @@ export const Contracts = () => {
   };
 
   const openDeployModal = async (template: MissionTemplate) => {
-    // Battle-type missions skip the old deploy modal — go straight to battle
+    // Battle-type missions show vehicle picker
     if (template.battle_type) {
-      setActionLoading(template.id);
-      try {
-        // Create the contract first
-        const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + template.estimated_duration_hours);
-        await apiService.createActiveContract({
-          user_id: 1,
-          mission_template_id: template.id,
-          status: 'active',
-          expires_at: expiresAt.toISOString(),
-          assigned_units: null,
-          assigned_contractors: null,
-          payout_received: 0,
-          reputation_change: 0,
-          political_impact_change: 0,
-        });
-
-        // Navigate to battle
-        const params = new URLSearchParams();
-        if (template.battle_type === 'air' && aircraftList.length > 0) {
-          params.set('aircraft', aircraftList[0].id.toString());
-        } else if (template.battle_type === 'naval' && shipList.length > 0) {
-          params.set('ship', shipList[0].id.toString());
-        }
-        if (ownedContractors.length > 0) {
-          params.set('contractor', ownedContractors[0].id.toString());
-        }
-        navigate(`/battle/new?${params.toString()}`);
-      } catch (err) {
-        console.error('Failed to start battle mission:', err);
-      } finally {
-        setActionLoading(null);
+      const list = template.battle_type === 'air' ? aircraftList : shipList;
+      if (list.length === 0) {
+        alert(`No ${template.battle_type === 'air' ? 'aircraft' : 'ships'} available. Purchase some from the Hangar first.`);
+        return;
       }
+      setBattlePickerTemplate(template);
+      setSelectedVehicleId(template.battle_type === 'air' ? aircraftList[0]?.aircraft_id : shipList[0]?.ship_id);
       return;
     }
 
@@ -252,6 +230,42 @@ export const Contracts = () => {
     setDeployTemplate(template);
     setSelectedUnitIds(new Set());
     setSelectedContractorIds(new Set());
+  };
+
+  const handleBattleDeploy = async () => {
+    if (!battlePickerTemplate || selectedVehicleId === null) return;
+    setActionLoading(battlePickerTemplate.id);
+    try {
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + battlePickerTemplate.estimated_duration_hours);
+      await apiService.createActiveContract({
+        user_id: 1,
+        mission_template_id: battlePickerTemplate.id,
+        status: 'active',
+        expires_at: expiresAt.toISOString(),
+        assigned_units: null,
+        assigned_contractors: null,
+        payout_received: 0,
+        reputation_change: 0,
+        political_impact_change: 0,
+      });
+
+      const params = new URLSearchParams();
+      if (battlePickerTemplate.battle_type === 'air') {
+        params.set('aircraft', selectedVehicleId.toString());
+      } else {
+        params.set('ship', selectedVehicleId.toString());
+      }
+      if (ownedContractors.length > 0) {
+        params.set('contractor', ownedContractors[0].id.toString());
+      }
+      setBattlePickerTemplate(null);
+      navigate(`/battle/new?${params.toString()}`);
+    } catch (err) {
+      console.error('Failed to start battle mission:', err);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const toggleUnit = (id: number) => {
@@ -363,6 +377,85 @@ export const Contracts = () => {
 
   return (
     <div className="px-4 py-5 lg:px-8 lg:py-6 max-w-4xl mx-auto">
+      {/* Battle Vehicle Picker Modal */}
+      {battlePickerTemplate && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center" onClick={() => setBattlePickerTemplate(null)}>
+          <div
+            className="bg-gray-900 rounded-t-2xl sm:rounded-2xl border-t sm:border border-gray-800 w-full sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <div>
+                <h2 className="text-lg font-bold text-white">
+                  Select {battlePickerTemplate.battle_type === 'air' ? 'Aircraft' : 'Ship'}
+                </h2>
+                <p className="text-xs text-gray-500">{battlePickerTemplate.title}</p>
+              </div>
+              <button onClick={() => setBattlePickerTemplate(null)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4 space-y-2">
+              {(battlePickerTemplate.battle_type === 'air' ? aircraftList : shipList).map((v) => {
+                const vehicleId = 'aircraft_id' in v ? v.aircraft_id : (v as any).ship_id;
+                const isSelected = selectedVehicleId === vehicleId;
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => setSelectedVehicleId(vehicleId)}
+                    className={`w-full text-left rounded-xl p-3 border transition-all ${
+                      isSelected
+                        ? 'bg-emerald-500/10 border-emerald-500/40'
+                        : 'bg-gray-800/50 border-gray-700/40 active:bg-gray-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isSelected ? 'bg-emerald-500/20' : 'bg-gray-800'
+                      }`}>
+                        {battlePickerTemplate.battle_type === 'air'
+                          ? <Plane className={`w-5 h-5 ${isSelected ? 'text-emerald-400' : 'text-gray-500'}`} />
+                          : <Anchor className={`w-5 h-5 ${isSelected ? 'text-emerald-400' : 'text-gray-500'}`} />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-white truncate">{v.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] text-gray-500">{v.origin}</span>
+                          <span className="text-gray-700">·</span>
+                          <span className={`text-[10px] font-semibold ${
+                            v.condition >= 70 ? 'text-emerald-400' : v.condition >= 40 ? 'text-amber-400' : 'text-red-400'
+                          }`}>{v.condition}% condition</span>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="p-4 border-t border-gray-800">
+              <button
+                onClick={handleBattleDeploy}
+                disabled={selectedVehicleId === null || actionLoading === battlePickerTemplate.id}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-white font-bold text-sm py-3 rounded-xl active:bg-emerald-600 disabled:opacity-40 transition-colors"
+              >
+                {actionLoading === battlePickerTemplate.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Swords className="w-4 h-4" />
+                )}
+                Deploy & Enter Battle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Deploy Modal */}
       {deployTemplate && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center" onClick={() => setDeployTemplate(null)}>

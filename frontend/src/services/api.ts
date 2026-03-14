@@ -93,6 +93,12 @@ export const apiService = {
   purchaseAircraft: (aircraftId: number) => api.post(`/aircraft/owned/purchase?aircraft_id=${aircraftId}`),
   getOwnedShips: () => api.get('/ships/owned/list'),
   purchaseShip: (shipId: number) => api.post(`/ships/owned/purchase?ship_id=${shipId}`),
+  sellAircraft: (ownedId: number) => api.delete(`/aircraft/owned/${ownedId}`),
+
+  // Weapon inventory
+  getOwnedWeapons: () => api.get('/weapons/owned/list'),
+  purchaseWeapons: (weaponId: number, quantity: number) => api.post('/weapons/owned/purchase', { weapon_id: weaponId, quantity }),
+  sellWeapons: (weaponId: number, quantity: number) => api.post('/weapons/owned/sell', { weapon_id: weaponId, quantity }),
 
   // Battle system
   startBattle: (data: any) => api.post('/battle/start', data),

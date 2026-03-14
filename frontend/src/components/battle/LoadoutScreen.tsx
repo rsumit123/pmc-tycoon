@@ -24,6 +24,7 @@ interface WeaponOption {
   base_pk: number;
   guidance: string;
   cost_per_unit: number;
+  stock: number;
 }
 
 interface LoadoutScreenProps {
@@ -185,6 +186,11 @@ export const LoadoutScreen = ({ battleId, aircraft, enemy, weapons, onReady }: L
                     <span className="text-gray-700">·</span>
                     <span className="text-[10px] text-gray-500">{w.weight_kg}kg</span>
                   </div>
+                  {w.stock !== undefined && (
+                    <p className={`text-[9px] mt-0.5 ${w.stock > 0 ? 'text-emerald-400/60' : 'text-red-400/60'}`}>
+                      Stock: {w.stock}
+                    </p>
+                  )}
                 </div>
 
                 {/* Qty controls */}
@@ -201,7 +207,8 @@ export const LoadoutScreen = ({ battleId, aircraft, enemy, weapons, onReady }: L
                   </span>
                   <button
                     onClick={() => adjust(w.id, 1)}
-                    className="w-8 h-8 rounded-lg bg-gray-800/80 border border-gray-700/50 flex items-center justify-center text-gray-400 active:bg-gray-700"
+                    disabled={w.stock !== undefined && qty >= w.stock}
+                    className="w-8 h-8 rounded-lg bg-gray-800/80 border border-gray-700/50 flex items-center justify-center text-gray-400 disabled:opacity-20 active:bg-gray-700"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>

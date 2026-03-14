@@ -11,6 +11,7 @@ from app.models.ship import Ship
 from app.models.battle import Battle, BattlePhase
 from app.models.owned_aircraft import OwnedAircraft
 from app.models.owned_ship import OwnedShip
+from app.models.owned_weapon import OwnedWeapon
 from app.seed.hardware_data import seed_hardware
 
 def init_db(db: Session) -> None:
@@ -109,7 +110,7 @@ def init_db(db: Session) -> None:
             username="commander",
             email="commander@pmctycoon.com",
             hashed_password="hashed_password_placeholder",  # This is just for initialization
-            balance=10000,
+            balance=250000,
             reputation=50,
             tech_level=1
         )

@@ -12,6 +12,7 @@ from app.models.aircraft import Aircraft
 from app.models.ship import Ship
 from app.models.weapon import Weapon
 from app.models.contractor import OwnedContractor, ContractorTemplate
+from app.models.owned_weapon import OwnedWeapon
 from app.models.user import User
 from app.schemas.battle import BattleCreate, LoadoutSubmit, BattleChoiceSubmit
 
@@ -209,13 +210,19 @@ def start_battle(data: BattleCreate, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(battle)
 
-        # Get compatible weapons for loadout screen
+        # Get compatible weapons for loadout screen (only those in inventory)
         compat_ids = json.loads(player_ac.compatible_weapons) if player_ac.compatible_weapons else []
         weapons = []
         for wid in compat_ids:
             if wid:
                 w = db.query(Weapon).filter(Weapon.id == wid).first()
                 if w:
+                    # Check inventory
+                    owned = db.query(OwnedWeapon).filter(
+                        OwnedWeapon.user_id == 1,
+                        OwnedWeapon.weapon_id == w.id,
+                    ).first()
+                    stock = owned.quantity if owned else 0
                     weapons.append({
                         "id": w.id, "name": w.name, "type": w.weapon_type.value,
                         "image_url": w.image_url,
@@ -223,6 +230,7 @@ def start_battle(data: BattleCreate, db: Session = Depends(get_db)):
                         "no_escape_range_km": w.no_escape_range_km,
                         "base_pk": w.base_pk, "guidance": w.guidance,
                         "cost_per_unit": w.cost_per_unit,
+                        "stock": stock,
                     })
 
         return {
@@ -342,6 +350,23 @@ def submit_loadout(battle_id: int, data: LoadoutSubmit, db: Session = Depends(ge
                 status_code=400,
                 detail=f"Too many weapons: {total_hardpoints} exceeds {player_ac.hardpoints} hardpoints"
             )
+
+        # Deduct weapons from inventory
+        for item in data.weapons:
+            owned = db.query(OwnedWeapon).filter(
+                OwnedWeapon.user_id == battle.user_id,
+                OwnedWeapon.weapon_id == item["weapon_id"],
+            ).first()
+            if not owned or owned.quantity < item["quantity"]:
+                w = db.query(Weapon).filter(Weapon.id == item["weapon_id"]).first()
+                wname = w.name if w else f"ID {item['weapon_id']}"
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Not enough {wname} in inventory"
+                )
+            owned.quantity -= item["quantity"]
+            if owned.quantity == 0:
+                db.delete(owned)
 
     # Save loadout and advance
     battle.player_loadout = json.dumps(data.weapons)
