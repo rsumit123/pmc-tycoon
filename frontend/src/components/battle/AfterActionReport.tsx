@@ -2,7 +2,6 @@ import {
   Trophy,
   Skull,
   DollarSign,
-  Shield,
   ChevronRight,
   Zap,
 } from 'lucide-react';
