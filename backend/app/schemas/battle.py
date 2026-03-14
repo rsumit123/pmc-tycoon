@@ -13,10 +13,16 @@ class BattleCreate(BaseModel):
 
 class LoadoutSubmit(BaseModel):
     weapons: List[dict]  # [{weapon_id: int, quantity: int}]
+    fuel_pct: float = 85.0
 
 
 class BattleChoiceSubmit(BaseModel):
     choice: str
+
+
+class TacticalChoiceSubmit(BaseModel):
+    action: str
+    weapon_id: Optional[int] = None
 
 
 class BattlePhaseResponse(BaseModel):

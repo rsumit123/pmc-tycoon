@@ -3,6 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
 import { LoadoutScreen } from './LoadoutScreen';
 import { BattleScreen } from './BattleScreen';
+import { TacticalBattleScreen } from './TacticalBattleScreen';
 import { AfterActionReport } from './AfterActionReport';
 import { Loader2, AlertTriangle, ArrowLeft } from 'lucide-react';
 
@@ -137,6 +138,20 @@ export const BattlePage = () => {
   }
 
   if (phase === 'battle' && battleState) {
+    // v2 tactical engine — detected by max_turns field
+    if (battleState.max_turns || battleState.engine_version === 2) {
+      return (
+        <TacticalBattleScreen
+          battleId={battleId}
+          initialState={battleState}
+          onComplete={(report) => {
+            setReportData(report);
+            setPhase('report');
+          }}
+        />
+      );
+    }
+
     return (
       <BattleScreen
         battleId={battleId}

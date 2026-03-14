@@ -14,11 +14,12 @@ from app.models.weapon import Weapon
 from app.models.contractor import OwnedContractor, ContractorTemplate
 from app.models.owned_weapon import OwnedWeapon
 from app.models.user import User
-from app.schemas.battle import BattleCreate, LoadoutSubmit, BattleChoiceSubmit
+from app.schemas.battle import BattleCreate, LoadoutSubmit, BattleChoiceSubmit, TacticalChoiceSubmit
 
 from app.engine.types import AircraftData, WeaponData, ShipData, LoadoutItem
 from app.engine.air_battle import AirBattleEngine
 from app.engine.naval_battle import NavalBattleEngine
+from app.engine.tactical_air_battle import TacticalAirBattleEngine
 from app.engine.choices import AIR_PHASE_CHOICES, NAVAL_PHASE_CHOICES
 
 router = APIRouter(prefix="/battle", tags=["battle"])
@@ -140,6 +141,68 @@ def _build_air_engine(battle: Battle, db: Session) -> AirBattleEngine:
     return engine
 
 
+def _build_tactical_air_engine(battle: Battle, db: Session) -> TacticalAirBattleEngine:
+    """Reconstruct a TacticalAirBattleEngine from a Battle record."""
+    player_ac = db.query(Aircraft).filter(Aircraft.id == battle.player_aircraft_id).first()
+    enemy_ac = db.query(Aircraft).filter(Aircraft.id == battle.enemy_aircraft_id).first()
+    if not player_ac or not enemy_ac:
+        raise HTTPException(status_code=404, detail="Aircraft not found")
+
+    # Parse loadout
+    loadout_data = json.loads(battle.player_loadout) if battle.player_loadout else []
+    player_loadout = []
+    for item in loadout_data:
+        w = db.query(Weapon).filter(Weapon.id == item["weapon_id"]).first()
+        if w:
+            player_loadout.append(LoadoutItem(weapon_to_data(w), item["quantity"]))
+
+    # Build enemy loadout
+    enemy_compat_ids = json.loads(enemy_ac.compatible_weapons) if enemy_ac.compatible_weapons else []
+    enemy_loadout = []
+    for wid in enemy_compat_ids:
+        if wid:
+            w = db.query(Weapon).filter(Weapon.id == wid).first()
+            if w:
+                enemy_loadout.append(LoadoutItem(weapon_to_data(w), 4))
+
+    # Get contractor skill
+    contractor_skill = 50
+    if battle.contractor_id:
+        oc = db.query(OwnedContractor).filter(OwnedContractor.id == battle.contractor_id).first()
+        if oc:
+            contractor_skill = oc.skill_level
+
+    # Get fuel from stored state or default
+    fuel_pct = 85.0
+    if battle.battle_state:
+        st = json.loads(battle.battle_state)
+        fuel_pct = st.get("fuel_pct", 85.0)
+
+    engine = TacticalAirBattleEngine(
+        player_aircraft=aircraft_to_data(player_ac),
+        enemy_aircraft=aircraft_to_data(enemy_ac),
+        player_loadout=player_loadout,
+        enemy_loadout=enemy_loadout,
+        contractor_skill=contractor_skill,
+        fuel_pct=fuel_pct,
+        seed=battle.id * 1000 + (battle.current_phase or 1),
+    )
+
+    # Restore state
+    if battle.battle_state:
+        state = json.loads(battle.battle_state)
+        if state.get("engine_version") == 2:
+            engine.restore_from_dict(state)
+
+    return engine
+
+
+def _save_tactical_engine_state(engine: TacticalAirBattleEngine, battle: Battle):
+    """Persist tactical engine state to the Battle record."""
+    battle.battle_state = json.dumps(engine.to_dict())
+    battle.current_phase = engine.turn
+
+
 def _save_engine_state(engine: AirBattleEngine | NavalBattleEngine, battle: Battle):
     """Persist engine state to the Battle record."""
     state = {
@@ -204,6 +267,7 @@ def start_battle(data: BattleCreate, db: Session = Depends(get_db)):
             enemy_aircraft_id=enemy_aircraft_id,
             contractor_id=data.contractor_id,
             current_phase=1,
+            engine_version=2,
             status=BattleStatus.LOADOUT,
         )
         db.add(battle)
@@ -372,10 +436,19 @@ def submit_loadout(battle_id: int, data: LoadoutSubmit, db: Session = Depends(ge
     battle.player_loadout = json.dumps(data.weapons)
     battle.current_phase = 2
     battle.status = BattleStatus.IN_PROGRESS
+
+    # Store initial fuel_pct for v2
+    if battle.battle_type == BattleType.AIR and getattr(battle, 'engine_version', 1) == 2:
+        battle.battle_state = json.dumps({"engine_version": 2, "fuel_pct": data.fuel_pct})
+
     db.commit()
 
     # Return initial battle state
     if battle.battle_type == BattleType.AIR:
+        if getattr(battle, 'engine_version', 1) == 2:
+            engine = _build_tactical_air_engine(battle, db)
+            state = engine.get_current_state()
+            return _tactical_state_to_dict(state)
         engine = _build_air_engine(battle, db)
         state = engine.get_current_state()
     else:
@@ -398,6 +471,15 @@ def get_battle_state(battle_id: int, db: Session = Depends(get_db)):
     battle = db.query(Battle).filter(Battle.id == battle_id).first()
     if not battle:
         raise HTTPException(status_code=404, detail="Battle not found")
+
+    if battle.battle_type == BattleType.AIR and getattr(battle, 'engine_version', 1) == 2:
+        engine = _build_tactical_air_engine(battle, db)
+        state = engine.get_current_state()
+        result = _tactical_state_to_dict(state)
+        # Include completed turns
+        phases = db.query(BattlePhase).filter(BattlePhase.battle_id == battle_id).order_by(BattlePhase.phase_number).all()
+        result["completed_turns"] = [{"turn_number": p.phase_number, "player_choice": p.player_choice, "outcome": json.loads(p.outcome)} for p in phases]
+        return result
 
     if battle.battle_type == BattleType.AIR:
         engine = _build_air_engine(battle, db)
@@ -430,6 +512,136 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
     if battle.status != BattleStatus.IN_PROGRESS:
         raise HTTPException(status_code=400, detail="Battle is not in progress")
 
+    # ─── Tactical v2 air battle ───
+    if battle.battle_type == BattleType.AIR and getattr(battle, 'engine_version', 1) == 2:
+        engine = _build_tactical_air_engine(battle, db)
+
+        # Parse weapon_id from action key if not provided separately
+        action = data.choice
+        weapon_id = None
+        if action.startswith("fire_bvr_") or action.startswith("fire_ir_"):
+            parts = action.rsplit("_", 1)
+            if parts[-1].isdigit():
+                weapon_id = int(parts[-1])
+
+        turn_result = engine.run_turn(action, weapon_id)
+        _save_tactical_engine_state(engine, battle)
+
+        # Save turn as a phase record for persistence
+        phase_record = BattlePhase(
+            battle_id=battle_id,
+            phase_number=turn_result.turn_number,
+            phase_name=f"Turn {turn_result.turn_number}",
+            player_choice=action,
+            outcome=json.dumps({
+                "player_action": turn_result.player_action,
+                "enemy_action": turn_result.enemy_action,
+                "weapon_fired": turn_result.weapon_fired,
+                "shot_pk": turn_result.shot_pk,
+                "shot_hit": turn_result.shot_hit,
+                "enemy_weapon_fired": turn_result.enemy_weapon_fired,
+                "enemy_shot_pk": turn_result.enemy_shot_pk,
+                "enemy_shot_hit": turn_result.enemy_shot_hit,
+                "damage_dealt": turn_result.damage_dealt,
+                "damage_taken": turn_result.damage_taken,
+                "range_change": turn_result.range_change,
+                "new_range": turn_result.new_range,
+                "zone": turn_result.zone,
+                "intel_revealed": turn_result.intel_revealed,
+                "fuel_consumed": turn_result.fuel_consumed,
+                "narrative": turn_result.narrative,
+                "factors": turn_result.factors,
+            }),
+        )
+        db.add(phase_record)
+
+        # Check completion
+        if engine.status == "completed":
+            report = engine.get_battle_result()
+            battle.status = BattleStatus.COMPLETED_SUCCESS if report.success else BattleStatus.COMPLETED_FAILURE
+            battle.completed_at = datetime.now()
+            battle.final_result = json.dumps({
+                "success": report.success,
+                "exit_reason": report.exit_reason,
+                "turns_played": report.turns_played,
+                "payout": report.payout,
+                "reputation_change": report.reputation_change,
+                "damage_dealt": report.total_damage_dealt,
+                "damage_taken": report.total_damage_taken,
+                "fuel_remaining": report.fuel_remaining,
+                "narrative": report.narrative_summary,
+            })
+
+            user = db.query(User).filter(User.id == battle.user_id).first()
+            if user:
+                user.balance += report.payout
+                user.reputation = max(0, min(100, user.reputation + report.reputation_change))
+
+            if battle.contract_id:
+                contract = db.query(ActiveContract).filter(ActiveContract.id == battle.contract_id).first()
+                if contract:
+                    contract.status = MissionStatus.COMPLETED_SUCCESS if report.success else MissionStatus.COMPLETED_FAILURE
+                    contract.payout_received = report.payout
+                    contract.reputation_change = report.reputation_change
+                    contract.completed_at = datetime.now()
+                    mission_log = MissionLog(
+                        user_id=battle.user_id,
+                        mission_template_id=contract.mission_template_id,
+                        status=MissionStatus.COMPLETED_SUCCESS if report.success else MissionStatus.COMPLETED_FAILURE,
+                        payout_earned=report.payout,
+                        reputation_change=report.reputation_change,
+                        enemy_strength=int(report.total_damage_dealt),
+                        ally_strength=int(100 - report.total_damage_taken),
+                        random_events=json.dumps([]),
+                        started_at=contract.started_at or datetime.now(),
+                        ended_at=datetime.now(),
+                    )
+                    db.add(mission_log)
+
+        db.commit()
+
+        # Build v2 response
+        response = {
+            "engine_version": 2,
+            "turn_number": turn_result.turn_number,
+            "player_action": turn_result.player_action,
+            "enemy_action": turn_result.enemy_action,
+            "weapon_fired": turn_result.weapon_fired,
+            "shot_pk": turn_result.shot_pk,
+            "shot_hit": turn_result.shot_hit,
+            "enemy_weapon_fired": turn_result.enemy_weapon_fired,
+            "enemy_shot_pk": turn_result.enemy_shot_pk,
+            "enemy_shot_hit": turn_result.enemy_shot_hit,
+            "damage_dealt": turn_result.damage_dealt,
+            "damage_taken": turn_result.damage_taken,
+            "range_change": turn_result.range_change,
+            "new_range": turn_result.new_range,
+            "zone": turn_result.zone,
+            "intel_revealed": turn_result.intel_revealed,
+            "fuel_consumed": turn_result.fuel_consumed,
+            "narrative": turn_result.narrative,
+            "factors": turn_result.factors,
+            "next_actions": [
+                {"key": a.key, "label": a.label, "description": a.description,
+                 "risk_hint": a.risk_hint, "weapon_id": a.weapon_id, "pk_preview": a.pk_preview}
+                for a in turn_result.next_actions
+            ],
+        }
+
+        # Updated state
+        current_state = engine.get_current_state()
+        response["state"] = _tactical_state_to_dict(current_state)
+
+        if battle.status in (BattleStatus.COMPLETED_SUCCESS, BattleStatus.COMPLETED_FAILURE):
+            final = json.loads(battle.final_result) if battle.final_result else {}
+            response["battle_complete"] = True
+            response["final_report"] = final
+        else:
+            response["battle_complete"] = False
+
+        return response
+
+    # ─── Legacy v1 air battle ───
     if battle.battle_type == BattleType.AIR:
         engine = _build_air_engine(battle, db)
         phase_result = engine.run_phase(data.choice)
@@ -599,9 +811,10 @@ def get_battle_report(battle_id: int, db: Session = Depends(get_db)):
         player_name = ps.name if ps else "Unknown"
         enemy_name = es.name if es else "Unknown"
 
-    return {
+    report = {
         "battle_id": battle.id,
         "battle_type": battle.battle_type.value,
+        "engine_version": getattr(battle, 'engine_version', 1),
         "player_name": player_name,
         "enemy_name": enemy_name,
         "success": final.get("success", False),
@@ -612,6 +825,14 @@ def get_battle_report(battle_id: int, db: Session = Depends(get_db)):
         "narrative_summary": final.get("narrative", ""),
         "phases": phase_list,
     }
+
+    # v2 extras
+    if getattr(battle, 'engine_version', 1) == 2:
+        report["exit_reason"] = final.get("exit_reason", "")
+        report["turns_played"] = final.get("turns_played", len(phase_list))
+        report["fuel_remaining"] = final.get("fuel_remaining", 0)
+
+    return report
 
 
 def _state_to_dict(state) -> dict:
@@ -631,4 +852,29 @@ def _state_to_dict(state) -> dict:
             for c in state.available_choices
         ],
         "status": state.status,
+    }
+
+
+def _tactical_state_to_dict(state) -> dict:
+    """Convert TacticalBattleState to a JSON-serializable dict."""
+    return {
+        "engine_version": 2,
+        "turn": state.turn,
+        "max_turns": state.max_turns,
+        "range_km": state.range_km,
+        "zone": state.zone,
+        "player_name": state.player_name,
+        "enemy_intel": state.enemy_intel,
+        "player_ammo": state.player_ammo,
+        "fuel_pct": state.fuel_pct,
+        "damage_pct": state.damage_pct,
+        "ecm_charges": state.ecm_charges,
+        "flare_uses": state.flare_uses,
+        "available_actions": [
+            {"key": a.key, "label": a.label, "description": a.description,
+             "risk_hint": a.risk_hint, "weapon_id": a.weapon_id, "pk_preview": a.pk_preview}
+            for a in state.available_actions
+        ],
+        "status": state.status,
+        "exit_reason": state.exit_reason,
     }

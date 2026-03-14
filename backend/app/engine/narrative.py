@@ -1,8 +1,11 @@
 """Template-based narrative generation for battle phases."""
 
 import random
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING
 from app.engine.types import DetectionResult, MissilePkResult, SalvoResult
+
+if TYPE_CHECKING:
+    from app.engine.types import TurnResult
 
 
 def detection_narrative(
@@ -158,3 +161,113 @@ def damage_phase_narrative(
     elif choice == "call_reinforcements":
         return f"You radio for support while maintaining contact. Reinforcements will shift the balance."
     return ""
+
+
+# ═══ Tactical Battle System (v2) Narratives ═══
+
+_ACTION_LABELS = {
+    "scan": "scans the target",
+    "ecm": "deploys ECM jamming",
+    "flares": "pops flares",
+    "close": "closes range",
+    "extend": "extends away",
+    "break_turn": "breaks hard",
+    "go_passive": "goes dark",
+    "disengage": "disengages",
+    "guns": "engages with guns",
+    "fire_bvr": "fires a BVR missile",
+    "fire_ir": "fires an IR missile",
+}
+
+
+def _action_label(action: str) -> str:
+    """Get readable label for a player/enemy action."""
+    for prefix, label in _ACTION_LABELS.items():
+        if action.startswith(prefix):
+            return label
+    return action.replace("_", " ")
+
+
+def turn_narrative(
+    player_name: str,
+    enemy_name: str,
+    player_action: str,
+    enemy_action: str,
+    result: "TurnResult",
+) -> str:
+    """Generate narrative for a tactical turn."""
+    parts = []
+
+    player_verb = _action_label(player_action)
+    enemy_verb = _action_label(enemy_action)
+
+    # Opening — what both sides did
+    templates_both_fire = [
+        f"Both pilots commit — you fire while the {enemy_name} launches back.",
+        f"Simultaneous engagement! You and the {enemy_name} trade shots.",
+    ]
+    templates_fire_vs_maneuver = [
+        f"You {player_verb} as the {enemy_name} {enemy_verb}.",
+        f"Your {player_name} {player_verb}. The {enemy_name} responds by {enemy_verb.rstrip('s')}ing.",
+    ]
+    templates_maneuver_vs_fire = [
+        f"You {player_verb} as the {enemy_name} {enemy_verb}.",
+        f"The {enemy_name} {enemy_verb} while you {player_verb}.",
+    ]
+    templates_both_maneuver = [
+        f"You {player_verb} while the {enemy_name} {enemy_verb}.",
+        f"Both aircraft maneuver — you {player_verb}, the {enemy_name} {enemy_verb}.",
+    ]
+
+    player_fires = player_action.startswith("fire_") or player_action == "guns"
+    enemy_fires = enemy_action.startswith("fire_") or enemy_action == "guns"
+
+    if player_fires and enemy_fires:
+        parts.append(random.choice(templates_both_fire))
+    elif player_fires:
+        parts.append(random.choice(templates_fire_vs_maneuver))
+    elif enemy_fires:
+        parts.append(random.choice(templates_maneuver_vs_fire))
+    else:
+        parts.append(random.choice(templates_both_maneuver))
+
+    # Player shot result
+    if result.shot_hit is not None:
+        weapon_name = result.weapon_fired or "weapon"
+        if result.shot_hit:
+            parts.append(f"Your {weapon_name} hits! {result.damage_dealt:.0f}% damage dealt.")
+        else:
+            parts.append(f"Your {weapon_name} misses — Pk was {result.shot_pk:.0%}.")
+
+    # Enemy shot result
+    if result.enemy_shot_hit is not None:
+        enemy_weapon = result.enemy_weapon_fired or "weapon"
+        if result.enemy_shot_hit:
+            parts.append(f"The {enemy_name}'s {enemy_weapon} strikes home — {result.damage_taken:.0f}% damage taken!")
+        else:
+            parts.append(f"The {enemy_name}'s {enemy_weapon} misses.")
+
+    # Intel reveal
+    if result.intel_revealed:
+        parts.append(f"Scan reveals enemy {result.intel_revealed}.")
+
+    # Scan action (when no intel revealed)
+    if player_action == "scan" and not result.intel_revealed:
+        parts.append("Scan complete — no new data.")
+
+    # Range change
+    if abs(result.range_change) > 5:
+        if result.range_change < 0:
+            parts.append(f"Range closes to {result.new_range:.0f}km.")
+        else:
+            parts.append(f"Range opens to {result.new_range:.0f}km.")
+
+    # Zone transition
+    old_zone = result.zone  # This is the zone after the turn
+    # We note it if interesting
+    if result.new_range <= 15 and result.new_range + abs(result.range_change) > 15:
+        parts.append("Entering WVR — weapons free!")
+    elif result.new_range <= 40 and result.new_range + abs(result.range_change) > 40:
+        parts.append("Entering transition zone.")
+
+    return " ".join(parts)

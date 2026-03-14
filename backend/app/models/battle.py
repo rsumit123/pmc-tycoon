@@ -37,7 +37,8 @@ class Battle(Base):
     contractor_id = Column(Integer, ForeignKey("owned_contractors.id"), nullable=True)
 
     # State
-    current_phase = Column(Integer, default=1)  # 1-6
+    current_phase = Column(Integer, default=1)  # 1-6 for v1, turn number for v2
+    engine_version = Column(Integer, default=2)  # 1=old 6-phase, 2=tactical
     player_loadout = Column(String, nullable=True)  # JSON: [{weapon_id, quantity}]
     battle_state = Column(String, nullable=True)  # JSON: full engine state snapshot
     final_result = Column(String, nullable=True)  # JSON: after-action report data

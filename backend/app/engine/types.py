@@ -160,3 +160,99 @@ class AfterActionReport:
     payout: int
     reputation_change: int
     narrative_summary: str
+
+
+# ═══ Tactical Battle System (v2) ═══
+
+@dataclass
+class TurnAction:
+    """A single action the player can take during a tactical turn."""
+    key: str  # "fire_bvr_1", "scan", "close", "extend", etc.
+    label: str
+    description: str
+    risk_hint: str  # "low", "medium", "high"
+    weapon_id: Optional[int] = None
+    pk_preview: Optional[float] = None  # estimated Pk if this is a fire action
+
+
+@dataclass
+class EnemyIntel:
+    """Fog of war state — what the player knows about the enemy."""
+    name: str
+    # Which stats have been revealed
+    radar_known: bool = False
+    rcs_known: bool = False
+    ecm_known: bool = False
+    loadout_known: bool = False
+    fuel_known: bool = False
+    damage_known: bool = False
+    # Revealed values (populated when discovered)
+    radar_type: Optional[str] = None
+    radar_range_km: Optional[int] = None
+    rcs_m2: Optional[float] = None
+    ecm_suite: Optional[str] = None
+    ecm_rating: Optional[int] = None
+    observed_weapons: List[str] = field(default_factory=list)
+    fuel_pct: Optional[float] = None
+    damage_pct: Optional[float] = None
+
+
+INTEL_REVEAL_ORDER = ["radar", "rcs", "ecm", "loadout", "fuel", "damage"]
+
+
+@dataclass
+class TurnResult:
+    """Result of a single tactical turn."""
+    turn_number: int
+    player_action: str
+    enemy_action: str
+    weapon_fired: Optional[str] = None
+    shot_pk: Optional[float] = None
+    shot_hit: Optional[bool] = None
+    enemy_weapon_fired: Optional[str] = None
+    enemy_shot_pk: Optional[float] = None
+    enemy_shot_hit: Optional[bool] = None
+    damage_dealt: float = 0.0
+    damage_taken: float = 0.0
+    range_change: float = 0.0
+    new_range: float = 0.0
+    zone: str = "BVR"
+    intel_revealed: Optional[str] = None
+    fuel_consumed: float = 0.0
+    narrative: str = ""
+    factors: List[Dict[str, Any]] = field(default_factory=list)
+    next_actions: List[TurnAction] = field(default_factory=list)
+
+
+@dataclass
+class TacticalBattleState:
+    """Full tactical battle state snapshot for frontend."""
+    turn: int
+    max_turns: int
+    range_km: float
+    zone: str  # "BVR", "TRANSITION", "WVR"
+    player_name: str
+    enemy_intel: Dict[str, Any]
+    player_ammo: List[Dict[str, Any]]
+    fuel_pct: float
+    damage_pct: float
+    ecm_charges: int
+    flare_uses: int
+    available_actions: List[TurnAction]
+    status: str  # "in_progress", "completed"
+    exit_reason: Optional[str] = None
+
+
+@dataclass
+class TacticalAfterActionReport:
+    """After-action report for the tactical battle system."""
+    success: bool
+    exit_reason: str
+    turns_played: int
+    turns: List[TurnResult]
+    total_damage_dealt: float
+    total_damage_taken: float
+    fuel_remaining: float
+    payout: int
+    reputation_change: int
+    narrative_summary: str

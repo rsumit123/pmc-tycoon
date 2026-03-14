@@ -104,7 +104,7 @@ export const apiService = {
   startBattle: (data: any) => api.post('/battle/start', data),
   submitLoadout: (battleId: number, data: any) => api.post(`/battle/${battleId}/loadout`, data),
   getBattleState: (battleId: number) => api.get(`/battle/${battleId}/state`),
-  submitChoice: (battleId: number, choice: string) => api.post(`/battle/${battleId}/choose`, { choice }),
+  submitChoice: (battleId: number, choice: string, weaponId?: number) => api.post(`/battle/${battleId}/choose`, { choice, weapon_id: weaponId }),
   getBattleReport: (battleId: number) => api.get(`/battle/${battleId}/report`),
 };
 

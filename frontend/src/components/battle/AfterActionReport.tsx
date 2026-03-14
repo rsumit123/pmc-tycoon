@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import {
   Trophy,
   Skull,
   DollarSign,
   ChevronRight,
   Zap,
+  ChevronDown,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,6 +22,7 @@ interface PhaseData {
 interface ReportData {
   battle_id: number;
   battle_type: string;
+  engine_version?: number;
   player_name: string;
   enemy_name: string;
   success: boolean;
@@ -29,6 +32,9 @@ interface ReportData {
   damage_taken: number;
   narrative_summary: string;
   phases: PhaseData[];
+  exit_reason?: string;
+  turns_played?: number;
+  fuel_remaining?: number;
 }
 
 interface AfterActionReportProps {
@@ -55,8 +61,27 @@ const choiceLabels: Record<string, string> = {
   pursue: 'Pursue', withdraw: 'Withdraw', damage_control: 'Damage Control',
 };
 
+const exitReasonLabels: Record<string, string> = {
+  enemy_destroyed: 'Enemy Destroyed',
+  player_destroyed: 'Shot Down',
+  player_bingo_fuel: 'Bingo Fuel',
+  player_disengaged: 'Disengaged',
+  enemy_disengaged: 'Enemy Escaped',
+  player_winchester: 'Out of Ammo',
+  max_turns_reached: 'Time Limit',
+};
+
 export const AfterActionReport = ({ report }: AfterActionReportProps) => {
   const navigate = useNavigate();
+  const [expandedTurns, setExpandedTurns] = useState(false);
+  const isV2 = (report.engine_version || 1) >= 2;
+  const manyTurns = isV2 && report.phases.length > 6;
+
+  // For v2 with many turns, show first 3 + last 3, collapsible middle
+  const visiblePhases = manyTurns && !expandedTurns
+    ? [...report.phases.slice(0, 3), ...report.phases.slice(-3)]
+    : report.phases;
+  const hiddenCount = manyTurns ? report.phases.length - 6 : 0;
 
   return (
     <div className="min-h-[100dvh] bg-gray-950 flex flex-col">
@@ -76,6 +101,20 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
         <p className="text-sm text-gray-400 mt-1">
           {report.player_name} vs {report.enemy_name}
         </p>
+        {isV2 && (
+          <div className="flex items-center justify-center gap-3 mt-2">
+            {report.exit_reason && (
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gray-800 text-gray-300">
+                {exitReasonLabels[report.exit_reason] || report.exit_reason}
+              </span>
+            )}
+            {report.turns_played && (
+              <span className="text-[10px] text-gray-500">
+                {report.turns_played} turns
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Scrollable content */}
@@ -128,50 +167,115 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
 
         {/* Phase timeline */}
         <div>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-3">Battle Timeline</p>
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-3">
+            Battle Timeline {isV2 && report.turns_played ? `— ${report.turns_played} turns` : ''}
+          </p>
           <div className="space-y-0">
-            {report.phases.map((phase, i) => {
+            {visiblePhases.map((phase, i) => {
               const q = qualityStyles[phase.choice_quality] || qualityStyles.neutral;
+              const isV2Phase = isV2;
+              const turnLabel = isV2Phase ? `Turn ${phase.phase_number}` : `Phase ${phase.phase_number}: ${phase.phase_name}`;
+              const choiceDisplay = choiceLabels[phase.player_choice] || phase.player_choice.replace(/_/g, ' ');
+
+              // For v2, extract hit/miss from outcome differently
+              const v2Hit = isV2Phase && phase.outcome?.shot_hit;
+              const v2Miss = isV2Phase && phase.outcome?.shot_hit === false;
+              const v2WeaponFired = isV2Phase ? phase.outcome?.weapon_fired : null;
+              const v2ShotPk = isV2Phase ? phase.outcome?.shot_pk : null;
+              const v2DamageDealt = isV2Phase ? phase.outcome?.damage_dealt : null;
+
+              // Show expand button after first 3 if collapsed
+              const showExpander = manyTurns && !expandedTurns && i === 2;
+
               return (
-                <div key={i} className="relative flex gap-3">
-                  {/* Timeline line */}
-                  <div className="flex flex-col items-center">
-                    <div className={`w-3 h-3 rounded-full ${q.dot} shrink-0 mt-1`} />
-                    {i < report.phases.length - 1 && <div className="w-px flex-1 bg-gray-800 my-1" />}
-                  </div>
-
-                  {/* Phase card */}
-                  <div className="flex-1 bg-gray-900 rounded-xl border border-gray-800/60 p-3 mb-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-white">
-                        Phase {phase.phase_number}: {phase.phase_name}
-                      </span>
-                      <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
-                        q.dot.replace('bg-', 'bg-').replace('-400', '-500/15')
-                      } ${q.dot.replace('bg-', 'text-')}`}>
-                        {q.label}
-                      </span>
+                <div key={`${phase.phase_number}-${i}`}>
+                  <div className="relative flex gap-3">
+                    {/* Timeline line */}
+                    <div className="flex flex-col items-center">
+                      <div className={`w-3 h-3 rounded-full ${isV2Phase ? (v2Hit ? 'bg-emerald-400' : v2Miss ? 'bg-red-400' : 'bg-gray-400') : q.dot} shrink-0 mt-1`} />
+                      {i < visiblePhases.length - 1 && <div className="w-px flex-1 bg-gray-800 my-1" />}
                     </div>
-                    <p className="text-[11px] text-emerald-400 font-medium mb-1">
-                      → {choiceLabels[phase.player_choice] || phase.player_choice}
-                    </p>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      {phase.narrative.length > 150 ? phase.narrative.slice(0, 150) + '...' : phase.narrative}
-                    </p>
 
-                    {/* Shot result if applicable */}
-                    {phase.outcome?.player_shot && (
-                      <div className={`mt-2 flex items-center gap-2 px-2 py-1 rounded-lg ${
-                        phase.outcome.player_shot.hit ? 'bg-emerald-500/10' : 'bg-red-500/10'
-                      }`}>
-                        <span className="text-xs font-bold">{phase.outcome.player_shot.hit ? '💥' : '💨'}</span>
-                        <span className="text-[10px] text-gray-300">
-                          {phase.outcome.player_shot.weapon} — Pk {(phase.outcome.player_shot.pk * 100).toFixed(0)}% —{' '}
-                          {phase.outcome.player_shot.hit ? 'HIT' : 'MISS'}
-                        </span>
+                    {/* Phase card */}
+                    <div className="flex-1 bg-gray-900 rounded-xl border border-gray-800/60 p-3 mb-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-white">{turnLabel}</span>
+                        {!isV2Phase && (
+                          <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                            q.dot.replace('bg-', 'bg-').replace('-400', '-500/15')
+                          } ${q.dot.replace('bg-', 'text-')}`}>
+                            {q.label}
+                          </span>
+                        )}
+                        {isV2Phase && phase.outcome?.zone && (
+                          <span className="text-[9px] font-bold text-gray-500">{phase.outcome.zone}</span>
+                        )}
                       </div>
-                    )}
+                      <p className="text-[11px] text-emerald-400 font-medium mb-1">
+                        → {choiceDisplay.toUpperCase()}
+                        {isV2Phase && phase.outcome?.enemy_action && (
+                          <span className="text-red-400 ml-2">
+                            vs {(phase.outcome.enemy_action as string).replace(/_/g, ' ').toUpperCase()}
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-400 leading-relaxed">
+                        {(phase.narrative || phase.outcome?.narrative || '').length > 150
+                          ? (phase.narrative || phase.outcome?.narrative || '').slice(0, 150) + '...'
+                          : (phase.narrative || phase.outcome?.narrative || '')}
+                      </p>
+
+                      {/* v1 shot result */}
+                      {!isV2Phase && phase.outcome?.player_shot && (
+                        <div className={`mt-2 flex items-center gap-2 px-2 py-1 rounded-lg ${
+                          phase.outcome.player_shot.hit ? 'bg-emerald-500/10' : 'bg-red-500/10'
+                        }`}>
+                          <span className="text-xs font-bold">{phase.outcome.player_shot.hit ? '💥' : '💨'}</span>
+                          <span className="text-[10px] text-gray-300">
+                            {phase.outcome.player_shot.weapon} — Pk {(phase.outcome.player_shot.pk * 100).toFixed(0)}% —{' '}
+                            {phase.outcome.player_shot.hit ? 'HIT' : 'MISS'}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* v2 shot result */}
+                      {isV2Phase && v2WeaponFired && v2ShotPk != null && (
+                        <div className={`mt-2 flex items-center gap-2 px-2 py-1 rounded-lg ${
+                          v2Hit ? 'bg-emerald-500/10' : 'bg-red-500/10'
+                        }`}>
+                          <span className="text-xs font-bold">{v2Hit ? '💥' : '💨'}</span>
+                          <span className="text-[10px] text-gray-300">
+                            {v2WeaponFired} — Pk {(v2ShotPk * 100).toFixed(0)}% —{' '}
+                            {v2Hit ? `HIT ${v2DamageDealt?.toFixed(0)}%` : 'MISS'}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* v2 enemy shot */}
+                      {isV2Phase && phase.outcome?.enemy_weapon_fired && (
+                        <div className={`mt-1 flex items-center gap-2 px-2 py-1 rounded-lg ${
+                          phase.outcome.enemy_shot_hit ? 'bg-red-500/10' : 'bg-emerald-500/5'
+                        }`}>
+                          <span className="text-xs font-bold">{phase.outcome.enemy_shot_hit ? '⚠' : '✓'}</span>
+                          <span className="text-[10px] text-gray-300">
+                            Enemy {phase.outcome.enemy_weapon_fired} —{' '}
+                            {phase.outcome.enemy_shot_hit ? `HIT ${phase.outcome.damage_taken?.toFixed(0)}%` : 'EVADED'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Expand button for collapsed turns */}
+                  {showExpander && (
+                    <button
+                      onClick={() => setExpandedTurns(true)}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 mb-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                      Show {hiddenCount} more turns
+                    </button>
+                  )}
                 </div>
               );
             })}

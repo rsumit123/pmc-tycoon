@@ -100,7 +100,7 @@ export const LoadoutScreen = ({ battleId, aircraft, enemy, weapons, onReady }: L
         weapon_id: Number(id),
         quantity: qty,
       }));
-      const res = await apiService.submitLoadout(battleId, { weapons: weaponsList });
+      const res = await apiService.submitLoadout(battleId, { weapons: weaponsList, fuel_pct: fuelPct });
       onReady(res.data);
     } catch (err) {
       console.error('Loadout submit failed:', err);

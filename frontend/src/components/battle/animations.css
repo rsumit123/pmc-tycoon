@@ -218,3 +218,42 @@
   );
   pointer-events: none;
 }
+
+/* ═══ TACTICAL BATTLE V2 ═══ */
+
+/* Zone transition — color pulse when crossing zone boundaries */
+@keyframes zoneTransition {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(245, 158, 11, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+.zone-transition {
+  animation: zoneTransition 0.8s ease-out;
+}
+
+/* Intel reveal — brief highlight flash */
+@keyframes intelReveal {
+  0% { background-color: rgba(139, 92, 246, 0.3); }
+  100% { background-color: transparent; }
+}
+.intel-reveal {
+  animation: intelReveal 1s ease-out;
+}
+
+/* ECM active — pulsing border */
+@keyframes ecmActive {
+  0%, 100% { border-color: rgba(34, 211, 238, 0.3); box-shadow: 0 0 8px rgba(34, 211, 238, 0.1); }
+  50% { border-color: rgba(34, 211, 238, 0.6); box-shadow: 0 0 16px rgba(34, 211, 238, 0.2); }
+}
+.ecm-active {
+  animation: ecmActive 1.5s ease-in-out infinite;
+}
+
+/* Low fuel warning — amber pulse */
+@keyframes lowFuelPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.low-fuel-warning {
+  animation: lowFuelPulse 1.2s ease-in-out infinite;
+}
