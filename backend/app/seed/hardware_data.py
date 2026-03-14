@@ -742,3 +742,74 @@ def seed_hardware(db: Session) -> None:
             db.add(Ship(**s_data))
 
     db.commit()
+
+    # ── BATTLE-TYPE MISSION TEMPLATES ──
+
+    from app.models.contract import MissionTemplate, Faction
+
+    # Look up aircraft/ship IDs by name
+    def get_ac_id(name):
+        ac = db.query(Aircraft).filter(Aircraft.name == name).first()
+        return ac.id if ac else None
+
+    def get_ship_id(name):
+        s = db.query(Ship).filter(Ship.name == name).first()
+        return s.id if s else None
+
+    battle_missions = [
+        {
+            "title": "Air Superiority: Rafale vs F-16",
+            "description": "Intercept and engage an F-16C Block 52 operating in contested airspace. BVR engagement expected.",
+            "faction": Faction.ATLANTIC_COALITION,
+            "required_unit_types": '["fighter"]',
+            "base_payout": 35000,
+            "risk_level": 55,
+            "political_impact": 10,
+            "estimated_duration_hours": 4,
+            "battle_type": "air",
+            "enemy_aircraft_id": get_ac_id("F-16C Block 52"),
+        },
+        {
+            "title": "Dogfight: Typhoon vs Su-30MKI",
+            "description": "Engage a Su-30MKI Flanker in a head-on BVR duel over open waters. The Flanker is heavily armed.",
+            "faction": Faction.DESERT_BLOC,
+            "required_unit_types": '["fighter"]',
+            "base_payout": 45000,
+            "risk_level": 70,
+            "political_impact": -10,
+            "estimated_duration_hours": 4,
+            "battle_type": "air",
+            "enemy_aircraft_id": get_ac_id("Su-30MKI"),
+        },
+        {
+            "title": "Naval Interdiction: Chennai vs Type 052D",
+            "description": "Engage a Chinese Type 052D destroyer threatening allied shipping lanes. Expect heavy SAM defense.",
+            "faction": Faction.PACIFIC_ALLIANCE,
+            "required_unit_types": '["destroyer"]',
+            "base_payout": 50000,
+            "risk_level": 65,
+            "political_impact": 15,
+            "estimated_duration_hours": 8,
+            "battle_type": "naval",
+            "enemy_ship_id": get_ship_id("Type 052D Kunming"),
+        },
+        {
+            "title": "Surface Duel: Gorshkov vs Burke",
+            "description": "An Arleigh Burke destroyer has been detected. Engage with BrahMos anti-ship missiles.",
+            "faction": Faction.SAHARA_SINDICATE,
+            "required_unit_types": '["frigate"]',
+            "base_payout": 55000,
+            "risk_level": 75,
+            "political_impact": -15,
+            "estimated_duration_hours": 8,
+            "battle_type": "naval",
+            "enemy_ship_id": get_ship_id("USS Arleigh Burke IIA"),
+        },
+    ]
+
+    for m_data in battle_missions:
+        existing = db.query(MissionTemplate).filter(MissionTemplate.title == m_data["title"]).first()
+        if not existing:
+            db.add(MissionTemplate(**m_data))
+
+    db.commit()

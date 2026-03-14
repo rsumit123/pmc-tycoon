@@ -38,6 +38,11 @@ class MissionTemplate(Base):
     # Duration
     estimated_duration_hours = Column(Integer, default=24)
     
+    # Battle system fields (nullable for legacy missions)
+    battle_type = Column(String, nullable=True)  # "air", "naval", or null for legacy
+    enemy_aircraft_id = Column(Integer, ForeignKey("aircraft.id"), nullable=True)
+    enemy_ship_id = Column(Integer, ForeignKey("ships.id"), nullable=True)
+
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

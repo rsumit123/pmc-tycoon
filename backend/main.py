@@ -24,6 +24,7 @@ from app.api.simulation import router as simulation_router
 from app.api.aircraft import router as aircraft_router
 from app.api.weapons import router as weapons_router
 from app.api.ships import router as ships_router
+from app.api.battle import router as battle_router
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -61,6 +62,7 @@ app.include_router(simulation_router)
 app.include_router(aircraft_router)
 app.include_router(weapons_router)
 app.include_router(ships_router)
+app.include_router(battle_router)
 
 @app.get("/")
 async def root():

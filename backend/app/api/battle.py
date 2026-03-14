@@ -1,0 +1,604 @@
+"""Battle API — stateful endpoints for the 6-phase tactical battle system."""
+
+import json
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.models.battle import Battle, BattlePhase, BattleType, BattleStatus
+from app.models.contract import MissionTemplate, ActiveContract, MissionStatus, MissionLog
+from app.models.aircraft import Aircraft
+from app.models.ship import Ship
+from app.models.weapon import Weapon
+from app.models.contractor import OwnedContractor, ContractorTemplate
+from app.models.user import User
+from app.schemas.battle import BattleCreate, LoadoutSubmit, BattleChoiceSubmit
+
+from app.engine.types import AircraftData, WeaponData, ShipData, LoadoutItem
+from app.engine.air_battle import AirBattleEngine
+from app.engine.naval_battle import NavalBattleEngine
+from app.engine.choices import AIR_PHASE_CHOICES, NAVAL_PHASE_CHOICES
+
+router = APIRouter(prefix="/battle", tags=["battle"])
+
+
+# ─── Helpers to convert DB models to engine dataclasses ───
+
+def aircraft_to_data(a: Aircraft) -> AircraftData:
+    return AircraftData(
+        id=a.id, name=a.name, origin=a.origin, role=a.role, generation=a.generation,
+        max_speed_mach=a.max_speed_mach, max_speed_loaded_mach=a.max_speed_loaded_mach,
+        combat_radius_km=a.combat_radius_km, service_ceiling_ft=a.service_ceiling_ft,
+        max_g_load=a.max_g_load, thrust_to_weight_clean=a.thrust_to_weight_clean,
+        wing_loading_kg_m2=a.wing_loading_kg_m2,
+        instantaneous_turn_rate_deg_s=a.instantaneous_turn_rate_deg_s,
+        sustained_turn_rate_deg_s=a.sustained_turn_rate_deg_s,
+        empty_weight_kg=a.empty_weight_kg, max_takeoff_weight_kg=a.max_takeoff_weight_kg,
+        internal_fuel_kg=a.internal_fuel_kg, max_payload_kg=a.max_payload_kg,
+        hardpoints=a.hardpoints, radar_type=a.radar_type, radar_range_km=a.radar_range_km,
+        rcs_m2=a.rcs_m2, irst=a.irst, ecm_suite=a.ecm_suite or "",
+        ecm_rating=a.ecm_rating, chaff_count=a.chaff_count, flare_count=a.flare_count,
+        towed_decoy=a.towed_decoy,
+    )
+
+
+def weapon_to_data(w: Weapon) -> WeaponData:
+    return WeaponData(
+        id=w.id, name=w.name, weapon_type=w.weapon_type.value, weight_kg=w.weight_kg,
+        max_range_km=w.max_range_km, no_escape_range_km=w.no_escape_range_km,
+        min_range_km=w.min_range_km, speed_mach=w.speed_mach, guidance=w.guidance,
+        seeker_generation=w.seeker_generation, base_pk=w.base_pk, warhead_kg=w.warhead_kg,
+        eccm_rating=w.eccm_rating, maneuverability_g=w.maneuverability_g,
+    )
+
+
+def ship_to_data(s: Ship, db: Session) -> ShipData:
+    """Convert Ship model to ShipData, resolving weapon system references."""
+    def resolve_weapons(json_str: str | None):
+        if not json_str:
+            return []
+        items = json.loads(json_str)
+        result = []
+        for item in items:
+            w = db.query(Weapon).filter(Weapon.id == item["weapon_id"]).first()
+            if w:
+                result.append({"weapon": weapon_to_data(w), "count": item["count"]})
+        return result
+
+    return ShipData(
+        id=s.id, name=s.name, class_name=s.class_name, origin=s.origin,
+        ship_type=s.ship_type.value, displacement_tons=s.displacement_tons,
+        max_speed_knots=s.max_speed_knots, radar_type=s.radar_type,
+        radar_range_km=s.radar_range_km, ecm_suite=s.ecm_suite or "",
+        ecm_rating=s.ecm_rating, compartments=s.compartments,
+        anti_ship_missiles=resolve_weapons(s.anti_ship_missiles),
+        sam_systems=resolve_weapons(s.sam_systems),
+        ciws=resolve_weapons(s.ciws),
+    )
+
+
+def _build_air_engine(battle: Battle, db: Session) -> AirBattleEngine:
+    """Reconstruct an AirBattleEngine from a Battle record."""
+    player_ac = db.query(Aircraft).filter(Aircraft.id == battle.player_aircraft_id).first()
+    enemy_ac = db.query(Aircraft).filter(Aircraft.id == battle.enemy_aircraft_id).first()
+    if not player_ac or not enemy_ac:
+        raise HTTPException(status_code=404, detail="Aircraft not found")
+
+    # Parse loadout
+    loadout_data = json.loads(battle.player_loadout) if battle.player_loadout else []
+    player_loadout = []
+    for item in loadout_data:
+        w = db.query(Weapon).filter(Weapon.id == item["weapon_id"]).first()
+        if w:
+            player_loadout.append(LoadoutItem(weapon_to_data(w), item["quantity"]))
+
+    # Build a basic enemy loadout from compatible weapons
+    enemy_compat = json.loads(player_ac.compatible_weapons) if player_ac.compatible_weapons else []
+    # Use enemy's compatible weapons instead
+    enemy_compat_ids = json.loads(enemy_ac.compatible_weapons) if enemy_ac.compatible_weapons else []
+    enemy_loadout = []
+    for wid in enemy_compat_ids:
+        if wid:
+            w = db.query(Weapon).filter(Weapon.id == wid).first()
+            if w:
+                enemy_loadout.append(LoadoutItem(weapon_to_data(w), 4))
+
+    # Get contractor skill
+    contractor_skill = 50
+    if battle.contractor_id:
+        oc = db.query(OwnedContractor).filter(OwnedContractor.id == battle.contractor_id).first()
+        if oc:
+            contractor_skill = oc.skill_level
+
+    engine = AirBattleEngine(
+        player_aircraft=aircraft_to_data(player_ac),
+        enemy_aircraft=aircraft_to_data(enemy_ac),
+        player_loadout=player_loadout,
+        enemy_loadout=enemy_loadout,
+        contractor_skill=contractor_skill,
+        seed=battle.id * 1000 + battle.current_phase,  # deterministic per battle+phase
+    )
+
+    # Replay existing phases to restore state
+    if battle.battle_state:
+        state = json.loads(battle.battle_state)
+        engine.current_phase = state.get("current_phase", 2)
+        engine.range_km = state.get("range_km", 250.0)
+        engine.player_fuel_pct = state.get("player_fuel_pct", 100.0)
+        engine.player_damage_pct = state.get("player_damage_pct", 0.0)
+        engine.enemy_damage_pct = state.get("enemy_damage_pct", 0.0)
+        engine.detection_advantage = state.get("detection_advantage", False)
+        engine.situations = state.get("situations", [])
+        # Restore ammo
+        for ammo_state in state.get("loadout_remaining", []):
+            for item in engine.player_loadout:
+                if item.weapon.id == ammo_state["weapon_id"]:
+                    item.quantity = ammo_state["quantity"]
+
+    return engine
+
+
+def _save_engine_state(engine: AirBattleEngine | NavalBattleEngine, battle: Battle):
+    """Persist engine state to the Battle record."""
+    state = {
+        "current_phase": engine.current_phase,
+        "range_km": engine.range_km,
+        "player_fuel_pct": getattr(engine, 'player_fuel_pct', 100.0),
+        "player_damage_pct": engine.player_damage_pct,
+        "enemy_damage_pct": engine.enemy_damage_pct,
+        "detection_advantage": getattr(engine, 'detection_advantage', False),
+        "situations": getattr(engine, 'situations', []),
+    }
+    if hasattr(engine, 'player_loadout'):
+        state["loadout_remaining"] = [
+            {"weapon_id": item.weapon.id, "quantity": item.quantity}
+            for item in engine.player_loadout
+        ]
+    battle.battle_state = json.dumps(state)
+    battle.current_phase = engine.current_phase
+
+
+# ─── Endpoints ───
+
+@router.post("/start")
+def start_battle(data: BattleCreate, db: Session = Depends(get_db)):
+    """Start a new battle. Returns battle_id and loadout options."""
+    user = db.query(User).filter(User.id == 1).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Determine battle type
+    if data.aircraft_id:
+        battle_type = BattleType.AIR
+        player_ac = db.query(Aircraft).filter(Aircraft.id == data.aircraft_id).first()
+        if not player_ac:
+            raise HTTPException(status_code=404, detail="Aircraft not found")
+
+        # Determine enemy from contract or pick a default
+        enemy_aircraft_id = None
+        if data.contract_id:
+            contract = db.query(ActiveContract).filter(ActiveContract.id == data.contract_id).first()
+            if contract:
+                mission = db.query(MissionTemplate).filter(MissionTemplate.id == contract.mission_template_id).first()
+                if mission and mission.enemy_aircraft_id:
+                    enemy_aircraft_id = mission.enemy_aircraft_id
+
+        # Fallback: pick a random enemy
+        if not enemy_aircraft_id:
+            enemies = db.query(Aircraft).filter(Aircraft.id != data.aircraft_id).all()
+            if enemies:
+                import random
+                enemy_aircraft_id = random.choice(enemies).id
+            else:
+                raise HTTPException(status_code=400, detail="No enemy aircraft available")
+
+        enemy_ac = db.query(Aircraft).filter(Aircraft.id == enemy_aircraft_id).first()
+
+        battle = Battle(
+            user_id=1,
+            contract_id=data.contract_id,
+            battle_type=BattleType.AIR,
+            player_aircraft_id=data.aircraft_id,
+            enemy_aircraft_id=enemy_aircraft_id,
+            contractor_id=data.contractor_id,
+            current_phase=1,
+            status=BattleStatus.LOADOUT,
+        )
+        db.add(battle)
+        db.commit()
+        db.refresh(battle)
+
+        # Get compatible weapons for loadout screen
+        compat_ids = json.loads(player_ac.compatible_weapons) if player_ac.compatible_weapons else []
+        weapons = []
+        for wid in compat_ids:
+            if wid:
+                w = db.query(Weapon).filter(Weapon.id == wid).first()
+                if w:
+                    weapons.append({
+                        "id": w.id, "name": w.name, "type": w.weapon_type.value,
+                        "weight_kg": w.weight_kg, "max_range_km": w.max_range_km,
+                        "no_escape_range_km": w.no_escape_range_km,
+                        "base_pk": w.base_pk, "guidance": w.guidance,
+                        "cost_per_unit": w.cost_per_unit,
+                    })
+
+        return {
+            "battle_id": battle.id,
+            "battle_type": "air",
+            "player_aircraft": {
+                "id": player_ac.id, "name": player_ac.name,
+                "max_payload_kg": player_ac.max_payload_kg,
+                "hardpoints": player_ac.hardpoints,
+                "radar_type": player_ac.radar_type,
+                "radar_range_km": player_ac.radar_range_km,
+                "rcs_m2": player_ac.rcs_m2,
+                "ecm_suite": player_ac.ecm_suite,
+                "ecm_rating": player_ac.ecm_rating,
+            },
+            "enemy_aircraft": {
+                "id": enemy_ac.id, "name": enemy_ac.name,
+                "origin": enemy_ac.origin, "generation": enemy_ac.generation,
+            },
+            "available_weapons": weapons,
+        }
+
+    elif data.ship_id:
+        battle_type = BattleType.NAVAL
+        player_ship = db.query(Ship).filter(Ship.id == data.ship_id).first()
+        if not player_ship:
+            raise HTTPException(status_code=404, detail="Ship not found")
+
+        # Determine enemy
+        enemy_ship_id = None
+        if data.contract_id:
+            contract = db.query(ActiveContract).filter(ActiveContract.id == data.contract_id).first()
+            if contract:
+                mission = db.query(MissionTemplate).filter(MissionTemplate.id == contract.mission_template_id).first()
+                if mission and mission.enemy_ship_id:
+                    enemy_ship_id = mission.enemy_ship_id
+
+        if not enemy_ship_id:
+            enemies = db.query(Ship).filter(Ship.id != data.ship_id).all()
+            if enemies:
+                import random
+                enemy_ship_id = random.choice(enemies).id
+            else:
+                raise HTTPException(status_code=400, detail="No enemy ship available")
+
+        enemy_ship = db.query(Ship).filter(Ship.id == enemy_ship_id).first()
+
+        battle = Battle(
+            user_id=1,
+            contract_id=data.contract_id,
+            battle_type=BattleType.NAVAL,
+            player_ship_id=data.ship_id,
+            enemy_ship_id=enemy_ship_id,
+            contractor_id=data.contractor_id,
+            current_phase=1,
+            status=BattleStatus.LOADOUT,
+        )
+        db.add(battle)
+        db.commit()
+        db.refresh(battle)
+
+        return {
+            "battle_id": battle.id,
+            "battle_type": "naval",
+            "player_ship": {
+                "id": player_ship.id, "name": player_ship.name,
+                "class_name": player_ship.class_name,
+                "displacement_tons": player_ship.displacement_tons,
+                "radar_type": player_ship.radar_type,
+            },
+            "enemy_ship": {
+                "id": enemy_ship.id, "name": enemy_ship.name,
+                "class_name": enemy_ship.class_name, "origin": enemy_ship.origin,
+            },
+            "available_weapons": [],  # naval loadout is fixed by ship class
+        }
+
+    else:
+        raise HTTPException(status_code=400, detail="Must provide aircraft_id or ship_id")
+
+
+@router.post("/{battle_id}/loadout")
+def submit_loadout(battle_id: int, data: LoadoutSubmit, db: Session = Depends(get_db)):
+    """Submit weapon loadout. Validates weight/hardpoint constraints. Advances to phase 2."""
+    battle = db.query(Battle).filter(Battle.id == battle_id).first()
+    if not battle:
+        raise HTTPException(status_code=404, detail="Battle not found")
+    if battle.status != BattleStatus.LOADOUT:
+        raise HTTPException(status_code=400, detail="Battle is not in loadout phase")
+
+    if battle.battle_type == BattleType.AIR:
+        player_ac = db.query(Aircraft).filter(Aircraft.id == battle.player_aircraft_id).first()
+        if not player_ac:
+            raise HTTPException(status_code=404, detail="Aircraft not found")
+
+        # Validate loadout
+        total_weight = 0
+        total_hardpoints = 0
+        for item in data.weapons:
+            w = db.query(Weapon).filter(Weapon.id == item["weapon_id"]).first()
+            if not w:
+                raise HTTPException(status_code=400, detail=f"Weapon {item['weapon_id']} not found")
+            total_weight += w.weight_kg * item["quantity"]
+            total_hardpoints += item["quantity"]
+
+        if total_weight > player_ac.max_payload_kg:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Loadout too heavy: {total_weight}kg exceeds max {player_ac.max_payload_kg}kg"
+            )
+        if total_hardpoints > player_ac.hardpoints:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Too many weapons: {total_hardpoints} exceeds {player_ac.hardpoints} hardpoints"
+            )
+
+    # Save loadout and advance
+    battle.player_loadout = json.dumps(data.weapons)
+    battle.current_phase = 2
+    battle.status = BattleStatus.IN_PROGRESS
+    db.commit()
+
+    # Return initial battle state
+    if battle.battle_type == BattleType.AIR:
+        engine = _build_air_engine(battle, db)
+        state = engine.get_current_state()
+    else:
+        # Naval — loadout is the ship itself
+        player_ship = db.query(Ship).filter(Ship.id == battle.player_ship_id).first()
+        enemy_ship = db.query(Ship).filter(Ship.id == battle.enemy_ship_id).first()
+        engine = NavalBattleEngine(
+            player_ship=ship_to_data(player_ship, db),
+            enemy_ship=ship_to_data(enemy_ship, db),
+            seed=battle.id,
+        )
+        state = engine.get_current_state()
+
+    return _state_to_dict(state)
+
+
+@router.get("/{battle_id}/state")
+def get_battle_state(battle_id: int, db: Session = Depends(get_db)):
+    """Get current battle state for the tactical display."""
+    battle = db.query(Battle).filter(Battle.id == battle_id).first()
+    if not battle:
+        raise HTTPException(status_code=404, detail="Battle not found")
+
+    if battle.battle_type == BattleType.AIR:
+        engine = _build_air_engine(battle, db)
+    else:
+        player_ship = db.query(Ship).filter(Ship.id == battle.player_ship_id).first()
+        enemy_ship = db.query(Ship).filter(Ship.id == battle.enemy_ship_id).first()
+        engine = NavalBattleEngine(
+            player_ship=ship_to_data(player_ship, db),
+            enemy_ship=ship_to_data(enemy_ship, db),
+            seed=battle.id,
+        )
+
+    state = engine.get_current_state()
+
+    # Also return completed phases
+    phases = db.query(BattlePhase).filter(BattlePhase.battle_id == battle_id).order_by(BattlePhase.phase_number).all()
+    completed = [{"phase_number": p.phase_number, "phase_name": p.phase_name, "player_choice": p.player_choice, "outcome": json.loads(p.outcome)} for p in phases]
+
+    result = _state_to_dict(state)
+    result["completed_phases"] = completed
+    return result
+
+
+@router.post("/{battle_id}/choose")
+def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depends(get_db)):
+    """Submit a player choice for the current phase. Returns phase result."""
+    battle = db.query(Battle).filter(Battle.id == battle_id).first()
+    if not battle:
+        raise HTTPException(status_code=404, detail="Battle not found")
+    if battle.status != BattleStatus.IN_PROGRESS:
+        raise HTTPException(status_code=400, detail="Battle is not in progress")
+
+    if battle.battle_type == BattleType.AIR:
+        engine = _build_air_engine(battle, db)
+        phase_result = engine.run_phase(data.choice)
+        _save_engine_state(engine, battle)
+
+        # Check if battle is complete (phase 6 done)
+        if engine.current_phase > 6:
+            report = engine.get_battle_result()
+            battle.status = BattleStatus.COMPLETED_SUCCESS if report.success else BattleStatus.COMPLETED_FAILURE
+            battle.completed_at = datetime.now()
+            battle.final_result = json.dumps({
+                "success": report.success,
+                "payout": report.payout,
+                "reputation_change": report.reputation_change,
+                "damage_dealt": report.total_damage_dealt,
+                "damage_taken": report.total_damage_taken,
+                "narrative": report.narrative_summary,
+            })
+
+            # Apply rewards to user
+            user = db.query(User).filter(User.id == battle.user_id).first()
+            if user:
+                user.balance += report.payout
+                user.reputation = max(0, min(100, user.reputation + report.reputation_change))
+
+            # Update contract if linked
+            if battle.contract_id:
+                contract = db.query(ActiveContract).filter(ActiveContract.id == battle.contract_id).first()
+                if contract:
+                    contract.status = MissionStatus.COMPLETED_SUCCESS if report.success else MissionStatus.COMPLETED_FAILURE
+                    contract.payout_received = report.payout
+                    contract.reputation_change = report.reputation_change
+                    contract.completed_at = datetime.now()
+
+                    # Create mission log
+                    mission_log = MissionLog(
+                        user_id=battle.user_id,
+                        mission_template_id=contract.mission_template_id,
+                        status=MissionStatus.COMPLETED_SUCCESS if report.success else MissionStatus.COMPLETED_FAILURE,
+                        payout_earned=report.payout,
+                        reputation_change=report.reputation_change,
+                        enemy_strength=int(report.total_damage_dealt),
+                        ally_strength=int(100 - report.total_damage_taken),
+                        random_events=json.dumps([]),
+                        started_at=contract.started_at or datetime.now(),
+                        ended_at=datetime.now(),
+                    )
+                    db.add(mission_log)
+
+    else:
+        # Naval battle
+        player_ship = db.query(Ship).filter(Ship.id == battle.player_ship_id).first()
+        enemy_ship = db.query(Ship).filter(Ship.id == battle.enemy_ship_id).first()
+        engine = NavalBattleEngine(
+            player_ship=ship_to_data(player_ship, db),
+            enemy_ship=ship_to_data(enemy_ship, db),
+            seed=battle.id * 1000 + battle.current_phase,
+        )
+        # Restore state
+        if battle.battle_state:
+            st = json.loads(battle.battle_state)
+            engine.current_phase = st.get("current_phase", 2)
+            engine.player_damage_pct = st.get("player_damage_pct", 0.0)
+            engine.enemy_damage_pct = st.get("enemy_damage_pct", 0.0)
+            engine.range_km = st.get("range_km", 350.0)
+            engine.detection_advantage = st.get("detection_advantage", False)
+
+        phase_result = engine.run_phase(data.choice)
+        _save_engine_state(engine, battle)
+
+        if engine.current_phase > 6:
+            report = engine.get_battle_result()
+            battle.status = BattleStatus.COMPLETED_SUCCESS if report.success else BattleStatus.COMPLETED_FAILURE
+            battle.completed_at = datetime.now()
+            battle.final_result = json.dumps({
+                "success": report.success,
+                "payout": report.payout,
+                "reputation_change": report.reputation_change,
+                "damage_dealt": report.total_damage_dealt,
+                "damage_taken": report.total_damage_taken,
+                "narrative": report.narrative_summary,
+            })
+            user = db.query(User).filter(User.id == battle.user_id).first()
+            if user:
+                user.balance += report.payout
+                user.reputation = max(0, min(100, user.reputation + report.reputation_change))
+
+    # Save phase to DB
+    phase_record = BattlePhase(
+        battle_id=battle_id,
+        phase_number=phase_result.phase_number,
+        phase_name=phase_result.phase_name,
+        player_choice=phase_result.player_choice,
+        outcome=json.dumps({
+            "choice_quality": phase_result.choice_quality,
+            "factors": phase_result.factors,
+            "outcome": phase_result.outcome,
+            "narrative": phase_result.narrative,
+        }),
+    )
+    db.add(phase_record)
+    db.commit()
+
+    # Build response
+    response = {
+        "phase_number": phase_result.phase_number,
+        "phase_name": phase_result.phase_name,
+        "player_choice": phase_result.player_choice,
+        "choice_quality": phase_result.choice_quality,
+        "factors": phase_result.factors,
+        "outcome": phase_result.outcome,
+        "narrative": phase_result.narrative,
+        "next_choices": [
+            {"key": c.key, "label": c.label, "description": c.description, "risk_hint": c.risk_hint}
+            for c in phase_result.next_choices
+        ],
+    }
+
+    # If battle complete, include final report
+    if battle.status in (BattleStatus.COMPLETED_SUCCESS, BattleStatus.COMPLETED_FAILURE):
+        final = json.loads(battle.final_result) if battle.final_result else {}
+        response["battle_complete"] = True
+        response["final_report"] = final
+    else:
+        response["battle_complete"] = False
+
+    return response
+
+
+@router.get("/{battle_id}/report")
+def get_battle_report(battle_id: int, db: Session = Depends(get_db)):
+    """Get the full after-action report for a completed battle."""
+    battle = db.query(Battle).filter(Battle.id == battle_id).first()
+    if not battle:
+        raise HTTPException(status_code=404, detail="Battle not found")
+
+    if battle.status not in (BattleStatus.COMPLETED_SUCCESS, BattleStatus.COMPLETED_FAILURE):
+        raise HTTPException(status_code=400, detail="Battle is not yet complete")
+
+    phases = db.query(BattlePhase).filter(BattlePhase.battle_id == battle_id).order_by(BattlePhase.phase_number).all()
+    phase_list = []
+    for p in phases:
+        outcome_data = json.loads(p.outcome)
+        phase_list.append({
+            "phase_number": p.phase_number,
+            "phase_name": p.phase_name,
+            "player_choice": p.player_choice,
+            "choice_quality": outcome_data.get("choice_quality", "neutral"),
+            "factors": outcome_data.get("factors", []),
+            "outcome": outcome_data.get("outcome", {}),
+            "narrative": outcome_data.get("narrative", ""),
+        })
+
+    final = json.loads(battle.final_result) if battle.final_result else {}
+
+    # Get aircraft/ship names
+    player_name = ""
+    enemy_name = ""
+    if battle.battle_type == BattleType.AIR:
+        pa = db.query(Aircraft).filter(Aircraft.id == battle.player_aircraft_id).first()
+        ea = db.query(Aircraft).filter(Aircraft.id == battle.enemy_aircraft_id).first()
+        player_name = pa.name if pa else "Unknown"
+        enemy_name = ea.name if ea else "Unknown"
+    else:
+        ps = db.query(Ship).filter(Ship.id == battle.player_ship_id).first()
+        es = db.query(Ship).filter(Ship.id == battle.enemy_ship_id).first()
+        player_name = ps.name if ps else "Unknown"
+        enemy_name = es.name if es else "Unknown"
+
+    return {
+        "battle_id": battle.id,
+        "battle_type": battle.battle_type.value,
+        "player_name": player_name,
+        "enemy_name": enemy_name,
+        "success": final.get("success", False),
+        "payout": final.get("payout", 0),
+        "reputation_change": final.get("reputation_change", 0),
+        "damage_dealt": final.get("damage_dealt", 0),
+        "damage_taken": final.get("damage_taken", 0),
+        "narrative_summary": final.get("narrative", ""),
+        "phases": phase_list,
+    }
+
+
+def _state_to_dict(state) -> dict:
+    """Convert BattleState dataclass to a JSON-serializable dict."""
+    return {
+        "phase": state.phase,
+        "phase_name": state.phase_name,
+        "player_name": state.player_name,
+        "enemy_name": state.enemy_name,
+        "range_km": state.range_km,
+        "player_ammo": state.player_ammo,
+        "player_fuel_pct": state.player_fuel_pct,
+        "player_damage_pct": state.player_damage_pct,
+        "enemy_damage_pct": state.enemy_damage_pct,
+        "available_choices": [
+            {"key": c.key, "label": c.label, "description": c.description, "risk_hint": c.risk_hint}
+            for c in state.available_choices
+        ],
+        "status": state.status,
+    }

@@ -14,6 +14,9 @@ class MissionTemplateBase(BaseModel):
     risk_level: int = 50  # 0-100
     political_impact: int = 0  # -100 to 100
     estimated_duration_hours: int = 24
+    battle_type: Optional[str] = None  # "air", "naval", or null
+    enemy_aircraft_id: Optional[int] = None
+    enemy_ship_id: Optional[int] = None
     is_active: bool = True
 
 class MissionTemplateCreate(MissionTemplateBase):
