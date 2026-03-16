@@ -16,10 +16,20 @@ Browser → pmc-tycoon.skdev.one (Vercel) → pmc-tycoon-api.skdev.one (GCP VM)
 **Vercel project:** `pmc-tycoon` (project ID: `prj_Qg9mh7qqjwiyndYVBAu2oI8S0Hah`)
 **DNS:** CNAME `pmc-tycoon` → `cname.vercel-dns.com` (Namecheap)
 
-> **Important:** This is a dedicated Vercel project. Do NOT deploy to the `frontend` project (that's rasoi).
+> **CRITICAL:** This is a dedicated Vercel project. Do NOT deploy to the `frontend` project (that's rasoi).
+>
+> **CRITICAL:** You MUST run `npx vercel` from the `frontend/` directory, NOT from the project root. Deploying from the root will deploy an empty directory and cause a 404.
 
 ### Deploy
 
+**Recommended: Use the deploy script (from any directory):**
+```bash
+./deploy.sh frontend    # Deploy frontend only
+./deploy.sh backend     # Deploy backend only
+./deploy.sh both        # Deploy both
+```
+
+**Manual (must be in frontend/ directory):**
 ```bash
 cd frontend
 npx vercel --prod --yes
