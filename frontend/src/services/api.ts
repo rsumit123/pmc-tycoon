@@ -94,6 +94,7 @@ export const apiService = {
   getOwnedShips: () => api.get('/ships/owned/list'),
   purchaseShip: (shipId: number) => api.post(`/ships/owned/purchase?ship_id=${shipId}`),
   sellAircraft: (ownedId: number) => api.delete(`/aircraft/owned/${ownedId}`),
+  assignPilot: (ownedId: number, contractorId: number | null) => api.post(`/aircraft/owned/${ownedId}/assign-pilot`, null, { params: { contractor_id: contractorId } }),
 
   // Weapon inventory
   getOwnedWeapons: () => api.get('/weapons/owned/list'),

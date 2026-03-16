@@ -24,6 +24,7 @@ export const BattlePage = () => {
   const [loadoutData, setLoadoutData] = useState<any>(null);
   const [battleState, setBattleState] = useState<any>(null);
   const [reportData, setReportData] = useState<any>(null);
+  const [showTransition, setShowTransition] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -93,6 +94,10 @@ export const BattlePage = () => {
     init();
   }, [battleIdParam, searchParams]);
 
+  if (showTransition) {
+    return <div className="transition-static" />;
+  }
+
   if (phase === 'loading') {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center" style={{ background: 'var(--color-base)' }}>
@@ -132,7 +137,11 @@ export const BattlePage = () => {
         weapons={loadoutData.available_weapons}
         onReady={(stateData) => {
           setBattleState(stateData);
-          setPhase('battle');
+          setShowTransition(true);
+          setTimeout(() => {
+            setShowTransition(false);
+            setPhase('battle');
+          }, 600);
         }}
       />
     );

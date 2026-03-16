@@ -125,6 +125,7 @@ export const Hangar = () => {
   const [swapSlot, setSwapSlot] = useState<string | null>(null);
   const [availableModules, setAvailableModules] = useState<ModuleData[]>([]);
   const [subsystemsLoading, setSubsystemsLoading] = useState(false);
+  const [computedStats, setComputedStats] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -153,11 +154,14 @@ export const Hangar = () => {
   const openAircraftDetail = async (ac: OwnedAircraftData) => {
     setDetailAircraft(ac);
     setSubsystemsLoading(true);
+    setComputedStats(null);
     try {
       const res = await apiService.getAircraftSubsystems(ac.id);
       setSubsystems(res.data.subsystems || []);
     } catch { setSubsystems([]); }
     finally { setSubsystemsLoading(false); }
+    const statsRes = await apiService.getAircraftComputedStats(ac.id).catch(() => ({ data: null }));
+    if (statsRes.data) setComputedStats(statsRes.data);
   };
 
   // ─── Open swap drawer ───
@@ -322,6 +326,28 @@ export const Hangar = () => {
             </div>
           )}
         </div>
+
+        {/* Performance summary */}
+        {computedStats && (
+          <div className="mb-4">
+            <p className="label-section mb-2">PERFORMANCE SUMMARY</p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: 'DETECT', value: `${computedStats.radar_range_km}km`, color: 'var(--color-blue)' },
+                { label: 'ECM', value: `${computedStats.ecm_rating}`, color: 'var(--color-amber)' },
+                { label: 'CHAFF', value: `${computedStats.chaff_count}`, color: 'var(--color-text-secondary)' },
+                { label: 'FLARE', value: `${computedStats.flare_count}`, color: 'var(--color-text-secondary)' },
+                { label: 'G-LIM', value: `${computedStats.max_g_mod}G`, color: 'var(--color-text-secondary)' },
+                { label: 'Pk+', value: `${(computedStats.pk_bonus * 100).toFixed(0)}%`, color: 'var(--color-green)' },
+              ].map(s => (
+                <div key={s.label} className="card-dossier p-2 text-center">
+                  <p className="text-[9px] font-display tracking-wider" style={{ color: 'var(--color-text-muted)' }}>{s.label}</p>
+                  <p className="font-data text-sm font-bold" style={{ color: s.color }}>{s.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-2.5">

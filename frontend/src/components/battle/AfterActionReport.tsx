@@ -320,6 +320,16 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
           </div>
         )}
 
+        {/* Fuel remaining */}
+        {report.fuel_remaining !== undefined && report.fuel_remaining !== null && (
+          <div className="flex items-center justify-between px-3.5 py-2 card-dossier mb-4">
+            <span className="label-section" style={{ margin: 0 }}>FUEL REMAINING</span>
+            <span className="font-data text-sm font-bold" style={{ color: report.fuel_remaining < 20 ? 'var(--color-red)' : 'var(--color-amber)' }}>
+              {report.fuel_remaining.toFixed(0)}%
+            </span>
+          </div>
+        )}
+
         {/* Narrative summary */}
         <div className="bg-dossier-surface rounded-xl border border-border p-3.5">
           <p className="text-[10px] text-ink-secondary uppercase tracking-wider font-semibold mb-2">Summary</p>

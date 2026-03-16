@@ -153,16 +153,17 @@ def _build_air_engine(battle: Battle, db: Session) -> AirBattleEngine:
         if w:
             player_loadout.append(LoadoutItem(weapon_to_data(w), item["quantity"]))
 
-    # Build a basic enemy loadout from compatible weapons
-    enemy_compat = json.loads(player_ac.compatible_weapons) if player_ac.compatible_weapons else []
-    # Use enemy's compatible weapons instead
+    # Build enemy loadout with variance (2-6 per weapon type, seeded by battle ID)
+    import random as _rng_mod
+    enemy_rng = _rng_mod.Random(battle.id)
     enemy_compat_ids = json.loads(enemy_ac.compatible_weapons) if enemy_ac.compatible_weapons else []
     enemy_loadout = []
     for wid in enemy_compat_ids:
         if wid:
             w = db.query(Weapon).filter(Weapon.id == wid).first()
             if w:
-                enemy_loadout.append(LoadoutItem(weapon_to_data(w), 4))
+                qty = enemy_rng.randint(2, 6)
+                enemy_loadout.append(LoadoutItem(weapon_to_data(w), qty))
 
     # Get contractor skill
     contractor_skill = 50
@@ -218,14 +219,16 @@ def _build_tactical_air_engine(battle: Battle, db: Session) -> TacticalAirBattle
         if w:
             player_loadout.append(LoadoutItem(weapon_to_data(w), item["quantity"]))
 
-    # Build enemy loadout
+    # Build enemy loadout with variance
+    enemy_rng = __import__('random').Random(battle.id)
     enemy_compat_ids = json.loads(enemy_ac.compatible_weapons) if enemy_ac.compatible_weapons else []
     enemy_loadout = []
     for wid in enemy_compat_ids:
         if wid:
             w = db.query(Weapon).filter(Weapon.id == wid).first()
             if w:
-                enemy_loadout.append(LoadoutItem(weapon_to_data(w), 4))
+                qty = enemy_rng.randint(2, 6)
+                enemy_loadout.append(LoadoutItem(weapon_to_data(w), qty))
 
     # Get contractor skill
     contractor_skill = 50
@@ -342,6 +345,41 @@ def _apply_subsystem_wear(
 
     db.flush()
     return wear_report
+
+
+def _roll_module_loot(battle: Battle, success: bool, risk_level: int, db: Session) -> dict | None:
+    """Roll for module loot drop after a battle. Returns module info or None."""
+    import random as _rng
+    from app.models.subsystem import SubsystemModule
+
+    rng = _rng.Random(battle.id * 7 + 13)
+    # Base drop chance: 10% on success, 5% on failure
+    # High-risk missions: +10% bonus
+    drop_chance = 0.10 if success else 0.05
+    if risk_level >= 70:
+        drop_chance += 0.10
+    elif risk_level >= 50:
+        drop_chance += 0.05
+
+    if rng.random() > drop_chance:
+        return None
+
+    # Pick a random tier 2 upgrade module (not tier 3 — those require R&D)
+    tier2_modules = db.query(SubsystemModule).filter(
+        SubsystemModule.is_default == False,
+        SubsystemModule.tier == 2,
+    ).all()
+
+    if not tier2_modules:
+        return None
+
+    module = rng.choice(tier2_modules)
+    return {
+        "module_id": module.id,
+        "module_name": module.name,
+        "slot_type": module.slot_type,
+        "tier": module.tier,
+    }
 
 
 def _save_tactical_engine_state(engine: TacticalAirBattleEngine, battle: Battle):
@@ -775,6 +813,7 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 "narrative": report.narrative_summary,
                 "subsystem_wear": wear_report,
                 "rp_earned": rp_earned,
+                "module_loot": _roll_module_loot(battle, report.success, 50, db),
             })
 
             # Progression: missions_completed + pilot XP
@@ -1022,6 +1061,7 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 "compartment_status": report.compartment_status,
                 "narrative": report.narrative_summary,
                 "rp_earned": rp_earned,
+                "module_loot": _roll_module_loot(battle, report.success, 50, db),
             })
 
             user = db.query(User).filter(User.id == battle.user_id).first()
@@ -1288,8 +1328,9 @@ def get_battle_report(battle_id: int, db: Session = Depends(get_db)):
         report["turns_played"] = final.get("turns_played", len(phase_list))
         report["fuel_remaining"] = final.get("fuel_remaining", 0)
 
-    # Include subsystem wear report if available
+    # Include subsystem wear report and module loot if available
     report["subsystem_wear"] = final.get("subsystem_wear", [])
+    report["module_loot"] = final.get("module_loot")
 
     return report
 

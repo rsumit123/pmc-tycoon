@@ -466,6 +466,10 @@ class TacticalAirBattleEngine:
             fuel_cost = self.rng.uniform(6, 10)
         elif action in ("guns",):
             fuel_cost = self.rng.uniform(8, 12)
+        elif action == "scan":
+            # Escalating scan cost: first 3 scans cheap, then increasingly expensive
+            scans_done = self._intel_index
+            fuel_cost = self.rng.uniform(3, 5) + max(0, (scans_done - 3) * 2)
         else:
             fuel_cost = self.rng.uniform(3, 5)
 

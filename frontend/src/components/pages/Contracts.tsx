@@ -148,6 +148,8 @@ export const Contracts = () => {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [simResult, setSimResult] = useState<SimulationResult | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [chapters, setChapters] = useState<any[]>([]);
+  const [userRank, setUserRank] = useState<any>(null);
 
   // Deploy modal state
   const [deployTemplate, setDeployTemplate] = useState<MissionTemplate | null>(null);
@@ -177,6 +179,11 @@ export const Contracts = () => {
 
       setAircraftList(Array.isArray(aircraftRes.data) ? aircraftRes.data : []);
       setShipList(Array.isArray(shipsRes.data) ? shipsRes.data : []);
+
+      const chaptersRes = await apiService.getChapters().catch(() => ({ data: [] }));
+      setChapters(Array.isArray(chaptersRes.data) ? chaptersRes.data : []);
+      const rankRes = await apiService.getUserRank(1).catch(() => ({ data: null }));
+      setUserRank(rankRes.data);
 
       const templates: MissionTemplate[] = Array.isArray(templatesRes.data) ? templatesRes.data : [];
       const active: ActiveContractData[] = Array.isArray(activeRes.data) ? activeRes.data : [];
@@ -859,6 +866,41 @@ export const Contracts = () => {
       {/* Available contracts */}
       {tab === 'available' && (
         <div className="space-y-3">
+          {/* Campaign chapters */}
+          {chapters.length > 0 && (
+            <div className="mb-4">
+              <p className="label-section mb-2">CAMPAIGNS</p>
+              <div className="space-y-2">
+                {chapters.map((ch: any) => (
+                  <div key={ch.key} className={ch.is_unlocked ? 'card-dossier-tab p-3' : 'card-redacted p-3'} style={!ch.is_unlocked ? { opacity: 0.6 } : {}}>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-display text-sm tracking-wider" style={{ color: ch.is_unlocked ? 'var(--color-text)' : 'var(--color-text-muted)' }}>
+                        {ch.title}
+                      </h3>
+                      {ch.is_complete && <span className="stamp stamp-success text-[8px]">COMPLETE</span>}
+                      {!ch.is_unlocked && <span className="text-[10px] font-display tracking-wider" style={{ color: 'var(--color-text-muted)' }}>&#128274; {ch.rank_name}</span>}
+                    </div>
+                    {ch.is_unlocked && (
+                      <>
+                        <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>{ch.description}</p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 gauge-bar" style={{ height: '4px' }}>
+                            <div className="gauge-fill gauge-fill-amber" style={{ width: `${ch.total_missions > 0 ? (ch.completed_missions / ch.total_missions) * 100 : 0}%` }} />
+                          </div>
+                          <span className="font-data text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{ch.completed_missions}/{ch.total_missions}</span>
+                        </div>
+                      </>
+                    )}
+                    {!ch.is_unlocked && (
+                      <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Requires {ch.rank_name} rank to unlock</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="divider" />
+            </div>
+          )}
+
           {missionTemplates.length === 0 ? (
             <EmptyState message="No contracts available. Check back later." />
           ) : (
@@ -868,11 +910,13 @@ export const Contracts = () => {
               const risk = riskBadge(template.risk_level);
               const requiredUnits = parseRequiredUnits(template.required_unit_types);
               const alreadyAccepted = activeContracts.some((c) => c.mission_template_id === template.id);
+              const isLocked = (template as any).min_rank && userRank && (template as any).min_rank > userRank.rank_index;
 
               return (
                 <div
                   key={template.id}
-                  className="card-dossier-tab overflow-hidden"
+                  className={isLocked ? "card-redacted overflow-hidden" : "card-dossier-tab overflow-hidden"}
+                  style={isLocked ? { opacity: 0.6 } : {}}
                 >
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-2.5">
@@ -933,36 +977,42 @@ export const Contracts = () => {
                       ))}
                     </div>
 
-                    <button
-                      onClick={() => alreadyAccepted ? null : openDeployModal(template)}
-                      disabled={alreadyAccepted || actionLoading === template.id}
-                      className={`
-                        w-full flex items-center justify-center gap-2 text-sm py-3 rounded-xl transition-colors
-                        ${alreadyAccepted
-                          ? 'btn-secondary cursor-not-allowed opacity-40'
-                          : 'btn-primary'
-                        }
-                      `}
-                    >
-                      {actionLoading === template.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : alreadyAccepted ? (
-                        <>
-                          <Check className="w-4 h-4" />
-                          Already Accepted
-                        </>
-                      ) : template.battle_type ? (
-                        <>
-                          <Swords className="w-4 h-4" />
-                          Enter Battle
-                        </>
-                      ) : (
-                        <>
-                          <Check className="w-4 h-4" />
-                          Accept Mission
-                        </>
-                      )}
-                    </button>
+                    {isLocked ? (
+                      <div className="w-full flex items-center justify-center gap-2 text-sm py-3 rounded-xl" style={{ background: 'var(--color-surface-raised)', color: 'var(--color-text-muted)' }}>
+                        &#128274; Requires higher rank
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => alreadyAccepted ? null : openDeployModal(template)}
+                        disabled={alreadyAccepted || actionLoading === template.id}
+                        className={`
+                          w-full flex items-center justify-center gap-2 text-sm py-3 rounded-xl transition-colors
+                          ${alreadyAccepted
+                            ? 'btn-secondary cursor-not-allowed opacity-40'
+                            : 'btn-primary'
+                          }
+                        `}
+                      >
+                        {actionLoading === template.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : alreadyAccepted ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            Already Accepted
+                          </>
+                        ) : template.battle_type ? (
+                          <>
+                            <Swords className="w-4 h-4" />
+                            Enter Battle
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4" />
+                            Accept Mission
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               );
