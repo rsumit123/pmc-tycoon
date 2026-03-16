@@ -20,6 +20,8 @@ class MissionTemplateBase(BaseModel):
     chapter: Optional[str] = None
     chapter_order: int = 0
     min_rank: int = 0
+    mission_objective: Optional[str] = None
+    difficulty: int = 1
     is_active: bool = True
 
 class MissionTemplateCreate(MissionTemplateBase):
