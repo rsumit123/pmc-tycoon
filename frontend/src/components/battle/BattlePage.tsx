@@ -6,6 +6,7 @@ import { BattleScreen } from './BattleScreen';
 import { TacticalBattleScreen } from './TacticalBattleScreen';
 import { AfterActionReport } from './AfterActionReport';
 import { Loader2, AlertTriangle, ArrowLeft } from 'lucide-react';
+import '../../styles/design-system.css';
 
 type Phase = 'loading' | 'loadout' | 'battle' | 'report' | 'error';
 
@@ -56,7 +57,7 @@ export const BattlePage = () => {
       const contractorId = searchParams.get('contractor');
 
       if (!aircraftId && !shipId) {
-        setErrorMsg('No aircraft or ship selected. Return to Contracts and select a vehicle.');
+        setErrorMsg('No aircraft or ship selected. Return to Operations and select a vehicle.');
         setPhase('error');
         return;
       }
@@ -75,7 +76,6 @@ export const BattlePage = () => {
         setLoadoutData(data);
 
         if (data.battle_type === 'naval') {
-          // Naval loadout is fixed by ship class — auto-submit and go to battle
           const loadoutRes = await apiService.submitLoadout(data.battle_id, { weapons: [] });
           setBattleState(loadoutRes.data);
           setPhase('battle');
@@ -94,10 +94,10 @@ export const BattlePage = () => {
 
   if (phase === 'loading') {
     return (
-      <div className="min-h-[100dvh] bg-gray-950 flex items-center justify-center">
+      <div className="min-h-[100dvh] flex items-center justify-center" style={{ background: 'var(--color-base)' }}>
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
-          <p className="text-sm text-gray-500">Preparing battle...</p>
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-amber)' }} />
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Preparing sortie...</p>
         </div>
       </div>
     );
@@ -105,17 +105,17 @@ export const BattlePage = () => {
 
   if (phase === 'error') {
     return (
-      <div className="min-h-[100dvh] bg-gray-950 flex items-center justify-center px-6">
+      <div className="min-h-[100dvh] flex items-center justify-center px-6" style={{ background: 'var(--color-base)' }}>
         <div className="max-w-sm w-full text-center">
-          <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-lg font-bold text-white mb-2">Battle Failed to Start</h2>
-          <p className="text-sm text-gray-400 mb-6">{errorMsg}</p>
+          <AlertTriangle className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--color-red)' }} />
+          <h2 className="text-lg font-display tracking-wider mb-2" style={{ color: 'var(--color-text)' }}>MISSION ABORTED</h2>
+          <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>{errorMsg}</p>
           <button
             onClick={() => navigate('/contracts')}
-            className="flex items-center justify-center gap-2 mx-auto bg-emerald-500 text-black font-bold text-sm py-3 px-6 rounded-xl active:bg-emerald-400 transition-colors"
+            className="btn-primary flex items-center justify-center gap-2 mx-auto"
           >
             <ArrowLeft className="w-4 h-4" />
-            Return to Operations
+            RETURN TO OPERATIONS
           </button>
         </div>
       </div>
@@ -170,15 +170,15 @@ export const BattlePage = () => {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-gray-950 flex items-center justify-center">
+    <div className="min-h-[100dvh] flex items-center justify-center" style={{ background: 'var(--color-base)' }}>
       <div className="text-center">
-        <p className="text-sm text-gray-500 mb-4">Something went wrong.</p>
+        <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>Something went wrong.</p>
         <button
           onClick={() => navigate('/contracts')}
-          className="flex items-center justify-center gap-2 mx-auto bg-gray-800 text-gray-300 font-semibold text-sm py-2.5 px-5 rounded-xl active:bg-gray-700"
+          className="btn-secondary flex items-center justify-center gap-2 mx-auto"
         >
           <ArrowLeft className="w-4 h-4" />
-          Return to Operations
+          RETURN TO OPERATIONS
         </button>
       </div>
     </div>

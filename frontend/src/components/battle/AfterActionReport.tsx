@@ -8,6 +8,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import '../../styles/design-system.css';
 
 interface PhaseData {
   phase_number: number;
@@ -92,32 +93,37 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
   const hiddenCount = manyTurns ? report.phases.length - 6 : 0;
 
   return (
-    <div className="min-h-[100dvh] bg-gray-950 flex flex-col">
+    <div className="min-h-[100dvh] bg-dossier-base flex flex-col">
       {/* Banner */}
-      <div className={`px-4 py-6 text-center ${report.success ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+      <div className={`px-4 py-6 text-center ${report.success ? 'bg-accent-green/10' : 'bg-red-500/10'}`}>
         <div className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 ${
-          report.success ? 'bg-emerald-500/20' : 'bg-red-500/20'
+          report.success ? 'bg-accent-green/20' : 'bg-red-500/20'
         }`}>
           {report.success
-            ? <Trophy className="w-8 h-8 text-emerald-400" />
+            ? <Trophy className="w-8 h-8 text-accent-green" />
             : <Skull className="w-8 h-8 text-red-400" />
           }
         </div>
-        <h1 className="text-xl font-bold text-white">
+        <div className="mb-2">
+          <span className={report.success ? 'stamp stamp-success text-sm' : 'stamp stamp-failed text-sm'}>
+            {report.success ? 'MISSION SUCCESS' : 'MISSION FAILED'}
+          </span>
+        </div>
+        <h1 className="text-xl font-display tracking-wider text-ink">
           {report.success ? 'Mission Success' : 'Mission Failed'}
         </h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-ink-secondary mt-1">
           {report.player_name} vs {report.enemy_name}
         </p>
         {isV2 && (
           <div className="flex items-center justify-center gap-3 mt-2">
             {report.exit_reason && (
-              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gray-800 text-gray-300">
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gray-800 text-ink">
                 {exitReasonLabels[report.exit_reason] || report.exit_reason}
               </span>
             )}
             {report.turns_played && (
-              <span className="text-[10px] text-gray-500">
+              <span className="text-[10px] text-ink-secondary">
                 {report.turns_played} turns
               </span>
             )}
@@ -130,24 +136,24 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
 
         {/* Rewards */}
         <div className="grid grid-cols-2 gap-2">
-          <div className="bg-gray-900 rounded-xl p-3.5 text-center border border-gray-800/60">
-            <DollarSign className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-            <p className="text-xl font-bold text-emerald-400">${report.payout.toLocaleString()}</p>
-            <p className="text-[10px] text-gray-500">Payout</p>
+          <div className="bg-dossier-surface rounded-xl p-3.5 text-center border border-border">
+            <DollarSign className="w-4 h-4 text-accent-green mx-auto mb-1" />
+            <p className="text-xl font-bold text-accent-green">${report.payout.toLocaleString()}</p>
+            <p className="text-[10px] text-ink-secondary">Payout</p>
           </div>
-          <div className="bg-gray-900 rounded-xl p-3.5 text-center border border-gray-800/60">
+          <div className="bg-dossier-surface rounded-xl p-3.5 text-center border border-border">
             <Zap className="w-4 h-4 text-blue-400 mx-auto mb-1" />
             <p className={`text-xl font-bold ${report.reputation_change >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
               {report.reputation_change >= 0 ? '+' : ''}{report.reputation_change}
             </p>
-            <p className="text-[10px] text-gray-500">Reputation</p>
+            <p className="text-[10px] text-ink-secondary">Reputation</p>
           </div>
         </div>
 
         {/* Damage summary */}
-        <div className="bg-gray-900 rounded-xl border border-gray-800/60 p-3.5">
+        <div className="bg-dossier-surface rounded-xl border border-border p-3.5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-emerald-400 font-semibold">You</span>
+            <span className="text-xs text-accent-green font-semibold">You</span>
             <span className="text-xs text-red-400 font-semibold">Enemy</span>
           </div>
           <div className="flex items-center gap-2 mb-1">
@@ -159,7 +165,7 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
                 const total = yourHp + enemyHp || 1;
                 return (
                   <>
-                    <div className="h-full bg-emerald-500 rounded-l-full" style={{ width: `${(yourHp / total) * 100}%` }} />
+                    <div className="h-full bg-accent-green rounded-l-full" style={{ width: `${(yourHp / total) * 100}%` }} />
                     <div className="h-full bg-red-500 rounded-r-full" style={{ width: `${(enemyHp / total) * 100}%` }} />
                   </>
                 );
@@ -167,7 +173,7 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
             </div>
             <span className="text-sm font-bold text-white w-14 text-right">{(100 - report.damage_dealt).toFixed(0)}%</span>
           </div>
-          <div className="flex items-center justify-between text-[10px] text-gray-500">
+          <div className="flex items-center justify-between text-[10px] text-ink-secondary">
             <span>-{report.damage_taken.toFixed(0)}% damage taken</span>
             <span>-{report.damage_dealt.toFixed(0)}% damage dealt</span>
           </div>
@@ -175,7 +181,7 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
 
         {/* Phase timeline */}
         <div>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-3">
+          <p className="text-[10px] text-ink-secondary uppercase tracking-wider font-semibold mb-3">
             Battle Timeline {isV2 && report.turns_played ? `— ${report.turns_played} turns` : ''}
           </p>
           <div className="space-y-0">
@@ -205,7 +211,7 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
                     </div>
 
                     {/* Phase card */}
-                    <div className="flex-1 bg-gray-900 rounded-xl border border-gray-800/60 p-3 mb-2">
+                    <div className="flex-1 bg-dossier-surface rounded-xl border border-border p-3 mb-2">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-bold text-white">{turnLabel}</span>
                         {!isV2Phase && (
@@ -216,10 +222,10 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
                           </span>
                         )}
                         {isV2Phase && phase.outcome?.zone && (
-                          <span className="text-[9px] font-bold text-gray-500">{phase.outcome.zone}</span>
+                          <span className="text-[9px] font-bold text-ink-secondary">{phase.outcome.zone}</span>
                         )}
                       </div>
-                      <p className="text-[11px] text-emerald-400 font-medium mb-1">
+                      <p className="text-[11px] text-accent-green font-medium mb-1">
                         → {choiceDisplay.toUpperCase()}
                         {isV2Phase && phase.outcome?.enemy_action && (
                           <span className="text-red-400 ml-2">
@@ -227,7 +233,7 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
                           </span>
                         )}
                       </p>
-                      <p className="text-xs text-gray-400 leading-relaxed">
+                      <p className="text-xs text-ink-secondary leading-relaxed">
                         {(phase.narrative || phase.outcome?.narrative || '').length > 150
                           ? (phase.narrative || phase.outcome?.narrative || '').slice(0, 150) + '...'
                           : (phase.narrative || phase.outcome?.narrative || '')}
@@ -236,10 +242,10 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
                       {/* v1 shot result */}
                       {!isV2Phase && phase.outcome?.player_shot && (
                         <div className={`mt-2 flex items-center gap-2 px-2 py-1 rounded-lg ${
-                          phase.outcome.player_shot.hit ? 'bg-emerald-500/10' : 'bg-red-500/10'
+                          phase.outcome.player_shot.hit ? 'bg-accent-green/10' : 'bg-red-500/10'
                         }`}>
                           <span className="text-xs font-bold">{phase.outcome.player_shot.hit ? '💥' : '💨'}</span>
-                          <span className="text-[10px] text-gray-300">
+                          <span className="text-[10px] text-ink">
                             {phase.outcome.player_shot.weapon} — Pk {(phase.outcome.player_shot.pk * 100).toFixed(0)}% —{' '}
                             {phase.outcome.player_shot.hit ? 'HIT' : 'MISS'}
                           </span>
@@ -249,10 +255,10 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
                       {/* v2 shot result */}
                       {isV2Phase && v2WeaponFired && v2ShotPk != null && (
                         <div className={`mt-2 flex items-center gap-2 px-2 py-1 rounded-lg ${
-                          v2Hit ? 'bg-emerald-500/10' : 'bg-red-500/10'
+                          v2Hit ? 'bg-accent-green/10' : 'bg-red-500/10'
                         }`}>
                           <span className="text-xs font-bold">{v2Hit ? '💥' : '💨'}</span>
-                          <span className="text-[10px] text-gray-300">
+                          <span className="text-[10px] text-ink">
                             {v2WeaponFired} — Pk {(v2ShotPk * 100).toFixed(0)}% —{' '}
                             {v2Hit ? `HIT ${v2DamageDealt?.toFixed(0)}%` : 'MISS'}
                           </span>
@@ -262,10 +268,10 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
                       {/* v2 enemy shot */}
                       {isV2Phase && phase.outcome?.enemy_weapon_fired && (
                         <div className={`mt-1 flex items-center gap-2 px-2 py-1 rounded-lg ${
-                          phase.outcome.enemy_shot_hit ? 'bg-red-500/10' : 'bg-emerald-500/5'
+                          phase.outcome.enemy_shot_hit ? 'bg-red-500/10' : 'bg-accent-green/5'
                         }`}>
                           <span className="text-xs font-bold">{phase.outcome.enemy_shot_hit ? '⚠' : '✓'}</span>
-                          <span className="text-[10px] text-gray-300">
+                          <span className="text-[10px] text-ink">
                             Enemy {phase.outcome.enemy_weapon_fired} —{' '}
                             {phase.outcome.enemy_shot_hit ? `HIT ${phase.outcome.damage_taken?.toFixed(0)}%` : 'EVADED'}
                           </span>
@@ -278,7 +284,7 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
                   {showExpander && (
                     <button
                       onClick={() => setExpandedTurns(true)}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 mb-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                      className="w-full flex items-center justify-center gap-1.5 py-2 mb-2 text-xs text-ink-secondary hover:text-ink transition-colors"
                     >
                       <ChevronDown className="w-3.5 h-3.5" />
                       Show {hiddenCount} more turns
@@ -292,19 +298,19 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
 
         {/* Subsystem wear report */}
         {report.subsystem_wear && report.subsystem_wear.length > 0 && (
-          <div className="bg-gray-900 rounded-xl border border-gray-800/60 p-3.5">
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2.5">Subsystem Wear</p>
+          <div className="bg-dossier-surface rounded-xl border border-border p-3.5">
+            <p className="text-[10px] text-ink-secondary uppercase tracking-wider font-semibold mb-2.5">Subsystem Wear</p>
             <div className="space-y-2">
               {report.subsystem_wear.map((w) => (
                 <div key={w.slot_type} className="flex items-center gap-2">
-                  <span className="text-[10px] text-gray-500 uppercase w-16 shrink-0 font-mono tracking-wider">{w.slot_type.slice(0, 6)}</span>
+                  <span className="text-[10px] text-ink-secondary uppercase w-16 shrink-0 font-mono tracking-wider">{w.slot_type.slice(0, 6)}</span>
                   <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${w.after >= 70 ? 'bg-emerald-500' : w.after >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+                      className={`h-full rounded-full transition-all ${w.after >= 70 ? 'bg-accent-green' : w.after >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
                       style={{ width: `${w.after}%` }}
                     />
                   </div>
-                  <span className={`text-[10px] font-mono font-bold w-10 text-right ${w.after >= 70 ? 'text-emerald-400' : w.after >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                  <span className={`text-[10px] font-mono font-bold w-10 text-right ${w.after >= 70 ? 'text-accent-green' : w.after >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
                     {w.after}%
                   </span>
                   <span className="text-[9px] text-red-400/60 font-mono w-10 text-right">-{w.wear}%</span>
@@ -315,20 +321,17 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
         )}
 
         {/* Narrative summary */}
-        <div className="bg-gray-900 rounded-xl border border-gray-800/60 p-3.5">
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Summary</p>
-          <p className="text-xs text-gray-300 leading-relaxed">{report.narrative_summary}</p>
+        <div className="bg-dossier-surface rounded-xl border border-border p-3.5">
+          <p className="text-[10px] text-ink-secondary uppercase tracking-wider font-semibold mb-2">Summary</p>
+          <p className="text-xs text-ink leading-relaxed">{report.narrative_summary}</p>
         </div>
       </div>
 
       {/* Bottom button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 sm:pb-4 bg-gray-950/90 backdrop-blur-lg border-t border-gray-800">
-        <button
-          onClick={() => navigate('/contracts')}
-          className="w-full flex items-center justify-center gap-2 bg-gray-800 text-white font-semibold text-sm py-3.5 rounded-xl active:bg-gray-700 transition-colors"
-        >
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 sm:pb-4 backdrop-blur-lg" style={{ background: 'rgba(12,14,18,0.9)', borderTop: '1px solid var(--color-border)' }}>
+        <button onClick={() => navigate('/contracts')} className="btn-primary w-full flex items-center justify-center gap-2 text-sm py-3.5">
           <ChevronRight className="w-4 h-4" />
-          Return to Operations
+          RETURN TO OPERATIONS
         </button>
       </div>
     </div>
