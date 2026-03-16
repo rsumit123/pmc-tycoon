@@ -65,7 +65,9 @@ export const RAndD = () => {
         apiService.getResearchItems(),
         apiService.getResearchStatus(),
       ]);
-      setItems(Array.isArray(itemsRes.data) ? itemsRes.data : []);
+      // API may return {items: [...]} or flat array
+      const rawItems = itemsRes.data?.items || itemsRes.data;
+      setItems(Array.isArray(rawItems) ? rawItems : []);
       setStatus(statusRes.data);
     } catch {
       setItems([]);
