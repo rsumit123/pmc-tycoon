@@ -124,7 +124,7 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
   const [error, setError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<TacticalAction | null>(null); // For retry
   const [combatLog, setCombatLog] = useState<LogEntry[]>([
-    { prefix: 'SYS', color: 'text-emerald-400', text: `TACTICAL ENGAGEMENT — ${initialState.player_name} vs ${initialState.enemy_intel.name}` },
+    { prefix: 'SYS', color: 'text-[#D4A843]', text: `TACTICAL ENGAGEMENT — ${initialState.player_name} vs ${initialState.enemy_intel.name}` },
     { prefix: 'SYS', color: 'text-gray-500', text: `Range: ${initialState.range_km}km — Zone: ${initialState.zone} — Awaiting orders...` },
   ]);
   const [screenEffect, setScreenEffect] = useState<string | null>(null);
@@ -286,14 +286,14 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
     state.enemy_intel.fuel_known, state.enemy_intel.damage_known].filter(Boolean).length;
 
   return (
-    <div className={`min-h-[100dvh] bg-gray-950 flex flex-col hud-grid hud-scanlines relative ${screenEffect === 'damage-vignette' ? 'screen-shake' : ''}`}>
+    <div className={`min-h-[100dvh] bg-dossier-base flex flex-col hud-grid hud-scanlines relative ${screenEffect === 'damage-vignette' ? 'screen-shake' : ''}`}>
       {screenEffect && <div className={screenEffect} />}
 
       {/* ═══ TOP BAR ═══ */}
-      <div className="px-3 py-2 flex items-center justify-between border-b border-emerald-500/10">
+      <div className="px-3 py-2 flex items-center justify-between border-b border-[rgba(212,168,67,0.1)]">
         <div className="hud-text flex items-center gap-2">
-          <span className="text-[10px] text-emerald-400/60">TURN</span>
-          <span className="text-sm font-bold text-emerald-400 hud-glow">{state.turn}/{state.max_turns}</span>
+          <span className="text-[10px] text-[#D4A843]/60">TURN</span>
+          <span className="text-sm font-bold text-[#D4A843] hud-glow-amber">{state.turn}/{state.max_turns}</span>
           <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${zone.bg} ${zone.text}`}>
             {state.zone}
           </span>
@@ -314,7 +314,7 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
 
       {/* ═══ TACTICAL VIEW ═══ */}
       <div className="px-3 py-2 relative">
-        <div className="hud-border rounded-xl p-3 relative overflow-hidden bg-gray-950/80">
+        <div className="hud-border rounded-xl p-3 relative overflow-hidden bg-dossier-base/80">
           {/* Radar sweep */}
           <div className="absolute inset-0 opacity-[0.03]">
             <div className="w-full h-full radar-sweep" style={{
@@ -327,10 +327,10 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
           <div className="relative flex items-center justify-between mb-2">
             {/* Player */}
             <div className="text-center">
-              <div className="w-12 h-12 rounded-lg hud-border flex items-center justify-center bg-emerald-500/5 mb-1">
+              <div className="w-12 h-12 rounded-lg hud-border flex items-center justify-center bg-[rgba(212,168,67,0.05)] mb-1">
                 <span className="text-xl">✈</span>
               </div>
-              <p className="text-[10px] text-emerald-400 hud-text font-bold truncate max-w-[64px]">{state.player_name.split(' ').pop()}</p>
+              <p className="text-[10px] text-[#D4A843] hud-text font-bold truncate max-w-[64px]">{state.player_name.split(' ').pop()}</p>
               <div className="h-1.5 w-12 bg-gray-800 rounded-full overflow-hidden mt-0.5">
                 <div className={`h-full rounded-full ${playerHp > 60 ? 'bg-emerald-500' : playerHp > 30 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${playerHp}%` }} />
               </div>
@@ -399,9 +399,9 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
           <div className="flex gap-1.5 flex-wrap">
             {state.player_ammo.map((a, i) => (
               <div key={i} className={`flex items-center gap-1 rounded px-1.5 py-0.5 ${a.remaining === 0 ? 'bg-red-500/10' : 'bg-gray-900/60'}`}>
-                <Crosshair className={`w-2.5 h-2.5 ${a.remaining === 0 ? 'text-red-400/60' : 'text-emerald-400/60'}`} />
+                <Crosshair className={`w-2.5 h-2.5 ${a.remaining === 0 ? 'text-red-400/60' : 'text-[#D4A843]/60'}`} />
                 <span className="text-[9px] text-gray-400 hud-text">{a.weapon_name.split(' ').pop()}</span>
-                <span className={`text-[10px] font-bold hud-text ${a.remaining === 0 ? 'text-red-400' : 'text-emerald-400'}`}>{a.remaining}</span>
+                <span className={`text-[10px] font-bold hud-text ${a.remaining === 0 ? 'text-red-400' : 'text-[#D4A843]'}`}>{a.remaining}</span>
               </div>
             ))}
             {state.ecm_charges > 0 && (
@@ -430,7 +430,7 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
       {/* ═══ COMBAT LOG ═══ */}
       <div
         ref={logRef}
-        className="mx-3 h-24 overflow-y-auto border-y border-emerald-500/10 bg-gray-950/90 py-1 px-2 space-y-0.5"
+        className="mx-3 h-24 overflow-y-auto border-y border-[rgba(212,168,67,0.1)] bg-dossier-base/90 py-1 px-2 space-y-0.5"
       >
         {combatLog.map((entry, i) => (
           <div key={i} className={`log-entry flex gap-2 text-[11px] hud-text leading-tight ${i === combatLog.length - 1 ? '' : 'opacity-70'}`}>
@@ -464,7 +464,7 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
             {/* Turn result */}
             <div className="rounded-xl bg-gray-900/60 p-3 mb-2">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-emerald-400 hud-text">TURN {turnResult.turn_number} RESULT</span>
+                <span className="text-xs font-bold text-[#D4A843] hud-text">TURN {turnResult.turn_number} RESULT</span>
                 <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${zone.bg} ${zone.text}`}>
                   {turnResult.zone}
                 </span>
@@ -562,7 +562,7 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
               <button
                 onClick={handleNextTurn}
                 disabled={nextTurnLoading}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-black font-bold text-sm py-3 rounded-xl active:bg-emerald-400 disabled:opacity-60 transition-colors hud-text tracking-wider"
+                className="w-full flex items-center justify-center gap-2 bg-[#D4A843] text-[#0C0E12] font-bold text-sm py-3 rounded-xl active:bg-[#9A7A35] disabled:opacity-60 transition-colors hud-text tracking-wider"
               >
                 {nextTurnLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -575,9 +575,9 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
         ) : (
           <div className="flex-1 flex flex-col overflow-hidden">
             {choosing && (
-              <div className="mb-1.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-2 flex items-center gap-2">
-                <Loader2 className="w-4 h-4 text-emerald-400 animate-spin shrink-0" />
-                <span className="text-xs text-emerald-400 hud-text">EXECUTING...</span>
+              <div className="mb-1.5 rounded-xl bg-[rgba(212,168,67,0.05)] border border-[rgba(212,168,67,0.2)] p-2 flex items-center gap-2">
+                <Loader2 className="w-4 h-4 text-[#D4A843] animate-spin shrink-0" />
+                <span className="text-xs text-[#D4A843] hud-text">EXECUTING...</span>
               </div>
             )}
 
@@ -590,8 +590,8 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
                     key={action.key}
                     onClick={() => handleAction(action)}
                     disabled={choosing}
-                    className={`w-full rounded-xl p-3 text-left transition-all active:scale-[0.98] disabled:opacity-40 bg-gray-950/80 ${
-                      isSelected ? 'border-emerald-500/60 bg-emerald-500/10 hud-border' : 'hud-border'
+                    className={`w-full rounded-xl p-3 text-left transition-all active:scale-[0.98] disabled:opacity-40 bg-dossier-base/80 ${
+                      isSelected ? 'border-[rgba(212,168,67,0.6)] bg-[rgba(212,168,67,0.1)] hud-border' : 'hud-border'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -606,7 +606,7 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
                         </div>
                         <p className="text-[11px] text-gray-500 mt-0.5 hud-text">{action.description}</p>
                       </div>
-                      {isSelected && choosing && <Loader2 className="w-4 h-4 text-emerald-400 animate-spin shrink-0" />}
+                      {isSelected && choosing && <Loader2 className="w-4 h-4 text-[#D4A843] animate-spin shrink-0" />}
                     </div>
                   </button>
                 );
