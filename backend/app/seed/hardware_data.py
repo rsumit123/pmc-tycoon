@@ -28,6 +28,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 65,
             "maneuverability_g": 35,
             "cost_per_unit": 800,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/5/55/AstraMk1Missile.jpg",
         },
         {
             "name": "Astra Mk-2",
@@ -45,6 +46,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 75,
             "maneuverability_g": 40,
             "cost_per_unit": 1200,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/cb/Astra_missile_launched_from_a_ground-based_launcher.jpg",
         },
         {
             "name": "AIM-120C AMRAAM",
@@ -62,6 +64,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 80,
             "maneuverability_g": 40,
             "cost_per_unit": 1100,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/AIM-120_AMRAAM_P6230147.JPG",
         },
         {
             "name": "MICA EM",
@@ -79,6 +82,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 82,
             "maneuverability_g": 50,
             "cost_per_unit": 1000,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d5/MICA_P6230072.JPG",
         },
         {
             "name": "Meteor",
@@ -96,6 +100,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 90,
             "maneuverability_g": 45,
             "cost_per_unit": 2000,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/e6/Meteor_Missile_in_EuroFighter.JPG",
         },
         {
             "name": "R-77",
@@ -113,6 +118,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 60,
             "maneuverability_g": 35,
             "cost_per_unit": 700,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Vympel-R-77-maks2009.jpg",
         },
         # IR Air-to-Air Missiles (WVR)
         {
@@ -131,6 +137,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 85,
             "maneuverability_g": 60,
             "cost_per_unit": 600,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Python5-missile001.jpg",
         },
         {
             "name": "AIM-9X Sidewinder",
@@ -148,6 +155,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 80,
             "maneuverability_g": 55,
             "cost_per_unit": 500,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f8/AIM-9X_F-15C_2002.JPEG",
         },
         {
             "name": "MICA IR",
@@ -165,6 +173,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 78,
             "maneuverability_g": 50,
             "cost_per_unit": 550,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d5/MICA_P6230072.JPG",
         },
         # Anti-Ship Missiles
         {
@@ -183,6 +192,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 80,
             "maneuverability_g": 15,
             "cost_per_unit": 5000,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/90/BRAHMOS_Launcher.JPG",
         },
         {
             "name": "Harpoon",
@@ -200,6 +210,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 60,
             "maneuverability_g": 10,
             "cost_per_unit": 3000,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Mk_141_Harpoon_Missile_Launcher.JPG",
         },
         {
             "name": "YJ-18",
@@ -217,6 +228,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 65,
             "maneuverability_g": 12,
             "cost_per_unit": 4000,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/YJ-83J_Missile_20170902.jpg",
         },
         # SAM Systems
         {
@@ -235,6 +247,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 78,
             "maneuverability_g": 30,
             "cost_per_unit": 2500,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/10/Barak_8_launcher.jpg",
         },
         {
             "name": "SM-2 Standard",
@@ -252,6 +265,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 85,
             "maneuverability_g": 25,
             "cost_per_unit": 4000,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/28/Sm-2.JPG",
         },
         {
             "name": "HHQ-9",
@@ -269,6 +283,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 65,
             "maneuverability_g": 22,
             "cost_per_unit": 3500,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Chinese_HQ-9_launcher.jpg",
         },
         # CIWS
         {
@@ -287,6 +302,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 30,
             "maneuverability_g": 0,
             "cost_per_unit": 1500,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/80/AK-630_30_mm_naval_CIWS_gun.JPEG",
         },
         {
             "name": "Phalanx CIWS",
@@ -304,6 +320,7 @@ def seed_hardware(db: Session) -> None:
             "eccm_rating": 40,
             "maneuverability_g": 0,
             "cost_per_unit": 2000,
+            "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Phalanx_CIWS_-_Side_View.JPG",
         },
     ]
 
