@@ -16,6 +16,7 @@ import {
   RotateCw,
 } from 'lucide-react';
 import { apiService } from '../../services/api';
+import { AircraftDiagram } from '../hangar/AircraftDiagram';
 import '../../styles/design-system.css';
 
 // ─── Types ───
@@ -126,6 +127,7 @@ export const Hangar = () => {
   const [availableModules, setAvailableModules] = useState<ModuleData[]>([]);
   const [subsystemsLoading, setSubsystemsLoading] = useState(false);
   const [computedStats, setComputedStats] = useState<any>(null);
+  const [selectedDiagramSlot, setSelectedDiagramSlot] = useState<string | null>('radar');
 
   const fetchData = useCallback(async () => {
     try {
@@ -282,48 +284,68 @@ export const Hangar = () => {
           </div>
         </div>
 
-        {/* Subsystems */}
+        {/* Subsystems — Aircraft Diagram */}
         <div className="mb-4">
-          <p className="label-section mb-3">SUBSYSTEMS</p>
+          <p className="label-section mb-2">SUBSYSTEMS</p>
           {subsystemsLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--color-amber)' }} />
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2.5">
-              {sortedSubs.map(sub => (
-                <div key={sub.slot_type} className="slot-card">
-                  <div className="slot-card-label">{SLOT_LABELS[sub.slot_type] || sub.slot_type}</div>
-                  <p className="font-data text-xs font-medium truncate" style={{ color: 'var(--color-text)' }}>
-                    {sub.module.name.replace(` (${detailAircraft.name})`, '')}
-                  </p>
-                  <p className="font-data text-[11px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
-                    {slotStatDisplay(sub.slot_type, sub.module.stats)}
-                  </p>
-                  {/* Tier badge */}
-                  {sub.module.tier > 1 && (
-                    <span className={`inline-block text-[8px] font-bold px-1.5 py-0.5 rounded border mt-1.5 font-display ${tierBadge(sub.module.tier)}`}>
-                      TIER {sub.module.tier}
-                    </span>
-                  )}
-                  {/* Condition bar */}
-                  <div className="mt-2 flex items-center gap-2">
-                    <div className="flex-1 gauge-bar" style={{ height: '4px' }}>
-                      <div className={`gauge-fill ${conditionBg(sub.condition_pct)}`} style={{ width: `${sub.condition_pct}%` }} />
+            <>
+              {/* Interactive aircraft diagram */}
+              <div className="card-dossier p-3 mb-3">
+                <AircraftDiagram
+                  slots={sortedSubs.map(sub => ({
+                    slot_type: sub.slot_type,
+                    module_name: sub.module.name.replace(` (${detailAircraft.name})`, ''),
+                    key_stat: slotStatDisplay(sub.slot_type, sub.module.stats),
+                    condition_pct: sub.condition_pct,
+                  }))}
+                  selectedSlot={swapSlot || selectedDiagramSlot}
+                  onSlotSelect={(slotType) => setSelectedDiagramSlot(slotType)}
+                />
+              </div>
+
+              {/* Selected slot detail card */}
+              {(() => {
+                const activeSlot = swapSlot || selectedDiagramSlot;
+                const sub = activeSlot ? sortedSubs.find(s => s.slot_type === activeSlot) : null;
+                if (!sub) return null;
+                return (
+                  <div className="card-dossier p-3 mb-3" style={{ borderLeft: `3px solid ${sub.condition_pct > 70 ? 'var(--color-green)' : sub.condition_pct > 40 ? 'var(--color-amber)' : 'var(--color-red)'}` }}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-display text-xs tracking-wider" style={{ color: 'var(--color-amber)' }}>
+                        {SLOT_LABELS[sub.slot_type] || sub.slot_type}
+                      </span>
+                      {sub.module.tier > 1 && (
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border font-display ${tierBadge(sub.module.tier)}`}>
+                          TIER {sub.module.tier}
+                        </span>
+                      )}
                     </div>
-                    <span className={`font-data text-[10px] font-bold ${conditionColor(sub.condition_pct)}`}>{sub.condition_pct}%</span>
+                    <p className="font-data text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                      {sub.module.name.replace(` (${detailAircraft.name})`, '')}
+                    </p>
+                    <p className="font-data text-xs mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
+                      {slotStatDisplay(sub.slot_type, sub.module.stats)}
+                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="flex-1 gauge-bar" style={{ height: '5px' }}>
+                        <div className={`gauge-fill ${conditionBg(sub.condition_pct)}`} style={{ width: `${sub.condition_pct}%` }} />
+                      </div>
+                      <span className={`font-data text-[11px] font-bold ${conditionColor(sub.condition_pct)}`}>{sub.condition_pct}%</span>
+                    </div>
+                    <button
+                      onClick={() => openSwapDrawer(sub.slot_type)}
+                      className="btn-secondary mt-2 w-full flex items-center justify-center gap-1 text-xs py-2"
+                    >
+                      <RotateCw className="w-3.5 h-3.5" /> SWAP MODULE
+                    </button>
                   </div>
-                  {/* Swap button */}
-                  <button
-                    onClick={() => openSwapDrawer(sub.slot_type)}
-                    className="mt-2 w-full flex items-center justify-center gap-1 text-[10px] font-display tracking-wider py-1.5 rounded border transition-colors"
-                    style={{ color: 'var(--color-text-secondary)', borderColor: 'var(--color-border)' }}
-                  >
-                    <RotateCw className="w-3 h-3" /> SWAP
-                  </button>
-                </div>
-              ))}
-            </div>
+                );
+              })()}
+            </>
           )}
         </div>
 
