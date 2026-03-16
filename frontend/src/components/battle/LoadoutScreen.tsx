@@ -11,6 +11,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { apiService } from '../../services/api';
+import { LazyImage } from '../ui/LazyImage';
 import '../../styles/design-system.css';
 import './animations.css';
 
@@ -121,13 +122,12 @@ export const LoadoutScreen = ({ battleId, aircraft, enemy, weapons, onReady }: L
           return (
             <div key={w.id} className="card-dossier p-3 transition-all" style={qty > 0 ? { borderColor: 'var(--color-amber-dim)' } : {}}>
               <div className="flex items-center gap-3">
-                {w.image_url ? (
-                  <img src={w.image_url} alt={w.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
-                ) : (
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center border text-xs font-bold font-data shrink-0 ${typeBg[w.type] || 'bg-ink-faint/40 text-ink-secondary border-border'}`}>
-                    {typeLabel[w.type] || w.type}
-                  </div>
-                )}
+                <LazyImage
+                  src={w.image_url}
+                  alt={w.name}
+                  className={`w-12 h-12 rounded-lg shrink-0 ${!w.image_url ? `flex items-center justify-center border text-xs font-bold font-data ${typeBg[w.type] || 'bg-ink-faint/40 text-ink-secondary border-border'}` : ''}`}
+                  fallbackText={typeLabel[w.type] || w.type}
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>{w.name}</p>
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">

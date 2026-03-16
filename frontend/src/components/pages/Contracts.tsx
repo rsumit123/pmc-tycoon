@@ -454,18 +454,18 @@ export const Contracts = () => {
                 );
               })}
             </div>
-            <div className="p-4" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <div className="p-4 pb-8" style={{ borderTop: '1px solid var(--color-border)', paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
               <button
                 onClick={handleBattleDeploy}
                 disabled={selectedVehicleId === null || actionLoading === battlePickerTemplate.id}
-                className="btn-primary w-full flex items-center justify-center gap-2 text-sm"
+                className="btn-primary w-full flex items-center justify-center gap-2 text-sm py-4"
               >
                 {actionLoading === battlePickerTemplate.id ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Swords className="w-4 h-4" />
                 )}
-                Deploy & Enter Battle
+                DEPLOY & ENTER BATTLE
               </button>
             </div>
           </div>

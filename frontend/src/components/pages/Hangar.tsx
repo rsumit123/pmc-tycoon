@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { apiService } from '../../services/api';
 import { AircraftDiagram } from '../hangar/AircraftDiagram';
+import { LazyImage } from '../ui/LazyImage';
 import '../../styles/design-system.css';
 
 // ─── Types ───
@@ -325,13 +326,12 @@ export const Hangar = () => {
                   <div className="card-dossier p-3 mb-3" style={{ borderLeft: `3px solid ${sub.condition_pct > 70 ? 'var(--color-green)' : sub.condition_pct > 40 ? 'var(--color-amber)' : 'var(--color-red)'}` }}>
                     <div className="flex gap-3">
                       {/* Module image */}
-                      {sub.module.image_url ? (
-                        <img src={sub.module.image_url} alt={sub.module.name} className="w-16 h-16 rounded-lg object-cover shrink-0" />
-                      ) : (
-                        <div className="w-16 h-16 rounded-lg shrink-0 flex items-center justify-center text-xs font-display tracking-wider" style={{ background: 'var(--color-surface-raised)', color: 'var(--color-text-muted)' }}>
-                          {(SLOT_LABELS[sub.slot_type] || sub.slot_type).slice(0, 3)}
-                        </div>
-                      )}
+                      <LazyImage
+                        src={sub.module.image_url}
+                        alt={sub.module.name}
+                        className="w-16 h-16 rounded-lg shrink-0"
+                        fallbackText={(SLOT_LABELS[sub.slot_type] || sub.slot_type).slice(0, 3)}
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
                           <span className="font-display text-[10px] tracking-wider" style={{ color: 'var(--color-amber)' }}>
@@ -446,13 +446,12 @@ export const Hangar = () => {
                     <div key={mod.id} className="card-dossier p-3">
                       <div className="flex items-start gap-3">
                         {/* Module image */}
-                        {mod.image_url ? (
-                          <img src={mod.image_url} alt={mod.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg shrink-0 flex items-center justify-center text-[9px] font-display" style={{ background: 'var(--color-surface-raised)', color: 'var(--color-text-muted)' }}>
-                            {(swapSlot || '').slice(0, 3).toUpperCase()}
-                          </div>
-                        )}
+                        <LazyImage
+                          src={mod.image_url}
+                          alt={mod.name}
+                          className="w-12 h-12 rounded-lg shrink-0"
+                          fallbackText={(swapSlot || '').slice(0, 3).toUpperCase()}
+                        />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="font-data text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{mod.name}</p>
