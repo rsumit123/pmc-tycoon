@@ -105,6 +105,82 @@ AIRCRAFT_DEFAULTS = {
     },
 }
 
+# Default image URLs per slot type (from Wikimedia Commons, verified)
+SLOT_IMAGES = {
+    "radar": [
+        "https://upload.wikimedia.org/wikipedia/commons/d/d3/AN-APG-68_radar%2C_Westinghouse%2C_1978_-_National_Electronics_Museum_-_DSC00415.JPG",
+        "https://upload.wikimedia.org/wikipedia/commons/4/4b/APY-016K_AESA_radar_in_Compact_Antenna_Test_Range.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/5/5e/AAAU_of_DRDO_Uttam_AESA_radar.png",
+        "https://upload.wikimedia.org/wikipedia/commons/b/b6/96L6E_phased_array_radar_antenna.JPG",
+    ],
+    "engine": [
+        "https://upload.wikimedia.org/wikipedia/commons/3/39/Close_up_of_a_General_Electric_F110_engine_on_a_F-14_Tomcat_2009-12-27.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/f/f7/General_Electric_F110_AEDC_84-1128_USAF.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/a/af/Pratt_%26_Whitney_F135_at_the_Steven_F._Udvar-Hazy_Center%2C_Dec_2017_1.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/6/63/EJ200-Eurofighter-Turbine-apel.JPG",
+        "https://upload.wikimedia.org/wikipedia/commons/2/27/117C_for_Su-35.jpg",
+    ],
+    "ecm": [
+        "https://upload.wikimedia.org/wikipedia/commons/a/ab/ALQ-131_ECM_Pod.JPG",
+        "https://upload.wikimedia.org/wikipedia/commons/9/9d/AN_ALQ-131%28V%29_mounted_on_USAF_F-16_at_ILA-2024.JPG",
+        "https://upload.wikimedia.org/wikipedia/commons/4/48/Two_airmen_inspect_an_electronic_countermeasures_pod.jpg",
+    ],
+    "countermeasures": [
+        "https://upload.wikimedia.org/wikipedia/commons/8/81/F-14_Chaff-Flare_Load.JPEG",
+        "https://upload.wikimedia.org/wikipedia/commons/5/51/C-130_Hercules_flare_and_CHAFF_dispensers.JPEG",
+        "https://upload.wikimedia.org/wikipedia/commons/f/f4/F-15E_Strike_Eagles_launch_chaff_and_flares.jpg",
+    ],
+    "computer": [
+        "https://upload.wikimedia.org/wikipedia/commons/5/51/F16_Cockpit%2C_Asian_Aerospace_2006.JPG",
+        "https://upload.wikimedia.org/wikipedia/commons/9/97/F-16_Cockpit_part.JPG",
+        "https://upload.wikimedia.org/wikipedia/commons/a/ac/NAVSTA_Rota_tries_out_F-35_cockpit_demonstrator_%285529922%29.jpg",
+    ],
+    "airframe": [
+        "https://upload.wikimedia.org/wikipedia/commons/b/b6/F-22_Raptor.JPG",
+        "https://upload.wikimedia.org/wikipedia/commons/0/04/Fond_Farewell_to_F-15C_A5095_%288605963%29.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/5/5c/F-22_Raptor_-_100526-F-2185F-524.JPG",
+    ],
+}
+
+# Per-module image overrides (index into SLOT_IMAGES[slot_type])
+MODULE_IMAGE_INDEX = {
+    # Radars
+    "APG-68(V)9": 0, "RBE2 AESA": 1, "N011M BARS PESA": 3, "APG-82(V)1 AESA": 1,
+    "KLJ-7A AESA": 1, "Uttam AESA": 2, "RDY-2": 3, "Captor-E AESA": 1,
+    "APG-83 SABR": 1, "Zhuk-AE AESA": 3, "AN/APG-82(V)1+": 1, "Captor-E Mk2": 1,
+    # Engines
+    "F110-GE-129": 0, "M88-2": 1, "AL-31FP": 4, "F100-PW-229": 1,
+    "RD-93": 0, "GE F414-INS6": 0, "M53-P2": 1, "EJ200": 3,
+    "Enhanced F110-GE-132": 1, "F135 Derivative": 2, "AL-41F1S Upgraded": 4, "EJ200 Phase 3": 3,
+    # ECM
+    "SPECTRA": 2, "ALQ-211 AIDEWS": 1, "Tarang Mk2": 2, "TEWS": 0,
+    "Basic ECM": 1, "Mayavi": 2, "ICMS Mk3": 0, "Praetorian DASS": 2,
+    "Khibiny-M": 2, "SPECTRA-NG": 2, "ALQ-239 DEWS": 0,
+    # Countermeasures
+    "AN/ALE-47 CMDS": 0, "APP-50 Dispenser": 0, "AN/ALE-45 CMDS": 0,
+    "Spirale CMDS": 1, "BOL/BOP Dispenser": 2, "DRDO CMDS": 0, "MBDA Chaff/Flare Dispenser": 0,
+    "Standard Dispenser": 0,
+    "Enhanced Dispenser System": 1, "Next-Gen CMS": 2, "BriteCloud Decoy System": 2,
+    # Computers
+    "AESA-Integrated FCC": 1, "Sensor Fusion MMC": 2, "Digital Glass Cockpit MMC": 2,
+    # Airframes
+    "Reinforced Airframe": 1, "Stealth Coating Package": 2, "Composite Overhaul": 0,
+}
+
+
+def _get_module_image(slot_type: str, module_name: str) -> str | None:
+    """Get image URL for a module based on its name or slot type."""
+    images = SLOT_IMAGES.get(slot_type, [])
+    if not images:
+        return None
+    # Check for specific module match
+    for key, idx in MODULE_IMAGE_INDEX.items():
+        if key in module_name:
+            return images[idx % len(images)] if idx < len(images) else images[0]
+    # Fallback: first image for slot type
+    return images[0]
+
+
 # Upgrade modules (not defaults, universal compatibility)
 UPGRADE_MODULES = [
     # --- RADAR upgrades ---
@@ -362,13 +438,15 @@ def seed_subsystems(db: Session) -> None:
         origin = specs["origin"]
 
         # RADAR
+        radar_name = specs['radar']['radar_type']
         mod = SubsystemModule(
-            name=f"{specs['radar']['radar_type']} ({ac_name})",
+            name=f"{radar_name} ({ac_name})",
             slot_type="radar",
             tier=1,
             origin=origin,
             description=f"Stock radar unit for {ac_name}.",
             stats=json.dumps(specs["radar"]),
+            image_url=_get_module_image("radar", radar_name),
             cost=0,
             maintenance_cost=200,
             compatible_aircraft=compatible,
@@ -386,6 +464,7 @@ def seed_subsystems(db: Session) -> None:
             origin=origin,
             description=f"Stock {engine_name} powerplant for {ac_name}.",
             stats=json.dumps(specs["engine"]),
+            image_url=_get_module_image("engine", engine_name),
             cost=0,
             maintenance_cost=300,
             compatible_aircraft=compatible,
@@ -395,13 +474,15 @@ def seed_subsystems(db: Session) -> None:
         default_module_map[(ac_name, "engine")] = mod
 
         # ECM
+        ecm_name = specs['ecm']['ecm_suite']
         mod = SubsystemModule(
-            name=f"{specs['ecm']['ecm_suite']} ({ac_name})",
+            name=f"{ecm_name} ({ac_name})",
             slot_type="ecm",
             tier=1,
             origin=origin,
             description=f"Stock electronic warfare suite for {ac_name}.",
             stats=json.dumps(specs["ecm"]),
+            image_url=_get_module_image("ecm", ecm_name),
             cost=0,
             maintenance_cost=150,
             compatible_aircraft=compatible,
@@ -419,6 +500,7 @@ def seed_subsystems(db: Session) -> None:
             origin=origin,
             description=f"Stock {cm_name} for {ac_name}.",
             stats=json.dumps(specs["countermeasures"]),
+            image_url=_get_module_image("countermeasures", cm_name),
             cost=0,
             maintenance_cost=100,
             compatible_aircraft=compatible,
@@ -436,6 +518,7 @@ def seed_subsystems(db: Session) -> None:
             origin=origin,
             description=f"Stock {computer_name} for {ac_name}.",
             stats=json.dumps({"pk_bonus": 0.0, "scan_speed_mod": 1.0, "multi_target": 2}),
+            image_url=_get_module_image("computer", computer_name),
             cost=0,
             maintenance_cost=100,
             compatible_aircraft=compatible,
@@ -453,6 +536,7 @@ def seed_subsystems(db: Session) -> None:
             origin=origin,
             description=f"Stock {airframe_name} structure for {ac_name}.",
             stats=json.dumps(specs["airframe"]),
+            image_url=_get_module_image("airframe", airframe_name),
             cost=0,
             maintenance_cost=200,
             compatible_aircraft=compatible,
@@ -463,7 +547,10 @@ def seed_subsystems(db: Session) -> None:
 
     # --- Create upgrade modules (universal) ---
     for upg in UPGRADE_MODULES:
-        mod = SubsystemModule(**upg)
+        upg_copy = dict(upg)
+        if "image_url" not in upg_copy:
+            upg_copy["image_url"] = _get_module_image(upg_copy["slot_type"], upg_copy["name"])
+        mod = SubsystemModule(**upg_copy)
         db.add(mod)
 
     # Flush so all modules get IDs

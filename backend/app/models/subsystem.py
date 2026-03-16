@@ -23,6 +23,7 @@ class SubsystemModule(Base):
     # airframe: {max_g_mod, rcs_mod, payload_mod, hp_mod}
     stats = Column(String, nullable=False)  # JSON
 
+    image_url = Column(String, nullable=True)
     cost = Column(Integer, default=0)
     maintenance_cost = Column(Integer, default=0)  # per mission repair cost base
     compatible_aircraft = Column(String, nullable=True)  # JSON list of aircraft IDs, null = universal

@@ -38,6 +38,7 @@ def _module_to_dict(mod: SubsystemModule) -> dict:
         "origin": mod.origin,
         "description": mod.description,
         "stats": json.loads(mod.stats),
+        "image_url": mod.image_url,
         "cost": mod.cost,
         "maintenance_cost": mod.maintenance_cost,
         "compatible_aircraft": json.loads(mod.compatible_aircraft) if mod.compatible_aircraft else None,

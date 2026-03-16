@@ -61,7 +61,7 @@ interface SubsystemData {
   module: {
     id: number; name: string; slot_type: string; tier: number; origin: string;
     description: string | null; stats: Record<string, any>; cost: number;
-    maintenance_cost: number; is_default: boolean;
+    maintenance_cost: number; is_default: boolean; image_url?: string | null;
   };
   condition_pct: number;
 }
@@ -70,6 +70,7 @@ interface ModuleData {
   id: number; name: string; slot_type: string; tier: number; origin: string;
   description: string | null; stats: Record<string, any>; cost: number;
   maintenance_cost: number; compatible_aircraft: number[] | null; is_default: boolean;
+  image_url?: string | null;
 }
 
 type Tab = 'aircraft' | 'weapons' | 'ships';
@@ -314,22 +315,34 @@ export const Hangar = () => {
                 if (!sub) return null;
                 return (
                   <div className="card-dossier p-3 mb-3" style={{ borderLeft: `3px solid ${sub.condition_pct > 70 ? 'var(--color-green)' : sub.condition_pct > 40 ? 'var(--color-amber)' : 'var(--color-red)'}` }}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-display text-xs tracking-wider" style={{ color: 'var(--color-amber)' }}>
-                        {SLOT_LABELS[sub.slot_type] || sub.slot_type}
-                      </span>
-                      {sub.module.tier > 1 && (
-                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border font-display ${tierBadge(sub.module.tier)}`}>
-                          TIER {sub.module.tier}
-                        </span>
+                    <div className="flex gap-3">
+                      {/* Module image */}
+                      {sub.module.image_url ? (
+                        <img src={sub.module.image_url} alt={sub.module.name} className="w-16 h-16 rounded-lg object-cover shrink-0" />
+                      ) : (
+                        <div className="w-16 h-16 rounded-lg shrink-0 flex items-center justify-center text-xs font-display tracking-wider" style={{ background: 'var(--color-surface-raised)', color: 'var(--color-text-muted)' }}>
+                          {(SLOT_LABELS[sub.slot_type] || sub.slot_type).slice(0, 3)}
+                        </div>
                       )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="font-display text-[10px] tracking-wider" style={{ color: 'var(--color-amber)' }}>
+                            {SLOT_LABELS[sub.slot_type] || sub.slot_type}
+                          </span>
+                          {sub.module.tier > 1 && (
+                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border font-display ${tierBadge(sub.module.tier)}`}>
+                              TIER {sub.module.tier}
+                            </span>
+                          )}
+                        </div>
+                        <p className="font-data text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
+                          {sub.module.name.replace(` (${detailAircraft.name})`, '')}
+                        </p>
+                        <p className="font-data text-xs mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
+                          {slotStatDisplay(sub.slot_type, sub.module.stats)}
+                        </p>
+                      </div>
                     </div>
-                    <p className="font-data text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                      {sub.module.name.replace(` (${detailAircraft.name})`, '')}
-                    </p>
-                    <p className="font-data text-xs mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
-                      {slotStatDisplay(sub.slot_type, sub.module.stats)}
-                    </p>
                     <div className="mt-2 flex items-center gap-2">
                       <div className="flex-1 gauge-bar" style={{ height: '5px' }}>
                         <div className={`gauge-fill ${conditionBg(sub.condition_pct)}`} style={{ width: `${sub.condition_pct}%` }} />
@@ -423,7 +436,15 @@ export const Hangar = () => {
                   const isInstalled = current?.module.id === mod.id;
                   return (
                     <div key={mod.id} className="card-dossier p-3">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        {/* Module image */}
+                        {mod.image_url ? (
+                          <img src={mod.image_url} alt={mod.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg shrink-0 flex items-center justify-center text-[9px] font-display" style={{ background: 'var(--color-surface-raised)', color: 'var(--color-text-muted)' }}>
+                            {(swapSlot || '').slice(0, 3).toUpperCase()}
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="font-data text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{mod.name}</p>
@@ -447,11 +468,11 @@ export const Hangar = () => {
                         <button
                           onClick={() => handleSwap(mod.id)}
                           disabled={isInstalled || actionLoading === `swap-${swapSlot}`}
-                          className="btn-secondary text-xs px-3 py-2 shrink-0 ml-2"
+                          className="btn-secondary text-xs px-3 py-2 shrink-0 mt-1"
                         >
                           {actionLoading === `swap-${swapSlot}` ? <Loader2 className="w-3 h-3 animate-spin" /> : 'INSTALL'}
                         </button>
-                      </div>
+                        </div>
                     </div>
                   );
                 })}
