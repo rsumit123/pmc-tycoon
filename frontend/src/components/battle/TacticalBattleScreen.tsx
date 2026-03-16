@@ -93,6 +93,8 @@ interface TacticalBattleScreenProps {
   battleId: number;
   initialState: TacticalState;
   objective?: string;
+  playerImageUrl?: string | null;
+  enemyImageUrl?: string | null;
   onComplete: (report: any) => void;
 }
 
@@ -127,7 +129,7 @@ const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> => {
   ]);
 };
 
-export const TacticalBattleScreen = ({ battleId, initialState, objective, onComplete }: TacticalBattleScreenProps) => {
+export const TacticalBattleScreen = ({ battleId, initialState, objective, playerImageUrl, enemyImageUrl, onComplete }: TacticalBattleScreenProps) => {
   const [state, setState] = useState<TacticalState>(initialState);
   const [turnResult, setTurnResult] = useState<TurnResultData | null>(null);
   const [choosing, setChoosing] = useState(false);
@@ -142,6 +144,7 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, onComp
   const [screenEffect, setScreenEffect] = useState<string | null>(null);
   const [missileAnim, setMissileAnim] = useState<'fwd' | 'rev' | null>(null);
   const [nextTurnLoading, setNextTurnLoading] = useState(false);
+  const [threatWarning, setThreatWarning] = useState<string | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const prevAmmoRef = useRef<Map<string, number>>(new Map());
 
@@ -255,6 +258,32 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, onComp
         }, delay);
       }
 
+      // Threat warnings (show briefly)
+      if (data.enemy_shot_hit !== undefined && data.enemy_shot_hit !== null) {
+        setThreatWarning('\u26A0 MISSILE INBOUND');
+        setTimeout(() => setThreatWarning(null), 1500);
+      }
+      if (data.state && data.state.fuel_pct < 20 && state.fuel_pct >= 20) {
+        setTimeout(() => { setThreatWarning('\u26FD BINGO FUEL \u2014 RTB RECOMMENDED'); setTimeout(() => setThreatWarning(null), 2000); }, 800);
+      }
+      if (data.enemy_action && data.enemy_action.toLowerCase().includes('fire')) {
+        setTimeout(() => { setThreatWarning('\u26A0 ENEMY RADAR LOCK'); setTimeout(() => setThreatWarning(null), 1500); }, 300);
+      }
+      // Winchester alert
+      if (data.state) {
+        data.state.player_ammo.forEach((a: { weapon_name: string; remaining: number }) => {
+          const oldQty = prevAmmoRef.current.get(a.weapon_name) ?? 0;
+          if (oldQty > 0 && a.remaining === 0) {
+            setTimeout(() => { setThreatWarning(`\uD83D\uDEA8 WINCHESTER \u2014 ${a.weapon_name}`); setTimeout(() => setThreatWarning(null), 2000); }, 1600);
+          }
+        });
+      }
+      // Zone transition warning
+      if (data.zone !== state.zone) {
+        const zoneMsg = data.zone === 'WVR' ? 'ENTERING WVR \u2014 CLOSE COMBAT' : data.zone === 'TRANSITION' ? 'ENTERING TRANSITION ZONE' : 'ENTERING BVR ZONE';
+        setTimeout(() => { setThreatWarning(`\u26A0 ${zoneMsg}`); setTimeout(() => setThreatWarning(null), 2000); }, 400);
+      }
+
     } catch (err: any) {
       const isTimeout = err?.message === 'Request timed out';
       const msg = isTimeout ? 'Request timed out — check connection' : (err?.response?.data?.detail || 'Connection error');
@@ -296,6 +325,34 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, onComp
   const intelCount = [state.enemy_intel.radar_known, state.enemy_intel.rcs_known,
     state.enemy_intel.ecm_known, state.enemy_intel.loadout_known,
     state.enemy_intel.fuel_known, state.enemy_intel.damage_known].filter(Boolean).length;
+
+  const getTacticalHint = (): string | null => {
+    if (state.fuel_pct < 15) return '\u26FD Critical fuel \u2014 disengage immediately';
+    if (state.fuel_pct < 30) return '\u26FD Low fuel \u2014 consider disengaging soon';
+
+    const playerHasBvr = state.player_ammo.some(a => a.type === 'BVR_AAM' && a.remaining > 0);
+    const playerHasIr = state.player_ammo.some(a => a.type === 'IR_AAM' && a.remaining > 0);
+    const allAmmoOut = !playerHasBvr && !playerHasIr;
+
+    if (allAmmoOut && state.zone !== 'WVR') return '\uD83D\uDD2B Winchester \u2014 close to WVR for guns or disengage';
+    if (allAmmoOut && state.zone === 'WVR') return '\uD83D\uDD2B Missiles spent \u2014 guns only';
+
+    if (state.enemy_intel.damage_known && (state.enemy_intel.damage_pct || 0) > 60)
+      return '\uD83C\uDFAF Enemy heavily damaged \u2014 press the advantage';
+
+    if (state.zone === 'BVR' && playerHasBvr)
+      return '\uD83D\uDCE1 BVR zone \u2014 radar missiles have max effectiveness here';
+    if (state.zone === 'TRANSITION' && playerHasIr)
+      return '\uD83D\uDD25 Transition zone \u2014 IR missiles becoming effective';
+    if (state.zone === 'WVR')
+      return '\u2694\uFE0F WVR \u2014 close combat, guns and IR missiles';
+
+    if (intelCount < 3) return '\uD83D\uDC41 Consider scanning \u2014 intel reveals enemy capabilities';
+    if (state.ecm_charges > 0 && state.zone !== 'WVR')
+      return '\uD83D\uDCE1 ECM available \u2014 can degrade enemy radar missiles';
+
+    return null;
+  };
 
   return (
     <div className={`min-h-[100dvh] bg-dossier-base flex flex-col hud-grid hud-scanlines relative ${screenEffect === 'damage-vignette' ? 'screen-shake' : ''}`}>
@@ -352,6 +409,13 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, onComp
       {/* ═══ TACTICAL VIEW ═══ */}
       <div className="px-3 py-2 relative">
         <div className="hud-border rounded-xl p-3 relative overflow-hidden bg-dossier-base/80">
+          {/* Threat warning banner */}
+          {threatWarning && (
+            <div className="absolute top-0 left-0 right-0 z-10 px-3 py-2 text-center fade-slide-up"
+              style={{ background: 'rgba(196,69,60,0.9)' }}>
+              <span className="text-sm font-display tracking-wider text-white font-bold">{threatWarning}</span>
+            </div>
+          )}
           {/* Radar sweep */}
           <div className="absolute inset-0 opacity-[0.03]">
             <div className="w-full h-full radar-sweep" style={{
@@ -364,8 +428,12 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, onComp
           <div className="relative flex items-center justify-between mb-2">
             {/* Player */}
             <div className="text-center">
-              <div className="w-12 h-12 rounded-lg hud-border flex items-center justify-center bg-[rgba(212,168,67,0.05)] mb-1">
-                <span className="text-xl">✈</span>
+              <div className="w-12 h-12 rounded-lg overflow-hidden hud-border bg-[rgba(212,168,67,0.05)] mb-1">
+                {playerImageUrl ? (
+                  <img src={playerImageUrl} alt="Your aircraft" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center"><span className="text-xl">{'\u2708'}</span></div>
+                )}
               </div>
               <p className="text-[10px] text-[#D4A843] hud-text font-bold truncate max-w-[64px]">{state.player_name.split(' ').pop()}</p>
               <div className="h-1.5 w-12 bg-gray-800 rounded-full overflow-hidden mt-0.5">
@@ -374,31 +442,44 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, onComp
               <span className="text-[10px] text-gray-500 hud-text">{playerHp.toFixed(0)}%</span>
             </div>
 
-            {/* Range line */}
-            <div className="flex-1 mx-2 relative h-6 flex items-center">
-              <div className="w-full h-px bg-emerald-500/20 relative">
-                <div className="absolute top-1/2 left-1/3 w-px h-2.5 -translate-y-1/2 bg-amber-500/30" />
-                <div className="absolute top-1/2 left-2/3 w-px h-2.5 -translate-y-1/2 bg-red-500/30" />
+            {/* Dynamic range bar */}
+            <div className="flex-1 mx-2 relative">
+              <div className="h-3 rounded-full overflow-hidden flex" style={{ background: 'var(--color-border)' }}>
+                {/* BVR zone - proportional to 0-250km range */}
+                <div className="h-full bg-emerald-500/30" style={{ width: '60%' }} />
+                {/* TRANSITION zone */}
+                <div className="h-full bg-amber-500/30" style={{ width: '25%' }} />
+                {/* WVR zone */}
+                <div className="h-full bg-red-500/30" style={{ width: '15%' }} />
               </div>
-              {missileAnim === 'fwd' && (
-                <div className="absolute inset-y-0 left-0 flex items-center">
-                  <div className="h-0.5 bg-gradient-to-r from-emerald-400 to-transparent missile-trail-fwd" style={{ maxWidth: '100%' }} />
-                </div>
-              )}
-              {missileAnim === 'rev' && (
-                <div className="absolute inset-y-0 right-0 flex items-center justify-end">
-                  <div className="h-0.5 bg-gradient-to-l from-red-400 to-transparent missile-trail-rev" style={{ maxWidth: '100%' }} />
-                </div>
-              )}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-0.5">
+              {/* Range marker - position based on current range (250km max) */}
+              <div className="absolute top-0 h-3 flex items-center" style={{ left: `${Math.min(100, Math.max(0, (1 - state.range_km / 250) * 100))}%`, transform: 'translateX(-50%)' }}>
+                <div className="w-2.5 h-5 rounded-sm" style={{ background: 'var(--color-amber)', boxShadow: '0 0 6px var(--color-amber)' }} />
+              </div>
+              {/* Zone labels */}
+              <div className="flex justify-between mt-1">
+                <span className="text-[8px] hud-text text-emerald-400/50">BVR</span>
+                <span className="text-[8px] hud-text text-amber-400/50">40km</span>
+                <span className="text-[8px] hud-text text-red-400/50">15km</span>
+                <span className="text-[8px] hud-text text-red-400/50">WVR</span>
+              </div>
+              {/* Current range display */}
+              <div className="text-center mt-0.5">
                 <span className="text-[10px] text-gray-600 hud-text">{state.range_km.toFixed(0)}KM</span>
               </div>
+              {/* Missile trails overlay */}
+              {missileAnim === 'fwd' && <div className="absolute inset-0 flex items-center"><div className="h-0.5 bg-gradient-to-r from-emerald-400 to-transparent missile-trail-fwd" /></div>}
+              {missileAnim === 'rev' && <div className="absolute inset-0 flex items-center justify-end"><div className="h-0.5 bg-gradient-to-l from-red-400 to-transparent missile-trail-rev" /></div>}
             </div>
 
             {/* Enemy */}
             <div className="text-center">
-              <div className="w-12 h-12 rounded-lg hud-border-amber flex items-center justify-center bg-amber-500/5 mb-1 relative">
-                <span className="text-xl">◇</span>
+              <div className="w-12 h-12 rounded-lg overflow-hidden hud-border-amber bg-amber-500/5 mb-1 relative">
+                {enemyImageUrl ? (
+                  <img src={enemyImageUrl} alt="Enemy aircraft" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center"><span className="text-xl">{'\u25C7'}</span></div>
+                )}
                 {intelCount < 6 && (
                   <span className="absolute -top-1 -right-1 text-[9px] bg-violet-500/30 text-violet-300 rounded-full w-4 h-4 flex items-center justify-center font-bold">?</span>
                 )}
@@ -611,6 +692,17 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, onComp
           </div>
         ) : (
           <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Tactical advisor hint */}
+            {!choosing && (() => {
+              const hint = getTacticalHint();
+              if (!hint) return null;
+              return (
+                <div className="mb-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: 'rgba(212,168,67,0.06)', border: '1px solid rgba(212,168,67,0.1)' }}>
+                  <p className="text-[11px] hud-text" style={{ color: 'var(--color-text-secondary)' }}>{hint}</p>
+                </div>
+              );
+            })()}
+
             {choosing && (
               <div className="mb-1.5 rounded-xl bg-[rgba(212,168,67,0.05)] border border-[rgba(212,168,67,0.2)] p-2 flex items-center gap-2">
                 <Loader2 className="w-4 h-4 text-[#D4A843] animate-spin shrink-0" />

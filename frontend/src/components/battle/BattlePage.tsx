@@ -27,6 +27,8 @@ export const BattlePage = () => {
   const [reportData, setReportData] = useState<any>(null);
   const [showTransition, setShowTransition] = useState(false);
   const [missionObjective, setMissionObjective] = useState<string | null>(null);
+  const [playerImageUrl, setPlayerImageUrl] = useState<string | null>(null);
+  const [enemyImageUrl, setEnemyImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -82,6 +84,10 @@ export const BattlePage = () => {
         // Store objective if available from backend
         if (data.objective) setMissionObjective(data.objective);
         else if (data.mission_objective) setMissionObjective(data.mission_objective);
+
+        // Store aircraft image URLs
+        if (data.player_aircraft?.image_url) setPlayerImageUrl(data.player_aircraft.image_url);
+        if (data.enemy_aircraft?.image_url) setEnemyImageUrl(data.enemy_aircraft.image_url);
 
         if (data.battle_type === 'naval') {
           const loadoutRes = await apiService.submitLoadout(data.battle_id, { weapons: [] });
@@ -196,6 +202,8 @@ export const BattlePage = () => {
           battleId={battleId}
           initialState={battleState}
           objective={missionObjective || battleState.objective || undefined}
+          playerImageUrl={playerImageUrl}
+          enemyImageUrl={enemyImageUrl}
           onComplete={(report) => {
             setReportData(report);
             setPhase('report');
