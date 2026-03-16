@@ -173,7 +173,13 @@ export const Hangar = () => {
     setSwapSlot(slotType);
     try {
       const res = await apiService.getSubsystemModules(slotType);
-      setAvailableModules(res.data || []);
+      const allModules: ModuleData[] = res.data || [];
+      // Filter to compatible modules only (null = universal, or aircraft_id in list)
+      const aircraftId = detailAircraft?.aircraft_id;
+      const compatible = allModules.filter(m =>
+        m.compatible_aircraft === null || (aircraftId && m.compatible_aircraft.includes(aircraftId))
+      );
+      setAvailableModules(compatible);
     } catch { setAvailableModules([]); }
   };
 
@@ -194,7 +200,11 @@ export const Hangar = () => {
       setSwapSlot(null);
       // Keep the diagram focused on the slot we just swapped
       setSelectedDiagramSlot(slotBeingSwapped);
-    } catch (err) { console.error('Swap failed:', err); }
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || 'Swap failed';
+      console.error('Swap failed:', msg);
+      alert(msg);
+    }
     finally { setActionLoading(null); }
   };
 
