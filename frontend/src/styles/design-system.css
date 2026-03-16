@@ -1,0 +1,570 @@
+/* ═══════════════════════════════════════════════════════
+   PMC TYCOON — CLASSIFIED DOSSIER DESIGN SYSTEM
+   ═══════════════════════════════════════════════════════ */
+
+/* ── COLOR TOKENS (CSS custom properties) ────────────── */
+
+:root {
+  /* Backgrounds */
+  --color-base: #0C0E12;
+  --color-surface: #151820;
+  --color-surface-raised: #1C1F2A;
+  --color-surface-overlay: #222633;
+
+  /* Accents */
+  --color-amber: #D4A843;
+  --color-amber-dim: #9A7A35;
+  --color-red: #C4453C;
+  --color-red-dim: #8B3330;
+  --color-blue: #5B8BA0;
+  --color-blue-dim: #3E6478;
+  --color-green: #5C8A4D;
+  --color-green-dim: #3F6236;
+
+  /* Text */
+  --color-text: #D8D4CC;
+  --color-text-secondary: #8A857C;
+  --color-text-muted: #5A5650;
+  --color-text-inverse: #0C0E12;
+
+  /* Borders */
+  --color-border: #252830;
+  --color-border-subtle: #1E2028;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px var(--color-border);
+  --shadow-elevated: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 1px var(--color-border);
+}
+
+
+/* ── BASE OVERRIDES ──────────────────────────────────── */
+
+body {
+  background-color: var(--color-base) !important;
+  color: var(--color-text);
+}
+
+
+/* ── TYPOGRAPHY ──────────────────────────────────────── */
+
+/* Condensed headers — military document feel */
+.font-display {
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* Monospace data — prices, stats, codes */
+.font-data {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Section label — small uppercase divider */
+.label-section {
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--color-text-muted);
+}
+
+
+/* ── CARDS — DOSSIER STYLE ───────────────────────────── */
+
+/* Base card — dark paper with subtle border */
+.card-dossier {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Card with folder tab accent at top */
+.card-dossier-tab {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+.card-dossier-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-amber);
+  opacity: 0.6;
+}
+
+/* Raised card (modals, drawers) */
+.card-elevated {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-elevated);
+}
+
+
+/* ── PAPER TEXTURE ───────────────────────────────────── */
+
+/* Subtle noise grain overlay */
+.texture-grain {
+  position: relative;
+}
+.texture-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Faint ruled lines — notebook paper */
+.texture-ruled {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 31px,
+    rgba(255,255,255,0.015) 31px,
+    rgba(255,255,255,0.015) 32px
+  );
+}
+
+
+/* ── CLASSIFICATION STAMPS ───────────────────────────── */
+
+.stamp {
+  display: inline-block;
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 3px 10px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  transform: rotate(-2deg);
+  opacity: 0.7;
+  user-select: none;
+}
+
+.stamp-confidential {
+  color: var(--color-amber);
+  border-color: var(--color-amber);
+}
+
+.stamp-secret {
+  color: var(--color-red);
+  border-color: var(--color-red);
+}
+
+.stamp-top-secret {
+  color: #E53E3E;
+  border-color: #E53E3E;
+  font-size: 13px;
+}
+
+.stamp-success {
+  color: var(--color-green);
+  border-color: var(--color-green);
+  transform: rotate(-3deg);
+}
+
+.stamp-failed {
+  color: var(--color-red);
+  border-color: var(--color-red);
+  transform: rotate(2deg);
+}
+
+
+/* ── REDACTION ────────────────────────────────────────── */
+
+/* Blacked out classified text */
+.redacted {
+  background: #1a1a1a;
+  color: transparent;
+  border-radius: 2px;
+  user-select: none;
+  display: inline;
+  padding: 0 4px;
+}
+
+/* Redacted card — entire card blacked out */
+.card-redacted {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.card-redacted::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(15,15,15,0.95) 0px,
+    rgba(15,15,15,0.95) 16px,
+    rgba(20,20,20,0.95) 16px,
+    rgba(20,20,20,0.95) 18px
+  );
+  pointer-events: none;
+}
+.card-redacted > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ── CONDITION / WEAR GAUGES ─────────────────────────── */
+
+.gauge-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+
+.gauge-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.gauge-fill-green { background: var(--color-green); }
+.gauge-fill-amber { background: var(--color-amber); }
+.gauge-fill-red { background: var(--color-red); }
+
+
+/* ── STATUS INDICATORS ───────────────────────────────── */
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-dot-active {
+  background: var(--color-green);
+  box-shadow: 0 0 6px var(--color-green);
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+.status-dot-warning {
+  background: var(--color-amber);
+  box-shadow: 0 0 6px var(--color-amber-dim);
+}
+
+.status-dot-critical {
+  background: var(--color-red);
+  box-shadow: 0 0 6px var(--color-red-dim);
+  animation: status-pulse 1.2s ease-in-out infinite;
+}
+
+.status-dot-inactive {
+  background: var(--color-text-muted);
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+
+/* ── BUTTONS ─────────────────────────────────────────── */
+
+/* Primary action — amber accent */
+.btn-primary {
+  background: var(--color-amber);
+  color: var(--color-text-inverse);
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 12px 20px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  min-height: 44px;
+}
+.btn-primary:active {
+  transform: scale(0.97);
+  background: var(--color-amber-dim);
+}
+.btn-primary:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Secondary / ghost button */
+.btn-secondary {
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 44px;
+}
+.btn-secondary:active {
+  background: var(--color-surface-raised);
+}
+
+/* Danger button */
+.btn-danger {
+  background: var(--color-red);
+  color: var(--color-text);
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 12px 20px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  min-height: 44px;
+}
+.btn-danger:active {
+  transform: scale(0.97);
+  background: var(--color-red-dim);
+}
+
+
+/* ── SLOT CARD (for subsystem modules) ───────────────── */
+
+.slot-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px;
+  position: relative;
+}
+
+.slot-card-label {
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.slot-card-label::before {
+  content: '─';
+  color: var(--color-border);
+}
+.slot-card-label::after {
+  content: '─';
+  color: var(--color-border);
+  flex: 1;
+}
+
+.slot-card-value {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 13px;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.slot-card-stat {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+
+/* ── BOTTOM SHEET (mobile modals) ────────────────────── */
+
+.bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 50;
+}
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 85vh;
+  background: var(--color-surface-raised);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.5);
+  z-index: 51;
+  overflow-y: auto;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.bottom-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--color-text-muted);
+  border-radius: 2px;
+  margin: 10px auto 6px;
+}
+
+
+/* ── RANK BADGE ──────────────────────────────────────── */
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.rank-startup { background: rgba(90,86,80,0.2); color: var(--color-text-secondary); border: 1px solid var(--color-text-muted); }
+.rank-licensed { background: rgba(91,139,160,0.15); color: var(--color-blue); border: 1px solid var(--color-blue-dim); }
+.rank-established { background: rgba(212,168,67,0.15); color: var(--color-amber); border: 1px solid var(--color-amber-dim); }
+.rank-elite { background: rgba(196,69,60,0.15); color: var(--color-red); border: 1px solid var(--color-red-dim); }
+.rank-legendary { background: linear-gradient(135deg, rgba(212,168,67,0.2), rgba(196,69,60,0.2)); color: #E8C66A; border: 1px solid var(--color-amber); }
+
+
+/* ── STAT DIFF INDICATORS ────────────────────────────── */
+
+.stat-up {
+  color: var(--color-green);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 11px;
+}
+.stat-up::before { content: '▲ '; }
+
+.stat-down {
+  color: var(--color-red);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 11px;
+}
+.stat-down::before { content: '▼ '; }
+
+.stat-neutral {
+  color: var(--color-text-muted);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 11px;
+}
+
+
+/* ── TRANSITION: DOSSIER → HUD ───────────────────────── */
+
+@keyframes staticGlitch {
+  0% { opacity: 0; }
+  5% { opacity: 0.8; }
+  10% { opacity: 0.2; }
+  15% { opacity: 0.9; }
+  20% { opacity: 0.1; }
+  30% { opacity: 0.7; }
+  40% { opacity: 0; }
+  50% { opacity: 0.6; }
+  60% { opacity: 0; }
+  70% { opacity: 0.4; }
+  80% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+.transition-static {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255,255,255,0.03) 0px,
+    transparent 1px,
+    transparent 2px,
+    rgba(255,255,255,0.03) 3px
+  );
+  animation: staticGlitch 0.6s ease-out forwards;
+}
+
+
+/* ── TAB NAVIGATION ──────────────────────────────────── */
+
+.tab-bar {
+  display: flex;
+  gap: 2px;
+  background: var(--color-surface);
+  border-radius: 6px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+}
+
+.tab-item {
+  flex: 1;
+  padding: 8px 12px;
+  text-align: center;
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tab-item-active {
+  background: var(--color-surface-raised);
+  color: var(--color-amber);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.tab-count {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 10px;
+  background: rgba(255,255,255,0.06);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+
+/* ── UTILITY ─────────────────────────────────────────── */
+
+/* Divider line */
+.divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 12px 0;
+}
+
+/* Scrollable list container */
+.scroll-list {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}

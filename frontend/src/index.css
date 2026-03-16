@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "./styles/design-system.css";
+
+/* ── Google Fonts — Barlow Condensed + JetBrains Mono ── */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 /* Custom scrollbar for the app */
 ::-webkit-scrollbar {

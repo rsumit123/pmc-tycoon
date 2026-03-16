@@ -100,6 +100,13 @@ export const apiService = {
   purchaseWeapons: (weaponId: number, quantity: number) => api.post('/weapons/owned/purchase', { weapon_id: weaponId, quantity }),
   sellWeapons: (weaponId: number, quantity: number) => api.post('/weapons/owned/sell', { weapon_id: weaponId, quantity }),
 
+  // Subsystem modules
+  getSubsystemModules: (slotType?: string) => api.get('/subsystems/modules', { params: slotType ? { slot_type: slotType } : {} }),
+  getAircraftSubsystems: (ownedAircraftId: number) => api.get(`/subsystems/aircraft/${ownedAircraftId}`),
+  swapModule: (ownedAircraftId: number, slotType: string, newModuleId: number) => api.post(`/subsystems/aircraft/${ownedAircraftId}/swap`, { slot_type: slotType, new_module_id: newModuleId }),
+  repairSubsystems: (ownedAircraftId: number, slotType?: string, repairAll?: boolean) => api.post(`/subsystems/aircraft/${ownedAircraftId}/repair`, { slot_type: slotType, repair_all: repairAll ?? false }),
+  getAircraftComputedStats: (ownedAircraftId: number) => api.get(`/subsystems/aircraft/${ownedAircraftId}/stats`),
+
   // Battle system
   startBattle: (data: any) => api.post('/battle/start', data),
   submitLoadout: (battleId: number, data: any) => api.post(`/battle/${battleId}/loadout`, data),

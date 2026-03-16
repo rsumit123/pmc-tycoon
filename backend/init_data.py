@@ -13,6 +13,8 @@ from app.models.owned_aircraft import OwnedAircraft
 from app.models.owned_ship import OwnedShip
 from app.models.owned_weapon import OwnedWeapon
 from app.seed.hardware_data import seed_hardware
+from app.models.subsystem import SubsystemModule, AircraftSubsystem
+from app.seed.subsystem_data import seed_subsystems
 
 def init_db(db: Session) -> None:
     # Create tables if they don't exist
@@ -185,6 +187,10 @@ def init_db(db: Session) -> None:
     # Seed real military hardware (aircraft, weapons, ships)
     seed_hardware(db)
     print("Hardware data seeded.")
+
+    # Seed subsystem modules and install defaults on owned aircraft
+    seed_subsystems(db)
+    print("Subsystem data seeded.")
 
 if __name__ == "__main__":
     db = SessionLocal()
