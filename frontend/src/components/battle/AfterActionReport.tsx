@@ -68,6 +68,7 @@ const exitReasonLabels: Record<string, string> = {
   player_disengaged: 'Disengaged',
   enemy_disengaged: 'Enemy Escaped',
   player_winchester: 'Out of Ammo',
+  enemy_winchester: 'Enemy Out of Ammo',
   max_turns_reached: 'Time Limit',
 };
 

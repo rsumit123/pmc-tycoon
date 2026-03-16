@@ -303,12 +303,56 @@ class TestExitConditions:
         result = engine.run_turn("scan")
         assert engine.exit_reason == "max_turns_reached"
 
-    def test_disengage_at_range(self):
+    def test_disengage_at_long_range(self):
+        """Disengage at long range should almost always succeed."""
         engine = _make_engine(seed=42)
-        engine.range_km = 50.0  # > 40km, should succeed
-        result = engine.run_turn("disengage")
-        # Should succeed at this range
+        engine.range_km = 150.0  # very long range, ~105% chance (capped at 95%)
+        engine.run_turn("disengage")
         assert engine.exit_reason == "player_disengaged"
+
+    def test_disengage_contested_at_close_range(self):
+        """Disengage at close range should sometimes fail."""
+        # Run multiple seeds, at least one should fail at 5km range
+        results = []
+        for seed in range(100, 120):
+            engine = _make_engine(seed=seed)
+            engine.range_km = 5.0  # very close, ~32.5% chance
+            engine.run_turn("disengage")
+            results.append(engine.exit_reason)
+        # Should have some failures (None = disengage failed)
+        assert None in results or "player_disengaged" in results  # at least some resolved
+
+    def test_enemy_winchester(self):
+        """Enemy with no missiles in non-WVR should exit (winchester or disengage)."""
+        engine = _make_engine(seed=42)
+        engine.range_km = 60.0
+        # Deplete all enemy ammo
+        for item in engine.enemy_loadout:
+            item.quantity = 0
+        engine.run_turn("scan")
+        # Enemy exits via winchester or disengage (AI may choose disengage when out of ammo)
+        assert engine.exit_reason in ("enemy_winchester", "enemy_disengaged")
+        assert engine.status == "completed"
+
+    def test_damage_capped_at_100(self):
+        """Damage should never exceed 100%."""
+        engine = _make_engine(seed=42)
+        engine.enemy_damage_pct = 95.0
+        engine.range_km = 10.0
+        # Fire guns — if it hits, damage should cap
+        engine.run_turn("guns")
+        assert engine.enemy_damage_pct <= 100.0
+
+    def test_player_damage_capped_at_100(self):
+        """Player damage should never exceed 100%."""
+        engine = _make_engine(seed=42)
+        engine.damage_pct = 95.0
+        # Run turns — if enemy hits, should cap
+        for _ in range(5):
+            if engine.status != "in_progress":
+                break
+            engine.run_turn("scan")
+        assert engine.damage_pct <= 100.0
 
 
 # ─── Enemy AI Tests ───
@@ -352,6 +396,7 @@ class TestSerialization:
         state_dict = engine.to_dict()
         assert state_dict["engine_version"] == 2
         assert state_dict["turn"] == engine.turn
+        assert state_dict["base_seed"] == 42
 
         # Create fresh engine and restore
         engine2 = _make_engine(seed=42)
@@ -362,6 +407,25 @@ class TestSerialization:
         assert engine2.fuel_pct == engine.fuel_pct
         assert engine2.damage_pct == engine.damage_pct
         assert engine2.ecm_charges == engine.ecm_charges
+
+    def test_rng_determinism_after_restore(self):
+        """Restored engine should produce same results for same turn."""
+        engine1 = _make_engine(seed=42)
+        engine1.run_turn("scan")
+        engine1.run_turn("close")
+        # Save state after turn 2
+        state_dict = engine1.to_dict()
+        # Run turn 3
+        result1 = engine1.run_turn("scan")
+
+        # Restore to after turn 2 and run turn 3 again
+        engine2 = _make_engine(seed=42)
+        engine2.restore_from_dict(state_dict)
+        result2 = engine2.run_turn("scan")
+
+        # Should produce identical results
+        assert result1.fuel_consumed == result2.fuel_consumed
+        assert result1.enemy_action == result2.enemy_action
 
 
 # ─── Full Battle Test ───

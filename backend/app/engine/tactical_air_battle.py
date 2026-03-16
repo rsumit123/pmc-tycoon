@@ -47,6 +47,7 @@ class TacticalAirBattleEngine:
         self.player_loadout = list(player_loadout)
         self.enemy_loadout = list(enemy_loadout)
         self.contractor_skill = contractor_skill
+        self._base_seed = seed or 0
         self.rng = random.Random(seed)
 
         # State
@@ -124,7 +125,9 @@ class TacticalAirBattleEngine:
 
         payload_factor = clamp(1.1 - self.enemy_twr_ratio * 0.15, 0.9, 1.15)
 
-        pk = weapon.base_pk * range_factor * ecm_factor * maneuver_factor * payload_factor
+        # Include estimated evasion modifier (assume 50% chance enemy maneuvers at 0.85x)
+        avg_evasion = 0.925  # midpoint of 1.0 and 0.85
+        pk = weapon.base_pk * range_factor * ecm_factor * maneuver_factor * payload_factor * avg_evasion
         return round(clamp(pk, 0.02, 0.95), 2)
 
     def get_available_actions(self) -> List[TurnAction]:
@@ -233,6 +236,9 @@ class TacticalAirBattleEngine:
 
     def run_turn(self, action: str, weapon_id: Optional[int] = None) -> TurnResult:
         """Execute one turn with simultaneous resolution."""
+        # Deterministic RNG per turn — ensures consistent results on engine reconstruction
+        self.rng = random.Random(self._base_seed + self.turn)
+
         result = TurnResult(
             turn_number=self.turn,
             player_action=action,
@@ -279,13 +285,16 @@ class TacticalAirBattleEngine:
                 enemy_maneuvers = enemy_action in ("close", "extend", "break_turn", "disengage")
                 evasion_mod = 0.85 if enemy_maneuvers else 1.0
 
+                # BVR missiles degraded in TRANSITION zone (closer = more clutter, less energy)
+                zone_mod = 0.85 if (self.zone == "TRANSITION" and weapon.weapon_type == "BVR_AAM") else 1.0
+
                 pk_result = calculate_missile_pk(
                     weapon=weapon,
                     launch_range_km=self.range_km,
                     target_ecm_rating=self.enemy.ecm_rating,
                     target_max_g=self.enemy.max_g_load,
                     target_twr_ratio=self.enemy_twr_ratio,
-                    player_modifier=evasion_mod,
+                    player_modifier=evasion_mod * zone_mod,
                     rng=self.rng,
                 )
 
@@ -298,7 +307,7 @@ class TacticalAirBattleEngine:
                         dmg = self.rng.uniform(30, 60)
                     else:
                         dmg = self.rng.uniform(35, 70)
-                    self.enemy_damage_pct += dmg
+                    self.enemy_damage_pct = min(100.0, self.enemy_damage_pct + dmg)
                     result.damage_dealt = round(dmg, 1)
 
                 result.factors.append({
@@ -320,7 +329,7 @@ class TacticalAirBattleEngine:
 
             if hit:
                 dmg = self.rng.uniform(15, 40)
-                self.enemy_damage_pct += dmg
+                self.enemy_damage_pct = min(100.0, self.enemy_damage_pct + dmg)
                 result.damage_dealt = round(dmg, 1)
 
             result.factors.append({
@@ -369,7 +378,7 @@ class TacticalAirBattleEngine:
 
                 if enemy_hit:
                     dmg = self.rng.uniform(30, 60)
-                    self.damage_pct += dmg
+                    self.damage_pct = min(100.0, self.damage_pct + dmg)
                     result.damage_taken = round(dmg, 1)
 
                 # Passive intel: learn weapon type
@@ -394,7 +403,7 @@ class TacticalAirBattleEngine:
 
                 if enemy_hit:
                     dmg = self.rng.uniform(35, 70)
-                    self.damage_pct += dmg
+                    self.damage_pct = min(100.0, self.damage_pct + dmg)
                     result.damage_taken = round(dmg, 1)
 
                 self._passive_intel_weapon(weapon.name)
@@ -410,7 +419,7 @@ class TacticalAirBattleEngine:
 
             if enemy_hit:
                 dmg = self.rng.uniform(15, 40)
-                self.damage_pct += dmg
+                self.damage_pct = min(100.0, self.damage_pct + dmg)
                 result.damage_taken = round(dmg, 1)
 
         elif enemy_action == "ecm":
@@ -521,17 +530,34 @@ class TacticalAirBattleEngine:
             return "enemy_destroyed"
         if self.fuel_pct <= 0:
             return "player_bingo_fuel"
+
+        # Contested disengage — harder at close range
+        # Success probability: 30% base + range/200 (40% at 20km, 55% at 50km, 80% at 100km)
         if player_action == "disengage":
-            # Disengage succeeds if range > 40km or roll succeeds
-            if self.range_km > 40 or self.rng.random() < 0.6:
+            disengage_chance = min(0.95, 0.3 + self.range_km / 200.0)
+            if self.rng.random() < disengage_chance:
                 return "player_disengaged"
         if enemy_action == "disengage":
-            if self.range_km > 40 or self.rng.random() < 0.5:
+            disengage_chance = min(0.90, 0.25 + self.range_km / 200.0)
+            if self.rng.random() < disengage_chance:
                 return "enemy_disengaged"
-        # Winchester check
-        player_has_ammo = any(i.quantity > 0 for i in self.player_loadout)
-        if not player_has_ammo and self.zone != "WVR":
+
+        # Winchester — player has no missiles and not in guns range
+        player_has_missiles = (
+            self._has_weapon_type(self.player_loadout, "BVR_AAM")
+            or self._has_weapon_type(self.player_loadout, "IR_AAM")
+        )
+        if not player_has_missiles and self.zone != "WVR":
             return "player_winchester"
+
+        # Enemy winchester — enemy has no missiles and not in guns range
+        enemy_has_missiles = (
+            self._has_weapon_type(self.enemy_loadout, "BVR_AAM")
+            or self._has_weapon_type(self.enemy_loadout, "IR_AAM")
+        )
+        if not enemy_has_missiles and self.zone != "WVR":
+            return "enemy_winchester"
+
         if self.turn > self.max_turns:
             return "max_turns_reached"
         return None
@@ -594,7 +620,7 @@ class TacticalAirBattleEngine:
         success = self.enemy_damage_pct > self.damage_pct and self.enemy_damage_pct >= 30
 
         # Special cases
-        if self.exit_reason == "enemy_destroyed":
+        if self.exit_reason in ("enemy_destroyed", "enemy_winchester"):
             success = True
         elif self.exit_reason == "player_destroyed":
             success = False
@@ -621,6 +647,7 @@ class TacticalAirBattleEngine:
             "player_disengaged": f"You successfully disengage from the {self.enemy.name}.",
             "enemy_disengaged": f"The {self.enemy.name} breaks off and escapes.",
             "player_winchester": "Winchester — out of weapons, must disengage.",
+            "enemy_winchester": f"The {self.enemy.name} is out of missiles and retreats.",
             "max_turns_reached": "Engagement time limit reached — both sides withdraw.",
         }
 
@@ -648,6 +675,7 @@ class TacticalAirBattleEngine:
         """Serialize engine state for storage."""
         return {
             "engine_version": 2,
+            "base_seed": self._base_seed,
             "turn": self.turn,
             "range_km": self.range_km,
             "fuel_pct": self.fuel_pct,
@@ -681,6 +709,7 @@ class TacticalAirBattleEngine:
 
     def restore_from_dict(self, state: Dict[str, Any]):
         """Restore engine state from stored dict."""
+        self._base_seed = state.get("base_seed", self._base_seed)
         self.turn = state.get("turn", 1)
         self.range_km = state.get("range_km", 250.0)
         self.fuel_pct = state.get("fuel_pct", 85.0)
