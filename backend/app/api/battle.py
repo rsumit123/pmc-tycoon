@@ -22,6 +22,7 @@ from app.engine.types import AircraftData, WeaponData, ShipData, LoadoutItem
 from app.engine.air_battle import AirBattleEngine
 from app.engine.naval_battle import NavalBattleEngine
 from app.engine.tactical_air_battle import TacticalAirBattleEngine
+from app.engine.tactical_naval_battle import TacticalNavalBattleEngine
 from app.engine.choices import AIR_PHASE_CHOICES, NAVAL_PHASE_CHOICES
 
 router = APIRouter(prefix="/battle", tags=["battle"])
@@ -349,6 +350,34 @@ def _save_tactical_engine_state(engine: TacticalAirBattleEngine, battle: Battle)
     battle.current_phase = engine.turn
 
 
+def _build_tactical_naval_engine(battle: Battle, db: Session) -> TacticalNavalBattleEngine:
+    """Reconstruct a TacticalNavalBattleEngine from a Battle record."""
+    player_ship = db.query(Ship).filter(Ship.id == battle.player_ship_id).first()
+    enemy_ship = db.query(Ship).filter(Ship.id == battle.enemy_ship_id).first()
+    if not player_ship or not enemy_ship:
+        raise HTTPException(status_code=404, detail="Ship not found")
+
+    engine = TacticalNavalBattleEngine(
+        player_ship=ship_to_data(player_ship, db),
+        enemy_ship=ship_to_data(enemy_ship, db),
+        seed=battle.id * 1000 + (battle.current_phase or 1),
+    )
+
+    # Restore state
+    if battle.battle_state:
+        state = json.loads(battle.battle_state)
+        if state.get("engine_type") == "naval_v2":
+            engine.restore_from_dict(state)
+
+    return engine
+
+
+def _save_tactical_naval_engine_state(engine: TacticalNavalBattleEngine, battle: Battle):
+    """Persist tactical naval engine state to the Battle record."""
+    battle.battle_state = json.dumps(engine.to_dict())
+    battle.current_phase = engine.turn
+
+
 def _save_engine_state(engine: AirBattleEngine | NavalBattleEngine, battle: Battle):
     """Persist engine state to the Battle record."""
     state = {
@@ -500,6 +529,7 @@ def start_battle(data: BattleCreate, db: Session = Depends(get_db)):
             enemy_ship_id=enemy_ship_id,
             contractor_id=data.contractor_id,
             current_phase=1,
+            engine_version=2,
             status=BattleStatus.LOADOUT,
         )
         db.add(battle)
@@ -599,6 +629,14 @@ def submit_loadout(battle_id: int, data: LoadoutSubmit, db: Session = Depends(ge
         state = engine.get_current_state()
     else:
         # Naval — loadout is the ship itself
+        if getattr(battle, 'engine_version', 1) == 2:
+            engine = _build_tactical_naval_engine(battle, db)
+            # Save initial state
+            _save_tactical_naval_engine_state(engine, battle)
+            db.commit()
+            state = engine.get_current_state()
+            return _naval_tactical_state_to_dict(state)
+
         player_ship = db.query(Ship).filter(Ship.id == battle.player_ship_id).first()
         enemy_ship = db.query(Ship).filter(Ship.id == battle.enemy_ship_id).first()
         engine = NavalBattleEngine(
@@ -623,6 +661,15 @@ def get_battle_state(battle_id: int, db: Session = Depends(get_db)):
         state = engine.get_current_state()
         result = _tactical_state_to_dict(state)
         # Include completed turns
+        phases = db.query(BattlePhase).filter(BattlePhase.battle_id == battle_id).order_by(BattlePhase.phase_number).all()
+        result["completed_turns"] = [{"turn_number": p.phase_number, "player_choice": p.player_choice, "outcome": json.loads(p.outcome)} for p in phases]
+        return result
+
+    # Naval v2
+    if battle.battle_type == BattleType.NAVAL and getattr(battle, 'engine_version', 1) == 2:
+        engine = _build_tactical_naval_engine(battle, db)
+        state = engine.get_current_state()
+        result = _naval_tactical_state_to_dict(state)
         phases = db.query(BattlePhase).filter(BattlePhase.battle_id == battle_id).order_by(BattlePhase.phase_number).all()
         result["completed_turns"] = [{"turn_number": p.phase_number, "player_choice": p.player_choice, "outcome": json.loads(p.outcome)} for p in phases]
         return result
@@ -917,8 +964,157 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                     )
                     db.add(mission_log)
 
+    # ─── Tactical v2 naval battle ───
+    elif battle.battle_type == BattleType.NAVAL and getattr(battle, 'engine_version', 1) == 2:
+        engine = _build_tactical_naval_engine(battle, db)
+
+        action = data.choice
+        turn_result = engine.run_turn(action)
+        _save_tactical_naval_engine_state(engine, battle)
+
+        # Save turn as a phase record for persistence
+        phase_record = BattlePhase(
+            battle_id=battle_id,
+            phase_number=turn_result.turn_number,
+            phase_name=f"Turn {turn_result.turn_number}",
+            player_choice=action,
+            outcome=json.dumps({
+                "player_action": turn_result.player_action,
+                "enemy_action": turn_result.enemy_action,
+                "phase": turn_result.phase,
+                "player_salvo_fired": turn_result.player_salvo_fired,
+                "player_hits": turn_result.player_hits,
+                "player_damage_dealt": turn_result.player_damage_dealt,
+                "enemy_salvo_fired": turn_result.enemy_salvo_fired,
+                "enemy_hits": turn_result.enemy_hits,
+                "enemy_damage_taken": turn_result.enemy_damage_taken,
+                "compartment_hit": turn_result.compartment_hit,
+                "damage_repaired": turn_result.damage_repaired,
+                "range_change": turn_result.range_change,
+                "new_range": turn_result.new_range,
+                "narrative": turn_result.narrative,
+                "factors": turn_result.factors,
+            }),
+        )
+        db.add(phase_record)
+
+        # Check completion
+        if engine.status == "completed":
+            report = engine.get_battle_result()
+            battle.status = BattleStatus.COMPLETED_SUCCESS if report.success else BattleStatus.COMPLETED_FAILURE
+            battle.completed_at = datetime.now()
+
+            rp_earned = 10 + int(report.turns_played * 2)
+            if report.success:
+                rp_earned = int(rp_earned * 1.5)
+
+            pilot_xp_earned = 0
+            pilot_level_up = False
+
+            battle.final_result = json.dumps({
+                "success": report.success,
+                "exit_reason": report.exit_reason,
+                "turns_played": report.turns_played,
+                "payout": report.payout,
+                "reputation_change": report.reputation_change,
+                "damage_dealt": report.total_damage_dealt,
+                "damage_taken": report.total_damage_taken,
+                "compartment_status": report.compartment_status,
+                "narrative": report.narrative_summary,
+                "rp_earned": rp_earned,
+            })
+
+            user = db.query(User).filter(User.id == battle.user_id).first()
+            if user:
+                user.balance += report.payout
+                user.reputation = max(0, min(100, user.reputation + report.reputation_change))
+                user.research_points = getattr(user, 'research_points', 0) + rp_earned
+                user.missions_completed = getattr(user, 'missions_completed', 0) + 1
+
+            if battle.contractor_id:
+                from app.engine.progression import calc_pilot_level
+                contractor = db.query(OwnedContractor).filter(OwnedContractor.id == battle.contractor_id).first()
+                if contractor:
+                    pilot_xp_earned = 50 + int(report.turns_played * 10)
+                    if report.success:
+                        pilot_xp_earned = int(pilot_xp_earned * 1.5)
+                    contractor.xp = getattr(contractor, 'xp', 0) + pilot_xp_earned
+                    new_level = calc_pilot_level(contractor.xp)
+                    if new_level > getattr(contractor, 'level', 1):
+                        contractor.level = new_level
+                        contractor.skill_level = min(100, contractor.skill_level + 2)
+                        pilot_level_up = True
+
+            final_data = json.loads(battle.final_result)
+            final_data["missions_completed"] = getattr(user, 'missions_completed', 0) if user else 0
+            final_data["pilot_xp_earned"] = pilot_xp_earned
+            final_data["pilot_level_up"] = pilot_level_up
+            battle.final_result = json.dumps(final_data)
+
+            if battle.contract_id:
+                contract = db.query(ActiveContract).filter(ActiveContract.id == battle.contract_id).first()
+                if contract:
+                    contract.status = MissionStatus.COMPLETED_SUCCESS if report.success else MissionStatus.COMPLETED_FAILURE
+                    contract.payout_received = report.payout
+                    contract.reputation_change = report.reputation_change
+                    contract.completed_at = datetime.now()
+                    mission_log = MissionLog(
+                        user_id=battle.user_id,
+                        mission_template_id=contract.mission_template_id,
+                        status=MissionStatus.COMPLETED_SUCCESS if report.success else MissionStatus.COMPLETED_FAILURE,
+                        payout_earned=report.payout,
+                        reputation_change=report.reputation_change,
+                        enemy_strength=int(report.total_damage_dealt),
+                        ally_strength=int(100 - report.total_damage_taken),
+                        random_events=json.dumps([]),
+                        started_at=contract.started_at or datetime.now(),
+                        ended_at=datetime.now(),
+                    )
+                    db.add(mission_log)
+
+        db.commit()
+
+        # Build v2 naval response
+        response = {
+            "engine_version": 2,
+            "engine_type": "naval_v2",
+            "turn_number": turn_result.turn_number,
+            "phase": turn_result.phase,
+            "player_action": turn_result.player_action,
+            "enemy_action": turn_result.enemy_action,
+            "player_salvo_fired": turn_result.player_salvo_fired,
+            "player_hits": turn_result.player_hits,
+            "player_damage_dealt": turn_result.player_damage_dealt,
+            "enemy_salvo_fired": turn_result.enemy_salvo_fired,
+            "enemy_hits": turn_result.enemy_hits,
+            "enemy_damage_taken": turn_result.enemy_damage_taken,
+            "compartment_hit": turn_result.compartment_hit,
+            "damage_repaired": turn_result.damage_repaired,
+            "range_change": turn_result.range_change,
+            "new_range": turn_result.new_range,
+            "narrative": turn_result.narrative,
+            "factors": turn_result.factors,
+            "next_actions": [
+                {"key": a.key, "label": a.label, "description": a.description,
+                 "risk_hint": a.risk_hint, "salvo_size": a.salvo_size}
+                for a in turn_result.next_actions
+            ],
+        }
+
+        current_state = engine.get_current_state()
+        response["state"] = _naval_tactical_state_to_dict(current_state)
+
+        if battle.status in (BattleStatus.COMPLETED_SUCCESS, BattleStatus.COMPLETED_FAILURE):
+            final = json.loads(battle.final_result) if battle.final_result else {}
+            response["battle_complete"] = True
+            response["final_report"] = final
+        else:
+            response["battle_complete"] = False
+
+        return response
+
     else:
-        # Naval battle
+        # Legacy naval v1 battle
         player_ship = db.query(Ship).filter(Ship.id == battle.player_ship_id).first()
         enemy_ship = db.query(Ship).filter(Ship.id == battle.enemy_ship_id).first()
         engine = NavalBattleEngine(
@@ -1136,6 +1332,33 @@ def _tactical_state_to_dict(state) -> dict:
         "available_actions": [
             {"key": a.key, "label": a.label, "description": a.description,
              "risk_hint": a.risk_hint, "weapon_id": a.weapon_id, "pk_preview": a.pk_preview}
+            for a in state.available_actions
+        ],
+        "status": state.status,
+        "exit_reason": state.exit_reason,
+    }
+
+
+def _naval_tactical_state_to_dict(state) -> dict:
+    """Convert NavalTacticalState to a JSON-serializable dict."""
+    return {
+        "engine_version": 2,
+        "engine_type": "naval_v2",
+        "turn": state.turn,
+        "max_turns": state.max_turns,
+        "phase": state.phase,
+        "range_km": state.range_km,
+        "player_name": state.player_name,
+        "enemy_name": state.enemy_name,
+        "player_compartments": state.player_compartments,
+        "enemy_compartments_known": state.enemy_compartments_known,
+        "player_missiles_remaining": state.player_missiles_remaining,
+        "player_sam_ready": state.player_sam_ready,
+        "player_ciws_ready": state.player_ciws_ready,
+        "ecm_charges": state.ecm_charges,
+        "available_actions": [
+            {"key": a.key, "label": a.label, "description": a.description,
+             "risk_hint": a.risk_hint, "salvo_size": a.salvo_size}
             for a in state.available_actions
         ],
         "status": state.status,

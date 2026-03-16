@@ -271,3 +271,105 @@ def turn_narrative(
         parts.append("Entering transition zone.")
 
     return " ".join(parts)
+
+
+# ═══ Naval Tactical Battle System (v2) Narratives ═══
+
+_NAVAL_ACTION_LABELS = {
+    "scan": "scans the target",
+    "full_radar": "activates full radar sweep",
+    "passive_approach": "closes on passive approach",
+    "sprint": "sprints to close range",
+    "go_passive": "goes dark",
+    "full_salvo": "fires a full salvo",
+    "half_salvo": "fires a half salvo",
+    "sea_skim": "fires sea-skimming missiles",
+    "high_dive": "fires high-dive missiles",
+    "ecm_jam": "deploys ECM jamming",
+    "damage_control": "conducts damage control",
+    "damage_control_final": "conducts final damage control",
+    "disengage": "attempts to disengage",
+    "pursue": "pursues with secondary weapons",
+    "withdraw": "withdraws from engagement",
+}
+
+
+def _naval_action_label(action: str) -> str:
+    """Get readable label for a naval action."""
+    return _NAVAL_ACTION_LABELS.get(action, action.replace("_", " "))
+
+
+def naval_turn_narrative(
+    player_name: str,
+    enemy_name: str,
+    player_action: str,
+    enemy_action: str,
+    result: "NavalTurnResult",
+) -> str:
+    """Generate narrative for a naval tactical turn."""
+    from app.engine.types import NavalTurnResult
+
+    parts = []
+
+    player_verb = _naval_action_label(player_action)
+    enemy_verb = _naval_action_label(enemy_action)
+
+    player_fires = player_action in ("full_salvo", "half_salvo", "sea_skim", "high_dive")
+    enemy_fires = enemy_action in ("full_salvo", "half_salvo", "sea_skim", "high_dive")
+
+    # Opening — what both sides did
+    if player_fires and enemy_fires:
+        parts.append(f"Salvos cross in mid-ocean — your {player_name} and the {enemy_name} trade missile fire.")
+    elif player_fires:
+        parts.append(f"Your {player_name} {player_verb} as the {enemy_name} {enemy_verb}.")
+    elif enemy_fires:
+        parts.append(f"The {enemy_name} {enemy_verb} while your {player_name} {player_verb}.")
+    else:
+        parts.append(f"Your {player_name} {player_verb}. The {enemy_name} {enemy_verb}.")
+
+    # Player salvo result
+    if result.player_salvo_fired > 0:
+        if result.player_hits > 0:
+            parts.append(
+                f"{result.player_hits} of {result.player_salvo_fired} missiles penetrate defenses — "
+                f"{result.player_damage_dealt:.0f}% damage dealt."
+            )
+            if result.compartment_hit:
+                parts.append(f"Enemy {result.compartment_hit} takes the brunt of the impact.")
+        else:
+            parts.append(f"All {result.player_salvo_fired} missiles are intercepted. The {enemy_name}'s defense holds.")
+
+    # Enemy salvo result
+    if result.enemy_salvo_fired > 0:
+        if result.enemy_hits > 0:
+            parts.append(
+                f"Incoming: {result.enemy_hits} of {result.enemy_salvo_fired} enemy missiles get through — "
+                f"{result.enemy_damage_taken:.0f}% damage taken!"
+            )
+        else:
+            parts.append(f"Your layered defense intercepts all {result.enemy_salvo_fired} incoming missiles.")
+
+    # Damage control
+    if result.damage_repaired > 0:
+        parts.append(f"Crew fights to contain damage — {result.damage_repaired:.0f}% repaired.")
+
+    # Intel reveal
+    if result.intel_revealed:
+        parts.append(f"Scan reveals enemy {result.intel_revealed}.")
+
+    # Pursuit damage
+    if player_action == "pursue" and result.player_damage_dealt > 0:
+        parts.append(f"Secondary weapons score hits — {result.player_damage_dealt:.0f}% additional damage.")
+
+    # Range change
+    if abs(result.range_change) > 5:
+        if result.range_change < 0:
+            parts.append(f"Range closes to {result.new_range:.0f}km.")
+        else:
+            parts.append(f"Range opens to {result.new_range:.0f}km.")
+
+    # Phase transition hints
+    if result.new_range <= 150 and result.new_range - result.range_change > 150:
+        parts.append("Entering missile engagement envelope!")
+
+    return " ".join(parts) if parts else "The battle continues."

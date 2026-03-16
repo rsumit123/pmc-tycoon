@@ -256,3 +256,80 @@ class TacticalAfterActionReport:
     payout: int
     reputation_change: int
     narrative_summary: str
+
+
+# ═══ Naval Tactical Battle System (v2) ═══
+
+@dataclass
+class ShipCompartment:
+    """Damage state for a ship compartment."""
+    name: str  # "engines", "radar", "weapons", "hull"
+    hp_pct: float = 100.0  # 0-100
+
+
+@dataclass
+class NavalTurnAction:
+    """Action available during a naval turn."""
+    key: str
+    label: str
+    description: str
+    risk_hint: str  # "low", "medium", "high"
+    salvo_size: Optional[int] = None  # how many missiles this fires
+
+
+@dataclass
+class NavalTurnResult:
+    """Result of one naval combat turn."""
+    turn_number: int
+    phase: str  # "approach", "exchange", "aftermath"
+    player_action: str
+    enemy_action: str
+    player_salvo_fired: int = 0
+    player_hits: int = 0
+    player_damage_dealt: float = 0.0
+    enemy_salvo_fired: int = 0
+    enemy_hits: int = 0
+    enemy_damage_taken: float = 0.0
+    compartment_hit: Optional[str] = None  # which compartment took damage
+    damage_repaired: float = 0.0
+    range_change: float = 0.0
+    new_range: float = 0.0
+    intel_revealed: Optional[str] = None
+    narrative: str = ""
+    factors: List[Dict[str, Any]] = field(default_factory=list)
+    next_actions: List["NavalTurnAction"] = field(default_factory=list)
+
+
+@dataclass
+class NavalTacticalState:
+    """Full naval battle state for frontend."""
+    turn: int
+    max_turns: int
+    phase: str  # "approach", "exchange", "aftermath"
+    range_km: float
+    player_name: str
+    enemy_name: str
+    player_compartments: List[Dict[str, Any]]  # [{name, hp_pct}]
+    enemy_compartments_known: List[Dict[str, Any]]  # fog of war
+    player_missiles_remaining: int
+    player_sam_ready: bool
+    player_ciws_ready: bool
+    ecm_charges: int
+    available_actions: List[NavalTurnAction]
+    status: str  # "in_progress", "completed"
+    exit_reason: Optional[str] = None
+
+
+@dataclass
+class NavalAfterActionReport:
+    """After-action report for naval tactical battle."""
+    success: bool
+    exit_reason: str
+    turns_played: int
+    turns: List[NavalTurnResult]
+    total_damage_dealt: float
+    total_damage_taken: float
+    compartment_status: List[Dict[str, Any]]
+    payout: int
+    reputation_change: int
+    narrative_summary: str

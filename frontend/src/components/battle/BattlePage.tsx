@@ -4,6 +4,7 @@ import { apiService } from '../../services/api';
 import { LoadoutScreen } from './LoadoutScreen';
 import { BattleScreen } from './BattleScreen';
 import { TacticalBattleScreen } from './TacticalBattleScreen';
+import { TacticalNavalScreen } from './TacticalNavalScreen';
 import { AfterActionReport } from './AfterActionReport';
 import { Loader2, AlertTriangle, ArrowLeft } from 'lucide-react';
 import '../../styles/design-system.css';
@@ -140,6 +141,20 @@ export const BattlePage = () => {
   if (phase === 'battle' && battleState) {
     // v2 tactical engine — detected by max_turns field
     if (battleState.max_turns || battleState.engine_version === 2) {
+      // Naval v2 — detected by player_compartments field
+      if (battleState.player_compartments) {
+        return (
+          <TacticalNavalScreen
+            battleId={battleId}
+            initialState={battleState}
+            onComplete={(report) => {
+              setReportData(report);
+              setPhase('report');
+            }}
+          />
+        );
+      }
+
       return (
         <TacticalBattleScreen
           battleId={battleId}
