@@ -11,7 +11,7 @@ from app.engine.types import (
 )
 from app.engine.missile import calculate_missile_pk
 from app.engine.detection import calculate_air_detection
-from app.engine.enemy_ai import get_doctrine, choose_enemy_action
+from app.engine.enemy_ai import get_doctrine, choose_enemy_action, EnemyDoctrine
 from app.engine.narrative import turn_narrative
 
 
@@ -32,6 +32,23 @@ def _get_zone(range_km: float) -> str:
 class TacticalAirBattleEngine:
     """Turn-based air combat engine with fog of war and variable-length battles."""
 
+    # Objective-specific initial conditions
+    OBJECTIVE_PARAMS = {
+        "interception": {"range_km": 350.0, "max_turns": 12},
+        "escort": {"range_km": 150.0, "max_turns": 15},
+        "strike": {"range_km": 250.0, "max_turns": 18},
+        "recon": {"range_km": 200.0, "max_turns": 15},
+        "air_superiority": {"range_km": 250.0, "max_turns": 20},
+    }
+
+    # Objective-specific enemy doctrine overrides
+    OBJECTIVE_DOCTRINE = {
+        "interception": EnemyDoctrine.CAUTIOUS,
+        "escort": EnemyDoctrine.AGGRESSIVE,
+        "strike": EnemyDoctrine.STANDOFF,
+        "recon": EnemyDoctrine.CAUTIOUS,
+    }
+
     def __init__(
         self,
         player_aircraft: AircraftData,
@@ -42,6 +59,7 @@ class TacticalAirBattleEngine:
         fuel_pct: float = 85.0,
         seed: Optional[int] = None,
         pk_bonus: float = 0.0,
+        objective: str = "air_superiority",
     ):
         self.player = player_aircraft
         self.enemy = enemy_aircraft
@@ -51,11 +69,13 @@ class TacticalAirBattleEngine:
         self.pk_bonus = pk_bonus  # from mission computer subsystem
         self._base_seed = seed or 0
         self.rng = random.Random(seed)
+        self.objective = objective
 
-        # State
+        # State — apply objective-specific overrides
+        params = self.OBJECTIVE_PARAMS.get(objective, self.OBJECTIVE_PARAMS["air_superiority"])
         self.turn = 1
-        self.max_turns = 20
-        self.range_km = 250.0
+        self.max_turns = params["max_turns"]
+        self.range_km = params["range_km"]
         self.fuel_pct = fuel_pct
         self.damage_pct = 0.0
         self.enemy_damage_pct = 0.0
@@ -71,7 +91,11 @@ class TacticalAirBattleEngine:
 
         # Enemy state tracking
         self.enemy_fuel_pct = 90.0  # assumed
-        self.enemy_doctrine = get_doctrine(enemy_aircraft.name)
+        # Override enemy doctrine based on objective, fallback to aircraft-based doctrine
+        if objective in self.OBJECTIVE_DOCTRINE:
+            self.enemy_doctrine = self.OBJECTIVE_DOCTRINE[objective]
+        else:
+            self.enemy_doctrine = get_doctrine(enemy_aircraft.name)
 
         # TWR ratios
         total_weapon_weight = sum(item.weapon.weight_kg * item.quantity for item in player_loadout)
@@ -541,16 +565,73 @@ class TacticalAirBattleEngine:
         if self.fuel_pct <= 0:
             return "player_bingo_fuel"
 
-        # Contested disengage — harder at close range
-        # Success probability: 30% base + range/200 (40% at 20km, 55% at 50km, 80% at 100km)
-        if player_action == "disengage":
-            disengage_chance = min(0.95, 0.3 + self.range_km / 200.0)
-            if self.rng.random() < disengage_chance:
-                return "player_disengaged"
-        if enemy_action == "disengage":
-            disengage_chance = min(0.90, 0.25 + self.range_km / 200.0)
-            if self.rng.random() < disengage_chance:
-                return "enemy_disengaged"
+        # ─── Objective-specific win/loss conditions ───
+        if self.objective == "interception":
+            # Enemy escaping = objective failed
+            if enemy_action == "disengage":
+                disengage_chance = min(0.90, 0.25 + self.range_km / 200.0)
+                if self.rng.random() < disengage_chance:
+                    return "objective_failed"
+            # Player disengage still works normally
+            if player_action == "disengage":
+                disengage_chance = min(0.95, 0.3 + self.range_km / 200.0)
+                if self.rng.random() < disengage_chance:
+                    return "player_disengaged"
+
+        elif self.objective == "strike":
+            # Reached the target zone
+            if self.range_km < 20:
+                return "objective_complete"
+            # Normal disengage handling
+            if player_action == "disengage":
+                disengage_chance = min(0.95, 0.3 + self.range_km / 200.0)
+                if self.rng.random() < disengage_chance:
+                    return "player_disengaged"
+            if enemy_action == "disengage":
+                disengage_chance = min(0.90, 0.25 + self.range_km / 200.0)
+                if self.rng.random() < disengage_chance:
+                    return "enemy_disengaged"
+
+        elif self.objective == "recon":
+            # Gathered enough intel and player disengages
+            if self._intel_index >= 6 and player_action == "disengage":
+                disengage_chance = min(0.95, 0.3 + self.range_km / 200.0)
+                if self.rng.random() < disengage_chance:
+                    return "objective_complete"
+            # Normal disengage (without enough intel)
+            if player_action == "disengage":
+                disengage_chance = min(0.95, 0.3 + self.range_km / 200.0)
+                if self.rng.random() < disengage_chance:
+                    return "player_disengaged"
+            if enemy_action == "disengage":
+                disengage_chance = min(0.90, 0.25 + self.range_km / 200.0)
+                if self.rng.random() < disengage_chance:
+                    return "enemy_disengaged"
+
+        elif self.objective == "escort":
+            # Normal disengage handling for escort
+            if player_action == "disengage":
+                disengage_chance = min(0.95, 0.3 + self.range_km / 200.0)
+                if self.rng.random() < disengage_chance:
+                    return "player_disengaged"
+            if enemy_action == "disengage":
+                disengage_chance = min(0.90, 0.25 + self.range_km / 200.0)
+                if self.rng.random() < disengage_chance:
+                    return "enemy_disengaged"
+            # Escort success checked at max_turns (below)
+
+        else:
+            # Default air_superiority disengage handling
+            # Contested disengage — harder at close range
+            # Success probability: 30% base + range/200 (40% at 20km, 55% at 50km, 80% at 100km)
+            if player_action == "disengage":
+                disengage_chance = min(0.95, 0.3 + self.range_km / 200.0)
+                if self.rng.random() < disengage_chance:
+                    return "player_disengaged"
+            if enemy_action == "disengage":
+                disengage_chance = min(0.90, 0.25 + self.range_km / 200.0)
+                if self.rng.random() < disengage_chance:
+                    return "enemy_disengaged"
 
         # Winchester — player has no missiles and not in guns range
         player_has_missiles = (
@@ -569,6 +650,9 @@ class TacticalAirBattleEngine:
             return "enemy_winchester"
 
         if self.turn > self.max_turns:
+            # Escort: survived with < 50% damage = success
+            if self.objective == "escort" and self.damage_pct < 50:
+                return "objective_complete"
             return "max_turns_reached"
         return None
 
@@ -624,6 +708,26 @@ class TacticalAirBattleEngine:
             exit_reason=self.exit_reason,
         )
 
+    def _objective_complete_narrative(self) -> str:
+        """Generate narrative for objective completion."""
+        narratives = {
+            "escort": f"Escort mission complete — convoy survived with your {self.player.name} providing cover.",
+            "strike": f"Strike target reached — your {self.player.name} delivered ordnance on target.",
+            "recon": f"Recon complete — sufficient intelligence gathered on the {self.enemy.name}. RTB.",
+            "interception": f"Interception successful — the {self.enemy.name} has been neutralized.",
+        }
+        return narratives.get(self.objective, "Objective complete.")
+
+    def _objective_failed_narrative(self) -> str:
+        """Generate narrative for objective failure."""
+        narratives = {
+            "interception": f"Interception failed — the {self.enemy.name} escaped the engagement zone.",
+            "escort": f"Escort failed — your {self.player.name} took too much damage to protect the convoy.",
+            "strike": f"Strike aborted — your {self.player.name} could not reach the target zone.",
+            "recon": f"Recon incomplete — insufficient intelligence gathered before disengagement.",
+        }
+        return narratives.get(self.objective, "Objective failed.")
+
     def get_battle_result(self) -> TacticalAfterActionReport:
         """Generate after-action report."""
         # Success if enemy took more damage than player
@@ -634,6 +738,22 @@ class TacticalAirBattleEngine:
             success = True
         elif self.exit_reason == "player_destroyed":
             success = False
+        elif self.exit_reason == "objective_complete":
+            success = True
+        elif self.exit_reason == "objective_failed":
+            success = False
+
+        # Objective-specific overrides
+        if self.objective == "escort":
+            # Escort success: survived with < 50% damage
+            if self.exit_reason == "objective_complete":
+                success = True
+            elif self.damage_pct >= 50:
+                success = False
+        elif self.objective == "strike":
+            success = self.exit_reason == "objective_complete" or self.exit_reason == "enemy_destroyed"
+        elif self.objective == "recon":
+            success = self.exit_reason == "objective_complete"
 
         # Payout
         base_payout = 20000
@@ -659,6 +779,8 @@ class TacticalAirBattleEngine:
             "player_winchester": "Winchester — out of weapons, must disengage.",
             "enemy_winchester": f"The {self.enemy.name} is out of missiles and retreats.",
             "max_turns_reached": "Engagement time limit reached — both sides withdraw.",
+            "objective_complete": self._objective_complete_narrative(),
+            "objective_failed": self._objective_failed_narrative(),
         }
 
         exit_text = exit_narratives.get(self.exit_reason or "", "Battle concluded.")
@@ -687,6 +809,7 @@ class TacticalAirBattleEngine:
             "engine_version": 2,
             "base_seed": self._base_seed,
             "pk_bonus": self.pk_bonus,
+            "objective": self.objective,
             "turn": self.turn,
             "range_km": self.range_km,
             "fuel_pct": self.fuel_pct,
@@ -722,6 +845,7 @@ class TacticalAirBattleEngine:
         """Restore engine state from stored dict."""
         self._base_seed = state.get("base_seed", self._base_seed)
         self.pk_bonus = state.get("pk_bonus", self.pk_bonus)
+        self.objective = state.get("objective", self.objective)
         self.turn = state.get("turn", 1)
         self.range_km = state.get("range_km", 250.0)
         self.fuel_pct = state.get("fuel_pct", 85.0)

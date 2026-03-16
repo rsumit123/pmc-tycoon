@@ -247,6 +247,15 @@ def _build_tactical_air_engine(battle: Battle, db: Session) -> TacticalAirBattle
     player_ac_data = aircraft_to_data(player_ac)
     player_ac_data, pk_bonus = _apply_subsystem_stats(player_ac_data, battle, db)
 
+    # Determine mission objective from contract
+    objective = "air_superiority"
+    if battle.contract_id:
+        contract = db.query(ActiveContract).filter(ActiveContract.id == battle.contract_id).first()
+        if contract:
+            mission = db.query(MissionTemplate).filter(MissionTemplate.id == contract.mission_template_id).first()
+            if mission and getattr(mission, 'mission_objective', None):
+                objective = mission.mission_objective
+
     engine = TacticalAirBattleEngine(
         player_aircraft=player_ac_data,
         enemy_aircraft=aircraft_to_data(enemy_ac),
@@ -256,6 +265,7 @@ def _build_tactical_air_engine(battle: Battle, db: Session) -> TacticalAirBattle
         fuel_pct=fuel_pct,
         seed=battle.id * 1000 + (battle.current_phase or 1),
         pk_bonus=pk_bonus,
+        objective=objective,
     )
 
     # Restore state
@@ -460,6 +470,22 @@ def start_battle(data: BattleCreate, db: Session = Depends(get_db)):
                 mission = db.query(MissionTemplate).filter(MissionTemplate.id == contract.mission_template_id).first()
                 if mission and mission.enemy_aircraft_id:
                     enemy_aircraft_id = mission.enemy_aircraft_id
+                # Difficulty-based enemy selection when no specific enemy set
+                elif mission and not mission.enemy_aircraft_id and getattr(mission, 'difficulty', None):
+                    import random as _diff_rng
+                    DIFFICULTY_TIERS = {
+                        1: ["JF-17 Thunder", "Tejas Mk2"],
+                        2: ["F-16C Block 52", "Mirage 2000-5", "Su-30MKI"],
+                        3: ["Dassault Rafale", "Eurofighter Typhoon", "F-15E Strike Eagle"],
+                    }
+                    tier_names = DIFFICULTY_TIERS.get(mission.difficulty, DIFFICULTY_TIERS[1])
+                    tier_aircraft = []
+                    for tname in tier_names:
+                        ac = db.query(Aircraft).filter(Aircraft.name == tname).first()
+                        if ac and ac.id != data.aircraft_id:
+                            tier_aircraft.append(ac)
+                    if tier_aircraft:
+                        enemy_aircraft_id = _diff_rng.choice(tier_aircraft).id
 
         # Fallback: pick a random enemy
         if not enemy_aircraft_id:

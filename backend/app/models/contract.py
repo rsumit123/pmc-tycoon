@@ -47,6 +47,9 @@ class MissionTemplate(Base):
     chapter_order = Column(Integer, default=0)  # ordering within chapter
     min_rank = Column(Integer, default=0)  # 0=STARTUP, 1=LICENSED, 2=ESTABLISHED, 3=ELITE, 4=LEGENDARY
 
+    mission_objective = Column(String, nullable=True)  # "air_superiority", "interception", "escort", "strike", "recon"
+    difficulty = Column(Integer, default=1)  # 1-3 (determines enemy selection)
+
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

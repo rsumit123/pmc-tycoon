@@ -34,10 +34,11 @@ CHAPTERS = {
 def seed_chapters(db: Session) -> None:
     """Tag existing MissionTemplate records with chapter assignments.
 
-    - First 3 missions  -> sahara_crisis  (min_rank=0)
-    - Next 3 missions    -> pacific_tensions (min_rank=1)
-    - Next 3 missions    -> arctic_shadow (min_rank=2)
-    - Remaining missions -> standalone (no chapter, min_rank=0)
+    11-mission structure:
+    - Missions 1-3   -> sahara_crisis    (min_rank=0)
+    - Missions 4-6   -> pacific_tensions (min_rank=1)
+    - Missions 7-9   -> arctic_shadow    (min_rank=2)
+    - Missions 10-11 -> standalone       (no chapter, min_rank=0)
     """
     missions = db.query(MissionTemplate).order_by(MissionTemplate.id).all()
     if not missions:
