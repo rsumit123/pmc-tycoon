@@ -92,8 +92,20 @@ interface LogEntry {
 interface TacticalBattleScreenProps {
   battleId: number;
   initialState: TacticalState;
+  objective?: string;
   onComplete: (report: any) => void;
 }
+
+const OBJECTIVE_DISPLAY: Record<string, string> = {
+  air_superiority: 'NEUTRALIZE HOSTILE AIRCRAFT',
+  interception: 'INTERCEPT — TARGET IS FLEEING',
+  escort: 'PROTECT CONVOY — SURVIVE WITH <50% DMG',
+  strike: 'REACH TARGET ZONE (<20KM)',
+  recon: 'SCAN ALL INTEL & EXTRACT',
+  naval_patrol: 'ENGAGE ENEMY VESSEL',
+  blockade_run: 'BREAK THROUGH BLOCKADE',
+  fleet_defense: 'DEFEND POSITION',
+};
 
 const zoneBadge: Record<string, { bg: string; text: string }> = {
   BVR: { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
@@ -115,7 +127,7 @@ const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> => {
   ]);
 };
 
-export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: TacticalBattleScreenProps) => {
+export const TacticalBattleScreen = ({ battleId, initialState, objective, onComplete }: TacticalBattleScreenProps) => {
   const [state, setState] = useState<TacticalState>(initialState);
   const [turnResult, setTurnResult] = useState<TurnResultData | null>(null);
   const [choosing, setChoosing] = useState(false);
@@ -311,6 +323,31 @@ export const TacticalBattleScreen = ({ battleId, initialState, onComplete }: Tac
           </div>
         </div>
       </div>
+
+      {/* ═══ OBJECTIVE BAR ═══ */}
+      {objective && (
+        <div className="px-3 py-1.5" style={{ background: 'rgba(212,168,67,0.06)', borderBottom: '1px solid var(--color-border)' }}>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-display tracking-wider" style={{ color: 'var(--color-amber)' }}>OBJECTIVE</span>
+            <span className="text-xs font-data" style={{ color: 'var(--color-text)' }}>{OBJECTIVE_DISPLAY[objective] || objective.replace(/_/g, ' ').toUpperCase()}</span>
+            {objective === 'escort' && (
+              <span className="text-[10px] font-data ml-auto" style={{ color: state.damage_pct < 50 ? 'var(--color-green)' : 'var(--color-red)' }}>
+                Hull: {(100 - state.damage_pct).toFixed(0)}% (need &gt;50%)
+              </span>
+            )}
+            {objective === 'strike' && (
+              <span className="text-[10px] font-data ml-auto" style={{ color: state.range_km < 40 ? 'var(--color-green)' : 'var(--color-text-muted)' }}>
+                Range: {state.range_km.toFixed(0)}km (need &lt;20km)
+              </span>
+            )}
+            {objective === 'recon' && (
+              <span className="text-[10px] font-data ml-auto" style={{ color: 'var(--color-text-muted)' }}>
+                Intel: {intelCount}/6
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ═══ TACTICAL VIEW ═══ */}
       <div className="px-3 py-2 relative">

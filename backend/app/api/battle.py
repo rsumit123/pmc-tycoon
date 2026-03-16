@@ -536,7 +536,7 @@ def start_battle(data: BattleCreate, db: Session = Depends(get_db)):
                         "stock": stock,
                     })
 
-        return {
+        result = {
             "battle_id": battle.id,
             "battle_type": "air",
             "player_aircraft": {
@@ -558,7 +558,26 @@ def start_battle(data: BattleCreate, db: Session = Depends(get_db)):
                 "origin": enemy_ac.origin, "generation": enemy_ac.generation,
             },
             "available_weapons": weapons,
+            "mission_objective": None,
+            "mission_title": None,
+            "mission_description": None,
+            "difficulty": 1,
+            "risk_level": 50,
         }
+
+        # Enrich with mission info if contract linked
+        if data.contract_id:
+            _c = db.query(ActiveContract).filter(ActiveContract.id == data.contract_id).first()
+            if _c:
+                _m = db.query(MissionTemplate).filter(MissionTemplate.id == _c.mission_template_id).first()
+                if _m:
+                    result["mission_objective"] = getattr(_m, 'mission_objective', None)
+                    result["mission_title"] = _m.title
+                    result["mission_description"] = _m.description
+                    result["difficulty"] = getattr(_m, 'difficulty', 1)
+                    result["risk_level"] = _m.risk_level
+
+        return result
 
     elif data.ship_id:
         battle_type = BattleType.NAVAL
@@ -1357,6 +1376,9 @@ def get_battle_report(battle_id: int, db: Session = Depends(get_db)):
     # Include subsystem wear report and module loot if available
     report["subsystem_wear"] = final.get("subsystem_wear", [])
     report["module_loot"] = final.get("module_loot")
+    report["rp_earned"] = final.get("rp_earned", 0)
+    report["pilot_xp_earned"] = final.get("pilot_xp_earned", 0)
+    report["pilot_level_up"] = final.get("pilot_level_up", False)
 
     return report
 
@@ -1403,6 +1425,7 @@ def _tactical_state_to_dict(state) -> dict:
         ],
         "status": state.status,
         "exit_reason": state.exit_reason,
+        "objective": getattr(state, 'objective', None),
     }
 
 

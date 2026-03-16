@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Zap,
   ChevronDown,
+  FlaskConical,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/design-system.css';
@@ -43,6 +44,10 @@ interface ReportData {
     after: number;
     wear: number;
   }>;
+  rp_earned?: number;
+  module_loot?: { module_name: string; slot_type: string; tier: number } | null;
+  pilot_xp_earned?: number;
+  pilot_level_up?: boolean;
 }
 
 interface AfterActionReportProps {
@@ -149,6 +154,47 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
             <p className="text-[10px] text-ink-secondary">Reputation</p>
           </div>
         </div>
+
+        {/* Extended rewards */}
+        {(report.rp_earned || report.pilot_xp_earned || report.module_loot) && (
+          <div className="space-y-2">
+            {/* RP earned */}
+            {report.rp_earned != null && report.rp_earned > 0 && (
+              <div className="card-dossier p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FlaskConical className="w-4 h-4" style={{ color: 'var(--color-amber)' }} />
+                  <span className="text-xs" style={{ color: 'var(--color-text)' }}>Research Points</span>
+                </div>
+                <span className="font-data text-sm font-bold" style={{ color: 'var(--color-amber)' }}>+{report.rp_earned} RP</span>
+              </div>
+            )}
+
+            {/* Pilot XP */}
+            {report.pilot_xp_earned != null && report.pilot_xp_earned > 0 && (
+              <div className="card-dossier p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4" style={{ color: 'var(--color-blue)' }} />
+                  <span className="text-xs" style={{ color: 'var(--color-text)' }}>Pilot Experience</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-data text-sm font-bold" style={{ color: 'var(--color-blue)' }}>+{report.pilot_xp_earned} XP</span>
+                  {report.pilot_level_up && <span className="stamp stamp-success text-[8px]">LEVEL UP</span>}
+                </div>
+              </div>
+            )}
+
+            {/* Module loot */}
+            {report.module_loot && (
+              <div className="card-dossier-tab p-3">
+                <p className="text-[10px] font-display tracking-wider mb-1" style={{ color: 'var(--color-amber)' }}>RECOVERED EQUIPMENT</p>
+                <p className="font-data text-sm font-bold" style={{ color: 'var(--color-text)' }}>{report.module_loot.module_name}</p>
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  {report.module_loot.slot_type.toUpperCase()} · Tier {report.module_loot.tier} — Added to inventory
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Damage summary */}
         <div className="bg-dossier-surface rounded-xl border border-border p-3.5">
@@ -337,12 +383,17 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
         </div>
       </div>
 
-      {/* Bottom button */}
+      {/* Bottom buttons */}
       <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 sm:pb-4 backdrop-blur-lg" style={{ background: 'rgba(12,14,18,0.9)', borderTop: '1px solid var(--color-border)' }}>
-        <button onClick={() => navigate('/contracts')} className="btn-primary w-full flex items-center justify-center gap-2 text-sm py-3.5">
-          <ChevronRight className="w-4 h-4" />
-          RETURN TO OPERATIONS
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => navigate('/contracts')} className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm py-3.5">
+            <ChevronRight className="w-4 h-4" />
+            NEXT MISSION
+          </button>
+          <button onClick={() => navigate('/hangar')} className="btn-secondary flex-1 flex items-center justify-center gap-2 text-sm py-3.5">
+            RETURN TO BASE
+          </button>
+        </div>
       </div>
     </div>
   );

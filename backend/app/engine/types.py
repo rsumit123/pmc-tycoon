@@ -241,6 +241,7 @@ class TacticalBattleState:
     available_actions: List[TurnAction]
     status: str  # "in_progress", "completed"
     exit_reason: Optional[str] = None
+    objective: Optional[str] = None
 
 
 @dataclass

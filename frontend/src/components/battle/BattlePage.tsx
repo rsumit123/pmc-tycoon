@@ -5,11 +5,12 @@ import { LoadoutScreen } from './LoadoutScreen';
 import { BattleScreen } from './BattleScreen';
 import { TacticalBattleScreen } from './TacticalBattleScreen';
 import { TacticalNavalScreen } from './TacticalNavalScreen';
+import { MissionBriefing } from './MissionBriefing';
 import { AfterActionReport } from './AfterActionReport';
 import { Loader2, AlertTriangle, ArrowLeft } from 'lucide-react';
 import '../../styles/design-system.css';
 
-type Phase = 'loading' | 'loadout' | 'battle' | 'report' | 'error';
+type Phase = 'loading' | 'briefing' | 'loadout' | 'battle' | 'report' | 'error';
 
 export const BattlePage = () => {
   const { battleId: battleIdParam } = useParams();
@@ -25,6 +26,7 @@ export const BattlePage = () => {
   const [battleState, setBattleState] = useState<any>(null);
   const [reportData, setReportData] = useState<any>(null);
   const [showTransition, setShowTransition] = useState(false);
+  const [missionObjective, setMissionObjective] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -77,12 +79,19 @@ export const BattlePage = () => {
         setBattleType(data.battle_type);
         setLoadoutData(data);
 
+        // Store objective if available from backend
+        if (data.objective) setMissionObjective(data.objective);
+        else if (data.mission_objective) setMissionObjective(data.mission_objective);
+
         if (data.battle_type === 'naval') {
           const loadoutRes = await apiService.submitLoadout(data.battle_id, { weapons: [] });
           setBattleState(loadoutRes.data);
+          // Store objective from battle state if available
+          if (loadoutRes.data?.objective) setMissionObjective(loadoutRes.data.objective);
           setPhase('battle');
         } else {
-          setPhase('loadout');
+          // Show briefing before loadout if we have mission info
+          setPhase(data.mission_title || data.contract_title ? 'briefing' : 'loadout');
         }
       } catch (err: any) {
         const detail = err?.response?.data?.detail || 'Failed to start battle. Check your network and try again.';
@@ -128,6 +137,23 @@ export const BattlePage = () => {
     );
   }
 
+  if (phase === 'briefing' && loadoutData) {
+    return (
+      <MissionBriefing
+        missionTitle={loadoutData.mission_title || loadoutData.contract_title || 'Combat Sortie'}
+        missionDescription={loadoutData.mission_description || loadoutData.contract_description}
+        missionObjective={missionObjective || loadoutData.objective || loadoutData.mission_objective}
+        difficulty={loadoutData.difficulty}
+        riskLevel={loadoutData.risk_level}
+        enemyName={loadoutData.enemy_aircraft?.name || loadoutData.enemy_name}
+        playerVehicleName={loadoutData.player_aircraft?.name || loadoutData.player_name || 'Unknown'}
+        playerCondition={loadoutData.player_aircraft?.condition ?? 100}
+        battleType={battleType}
+        onProceed={() => setPhase('loadout')}
+      />
+    );
+  }
+
   if (phase === 'loadout' && loadoutData) {
     return (
       <LoadoutScreen
@@ -156,6 +182,7 @@ export const BattlePage = () => {
           <TacticalNavalScreen
             battleId={battleId}
             initialState={battleState}
+            objective={missionObjective || battleState.objective || undefined}
             onComplete={(report) => {
               setReportData(report);
               setPhase('report');
@@ -168,6 +195,7 @@ export const BattlePage = () => {
         <TacticalBattleScreen
           battleId={battleId}
           initialState={battleState}
+          objective={missionObjective || battleState.objective || undefined}
           onComplete={(report) => {
             setReportData(report);
             setPhase('report');

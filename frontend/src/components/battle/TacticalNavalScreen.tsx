@@ -75,8 +75,20 @@ interface LogEntry { prefix: string; color: string; text: string; }
 interface TacticalNavalScreenProps {
   battleId: number;
   initialState: NavalState;
+  objective?: string;
   onComplete: (report: any) => void;
 }
+
+const OBJECTIVE_DISPLAY: Record<string, string> = {
+  air_superiority: 'NEUTRALIZE HOSTILE AIRCRAFT',
+  interception: 'INTERCEPT — TARGET IS FLEEING',
+  escort: 'PROTECT CONVOY — SURVIVE WITH <50% DMG',
+  strike: 'REACH TARGET ZONE (<20KM)',
+  recon: 'SCAN ALL INTEL & EXTRACT',
+  naval_patrol: 'ENGAGE ENEMY VESSEL',
+  blockade_run: 'BREAK THROUGH BLOCKADE',
+  fleet_defense: 'DEFEND POSITION',
+};
 
 const phaseBadge: Record<string, { bg: string; text: string }> = {
   approach: { bg: 'bg-accent-blue/20', text: 'text-accent-blue' },
@@ -91,7 +103,7 @@ const compartmentLabel: Record<string, string> = { hull: 'HULL', engines: 'ENG',
 const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
   Promise.race([promise, new Promise<never>((_, rej) => setTimeout(() => rej(new Error('Request timed out')), ms))]);
 
-export const TacticalNavalScreen = ({ battleId, initialState, onComplete }: TacticalNavalScreenProps) => {
+export const TacticalNavalScreen = ({ battleId, initialState, objective, onComplete }: TacticalNavalScreenProps) => {
   const [state, setState] = useState<NavalState>(initialState);
   const [turnResult, setTurnResult] = useState<NavalTurnResult | null>(null);
   const [choosing, setChoosing] = useState(false);
@@ -196,6 +208,16 @@ export const TacticalNavalScreen = ({ battleId, initialState, onComplete }: Tact
           </div>
         </div>
       </div>
+
+      {/* ═══ OBJECTIVE BAR ═══ */}
+      {objective && (
+        <div className="px-3 py-1.5" style={{ background: 'rgba(212,168,67,0.06)', borderBottom: '1px solid var(--color-border)' }}>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-display tracking-wider" style={{ color: 'var(--color-amber)' }}>OBJECTIVE</span>
+            <span className="text-xs font-data" style={{ color: 'var(--color-text)' }}>{OBJECTIVE_DISPLAY[objective] || objective.replace(/_/g, ' ').toUpperCase()}</span>
+          </div>
+        </div>
+      )}
 
       {/* ═══ TACTICAL VIEW ═══ */}
       <div className="px-3 py-2">

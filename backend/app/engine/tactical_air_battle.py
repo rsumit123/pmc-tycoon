@@ -706,6 +706,7 @@ class TacticalAirBattleEngine:
             available_actions=self.get_available_actions(),
             status=self.status,
             exit_reason=self.exit_reason,
+            objective=self.objective,
         )
 
     def _objective_complete_narrative(self) -> str:
