@@ -47,6 +47,61 @@ def aircraft_to_data(a: Aircraft) -> AircraftData:
     )
 
 
+def _apply_subsystem_stats(ac_data: AircraftData, battle: Battle, db: Session) -> tuple:
+    """Overlay subsystem module stats onto AircraftData. Returns (modified_data, pk_bonus).
+    If no subsystems found, returns the original data unchanged."""
+    pk_bonus = 0.0
+
+    if not battle.player_aircraft_id:
+        return ac_data, pk_bonus
+
+    # Find the owned aircraft for this battle
+    owned = db.query(OwnedAircraft).filter(
+        OwnedAircraft.user_id == battle.user_id,
+        OwnedAircraft.aircraft_id == battle.player_aircraft_id,
+    ).first()
+    if not owned:
+        return ac_data, pk_bonus
+
+    subs = db.query(AircraftSubsystem).filter(
+        AircraftSubsystem.owned_aircraft_id == owned.id
+    ).all()
+    if not subs:
+        return ac_data, pk_bonus
+
+    # Apply each subsystem's stats with condition degradation
+    for sub in subs:
+        stats = json.loads(sub.module.stats)
+        cond = sub.condition_pct / 100.0
+
+        if sub.slot_type == "radar":
+            ac_data.radar_type = stats.get("radar_type", ac_data.radar_type)
+            ac_data.radar_range_km = int(stats.get("radar_range_km", ac_data.radar_range_km) * cond)
+            ac_data.irst = stats.get("irst", ac_data.irst)
+        elif sub.slot_type == "engine":
+            twr_mod = 1.0 + (stats.get("thrust_to_weight_mod", 1.0) - 1.0) * cond
+            ac_data.thrust_to_weight_clean = round(ac_data.thrust_to_weight_clean * twr_mod / 1.0, 3) if twr_mod != 1.0 else ac_data.thrust_to_weight_clean
+            # For default modules, twr_mod IS the thrust value, not a multiplier
+            # Use it directly if it looks like an absolute value (>0.5)
+            if stats.get("thrust_to_weight_mod", 1.0) > 0.5:
+                ac_data.thrust_to_weight_clean = round(stats["thrust_to_weight_mod"] * cond + (1.0 - cond), 3)
+        elif sub.slot_type == "ecm":
+            ac_data.ecm_suite = stats.get("ecm_suite", ac_data.ecm_suite) or ""
+            ac_data.ecm_rating = int(stats.get("ecm_rating", ac_data.ecm_rating) * cond)
+        elif sub.slot_type == "countermeasures":
+            ac_data.chaff_count = int(stats.get("chaff_count", ac_data.chaff_count) * cond)
+            ac_data.flare_count = int(stats.get("flare_count", ac_data.flare_count) * cond)
+            ac_data.towed_decoy = stats.get("towed_decoy", ac_data.towed_decoy)
+        elif sub.slot_type == "computer":
+            pk_bonus = round(stats.get("pk_bonus", 0.0) * cond, 3)
+        elif sub.slot_type == "airframe":
+            ac_data.max_g_load = stats.get("max_g_mod", ac_data.max_g_load)
+            rcs_mod = stats.get("rcs_mod", 1.0)
+            ac_data.rcs_m2 = round(ac_data.rcs_m2 * rcs_mod, 2)
+
+    return ac_data, pk_bonus
+
+
 def weapon_to_data(w: Weapon) -> WeaponData:
     return WeaponData(
         id=w.id, name=w.name, weapon_type=w.weapon_type.value, weight_kg=w.weight_kg,
@@ -115,8 +170,12 @@ def _build_air_engine(battle: Battle, db: Session) -> AirBattleEngine:
         if oc:
             contractor_skill = oc.skill_level
 
+    # Apply subsystem module stats to player aircraft
+    player_ac_data = aircraft_to_data(player_ac)
+    player_ac_data, _pk_bonus = _apply_subsystem_stats(player_ac_data, battle, db)
+
     engine = AirBattleEngine(
-        player_aircraft=aircraft_to_data(player_ac),
+        player_aircraft=player_ac_data,
         enemy_aircraft=aircraft_to_data(enemy_ac),
         player_loadout=player_loadout,
         enemy_loadout=enemy_loadout,
@@ -180,14 +239,19 @@ def _build_tactical_air_engine(battle: Battle, db: Session) -> TacticalAirBattle
         st = json.loads(battle.battle_state)
         fuel_pct = st.get("fuel_pct", 85.0)
 
+    # Apply subsystem module stats to player aircraft (upgrades + wear)
+    player_ac_data = aircraft_to_data(player_ac)
+    player_ac_data, pk_bonus = _apply_subsystem_stats(player_ac_data, battle, db)
+
     engine = TacticalAirBattleEngine(
-        player_aircraft=aircraft_to_data(player_ac),
+        player_aircraft=player_ac_data,
         enemy_aircraft=aircraft_to_data(enemy_ac),
         player_loadout=player_loadout,
         enemy_loadout=enemy_loadout,
         contractor_skill=contractor_skill,
         fuel_pct=fuel_pct,
         seed=battle.id * 1000 + (battle.current_phase or 1),
+        pk_bonus=pk_bonus,
     )
 
     # Restore state

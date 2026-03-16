@@ -41,12 +41,14 @@ class TacticalAirBattleEngine:
         contractor_skill: int = 50,
         fuel_pct: float = 85.0,
         seed: Optional[int] = None,
+        pk_bonus: float = 0.0,
     ):
         self.player = player_aircraft
         self.enemy = enemy_aircraft
         self.player_loadout = list(player_loadout)
         self.enemy_loadout = list(enemy_loadout)
         self.contractor_skill = contractor_skill
+        self.pk_bonus = pk_bonus  # from mission computer subsystem
         self._base_seed = seed or 0
         self.rng = random.Random(seed)
 
@@ -127,7 +129,9 @@ class TacticalAirBattleEngine:
 
         # Include estimated evasion modifier (assume 50% chance enemy maneuvers at 0.85x)
         avg_evasion = 0.925  # midpoint of 1.0 and 0.85
-        pk = weapon.base_pk * range_factor * ecm_factor * maneuver_factor * payload_factor * avg_evasion
+        # Apply mission computer pk_bonus
+        computer_mod = 1.0 + self.pk_bonus
+        pk = weapon.base_pk * range_factor * ecm_factor * maneuver_factor * payload_factor * avg_evasion * computer_mod
         return round(clamp(pk, 0.02, 0.95), 2)
 
     def get_available_actions(self) -> List[TurnAction]:
@@ -287,6 +291,8 @@ class TacticalAirBattleEngine:
 
                 # BVR missiles degraded in TRANSITION zone (closer = more clutter, less energy)
                 zone_mod = 0.85 if (self.zone == "TRANSITION" and weapon.weapon_type == "BVR_AAM") else 1.0
+                # Mission computer pk_bonus
+                computer_mod = 1.0 + self.pk_bonus
 
                 pk_result = calculate_missile_pk(
                     weapon=weapon,
@@ -294,7 +300,7 @@ class TacticalAirBattleEngine:
                     target_ecm_rating=self.enemy.ecm_rating,
                     target_max_g=self.enemy.max_g_load,
                     target_twr_ratio=self.enemy_twr_ratio,
-                    player_modifier=evasion_mod * zone_mod,
+                    player_modifier=evasion_mod * zone_mod * computer_mod,
                     rng=self.rng,
                 )
 
@@ -318,7 +324,7 @@ class TacticalAirBattleEngine:
 
         elif action == "guns":
             player_fires = True
-            guns_pk = 0.35 * (0.8 + self.contractor_skill / 250.0) * (1.0 - self.damage_pct / 150.0)
+            guns_pk = 0.35 * (0.8 + self.contractor_skill / 250.0) * (1.0 - self.damage_pct / 150.0) * (1.0 + self.pk_bonus)
             guns_pk = max(0.05, min(0.8, guns_pk))
             roll = self.rng.randint(1, 100)
             hit = roll <= int(guns_pk * 100)
@@ -676,6 +682,7 @@ class TacticalAirBattleEngine:
         return {
             "engine_version": 2,
             "base_seed": self._base_seed,
+            "pk_bonus": self.pk_bonus,
             "turn": self.turn,
             "range_km": self.range_km,
             "fuel_pct": self.fuel_pct,
@@ -710,6 +717,7 @@ class TacticalAirBattleEngine:
     def restore_from_dict(self, state: Dict[str, Any]):
         """Restore engine state from stored dict."""
         self._base_seed = state.get("base_seed", self._base_seed)
+        self.pk_bonus = state.get("pk_bonus", self.pk_bonus)
         self.turn = state.get("turn", 1)
         self.range_km = state.get("range_km", 250.0)
         self.fuel_pct = state.get("fuel_pct", 85.0)
