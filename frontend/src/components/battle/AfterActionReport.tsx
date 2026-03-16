@@ -35,6 +35,13 @@ interface ReportData {
   exit_reason?: string;
   turns_played?: number;
   fuel_remaining?: number;
+  subsystem_wear?: Array<{
+    slot_type: string;
+    module_name: string;
+    before: number;
+    after: number;
+    wear: number;
+  }>;
 }
 
 interface AfterActionReportProps {
@@ -282,6 +289,30 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
             })}
           </div>
         </div>
+
+        {/* Subsystem wear report */}
+        {report.subsystem_wear && report.subsystem_wear.length > 0 && (
+          <div className="bg-gray-900 rounded-xl border border-gray-800/60 p-3.5">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2.5">Subsystem Wear</p>
+            <div className="space-y-2">
+              {report.subsystem_wear.map((w) => (
+                <div key={w.slot_type} className="flex items-center gap-2">
+                  <span className="text-[10px] text-gray-500 uppercase w-16 shrink-0 font-mono tracking-wider">{w.slot_type.slice(0, 6)}</span>
+                  <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${w.after >= 70 ? 'bg-emerald-500' : w.after >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+                      style={{ width: `${w.after}%` }}
+                    />
+                  </div>
+                  <span className={`text-[10px] font-mono font-bold w-10 text-right ${w.after >= 70 ? 'text-emerald-400' : w.after >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                    {w.after}%
+                  </span>
+                  <span className="text-[9px] text-red-400/60 font-mono w-10 text-right">-{w.wear}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Narrative summary */}
         <div className="bg-gray-900 rounded-xl border border-gray-800/60 p-3.5">

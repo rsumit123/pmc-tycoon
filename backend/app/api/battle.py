@@ -13,6 +13,8 @@ from app.models.ship import Ship
 from app.models.weapon import Weapon
 from app.models.contractor import OwnedContractor, ContractorTemplate
 from app.models.owned_weapon import OwnedWeapon
+from app.models.owned_aircraft import OwnedAircraft
+from app.models.subsystem import AircraftSubsystem
 from app.models.user import User
 from app.schemas.battle import BattleCreate, LoadoutSubmit, BattleChoiceSubmit, TacticalChoiceSubmit
 
@@ -195,6 +197,86 @@ def _build_tactical_air_engine(battle: Battle, db: Session) -> TacticalAirBattle
             engine.restore_from_dict(state)
 
     return engine
+
+
+def _apply_subsystem_wear(
+    battle: Battle,
+    damage_taken: float,
+    turns_played: int,
+    db: Session,
+) -> list:
+    """Degrade subsystem conditions after a battle. Returns wear report."""
+    import random as _rng
+
+    if not battle.player_aircraft_id:
+        return []
+
+    # Find the owned aircraft used in this battle
+    owned = db.query(OwnedAircraft).filter(
+        OwnedAircraft.user_id == battle.user_id,
+        OwnedAircraft.aircraft_id == battle.player_aircraft_id,
+    ).first()
+    if not owned:
+        return []
+
+    subsystems = db.query(AircraftSubsystem).filter(
+        AircraftSubsystem.owned_aircraft_id == owned.id
+    ).all()
+    if not subsystems:
+        return []
+
+    # Base wear scales with combat intensity
+    # Light (0-20% damage taken, <5 turns): 3-8% per subsystem
+    # Standard (20-40%, 5-10 turns): 5-12%
+    # Heavy (40%+, 10+ turns): 8-18%
+    intensity = 0  # 0=light, 1=standard, 2=heavy
+    if damage_taken >= 40 or turns_played >= 10:
+        intensity = 2
+    elif damage_taken >= 20 or turns_played >= 5:
+        intensity = 1
+
+    wear_ranges = [
+        (3, 8),    # light
+        (5, 12),   # standard
+        (8, 18),   # heavy
+    ]
+    wear_min, wear_max = wear_ranges[intensity]
+
+    # Per-slot weighting: subsystems used more in combat degrade faster
+    slot_weights = {
+        "radar": 1.2,          # always active
+        "engine": 1.3,         # fuel burn = engine wear
+        "ecm": 0.8,            # only active when deployed
+        "countermeasures": 0.7, # expendable, less wear on dispenser
+        "computer": 0.9,       # electronics degrade slowly
+        "airframe": 1.1 + (damage_taken / 100),  # scales with hits taken
+    }
+
+    rng = _rng.Random(battle.id)
+    wear_report = []
+
+    for sub in subsystems:
+        weight = slot_weights.get(sub.slot_type, 1.0)
+        base_wear = rng.uniform(wear_min, wear_max)
+        actual_wear = round(base_wear * weight, 1)
+
+        old_condition = sub.condition_pct
+        sub.condition_pct = max(0, int(old_condition - actual_wear))
+
+        wear_report.append({
+            "slot_type": sub.slot_type,
+            "module_name": sub.module.name if sub.module else "Unknown",
+            "before": old_condition,
+            "after": sub.condition_pct,
+            "wear": round(actual_wear, 1),
+        })
+
+    # Also degrade overall aircraft condition
+    avg_condition = sum(s.condition_pct for s in subsystems) / max(len(subsystems), 1)
+    owned.condition = int(avg_condition)
+
+    db.flush()
+    return wear_report
 
 
 def _save_tactical_engine_state(engine: TacticalAirBattleEngine, battle: Battle):
@@ -560,6 +642,11 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
             report = engine.get_battle_result()
             battle.status = BattleStatus.COMPLETED_SUCCESS if report.success else BattleStatus.COMPLETED_FAILURE
             battle.completed_at = datetime.now()
+            # Apply subsystem wear
+            wear_report = _apply_subsystem_wear(
+                battle, report.total_damage_taken, report.turns_played, db,
+            )
+
             battle.final_result = json.dumps({
                 "success": report.success,
                 "exit_reason": report.exit_reason,
@@ -570,6 +657,7 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 "damage_taken": report.total_damage_taken,
                 "fuel_remaining": report.fuel_remaining,
                 "narrative": report.narrative_summary,
+                "subsystem_wear": wear_report,
             })
 
             user = db.query(User).filter(User.id == battle.user_id).first()
@@ -652,6 +740,11 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
             report = engine.get_battle_result()
             battle.status = BattleStatus.COMPLETED_SUCCESS if report.success else BattleStatus.COMPLETED_FAILURE
             battle.completed_at = datetime.now()
+            # Apply subsystem wear (v1 — 5 phases is standard intensity)
+            wear_report = _apply_subsystem_wear(
+                battle, report.total_damage_taken, 5, db,
+            )
+
             battle.final_result = json.dumps({
                 "success": report.success,
                 "payout": report.payout,
@@ -659,6 +752,7 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 "damage_dealt": report.total_damage_dealt,
                 "damage_taken": report.total_damage_taken,
                 "narrative": report.narrative_summary,
+                "subsystem_wear": wear_report,
             })
 
             # Apply rewards to user
@@ -831,6 +925,9 @@ def get_battle_report(battle_id: int, db: Session = Depends(get_db)):
         report["exit_reason"] = final.get("exit_reason", "")
         report["turns_played"] = final.get("turns_played", len(phase_list))
         report["fuel_remaining"] = final.get("fuel_remaining", 0)
+
+    # Include subsystem wear report if available
+    report["subsystem_wear"] = final.get("subsystem_wear", [])
 
     return report
 
