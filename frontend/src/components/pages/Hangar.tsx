@@ -179,12 +179,20 @@ export const Hangar = () => {
   // ─── Swap module ───
   const handleSwap = async (moduleId: number) => {
     if (!detailAircraft || !swapSlot) return;
+    const slotBeingSwapped = swapSlot;
     setActionLoading(`swap-${swapSlot}`);
     try {
       await apiService.swapModule(detailAircraft.id, swapSlot, moduleId);
-      const res = await apiService.getAircraftSubsystems(detailAircraft.id);
-      setSubsystems(res.data.subsystems || []);
+      // Re-fetch subsystems AND computed stats
+      const [subsRes, statsRes] = await Promise.all([
+        apiService.getAircraftSubsystems(detailAircraft.id),
+        apiService.getAircraftComputedStats(detailAircraft.id).catch(() => ({ data: null })),
+      ]);
+      setSubsystems(subsRes.data.subsystems || []);
+      if (statsRes.data) setComputedStats(statsRes.data);
       setSwapSlot(null);
+      // Keep the diagram focused on the slot we just swapped
+      setSelectedDiagramSlot(slotBeingSwapped);
     } catch (err) { console.error('Swap failed:', err); }
     finally { setActionLoading(null); }
   };
