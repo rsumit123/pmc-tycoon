@@ -23,11 +23,22 @@ interface MissionLogEntry {
   ended_at: string;
 }
 
+interface RankData {
+  rank: string;
+  rank_index: number;
+  next_rank: string | null;
+  next_rep_needed: number;
+  next_missions_needed: number;
+  reputation: number;
+  missions_completed: number;
+}
+
 export const Dashboard = () => {
   const [stats, setStats] = useState({
     balance: 0, monthlyProfit: 0, reputation: 0, techLevel: 0,
-    totalAssets: 0, activeContracts: 0, totalContractors: 0,
+    totalAssets: 0, activeContracts: 0, totalContractors: 0, missionsCompleted: 0,
   });
+  const [rankData, setRankData] = useState<RankData | null>(null);
   const [missionLogs, setMissionLogs] = useState<MissionLogEntry[]>([]);
   const [missionTemplateNames, setMissionTemplateNames] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
@@ -36,9 +47,10 @@ export const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const [userRes, unitsRes, contractsRes, contractorsRes, logsRes, templatesRes] = await Promise.all([
+        const [userRes, unitsRes, contractsRes, contractorsRes, logsRes, templatesRes, rankRes] = await Promise.all([
           apiService.getUser(1), apiService.getOwnedUnits(), apiService.getActiveContracts(),
           apiService.getOwnedContractors(), apiService.getMissionHistory(1), apiService.getMissionTemplates(),
+          apiService.getUserRank(1).catch(() => ({ data: null })),
         ]);
         const user = userRes.data;
         const units = Array.isArray(unitsRes.data) ? unitsRes.data : [];
@@ -51,13 +63,15 @@ export const Dashboard = () => {
         templates.forEach((t: any) => { nameMap[t.id] = t.title; });
         setMissionTemplateNames(nameMap);
         setMissionLogs(logs.slice(0, 5));
+        if (rankRes.data) setRankData(rankRes.data);
         setStats({
           balance: user.balance, monthlyProfit: 2500, reputation: user.reputation,
           techLevel: user.tech_level, totalAssets: units.length,
           activeContracts: active.length, totalContractors: contractors.length,
+          missionsCompleted: user.missions_completed || 0,
         });
       } catch {
-        setStats({ balance: 10000, monthlyProfit: 2500, reputation: 75, techLevel: 3, totalAssets: 5, activeContracts: 2, totalContractors: 4 });
+        setStats({ balance: 10000, monthlyProfit: 2500, reputation: 75, techLevel: 3, totalAssets: 5, activeContracts: 2, totalContractors: 4, missionsCompleted: 0 });
       } finally { setLoading(false); }
     };
     fetchDashboardData();
@@ -72,14 +86,15 @@ export const Dashboard = () => {
     </div>
   );
 
-  // Rank calculation
-  const rep = stats.reputation;
-  const rank = rep >= 80 ? 'LEGENDARY' : rep >= 60 ? 'ELITE' : rep >= 40 ? 'ESTABLISHED' : rep >= 20 ? 'LICENSED' : 'STARTUP';
-  const rankClass = rep >= 80 ? 'rank-legendary' : rep >= 60 ? 'rank-elite' : rep >= 40 ? 'rank-established' : rep >= 20 ? 'rank-licensed' : 'rank-startup';
-  const nextRank = rep >= 80 ? null : rep >= 60 ? 'LEGENDARY' : rep >= 40 ? 'ELITE' : rep >= 20 ? 'ESTABLISHED' : 'LICENSED';
-  const nextThreshold = rep >= 80 ? 100 : rep >= 60 ? 80 : rep >= 40 ? 60 : rep >= 20 ? 40 : 20;
-  const prevThreshold = rep >= 80 ? 80 : rep >= 60 ? 60 : rep >= 40 ? 40 : rep >= 20 ? 20 : 0;
-  const rankProgress = nextThreshold > prevThreshold ? ((rep - prevThreshold) / (nextThreshold - prevThreshold)) * 100 : 100;
+  // Rank — use API data if available, fallback to client calculation
+  const rank = rankData?.rank || (stats.reputation >= 80 ? 'LEGENDARY' : stats.reputation >= 60 ? 'ELITE' : stats.reputation >= 40 ? 'ESTABLISHED' : stats.reputation >= 20 ? 'LICENSED' : 'STARTUP');
+  const rankClass = rank === 'LEGENDARY' ? 'rank-legendary' : rank === 'ELITE' ? 'rank-elite' : rank === 'ESTABLISHED' ? 'rank-established' : rank === 'LICENSED' ? 'rank-licensed' : 'rank-startup';
+  const nextRank = rankData?.next_rank || null;
+  const nextThreshold = rankData?.next_rep_needed || 100;
+  const prevThresholds = [0, 20, 40, 60, 80];
+  const rankIdx = rankData?.rank_index ?? 0;
+  const prevThreshold = prevThresholds[rankIdx] || 0;
+  const rankProgress = nextThreshold > prevThreshold ? ((stats.reputation - prevThreshold) / (nextThreshold - prevThreshold)) * 100 : 100;
 
   return (
     <div className="px-4 py-5 lg:px-8 lg:py-6 max-w-4xl mx-auto" style={{ color: 'var(--color-text)' }}>
@@ -140,8 +155,15 @@ export const Dashboard = () => {
           <div className="gauge-fill gauge-fill-amber" style={{ width: `${rankProgress}%` }} />
         </div>
         <div className="flex items-center justify-between">
-          <span className="font-data text-[11px]" style={{ color: 'var(--color-text-muted)' }}>{stats.reputation}/{nextThreshold} REP</span>
-          {nextRank && <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>Next: <span style={{ color: 'var(--color-amber)' }}>{nextRank}</span></span>}
+          <span className="font-data text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+            {stats.reputation} REP · {stats.missionsCompleted} missions
+          </span>
+          {nextRank && (
+            <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+              Next: <span style={{ color: 'var(--color-amber)' }}>{nextRank}</span>
+              {rankData && <> ({rankData.next_missions_needed} missions)</>}
+            </span>
+          )}
         </div>
       </div>
 

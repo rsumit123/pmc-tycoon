@@ -666,11 +666,38 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 "rp_earned": rp_earned,
             })
 
+            # Progression: missions_completed + pilot XP
+            pilot_xp_earned = 0
+            pilot_level_up = False
+
             user = db.query(User).filter(User.id == battle.user_id).first()
             if user:
                 user.balance += report.payout
                 user.reputation = max(0, min(100, user.reputation + report.reputation_change))
                 user.research_points = getattr(user, 'research_points', 0) + rp_earned
+                user.missions_completed = getattr(user, 'missions_completed', 0) + 1
+
+            # Award pilot XP if contractor assigned
+            if battle.contractor_id:
+                from app.engine.progression import calc_pilot_level
+                contractor = db.query(OwnedContractor).filter(OwnedContractor.id == battle.contractor_id).first()
+                if contractor:
+                    pilot_xp_earned = 50 + int(report.turns_played * 10)
+                    if report.success:
+                        pilot_xp_earned = int(pilot_xp_earned * 1.5)
+                    contractor.xp = getattr(contractor, 'xp', 0) + pilot_xp_earned
+                    new_level = calc_pilot_level(contractor.xp)
+                    if new_level > getattr(contractor, 'level', 1):
+                        contractor.level = new_level
+                        contractor.skill_level = min(100, contractor.skill_level + 2)
+                        pilot_level_up = True
+
+            # Add progression info to final_result
+            final_data = json.loads(battle.final_result)
+            final_data["missions_completed"] = getattr(user, 'missions_completed', 0) if user else 0
+            final_data["pilot_xp_earned"] = pilot_xp_earned
+            final_data["pilot_level_up"] = pilot_level_up
+            battle.final_result = json.dumps(final_data)
 
             if battle.contract_id:
                 contract = db.query(ActiveContract).filter(ActiveContract.id == battle.contract_id).first()
@@ -768,12 +795,39 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 "rp_earned": rp_earned_v1,
             })
 
+            # Progression: missions_completed + pilot XP (v1)
+            pilot_xp_earned_v1 = 0
+            pilot_level_up_v1 = False
+
             # Apply rewards to user
             user = db.query(User).filter(User.id == battle.user_id).first()
             if user:
                 user.balance += report.payout
                 user.reputation = max(0, min(100, user.reputation + report.reputation_change))
                 user.research_points = getattr(user, 'research_points', 0) + rp_earned_v1
+                user.missions_completed = getattr(user, 'missions_completed', 0) + 1
+
+            # Award pilot XP if contractor assigned (v1 uses turns_played=5)
+            if battle.contractor_id:
+                from app.engine.progression import calc_pilot_level
+                contractor = db.query(OwnedContractor).filter(OwnedContractor.id == battle.contractor_id).first()
+                if contractor:
+                    pilot_xp_earned_v1 = 50 + int(5 * 10)
+                    if report.success:
+                        pilot_xp_earned_v1 = int(pilot_xp_earned_v1 * 1.5)
+                    contractor.xp = getattr(contractor, 'xp', 0) + pilot_xp_earned_v1
+                    new_level = calc_pilot_level(contractor.xp)
+                    if new_level > getattr(contractor, 'level', 1):
+                        contractor.level = new_level
+                        contractor.skill_level = min(100, contractor.skill_level + 2)
+                        pilot_level_up_v1 = True
+
+            # Add progression info to final_result
+            final_data_v1 = json.loads(battle.final_result)
+            final_data_v1["missions_completed"] = getattr(user, 'missions_completed', 0) if user else 0
+            final_data_v1["pilot_xp_earned"] = pilot_xp_earned_v1
+            final_data_v1["pilot_level_up"] = pilot_level_up_v1
+            battle.final_result = json.dumps(final_data_v1)
 
             # Update contract if linked
             if battle.contract_id:
@@ -829,6 +883,10 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
             if report.success:
                 rp_earned_naval = int(rp_earned_naval * 1.5)
 
+            # Progression: missions_completed + pilot XP (naval)
+            pilot_xp_earned_naval = 0
+            pilot_level_up_naval = False
+
             battle.final_result = json.dumps({
                 "success": report.success,
                 "payout": report.payout,
@@ -843,6 +901,29 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 user.balance += report.payout
                 user.reputation = max(0, min(100, user.reputation + report.reputation_change))
                 user.research_points = getattr(user, 'research_points', 0) + rp_earned_naval
+                user.missions_completed = getattr(user, 'missions_completed', 0) + 1
+
+            # Award pilot XP if contractor assigned (naval uses turns_played=5)
+            if battle.contractor_id:
+                from app.engine.progression import calc_pilot_level
+                contractor = db.query(OwnedContractor).filter(OwnedContractor.id == battle.contractor_id).first()
+                if contractor:
+                    pilot_xp_earned_naval = 50 + int(5 * 10)
+                    if report.success:
+                        pilot_xp_earned_naval = int(pilot_xp_earned_naval * 1.5)
+                    contractor.xp = getattr(contractor, 'xp', 0) + pilot_xp_earned_naval
+                    new_level = calc_pilot_level(contractor.xp)
+                    if new_level > getattr(contractor, 'level', 1):
+                        contractor.level = new_level
+                        contractor.skill_level = min(100, contractor.skill_level + 2)
+                        pilot_level_up_naval = True
+
+            # Add progression info to final_result
+            final_data_naval = json.loads(battle.final_result)
+            final_data_naval["missions_completed"] = getattr(user, 'missions_completed', 0) if user else 0
+            final_data_naval["pilot_xp_earned"] = pilot_xp_earned_naval
+            final_data_naval["pilot_level_up"] = pilot_level_up_naval
+            battle.final_result = json.dumps(final_data_naval)
 
     # Save phase to DB
     phase_record = BattlePhase(

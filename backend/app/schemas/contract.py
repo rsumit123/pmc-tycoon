@@ -17,6 +17,9 @@ class MissionTemplateBase(BaseModel):
     battle_type: Optional[str] = None  # "air", "naval", or null
     enemy_aircraft_id: Optional[int] = None
     enemy_ship_id: Optional[int] = None
+    chapter: Optional[str] = None
+    chapter_order: int = 0
+    min_rank: int = 0
     is_active: bool = True
 
 class MissionTemplateCreate(MissionTemplateBase):

@@ -43,6 +43,10 @@ class MissionTemplate(Base):
     enemy_aircraft_id = Column(Integer, ForeignKey("aircraft.id"), nullable=True)
     enemy_ship_id = Column(Integer, ForeignKey("ships.id"), nullable=True)
 
+    chapter = Column(String, nullable=True)  # "sahara_crisis", "pacific_tensions", "arctic_shadow", null=standalone
+    chapter_order = Column(Integer, default=0)  # ordering within chapter
+    min_rank = Column(Integer, default=0)  # 0=STARTUP, 1=LICENSED, 2=ESTABLISHED, 3=ELITE, 4=LEGENDARY
+
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

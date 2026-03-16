@@ -107,6 +107,10 @@ export const apiService = {
   repairSubsystems: (ownedAircraftId: number, slotType?: string, repairAll?: boolean) => api.post(`/subsystems/aircraft/${ownedAircraftId}/repair`, { slot_type: slotType, repair_all: repairAll ?? false }),
   getAircraftComputedStats: (ownedAircraftId: number) => api.get(`/subsystems/aircraft/${ownedAircraftId}/stats`),
 
+  // Progression
+  getUserRank: (userId: number) => api.get(`/api/user/${userId}/rank`),
+  getChapters: () => api.get('/contracts/chapters'),
+
   // Research & Development
   getResearchItems: () => api.get('/research/items'),
   getResearchStatus: () => api.get('/research/status'),

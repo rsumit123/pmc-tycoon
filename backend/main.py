@@ -94,6 +94,7 @@ def get_user_stats(user_id: int, db: Session = Depends(get_db)):
         "reputation": user.reputation,
         "tech_level": user.tech_level,
         "research_points": getattr(user, "research_points", 0),
+        "missions_completed": getattr(user, "missions_completed", 0),
     }
 
 class UserUpdate(BaseModel):
@@ -101,6 +102,7 @@ class UserUpdate(BaseModel):
     reputation: Optional[int] = None
     tech_level: Optional[int] = None
     research_points: Optional[int] = None
+    missions_completed: Optional[int] = None
 
 @app.put("/api/user/{user_id}")
 def update_user_stats(user_id: int, update: UserUpdate, db: Session = Depends(get_db)):
@@ -116,6 +118,8 @@ def update_user_stats(user_id: int, update: UserUpdate, db: Session = Depends(ge
         user.tech_level = update.tech_level
     if update.research_points is not None:
         user.research_points = update.research_points
+    if update.missions_completed is not None:
+        user.missions_completed = update.missions_completed
 
     db.commit()
     db.refresh(user)
@@ -126,4 +130,17 @@ def update_user_stats(user_id: int, update: UserUpdate, db: Session = Depends(ge
         "reputation": user.reputation,
         "tech_level": user.tech_level,
         "research_points": getattr(user, "research_points", 0),
+        "missions_completed": getattr(user, "missions_completed", 0),
     }
+
+
+@app.get("/api/user/{user_id}/rank")
+def get_user_rank(user_id: int, db: Session = Depends(get_db)):
+    from app.engine.progression import get_rank
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    rank_info = get_rank(user.reputation, getattr(user, 'missions_completed', 0))
+    rank_info["reputation"] = user.reputation
+    rank_info["missions_completed"] = getattr(user, 'missions_completed', 0)
+    return rank_info

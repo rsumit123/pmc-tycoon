@@ -16,6 +16,7 @@ class User(Base):
     reputation = Column(Integer, default=50)  # 0-100
     tech_level = Column(Integer, default=1)   # Research level
     research_points = Column(Integer, default=150)  # starting RP
+    missions_completed = Column(Integer, default=0)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())

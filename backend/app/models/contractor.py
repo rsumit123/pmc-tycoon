@@ -26,6 +26,8 @@ class OwnedContractor(Base):
     skill_level = Column(Integer, default=50)  # 0-100, can be improved
     fatigue_level = Column(Integer, default=0)  # 0-100, increases with use
     current_salary = Column(Integer, nullable=False)  # Can change with raises/bonuses
+    xp = Column(Integer, default=0)
+    level = Column(Integer, default=1)
     
     # Timestamps
     hired_at = Column(DateTime(timezone=True), server_default=func.now())

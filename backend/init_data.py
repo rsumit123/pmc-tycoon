@@ -17,6 +17,7 @@ from app.models.subsystem import SubsystemModule, AircraftSubsystem
 from app.seed.subsystem_data import seed_subsystems
 from app.models.research import ResearchItem, UserResearch
 from app.seed.research_data import seed_research
+from app.seed.chapter_data import seed_chapters
 
 def init_db(db: Session) -> None:
     # Create tables if they don't exist
@@ -197,6 +198,10 @@ def init_db(db: Session) -> None:
     # Seed research tech tree
     seed_research(db)
     print("Research data seeded.")
+
+    # Seed campaign chapters (tags existing missions)
+    seed_chapters(db)
+    print("Campaign chapters seeded.")
 
 if __name__ == "__main__":
     db = SessionLocal()
