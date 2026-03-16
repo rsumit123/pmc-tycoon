@@ -9,28 +9,28 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/', label: 'HQ', icon: LayoutDashboard },
   { path: '/hangar', label: 'Hangar', icon: Warehouse },
   { path: '/personnel', label: 'Personnel', icon: Users },
-  { path: '/contracts', label: 'Contracts', icon: Crosshair },
+  { path: '/contracts', label: 'Operations', icon: Crosshair },
   { path: '/research', label: 'R&D', icon: FlaskConical },
 ];
 
 export const Sidebar = ({ currentPath }: { currentPath: string }) => {
   return (
-    <aside className="w-56 h-full bg-gray-900 border-r border-gray-800 flex flex-col">
+    <aside className="w-56 h-full flex flex-col" style={{ background: 'var(--color-surface)', borderRight: '1px solid var(--color-border)' }}>
       {/* Logo */}
       <div className="px-5 pt-6 pb-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-            <Shield className="w-5 h-5 text-emerald-400" />
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(212,168,67,0.15)' }}>
+            <Shield className="w-5 h-5" style={{ color: 'var(--color-amber)' }} />
           </div>
           <div>
-            <h1 className="text-base font-bold text-white tracking-tight leading-none">
-              PMC Tycoon
+            <h1 className="font-display text-base tracking-wider" style={{ color: 'var(--color-text)' }}>
+              PMC TYCOON
             </h1>
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">
-              Command Center
+            <p className="text-[10px] font-display tracking-widest mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+              COMMAND CENTER
             </p>
           </div>
         </div>
@@ -45,18 +45,16 @@ export const Sidebar = ({ currentPath }: { currentPath: string }) => {
               <Link
                 key={path}
                 to={path}
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
-                  ${isActive
-                    ? 'bg-emerald-500/15 text-emerald-400'
-                    : 'text-gray-400 hover:bg-gray-800/60 hover:text-gray-200'
-                  }
-                `}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
+                style={{
+                  background: isActive ? 'rgba(212,168,67,0.1)' : 'transparent',
+                  color: isActive ? 'var(--color-amber)' : 'var(--color-text-secondary)',
+                }}
               >
-                <Icon className="w-4.5 h-4.5 shrink-0" />
-                <span>{label}</span>
+                <Icon className="w-[18px] h-[18px] shrink-0" />
+                <span className="font-display tracking-wider text-xs">{label.toUpperCase()}</span>
                 {isActive && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-amber)' }} />
                 )}
               </Link>
             );
@@ -65,8 +63,8 @@ export const Sidebar = ({ currentPath }: { currentPath: string }) => {
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-4 border-t border-gray-800/60">
-        <div className="text-xs text-gray-600 text-center">v0.1.0</div>
+      <div className="px-4 py-4" style={{ borderTop: '1px solid var(--color-border)' }}>
+        <div className="text-xs font-data text-center" style={{ color: 'var(--color-text-muted)' }}>v0.2.0</div>
       </div>
     </aside>
   );

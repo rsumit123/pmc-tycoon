@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
+import '../../styles/design-system.css';
 
 interface Research {
   id: number;
@@ -26,11 +27,11 @@ interface CompletedResearch {
 }
 
 const categoryStyle: Record<string, { bg: string; text: string; icon: string }> = {
-  Stealth: { bg: 'bg-violet-500/15', text: 'text-violet-400', icon: '🛡' },
-  Performance: { bg: 'bg-cyan-500/15', text: 'text-cyan-400', icon: '⚡' },
-  Combat: { bg: 'bg-red-500/15', text: 'text-red-400', icon: '🎯' },
-  Defense: { bg: 'bg-amber-500/15', text: 'text-amber-400', icon: '🔒' },
-  Maintenance: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', icon: '🔧' },
+  Stealth: { bg: 'bg-[var(--color-blue)]/15', text: 'text-[var(--color-blue)]', icon: '🛡' },
+  Performance: { bg: 'bg-[var(--color-blue)]/15', text: 'text-[var(--color-blue)]', icon: '⚡' },
+  Combat: { bg: 'bg-[var(--color-red)]/15', text: 'text-[var(--color-red)]', icon: '🎯' },
+  Defense: { bg: 'bg-[var(--color-amber)]/15', text: 'text-[var(--color-amber)]', icon: '🔒' },
+  Maintenance: { bg: 'bg-[var(--color-green)]/15', text: 'text-[var(--color-green)]', icon: '🔧' },
 };
 
 export const RAndD = () => {
@@ -105,30 +106,33 @@ export const RAndD = () => {
   return (
     <div className="px-4 py-5 lg:px-8 lg:py-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-xl font-bold text-white lg:text-2xl">Research & Development</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Advance your technological capabilities</p>
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-xl lg:text-2xl" style={{ color: 'var(--color-text)' }}>R&D Division</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Advance your technological capabilities</p>
+        </div>
+        <span className="stamp stamp-secret text-xs">Restricted</span>
       </div>
 
       {/* Research points banner */}
-      <div className="bg-gray-900 rounded-2xl border border-gray-800/60 p-4 mb-5">
+      <div className="card-dossier-tab p-4 mb-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-              <FlaskConical className="w-5 h-5 text-emerald-400" />
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'rgba(212,168,67,0.15)' }}>
+              <FlaskConical className="w-5 h-5" style={{ color: 'var(--color-amber)' }} />
             </div>
             <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wider">Research Points</p>
-              <p className="text-2xl font-bold text-white">{researchPoints} <span className="text-sm text-gray-500 font-normal">RP</span></p>
+              <p className="label-section">Research Points</p>
+              <p className="font-data text-2xl font-bold" style={{ color: 'var(--color-text)' }}>{researchPoints} <span className="text-sm font-normal" style={{ color: 'var(--color-text-muted)' }}>RP</span></p>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-xs text-gray-500">
+          <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--color-text-muted)' }}>
             <div className="text-center">
-              <p className="text-lg font-bold text-white">{completedResearch.length}</p>
+              <p className="font-data text-lg font-bold" style={{ color: 'var(--color-text)' }}>{completedResearch.length}</p>
               <p>Complete</p>
             </div>
             <div className="text-center">
-              <p className="text-lg font-bold text-white">{availableResearch.length}</p>
+              <p className="font-data text-lg font-bold" style={{ color: 'var(--color-text)' }}>{availableResearch.length}</p>
               <p>Available</p>
             </div>
           </div>
@@ -138,8 +142,8 @@ export const RAndD = () => {
       {/* Available research */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-4 h-4 text-gray-500" />
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Available Research</h2>
+          <Sparkles className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+          <h2 className="label-section">Available Research</h2>
         </div>
 
         <div className="space-y-3">
@@ -153,7 +157,7 @@ export const RAndD = () => {
             return (
               <div
                 key={research.id}
-                className={`bg-gray-900 rounded-2xl border border-gray-800/60 overflow-hidden ${disabled ? 'opacity-60' : ''}`}
+                className={`${locked ? 'card-redacted' : 'card-dossier'} ${disabled ? 'opacity-60' : ''}`}
               >
                 <div className="p-4">
                   {/* Category + cost */}
@@ -162,32 +166,32 @@ export const RAndD = () => {
                       {style.icon} {research.category}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      {locked && <Lock className="w-3 h-3 text-gray-600" />}
-                      <span className={`text-xs font-bold ${affordable ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {locked && <Lock className="w-3 h-3" style={{ color: 'var(--color-text-muted)' }} />}
+                      <span className={`font-data text-xs font-bold`} style={{ color: affordable ? 'var(--color-green)' : 'var(--color-red)' }}>
                         {research.cost} RP
                       </span>
                     </div>
                   </div>
 
                   {/* Name + description */}
-                  <h3 className="text-base font-bold text-white mb-1">{research.name}</h3>
-                  <p className="text-xs text-gray-500 mb-3">{research.description}</p>
+                  <h3 className="text-base font-bold mb-1" style={{ color: 'var(--color-text)' }}>{research.name}</h3>
+                  <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>{research.description}</p>
 
                   {/* Benefits */}
                   <div className="space-y-1.5 mb-4">
                     {research.benefits.map((benefit, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <Zap className="w-3 h-3 text-emerald-400 shrink-0" />
-                        <span className="text-xs text-gray-300">{benefit}</span>
+                        <Zap className="w-3 h-3 shrink-0" style={{ color: 'var(--color-green)' }} />
+                        <span className="stat-up" style={{ fontSize: '12px' }}>{benefit}</span>
                       </div>
                     ))}
                   </div>
 
                   {/* Prerequisite warning */}
                   {locked && (
-                    <div className="flex items-center gap-2 bg-gray-800/50 rounded-xl px-3 py-2 mb-3">
-                      <Lock className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                      <p className="text-xs text-gray-500">
+                    <div className="flex items-center gap-2 rounded-xl px-3 py-2 mb-3" style={{ background: 'var(--color-surface-raised)' }}>
+                      <Lock className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--color-text-muted)' }} />
+                      <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                         Requires: {availableResearch.find((r) => r.id === research.prerequisite)?.name ?? 'Unknown'}
                       </p>
                     </div>
@@ -198,10 +202,10 @@ export const RAndD = () => {
                     onClick={() => handleResearch(research.id)}
                     disabled={disabled}
                     className={`
-                      w-full flex items-center justify-center gap-2 font-semibold text-sm py-3 rounded-xl transition-colors
+                      w-full flex items-center justify-center gap-2 text-sm py-3 rounded-xl transition-colors
                       ${disabled
-                        ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                        : 'bg-emerald-500 text-white active:bg-emerald-600'
+                        ? 'btn-secondary cursor-not-allowed opacity-40'
+                        : 'btn-primary'
                       }
                     `}
                   >
@@ -227,13 +231,13 @@ export const RAndD = () => {
       {/* Completed research */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <CheckCircle className="w-4 h-4 text-gray-500" />
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Completed</h2>
+          <CheckCircle className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+          <h2 className="label-section">Completed</h2>
         </div>
 
         {completedResearch.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm text-gray-600">No research completed yet</p>
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>No research completed yet</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -242,16 +246,16 @@ export const RAndD = () => {
               return (
                 <div
                   key={research.id}
-                  className="bg-gray-900 rounded-xl border border-gray-800/60 p-3.5 flex items-center gap-3"
+                  className="card-dossier p-3.5 flex items-center gap-3"
                 >
                   <div className={`w-9 h-9 rounded-lg ${style.bg} flex items-center justify-center shrink-0`}>
                     <CheckCircle className={`w-4 h-4 ${style.text}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-white truncate">{research.name}</h3>
-                    <p className="text-xs text-gray-500">{research.category} · {research.completedAt}</p>
+                    <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>{research.name}</h3>
+                    <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{research.category} · <span className="font-data">{research.completedAt}</span></p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-700 shrink-0" />
+                  <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--color-border)' }} />
                 </div>
               );
             })}

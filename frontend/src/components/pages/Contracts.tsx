@@ -20,6 +20,7 @@ import {
   Swords,
 } from 'lucide-react';
 import { apiService } from '../../services/api';
+import '../../styles/design-system.css';
 
 interface MissionTemplate {
   id: number;
@@ -111,10 +112,10 @@ const factionDisplayName: Record<string, string> = {
 };
 
 const factionColors: Record<string, { bg: string; text: string; dot: string }> = {
-  atlantic_coalition: { bg: 'bg-blue-500/10', text: 'text-blue-400', dot: 'bg-blue-400' },
-  desert_bloc: { bg: 'bg-amber-500/10', text: 'text-amber-400', dot: 'bg-amber-400' },
-  pacific_alliance: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', dot: 'bg-cyan-400' },
-  sahara_sindicate: { bg: 'bg-orange-500/10', text: 'text-orange-400', dot: 'bg-orange-400' },
+  atlantic_coalition: { bg: 'bg-[var(--color-blue)]/10', text: 'text-[var(--color-blue)]', dot: 'bg-[var(--color-blue)]' },
+  desert_bloc: { bg: 'bg-[var(--color-amber)]/10', text: 'text-[var(--color-amber)]', dot: 'bg-[var(--color-amber)]' },
+  pacific_alliance: { bg: 'bg-[var(--color-blue)]/10', text: 'text-[var(--color-blue)]', dot: 'bg-[var(--color-blue)]' },
+  sahara_sindicate: { bg: 'bg-[var(--color-amber)]/10', text: 'text-[var(--color-amber)]', dot: 'bg-[var(--color-amber)]' },
 };
 
 const typeIcons: Record<string, typeof Plane> = {
@@ -124,9 +125,15 @@ const typeIcons: Record<string, typeof Plane> = {
 };
 
 const riskBadge = (risk: number) => {
-  if (risk < 30) return { label: 'Low', bg: 'bg-emerald-500/15', text: 'text-emerald-400' };
-  if (risk < 70) return { label: 'Med', bg: 'bg-amber-500/15', text: 'text-amber-400' };
-  return { label: 'High', bg: 'bg-red-500/15', text: 'text-red-400' };
+  if (risk < 30) return { label: 'Low', stamp: 'stamp stamp-confidential', text: 'text-[var(--color-amber)]' };
+  if (risk < 70) return { label: 'Med', stamp: 'stamp stamp-secret', text: 'text-[var(--color-red)]' };
+  return { label: 'High', stamp: 'stamp stamp-top-secret', text: 'text-[#E53E3E]' };
+};
+
+const riskStampClass = (risk: number) => {
+  if (risk < 30) return 'stamp-confidential';
+  if (risk < 70) return 'stamp-secret';
+  return 'stamp-top-secret';
 };
 
 type Tab = 'available' | 'active';
@@ -368,8 +375,8 @@ export const Contracts = () => {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Loading operations...</p>
+          <div className="w-8 h-8 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--color-amber)', borderTopColor: 'transparent' }} />
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Loading operations...</p>
         </div>
       </div>
     );
@@ -377,25 +384,27 @@ export const Contracts = () => {
 
   return (
     <div className="px-4 py-5 lg:px-8 lg:py-6 max-w-4xl mx-auto">
-      {/* Battle Vehicle Picker Modal */}
+      {/* Battle Vehicle Picker Bottom Sheet */}
       {battlePickerTemplate && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center" onClick={() => setBattlePickerTemplate(null)}>
+        <div className="bottom-sheet-backdrop" onClick={() => setBattlePickerTemplate(null)}>
           <div
-            className="bg-gray-900 rounded-t-2xl sm:rounded-2xl border-t sm:border border-gray-800 w-full sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col"
+            className="bottom-sheet flex flex-col"
+            style={{ maxHeight: '80vh' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+            <div className="bottom-sheet-handle" />
+            <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
               <div>
-                <h2 className="text-lg font-bold text-white">
+                <h2 className="font-display text-lg" style={{ color: 'var(--color-text)' }}>
                   Select {battlePickerTemplate.battle_type === 'air' ? 'Aircraft' : 'Ship'}
                 </h2>
-                <p className="text-xs text-gray-500">{battlePickerTemplate.title}</p>
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{battlePickerTemplate.title}</p>
               </div>
-              <button onClick={() => setBattlePickerTemplate(null)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400">
+              <button onClick={() => setBattlePickerTemplate(null)} className="btn-secondary w-8 h-8 flex items-center justify-center !p-0 !min-h-0" style={{ borderRadius: '8px' }}>
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="overflow-y-auto p-4 space-y-2">
+            <div className="overflow-y-auto p-4 space-y-2 scroll-list">
               {(battlePickerTemplate.battle_type === 'air' ? aircraftList : shipList).map((v) => {
                 const vehicleId = 'aircraft_id' in v ? v.aircraft_id : (v as any).ship_id;
                 const isSelected = selectedVehicleId === vehicleId;
@@ -405,32 +414,32 @@ export const Contracts = () => {
                     onClick={() => setSelectedVehicleId(vehicleId)}
                     className={`w-full text-left rounded-xl p-3 border transition-all ${
                       isSelected
-                        ? 'bg-emerald-500/10 border-emerald-500/40'
-                        : 'bg-gray-800/50 border-gray-700/40 active:bg-gray-800'
+                        ? 'border-[var(--color-amber)]'
+                        : 'border-[var(--color-border)]'
                     }`}
+                    style={{ background: isSelected ? 'rgba(212,168,67,0.1)' : 'var(--color-surface)' }}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        isSelected ? 'bg-emerald-500/20' : 'bg-gray-800'
-                      }`}>
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{ background: isSelected ? 'rgba(212,168,67,0.2)' : 'var(--color-surface-raised)' }}>
                         {battlePickerTemplate.battle_type === 'air'
-                          ? <Plane className={`w-5 h-5 ${isSelected ? 'text-emerald-400' : 'text-gray-500'}`} />
-                          : <Anchor className={`w-5 h-5 ${isSelected ? 'text-emerald-400' : 'text-gray-500'}`} />
+                          ? <Plane className="w-5 h-5" style={{ color: isSelected ? 'var(--color-amber)' : 'var(--color-text-muted)' }} />
+                          : <Anchor className="w-5 h-5" style={{ color: isSelected ? 'var(--color-amber)' : 'var(--color-text-muted)' }} />
                         }
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">{v.name}</p>
+                        <p className="text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>{v.name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] text-gray-500">{v.origin}</span>
-                          <span className="text-gray-700">·</span>
-                          <span className={`text-[10px] font-semibold ${
-                            v.condition >= 70 ? 'text-emerald-400' : v.condition >= 40 ? 'text-amber-400' : 'text-red-400'
-                          }`}>{v.condition}% condition</span>
+                          <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{v.origin}</span>
+                          <span style={{ color: 'var(--color-border)' }}>·</span>
+                          <span className="font-data text-[10px] font-semibold" style={{
+                            color: v.condition >= 70 ? 'var(--color-green)' : v.condition >= 40 ? 'var(--color-amber)' : 'var(--color-red)'
+                          }}>{v.condition}% condition</span>
                         </div>
                       </div>
                       {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
-                          <Check className="w-3 h-3 text-white" />
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--color-amber)' }}>
+                          <Check className="w-3 h-3" style={{ color: 'var(--color-text-inverse)' }} />
                         </div>
                       )}
                     </div>
@@ -438,11 +447,11 @@ export const Contracts = () => {
                 );
               })}
             </div>
-            <div className="p-4 border-t border-gray-800">
+            <div className="p-4" style={{ borderTop: '1px solid var(--color-border)' }}>
               <button
                 onClick={handleBattleDeploy}
                 disabled={selectedVehicleId === null || actionLoading === battlePickerTemplate.id}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-white font-bold text-sm py-3 rounded-xl active:bg-emerald-600 disabled:opacity-40 transition-colors"
+                className="btn-primary w-full flex items-center justify-center gap-2 text-sm"
               >
                 {actionLoading === battlePickerTemplate.id ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -456,31 +465,33 @@ export const Contracts = () => {
         </div>
       )}
 
-      {/* Deploy Modal */}
+      {/* Deploy Bottom Sheet */}
       {deployTemplate && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center" onClick={() => setDeployTemplate(null)}>
+        <div className="bottom-sheet-backdrop" onClick={() => setDeployTemplate(null)}>
           <div
-            className="bg-gray-900 rounded-t-2xl sm:rounded-2xl border-t sm:border border-gray-800 w-full sm:max-w-md max-h-[80vh] mb-[env(safe-area-inset-bottom)] overflow-hidden flex flex-col"
+            className="bottom-sheet flex flex-col"
+            style={{ maxHeight: '80vh' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+            <div className="bottom-sheet-handle" />
+            <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
               <div>
-                <h2 className="text-lg font-bold text-white">Deploy Forces</h2>
-                <p className="text-xs text-gray-500">{deployTemplate.title}</p>
+                <h2 className="font-display text-lg" style={{ color: 'var(--color-text)' }}>Deploy Forces</h2>
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{deployTemplate.title}</p>
               </div>
-              <button onClick={() => setDeployTemplate(null)} className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400">
+              <button onClick={() => setDeployTemplate(null)} className="btn-secondary w-8 h-8 flex items-center justify-center !p-0 !min-h-0" style={{ borderRadius: '8px' }}>
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="overflow-y-auto flex-1">
+            <div className="overflow-y-auto flex-1 scroll-list">
               {/* Select Units */}
-              <div className="p-4 border-b border-gray-800/60">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-3">
+              <div className="p-4" style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
+                <p className="label-section mb-3">
                   Select Units ({selectedUnitIds.size} selected)
                 </p>
                 {ownedUnits.length === 0 ? (
-                  <p className="text-xs text-gray-600 py-2">No units available. Visit the Hangar to acquire units.</p>
+                  <p className="text-xs py-2" style={{ color: 'var(--color-text-muted)' }}>No units available. Visit the Hangar to acquire units.</p>
                 ) : (
                   <div className="space-y-2">
                     {ownedUnits.map((unit) => {
@@ -490,23 +501,25 @@ export const Contracts = () => {
                         <button
                           key={unit.id}
                           onClick={() => toggleUnit(unit.id)}
-                          className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
-                            selected ? 'bg-emerald-500/15 border border-emerald-500/30' : 'bg-gray-800/50 border border-transparent'
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all border ${
+                            selected ? 'border-[var(--color-amber)]' : 'border-transparent'
                           }`}
+                          style={{ background: selected ? 'rgba(212,168,67,0.1)' : 'var(--color-surface)' }}
                         >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                            selected ? 'bg-emerald-500/20' : 'bg-gray-700'
-                          }`}>
-                            <Icon className={`w-4 h-4 ${selected ? 'text-emerald-400' : 'text-gray-400'}`} />
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style={{ background: selected ? 'rgba(212,168,67,0.2)' : 'var(--color-surface-raised)' }}>
+                            <Icon className="w-4 h-4" style={{ color: selected ? 'var(--color-amber)' : 'var(--color-text-secondary)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-white font-medium truncate">{unit.name}</p>
-                            <p className="text-xs text-gray-500 capitalize">{unit.type} · {unit.condition}% condition</p>
+                            <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{unit.name}</p>
+                            <p className="text-xs capitalize" style={{ color: 'var(--color-text-muted)' }}>{unit.type} · <span className="font-data">{unit.condition}%</span> condition</p>
                           </div>
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                            selected ? 'border-emerald-400 bg-emerald-400' : 'border-gray-600'
-                          }`}>
-                            {selected && <Check className="w-3 h-3 text-gray-900" />}
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0`}
+                            style={{
+                              borderColor: selected ? 'var(--color-amber)' : 'var(--color-text-muted)',
+                              background: selected ? 'var(--color-amber)' : 'transparent'
+                            }}>
+                            {selected && <Check className="w-3 h-3" style={{ color: 'var(--color-text-inverse)' }} />}
                           </div>
                         </button>
                       );
@@ -517,11 +530,11 @@ export const Contracts = () => {
 
               {/* Select Contractors */}
               <div className="p-4">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-3">
+                <p className="label-section mb-3">
                   Assign Personnel ({selectedContractorIds.size} selected)
                 </p>
                 {ownedContractors.length === 0 ? (
-                  <p className="text-xs text-gray-600 py-2">No personnel available. Visit Personnel to hire contractors.</p>
+                  <p className="text-xs py-2" style={{ color: 'var(--color-text-muted)' }}>No personnel available. Visit Personnel to hire contractors.</p>
                 ) : (
                   <div className="space-y-2">
                     {ownedContractors.map((c) => {
@@ -530,23 +543,25 @@ export const Contracts = () => {
                         <button
                           key={c.id}
                           onClick={() => toggleContractor(c.id)}
-                          className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
-                            selected ? 'bg-emerald-500/15 border border-emerald-500/30' : 'bg-gray-800/50 border border-transparent'
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all border ${
+                            selected ? 'border-[var(--color-amber)]' : 'border-transparent'
                           }`}
+                          style={{ background: selected ? 'rgba(212,168,67,0.1)' : 'var(--color-surface)' }}
                         >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                            selected ? 'bg-emerald-500/20' : 'bg-gray-700'
-                          }`}>
-                            <User className={`w-4 h-4 ${selected ? 'text-emerald-400' : 'text-gray-400'}`} />
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style={{ background: selected ? 'rgba(212,168,67,0.2)' : 'var(--color-surface-raised)' }}>
+                            <User className="w-4 h-4" style={{ color: selected ? 'var(--color-amber)' : 'var(--color-text-secondary)' }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-white font-medium truncate">{c.name}</p>
-                            <p className="text-xs text-gray-500 capitalize">{c.specialization} · Skill {c.skill_level} · Fatigue {c.fatigue_level}%</p>
+                            <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{c.name}</p>
+                            <p className="text-xs capitalize" style={{ color: 'var(--color-text-muted)' }}>{c.specialization} · Skill <span className="font-data">{c.skill_level}</span> · Fatigue <span className="font-data">{c.fatigue_level}%</span></p>
                           </div>
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                            selected ? 'border-emerald-400 bg-emerald-400' : 'border-gray-600'
-                          }`}>
-                            {selected && <Check className="w-3 h-3 text-gray-900" />}
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0`}
+                            style={{
+                              borderColor: selected ? 'var(--color-amber)' : 'var(--color-text-muted)',
+                              background: selected ? 'var(--color-amber)' : 'transparent'
+                            }}>
+                            {selected && <Check className="w-3 h-3" style={{ color: 'var(--color-text-inverse)' }} />}
                           </div>
                         </button>
                       );
@@ -557,11 +572,11 @@ export const Contracts = () => {
             </div>
 
             {/* Deploy button */}
-            <div className="p-4 pb-6 sm:pb-4 border-t border-gray-800">
+            <div className="p-4 pb-6 sm:pb-4" style={{ borderTop: '1px solid var(--color-border)' }}>
               <button
                 onClick={handleAcceptWithDeployment}
                 disabled={actionLoading === deployTemplate.id || (selectedUnitIds.size === 0 && selectedContractorIds.size === 0)}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-white font-semibold text-sm py-3 rounded-xl active:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="btn-primary w-full flex items-center justify-center gap-2 text-sm"
               >
                 {actionLoading === deployTemplate.id ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -573,91 +588,94 @@ export const Contracts = () => {
                 )}
               </button>
               {selectedUnitIds.size === 0 && selectedContractorIds.size === 0 && (
-                <p className="text-xs text-gray-600 text-center mt-2">Select at least one unit or contractor</p>
+                <p className="text-xs text-center mt-2" style={{ color: 'var(--color-text-muted)' }}>Select at least one unit or contractor</p>
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* After-Action Report Modal */}
+      {/* After-Action Report Bottom Sheet */}
       {simResult && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center" onClick={() => setSimResult(null)}>
+        <div className="bottom-sheet-backdrop" onClick={() => setSimResult(null)}>
           <div
-            className="bg-gray-900 rounded-t-2xl sm:rounded-2xl border-t sm:border border-gray-800 w-full sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+            className="bottom-sheet flex flex-col"
+            style={{ maxHeight: '90vh' }}
             onClick={(e) => e.stopPropagation()}
           >
+            <div className="bottom-sheet-handle" />
             {/* Header banner */}
-            <div className={`p-5 text-center relative overflow-hidden ${simResult.success ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
-              <div className={`w-14 h-14 rounded-full mx-auto flex items-center justify-center mb-2.5 ${
-                simResult.success ? 'bg-emerald-500/20' : 'bg-red-500/20'
-              }`}>
+            <div className="p-5 text-center relative overflow-hidden" style={{ background: simResult.success ? 'rgba(92,138,77,0.1)' : 'rgba(196,69,60,0.1)' }}>
+              <div className="w-14 h-14 rounded-full mx-auto flex items-center justify-center mb-2.5"
+                style={{ background: simResult.success ? 'rgba(92,138,77,0.2)' : 'rgba(196,69,60,0.2)' }}>
                 {simResult.success
-                  ? <Trophy className="w-7 h-7 text-emerald-400" />
-                  : <Skull className="w-7 h-7 text-red-400" />
+                  ? <Trophy className="w-7 h-7" style={{ color: 'var(--color-green)' }} />
+                  : <Skull className="w-7 h-7" style={{ color: 'var(--color-red)' }} />
                 }
               </div>
-              <h2 className="text-lg font-bold text-white">
+              <h2 className="font-display text-lg" style={{ color: 'var(--color-text)' }}>
                 {simResult.success ? 'Mission Success' : 'Mission Failed'}
               </h2>
-              <p className="text-sm text-gray-400 mt-0.5">{simResult.mission_title}</p>
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                  riskBadge(simResult.risk_level).bg
-                } ${riskBadge(simResult.risk_level).text}`}>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>{simResult.mission_title}</p>
+              <div className="flex items-center justify-center gap-3 mt-2">
+                <span className={`stamp ${riskStampClass(simResult.risk_level)}`} style={{ fontSize: '10px', transform: 'none', padding: '2px 8px' }}>
                   {riskBadge(simResult.risk_level).label} Risk
                 </span>
-                <span className="text-[10px] text-gray-500">
+                <span className="font-data text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
                   {simResult.success_probability}% success chance
                 </span>
               </div>
+              {simResult.success
+                ? <div className="stamp stamp-success absolute top-3 right-3" style={{ fontSize: '10px' }}>Success</div>
+                : <div className="stamp stamp-failed absolute top-3 right-3" style={{ fontSize: '10px' }}>Failed</div>
+              }
             </div>
 
             {/* Scrollable content */}
-            <div className="overflow-y-auto flex-1 p-4 space-y-4">
+            <div className="overflow-y-auto flex-1 p-4 space-y-4 scroll-list">
 
               {/* Rewards */}
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Rewards</p>
+                <p className="label-section mb-2">Rewards</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                    <DollarSign className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-                    <p className="text-lg font-bold text-emerald-400">${simResult.payout.toLocaleString()}</p>
-                    <p className="text-[10px] text-gray-500">Payout earned</p>
+                  <div className="card-dossier p-3 text-center">
+                    <DollarSign className="w-4 h-4 mx-auto mb-1" style={{ color: 'var(--color-green)' }} />
+                    <p className="font-data text-lg font-bold" style={{ color: 'var(--color-green)' }}>${simResult.payout.toLocaleString()}</p>
+                    <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Payout earned</p>
                   </div>
-                  <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                    <Zap className="w-4 h-4 text-blue-400 mx-auto mb-1" />
-                    <p className={`text-lg font-bold ${simResult.reputation_change >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
+                  <div className="card-dossier p-3 text-center">
+                    <Zap className="w-4 h-4 mx-auto mb-1" style={{ color: 'var(--color-blue)' }} />
+                    <p className="font-data text-lg font-bold" style={{ color: simResult.reputation_change >= 0 ? 'var(--color-blue)' : 'var(--color-red)' }}>
                       {simResult.reputation_change >= 0 ? '+' : ''}{simResult.reputation_change}
                     </p>
-                    <p className="text-[10px] text-gray-500">Reputation</p>
+                    <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Reputation</p>
                   </div>
                 </div>
               </div>
 
               {/* Battle strength comparison */}
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Battle Overview</p>
-                <div className="bg-gray-800/50 rounded-xl p-3">
+                <p className="label-section mb-2">Battle Overview</p>
+                <div className="card-dossier p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-emerald-400 font-semibold">Allied Forces</span>
-                    <span className="text-xs text-red-400 font-semibold">Enemy Forces</span>
+                    <span className="text-xs font-semibold" style={{ color: 'var(--color-green)' }}>Allied Forces</span>
+                    <span className="text-xs font-semibold" style={{ color: 'var(--color-red)' }}>Enemy Forces</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-white w-12 text-left">{simResult.ally_strength}</span>
-                    <div className="flex-1 h-3 bg-gray-700 rounded-full overflow-hidden flex">
+                    <span className="font-data text-sm font-bold w-12 text-left" style={{ color: 'var(--color-text)' }}>{simResult.ally_strength}</span>
+                    <div className="gauge-bar flex-1" style={{ height: '12px' }}>
                       {(() => {
                         const total = simResult.ally_strength + simResult.enemy_strength;
                         const allyPct = total > 0 ? (simResult.ally_strength / total) * 100 : 50;
                         return (
-                          <>
-                            <div className="h-full bg-emerald-500 rounded-l-full" style={{ width: `${allyPct}%` }} />
-                            <div className="h-full bg-red-500 rounded-r-full" style={{ width: `${100 - allyPct}%` }} />
-                          </>
+                          <div className="flex h-full">
+                            <div className="gauge-fill gauge-fill-green rounded-l-full" style={{ width: `${allyPct}%` }} />
+                            <div className="gauge-fill gauge-fill-red rounded-r-full" style={{ width: `${100 - allyPct}%` }} />
+                          </div>
                         );
                       })()}
                     </div>
-                    <span className="text-sm font-bold text-white w-12 text-right">{simResult.enemy_strength}</span>
+                    <span className="font-data text-sm font-bold w-12 text-right" style={{ color: 'var(--color-text)' }}>{simResult.enemy_strength}</span>
                   </div>
                 </div>
               </div>
@@ -665,19 +683,18 @@ export const Contracts = () => {
               {/* Random events */}
               {simResult.random_events.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Battlefield Events</p>
+                  <p className="label-section mb-2">Battlefield Events</p>
                   <div className="space-y-1.5">
                     {simResult.random_events.map((event, i) => (
-                      <div key={i} className={`flex items-start gap-2.5 rounded-xl px-3 py-2.5 ${
-                        event.impact > 0 ? 'bg-emerald-500/10' : 'bg-red-500/10'
-                      }`}>
-                        <Sparkles className={`w-4 h-4 mt-0.5 shrink-0 ${event.impact > 0 ? 'text-emerald-400' : 'text-red-400'}`} />
+                      <div key={i} className="flex items-start gap-2.5 rounded-xl px-3 py-2.5"
+                        style={{ background: event.impact > 0 ? 'rgba(92,138,77,0.1)' : 'rgba(196,69,60,0.1)' }}>
+                        <Sparkles className="w-4 h-4 mt-0.5 shrink-0" style={{ color: event.impact > 0 ? 'var(--color-green)' : 'var(--color-red)' }} />
                         <div>
-                          <p className="text-xs text-white font-medium">
+                          <p className="text-xs font-medium" style={{ color: 'var(--color-text)' }}>
                             {event.type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
                           </p>
-                          <p className="text-xs text-gray-400 mt-0.5">{event.description}</p>
-                          <span className={`text-[10px] font-bold ${event.impact > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>{event.description}</p>
+                          <span className="font-data text-[10px] font-bold" style={{ color: event.impact > 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
                             {event.impact > 0 ? '+' : ''}{(event.impact * 100).toFixed(0)}% success modifier
                           </span>
                         </div>
@@ -690,38 +707,37 @@ export const Contracts = () => {
               {/* Unit damage report */}
               {simResult.unit_report.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Unit Damage Report</p>
+                  <p className="label-section mb-2">Unit Damage Report</p>
                   <div className="space-y-2">
                     {simResult.unit_report.map((unit, i) => {
                       const Icon = typeIcons[unit.type] ?? Plane;
                       const critical = unit.condition_after < 30;
                       return (
-                        <div key={i} className="bg-gray-800/50 rounded-xl p-3">
+                        <div key={i} className="card-dossier p-3">
                           <div className="flex items-center gap-2.5 mb-2">
-                            <Icon className={`w-4 h-4 ${critical ? 'text-red-400' : 'text-gray-400'}`} />
-                            <span className="text-xs font-semibold text-white flex-1">{unit.name}</span>
+                            <Icon className="w-4 h-4" style={{ color: critical ? 'var(--color-red)' : 'var(--color-text-secondary)' }} />
+                            <span className="text-xs font-semibold flex-1" style={{ color: 'var(--color-text)' }}>{unit.name}</span>
                             {unit.damage_taken > 0 && (
-                              <span className="text-[10px] font-bold text-red-400">-{unit.damage_taken}% dmg</span>
+                              <span className="font-data text-[10px] font-bold" style={{ color: 'var(--color-red)' }}>-{unit.damage_taken}% dmg</span>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-                              {/* Show before (faded) and after (solid) */}
+                            <div className="gauge-bar flex-1">
                               <div className="h-full relative">
                                 <div
-                                  className="absolute inset-y-0 left-0 bg-gray-600 rounded-full"
-                                  style={{ width: `${unit.condition_before}%` }}
+                                  className="absolute inset-y-0 left-0 rounded-full"
+                                  style={{ width: `${unit.condition_before}%`, background: 'var(--color-text-muted)', opacity: 0.4 }}
                                 />
                                 <div
-                                  className={`absolute inset-y-0 left-0 rounded-full ${
-                                    unit.condition_after >= 70 ? 'bg-emerald-500' :
-                                    unit.condition_after >= 40 ? 'bg-amber-500' : 'bg-red-500'
+                                  className={`absolute inset-y-0 left-0 rounded-full gauge-fill ${
+                                    unit.condition_after >= 70 ? 'gauge-fill-green' :
+                                    unit.condition_after >= 40 ? 'gauge-fill-amber' : 'gauge-fill-red'
                                   }`}
                                   style={{ width: `${unit.condition_after}%` }}
                                 />
                               </div>
                             </div>
-                            <span className="text-xs text-gray-400 w-16 text-right shrink-0">
+                            <span className="font-data text-xs w-16 text-right shrink-0" style={{ color: 'var(--color-text-secondary)' }}>
                               {unit.condition_before}% → {unit.condition_after}%
                             </span>
                           </div>
@@ -735,35 +751,35 @@ export const Contracts = () => {
               {/* Contractor fatigue report */}
               {simResult.contractor_report.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Crew Fatigue Report</p>
+                  <p className="label-section mb-2">Crew Fatigue Report</p>
                   <div className="space-y-2">
                     {simResult.contractor_report.map((c, i) => {
                       const exhausted = c.fatigue_after > 75;
                       return (
-                        <div key={i} className="bg-gray-800/50 rounded-xl p-3">
+                        <div key={i} className="card-dossier p-3">
                           <div className="flex items-center gap-2.5 mb-2">
-                            <User className={`w-4 h-4 ${exhausted ? 'text-red-400' : 'text-gray-400'}`} />
+                            <User className="w-4 h-4" style={{ color: exhausted ? 'var(--color-red)' : 'var(--color-text-secondary)' }} />
                             <div className="flex-1 min-w-0">
-                              <span className="text-xs font-semibold text-white">{c.name}</span>
-                              <span className="text-[10px] text-gray-500 ml-1.5 capitalize">{c.specialization}</span>
+                              <span className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>{c.name}</span>
+                              <span className="text-[10px] ml-1.5 capitalize" style={{ color: 'var(--color-text-muted)' }}>{c.specialization}</span>
                             </div>
                             {c.fatigue_gained > 0 && (
-                              <span className="text-[10px] font-bold text-amber-400">+{c.fatigue_gained}% fatigue</span>
+                              <span className="font-data text-[10px] font-bold" style={{ color: 'var(--color-amber)' }}>+{c.fatigue_gained}% fatigue</span>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div className="gauge-bar flex-1">
                               <div className="h-full relative">
                                 <div
-                                  className={`absolute inset-y-0 left-0 rounded-full ${
-                                    c.fatigue_after <= 30 ? 'bg-emerald-500' :
-                                    c.fatigue_after <= 60 ? 'bg-amber-500' : 'bg-red-500'
+                                  className={`absolute inset-y-0 left-0 rounded-full gauge-fill ${
+                                    c.fatigue_after <= 30 ? 'gauge-fill-green' :
+                                    c.fatigue_after <= 60 ? 'gauge-fill-amber' : 'gauge-fill-red'
                                   }`}
                                   style={{ width: `${c.fatigue_after}%` }}
                                 />
                               </div>
                             </div>
-                            <span className="text-xs text-gray-400 w-16 text-right shrink-0">
+                            <span className="font-data text-xs w-16 text-right shrink-0" style={{ color: 'var(--color-text-secondary)' }}>
                               {c.fatigue_before}% → {c.fatigue_after}%
                             </span>
                           </div>
@@ -776,25 +792,25 @@ export const Contracts = () => {
 
               {/* Updated stats */}
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Updated Stats</p>
+                <p className="label-section mb-2">Updated Stats</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                    <p className="text-[10px] text-gray-500">Balance</p>
-                    <p className="text-sm font-bold text-white">${simResult.new_balance.toLocaleString()}</p>
+                  <div className="card-dossier p-3 text-center">
+                    <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Balance</p>
+                    <p className="font-data text-sm font-bold" style={{ color: 'var(--color-text)' }}>${simResult.new_balance.toLocaleString()}</p>
                   </div>
-                  <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                    <p className="text-[10px] text-gray-500">Reputation</p>
-                    <p className="text-sm font-bold text-white">{simResult.new_reputation}%</p>
+                  <div className="card-dossier p-3 text-center">
+                    <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Reputation</p>
+                    <p className="font-data text-sm font-bold" style={{ color: 'var(--color-text)' }}>{simResult.new_reputation}%</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Dismiss button */}
-            <div className="p-4 pb-6 sm:pb-4 border-t border-gray-800">
+            <div className="p-4 pb-6 sm:pb-4" style={{ borderTop: '1px solid var(--color-border)' }}>
               <button
                 onClick={() => setSimResult(null)}
-                className="w-full bg-gray-800 text-white font-semibold text-sm py-3 rounded-xl active:bg-gray-700 transition-colors"
+                className="btn-secondary w-full text-sm"
               >
                 Dismiss
               </button>
@@ -805,38 +821,37 @@ export const Contracts = () => {
 
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-bold text-white lg:text-2xl">Operations</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Mission board & active deployments</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="font-display text-xl lg:text-2xl" style={{ color: 'var(--color-text)' }}>Operations Center</h1>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Mission board & active deployments</p>
+          </div>
+          <span className="stamp stamp-confidential text-[10px]">Confidential</span>
         </div>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-400 active:bg-gray-800 transition-colors"
+          className="btn-secondary w-10 h-10 flex items-center justify-center !p-0 !min-h-0"
         >
-          <RefreshCw className={`w-4.5 h-4.5 ${refreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
       {/* Tab switcher */}
-      <div className="flex bg-gray-900 rounded-xl p-1 mb-5">
+      <div className="tab-bar mb-5">
         <button
           onClick={() => setTab('available')}
-          className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-            tab === 'available' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-500'
-          }`}
+          className={`tab-item ${tab === 'available' ? 'tab-item-active' : ''}`}
         >
-          Available ({missionTemplates.length})
+          Available <span className="tab-count">{missionTemplates.length}</span>
         </button>
         <button
           onClick={() => setTab('active')}
-          className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all relative ${
-            tab === 'active' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-500'
-          }`}
+          className={`tab-item ${tab === 'active' ? 'tab-item-active' : ''} relative`}
         >
-          Active ({activeContracts.length})
+          Active <span className="tab-count">{activeContracts.length}</span>
           {activeContracts.length > 0 && tab !== 'active' && (
-            <span className="absolute top-1.5 right-3 w-2 h-2 rounded-full bg-emerald-400 animate-subtle-pulse" />
+            <span className="status-dot status-dot-active absolute top-1.5 right-3" />
           )}
         </button>
       </div>
@@ -857,7 +872,7 @@ export const Contracts = () => {
               return (
                 <div
                   key={template.id}
-                  className="bg-gray-900 rounded-2xl border border-gray-800/60 overflow-hidden card-press"
+                  className="card-dossier-tab overflow-hidden"
                 >
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-2.5">
@@ -867,52 +882,52 @@ export const Contracts = () => {
                       </div>
                       <div className="flex items-center gap-1.5">
                         {template.battle_type && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-violet-500/15 text-violet-400">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md" style={{ background: 'rgba(91,139,160,0.15)', color: 'var(--color-blue)' }}>
                             {template.battle_type === 'air' ? '✈ Tactical' : '🚢 Naval'}
                           </span>
                         )}
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${risk.bg} ${risk.text}`}>
+                        <span className={`stamp ${riskStampClass(template.risk_level)}`} style={{ fontSize: '10px', transform: 'none', padding: '2px 8px' }}>
                           {risk.label} Risk
                         </span>
                       </div>
                     </div>
 
-                    <h3 className="text-base font-bold text-white mb-1">{template.title}</h3>
+                    <h3 className="text-base font-bold mb-1" style={{ color: 'var(--color-text)' }}>{template.title}</h3>
                     {template.description && (
-                      <p className="text-xs text-gray-500 mb-3">{template.description}</p>
+                      <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>{template.description}</p>
                     )}
 
                     <div className="grid grid-cols-3 gap-2 mb-3">
-                      <div className="bg-gray-800/50 rounded-xl px-3 py-2">
+                      <div className="rounded-xl px-3 py-2" style={{ background: 'var(--color-surface-raised)' }}>
                         <div className="flex items-center gap-1 mb-0.5">
-                          <DollarSign className="w-3 h-3 text-emerald-400" />
-                          <span className="text-[10px] text-gray-500">Payout</span>
+                          <DollarSign className="w-3 h-3" style={{ color: 'var(--color-green)' }} />
+                          <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Payout</span>
                         </div>
-                        <p className="text-sm font-bold text-white">${(template.base_payout / 1000).toFixed(0)}k</p>
+                        <p className="font-data text-sm font-bold" style={{ color: 'var(--color-text)' }}>${(template.base_payout / 1000).toFixed(0)}k</p>
                       </div>
-                      <div className="bg-gray-800/50 rounded-xl px-3 py-2">
+                      <div className="rounded-xl px-3 py-2" style={{ background: 'var(--color-surface-raised)' }}>
                         <div className="flex items-center gap-1 mb-0.5">
-                          <Clock className="w-3 h-3 text-gray-400" />
-                          <span className="text-[10px] text-gray-500">Duration</span>
+                          <Clock className="w-3 h-3" style={{ color: 'var(--color-text-secondary)' }} />
+                          <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Duration</span>
                         </div>
-                        <p className="text-sm font-bold text-white">{template.estimated_duration_hours}h</p>
+                        <p className="font-data text-sm font-bold" style={{ color: 'var(--color-text)' }}>{template.estimated_duration_hours}h</p>
                       </div>
-                      <div className="bg-gray-800/50 rounded-xl px-3 py-2">
+                      <div className="rounded-xl px-3 py-2" style={{ background: 'var(--color-surface-raised)' }}>
                         <div className="flex items-center gap-1 mb-0.5">
-                          <Zap className="w-3 h-3 text-violet-400" />
-                          <span className="text-[10px] text-gray-500">Impact</span>
+                          <Zap className="w-3 h-3" style={{ color: 'var(--color-amber)' }} />
+                          <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Impact</span>
                         </div>
-                        <p className={`text-sm font-bold ${template.political_impact >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <p className="font-data text-sm font-bold" style={{ color: template.political_impact >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
                           {template.political_impact > 0 ? '+' : ''}{template.political_impact}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-1.5 mb-4 flex-wrap">
-                      <Target className="w-3 h-3 text-gray-600 shrink-0" />
-                      <span className="text-[10px] text-gray-500 uppercase tracking-wider mr-1">Requires</span>
+                      <Target className="w-3 h-3 shrink-0" style={{ color: 'var(--color-text-muted)' }} />
+                      <span className="label-section mr-1">Requires</span>
                       {requiredUnits.map((unit) => (
-                        <span key={unit} className="text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded-md font-medium">
+                        <span key={unit} className="text-xs px-2 py-0.5 rounded-md font-medium" style={{ background: 'var(--color-surface-raised)', color: 'var(--color-text-secondary)' }}>
                           {unit}
                         </span>
                       ))}
@@ -922,10 +937,10 @@ export const Contracts = () => {
                       onClick={() => alreadyAccepted ? null : openDeployModal(template)}
                       disabled={alreadyAccepted || actionLoading === template.id}
                       className={`
-                        w-full flex items-center justify-center gap-2 font-semibold text-sm py-3 rounded-xl transition-colors
+                        w-full flex items-center justify-center gap-2 text-sm py-3 rounded-xl transition-colors
                         ${alreadyAccepted
-                          ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                          : 'bg-emerald-500 text-white active:bg-emerald-600'
+                          ? 'btn-secondary cursor-not-allowed opacity-40'
+                          : 'btn-primary'
                         }
                       `}
                     >
@@ -987,28 +1002,28 @@ export const Contracts = () => {
               return (
                 <div
                   key={contract.id}
-                  className="bg-gray-900 rounded-2xl border border-gray-800/60 overflow-hidden"
+                  className="card-dossier-tab overflow-hidden"
                 >
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-400 animate-subtle-pulse" />
-                        <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Ready to Deploy</span>
+                        <span className="status-dot status-dot-active" />
+                        <span className="label-section" style={{ color: 'var(--color-green)' }}>Ready to Deploy</span>
                       </div>
-                      <div className="flex items-center gap-1.5 bg-gray-800 rounded-lg px-2.5 py-1">
-                        <Clock className="w-3 h-3 text-amber-400" />
-                        <span className="text-xs font-bold text-amber-400">{timeStr}</span>
+                      <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1" style={{ background: 'var(--color-surface-raised)' }}>
+                        <Clock className="w-3 h-3" style={{ color: 'var(--color-amber)' }} />
+                        <span className="font-data text-xs font-bold" style={{ color: 'var(--color-amber)' }}>{timeStr}</span>
                       </div>
                     </div>
 
-                    <h3 className="text-base font-bold text-white">{template.title}</h3>
+                    <h3 className="text-base font-bold" style={{ color: 'var(--color-text)' }}>{template.title}</h3>
                     <div className="flex items-center gap-2 mt-1 mb-3">
                       <div className={`w-1.5 h-1.5 rounded-full ${faction.dot}`} />
                       <span className={`text-xs ${faction.text}`}>{fName}</span>
-                      <span className="text-gray-700">·</span>
+                      <span style={{ color: 'var(--color-border)' }}>·</span>
                       <span className={`text-xs ${risk.text}`}>{risk.label} Risk</span>
-                      <span className="text-gray-700">·</span>
-                      <span className="text-xs text-emerald-400">${template.base_payout.toLocaleString()}</span>
+                      <span style={{ color: 'var(--color-border)' }}>·</span>
+                      <span className="font-data text-xs" style={{ color: 'var(--color-green)' }}>${template.base_payout.toLocaleString()}</span>
                     </div>
 
                     {/* Assigned resources */}
@@ -1016,20 +1031,20 @@ export const Contracts = () => {
                       <div className="space-y-2 mb-4">
                         {assignedUnitNames.length > 0 && (
                           <div>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Deployed Units</p>
+                            <p className="label-section mb-1">Deployed Units</p>
                             <div className="flex flex-wrap gap-1.5">
                               {assignedUnitNames.map((name, i) => (
-                                <span key={i} className="text-xs bg-blue-500/15 text-blue-300 px-2.5 py-1 rounded-lg font-medium">{name}</span>
+                                <span key={i} className="text-xs px-2.5 py-1 rounded-lg font-medium" style={{ background: 'rgba(91,139,160,0.15)', color: 'var(--color-blue)' }}>{name}</span>
                               ))}
                             </div>
                           </div>
                         )}
                         {assignedContractorNames.length > 0 && (
                           <div>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Personnel</p>
+                            <p className="label-section mb-1">Personnel</p>
                             <div className="flex flex-wrap gap-1.5">
                               {assignedContractorNames.map((name, i) => (
-                                <span key={i} className="text-xs bg-violet-500/15 text-violet-300 px-2.5 py-1 rounded-lg font-medium">{name}</span>
+                                <span key={i} className="text-xs px-2.5 py-1 rounded-lg font-medium" style={{ background: 'rgba(212,168,67,0.15)', color: 'var(--color-amber)' }}>{name}</span>
                               ))}
                             </div>
                           </div>
@@ -1041,7 +1056,7 @@ export const Contracts = () => {
                       <button
                         onClick={() => handleRunMission(contract.id)}
                         disabled={isLoading}
-                        className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 text-white font-semibold text-sm py-3 rounded-xl active:bg-emerald-600 disabled:opacity-60 transition-colors"
+                        className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm"
                       >
                         {isLoading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -1060,7 +1075,7 @@ export const Contracts = () => {
                       <button
                         onClick={() => handleWithdraw(contract.id)}
                         disabled={isLoading}
-                        className="flex items-center justify-center gap-1.5 bg-red-500/15 text-red-400 font-medium text-sm py-3 px-4 rounded-xl active:bg-red-500/25 transition-colors"
+                        className="btn-danger flex items-center justify-center gap-1.5 text-sm px-4"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -1079,10 +1094,10 @@ export const Contracts = () => {
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-gray-800 flex items-center justify-center mb-4">
-        <AlertTriangle className="w-8 h-8 text-gray-600" />
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'var(--color-surface-raised)' }}>
+        <AlertTriangle className="w-8 h-8" style={{ color: 'var(--color-text-muted)' }} />
       </div>
-      <p className="text-gray-400 font-medium">{message}</p>
+      <p className="font-medium" style={{ color: 'var(--color-text-secondary)' }}>{message}</p>
     </div>
   );
 }
