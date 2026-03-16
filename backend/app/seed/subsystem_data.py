@@ -10,65 +10,97 @@ AIRCRAFT_DEFAULTS = {
     "Dassault Rafale": {
         "origin": "France",
         "radar": {"radar_type": "RBE2 AESA", "radar_range_km": 150, "irst": True},
+        "engine_name": "M88-2",
         "engine": {"thrust_to_weight_mod": 1.13, "fuel_efficiency_mod": 1.0, "max_speed_mod": 1.0},
         "ecm": {"ecm_suite": "SPECTRA", "ecm_rating": 85},
+        "cm_name": "MBDA Chaff/Flare Dispenser",
         "countermeasures": {"chaff_count": 112, "flare_count": 32, "towed_decoy": False},
+        "computer_name": "MDPU Mission Computer",
+        "airframe_name": "Composite Delta Wing",
         "airframe": {"max_g_mod": 9.0, "rcs_mod": 1.0, "payload_mod": 1.0, "hp_mod": 1.0},
     },
     "F-16C Block 52": {
         "origin": "USA",
         "radar": {"radar_type": "APG-68(V)9", "radar_range_km": 120, "irst": False},
+        "engine_name": "F110-GE-129",
         "engine": {"thrust_to_weight_mod": 1.095, "fuel_efficiency_mod": 1.0, "max_speed_mod": 1.0},
         "ecm": {"ecm_suite": "ALQ-211 AIDEWS", "ecm_rating": 65},
+        "cm_name": "AN/ALE-47 CMDS",
         "countermeasures": {"chaff_count": 90, "flare_count": 30, "towed_decoy": False},
+        "computer_name": "MMC Block 52",
+        "airframe_name": "Lightweight Alloy Monoplane",
         "airframe": {"max_g_mod": 9.0, "rcs_mod": 3.5, "payload_mod": 1.0, "hp_mod": 1.0},
     },
     "Su-30MKI": {
         "origin": "Russia/India",
         "radar": {"radar_type": "N011M BARS PESA", "radar_range_km": 180, "irst": True},
+        "engine_name": "AL-31FP",
         "engine": {"thrust_to_weight_mod": 1.0, "fuel_efficiency_mod": 1.0, "max_speed_mod": 1.0},
         "ecm": {"ecm_suite": "Tarang Mk2", "ecm_rating": 60},
+        "cm_name": "APP-50 Dispenser",
         "countermeasures": {"chaff_count": 96, "flare_count": 48, "towed_decoy": False},
+        "computer_name": "MIL-STD-1553B Bus",
+        "airframe_name": "Titanium/Aluminium Twin-Tail",
         "airframe": {"max_g_mod": 9.0, "rcs_mod": 10.0, "payload_mod": 1.0, "hp_mod": 1.0},
     },
     "F-15E Strike Eagle": {
         "origin": "USA",
         "radar": {"radar_type": "APG-82(V)1 AESA", "radar_range_km": 180, "irst": False},
+        "engine_name": "F100-PW-229",
         "engine": {"thrust_to_weight_mod": 1.12, "fuel_efficiency_mod": 1.0, "max_speed_mod": 1.0},
         "ecm": {"ecm_suite": "TEWS", "ecm_rating": 70},
+        "cm_name": "AN/ALE-45 CMDS",
         "countermeasures": {"chaff_count": 120, "flare_count": 60, "towed_decoy": False},
+        "computer_name": "ADCP-II Mission Computer",
+        "airframe_name": "Heavy-Duty Strike Airframe",
         "airframe": {"max_g_mod": 9.0, "rcs_mod": 10.0, "payload_mod": 1.0, "hp_mod": 1.0},
     },
     "JF-17 Thunder": {
         "origin": "Pakistan/China",
         "radar": {"radar_type": "KLJ-7A AESA", "radar_range_km": 130, "irst": False},
+        "engine_name": "RD-93",
         "engine": {"thrust_to_weight_mod": 0.95, "fuel_efficiency_mod": 1.0, "max_speed_mod": 1.0},
         "ecm": {"ecm_suite": "Basic ECM", "ecm_rating": 40},
+        "cm_name": "Standard Dispenser",
         "countermeasures": {"chaff_count": 64, "flare_count": 24, "towed_decoy": False},
+        "computer_name": "NRIET Avionics",
+        "airframe_name": "Lightweight Single-Engine",
         "airframe": {"max_g_mod": 8.5, "rcs_mod": 3.0, "payload_mod": 1.0, "hp_mod": 1.0},
     },
     "Tejas Mk2": {
         "origin": "India",
         "radar": {"radar_type": "Uttam AESA", "radar_range_km": 150, "irst": True},
+        "engine_name": "GE F414-INS6",
         "engine": {"thrust_to_weight_mod": 1.07, "fuel_efficiency_mod": 1.0, "max_speed_mod": 1.0},
         "ecm": {"ecm_suite": "Mayavi", "ecm_rating": 70},
+        "cm_name": "DRDO CMDS",
         "countermeasures": {"chaff_count": 80, "flare_count": 32, "towed_decoy": False},
+        "computer_name": "DFCC Mk2",
+        "airframe_name": "Composite Tailless Delta",
         "airframe": {"max_g_mod": 8.0, "rcs_mod": 1.5, "payload_mod": 1.0, "hp_mod": 1.0},
     },
     "Mirage 2000-5": {
         "origin": "France",
         "radar": {"radar_type": "RDY-2", "radar_range_km": 130, "irst": False},
+        "engine_name": "M53-P2",
         "engine": {"thrust_to_weight_mod": 1.05, "fuel_efficiency_mod": 1.0, "max_speed_mod": 1.0},
         "ecm": {"ecm_suite": "ICMS Mk3", "ecm_rating": 60},
+        "cm_name": "Spirale CMDS",
         "countermeasures": {"chaff_count": 96, "flare_count": 32, "towed_decoy": False},
+        "computer_name": "Thales Avionics Suite",
+        "airframe_name": "Delta Wing Monocoque",
         "airframe": {"max_g_mod": 9.0, "rcs_mod": 1.5, "payload_mod": 1.0, "hp_mod": 1.0},
     },
     "Eurofighter Typhoon": {
         "origin": "Europe",
         "radar": {"radar_type": "Captor-E AESA", "radar_range_km": 200, "irst": True},
+        "engine_name": "EJ200",
         "engine": {"thrust_to_weight_mod": 1.18, "fuel_efficiency_mod": 1.0, "max_speed_mod": 1.0},
         "ecm": {"ecm_suite": "Praetorian DASS", "ecm_rating": 88},
+        "cm_name": "BOL/BOP Dispenser",
         "countermeasures": {"chaff_count": 120, "flare_count": 48, "towed_decoy": False},
+        "computer_name": "DASS Attack Computer",
+        "airframe_name": "Canard-Delta CFRP",
         "airframe": {"max_g_mod": 9.0, "rcs_mod": 0.5, "payload_mod": 1.0, "hp_mod": 1.0},
     },
 }
@@ -346,12 +378,13 @@ def seed_subsystems(db: Session) -> None:
         default_module_map[(ac_name, "radar")] = mod
 
         # ENGINE
+        engine_name = specs.get("engine_name", "Standard Engine")
         mod = SubsystemModule(
-            name=f"Standard Engine ({ac_name})",
+            name=f"{engine_name} ({ac_name})",
             slot_type="engine",
             tier=1,
             origin=origin,
-            description=f"Stock powerplant for {ac_name}.",
+            description=f"Stock {engine_name} powerplant for {ac_name}.",
             stats=json.dumps(specs["engine"]),
             cost=0,
             maintenance_cost=300,
@@ -378,12 +411,13 @@ def seed_subsystems(db: Session) -> None:
         default_module_map[(ac_name, "ecm")] = mod
 
         # COUNTERMEASURES
+        cm_name = specs.get("cm_name", "Standard CMS")
         mod = SubsystemModule(
-            name=f"Standard CMS ({ac_name})",
+            name=f"{cm_name} ({ac_name})",
             slot_type="countermeasures",
             tier=1,
             origin=origin,
-            description=f"Stock countermeasure dispenser for {ac_name}.",
+            description=f"Stock {cm_name} for {ac_name}.",
             stats=json.dumps(specs["countermeasures"]),
             cost=0,
             maintenance_cost=100,
@@ -393,13 +427,14 @@ def seed_subsystems(db: Session) -> None:
         db.add(mod)
         default_module_map[(ac_name, "countermeasures")] = mod
 
-        # COMPUTER (standard for all)
+        # COMPUTER
+        computer_name = specs.get("computer_name", "Standard MMC")
         mod = SubsystemModule(
-            name=f"Standard MMC ({ac_name})",
+            name=f"{computer_name} ({ac_name})",
             slot_type="computer",
             tier=1,
             origin=origin,
-            description=f"Stock mission management computer for {ac_name}.",
+            description=f"Stock {computer_name} for {ac_name}.",
             stats=json.dumps({"pk_bonus": 0.0, "scan_speed_mod": 1.0, "multi_target": 2}),
             cost=0,
             maintenance_cost=100,
@@ -410,12 +445,13 @@ def seed_subsystems(db: Session) -> None:
         default_module_map[(ac_name, "computer")] = mod
 
         # AIRFRAME
+        airframe_name = specs.get("airframe_name", "Standard Airframe")
         mod = SubsystemModule(
-            name=f"Standard Airframe ({ac_name})",
+            name=f"{airframe_name} ({ac_name})",
             slot_type="airframe",
             tier=1,
             origin=origin,
-            description=f"Stock airframe for {ac_name}.",
+            description=f"Stock {airframe_name} structure for {ac_name}.",
             stats=json.dumps(specs["airframe"]),
             cost=0,
             maintenance_cost=200,
