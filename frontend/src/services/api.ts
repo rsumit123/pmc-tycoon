@@ -107,6 +107,12 @@ export const apiService = {
   repairSubsystems: (ownedAircraftId: number, slotType?: string, repairAll?: boolean) => api.post(`/subsystems/aircraft/${ownedAircraftId}/repair`, { slot_type: slotType, repair_all: repairAll ?? false }),
   getAircraftComputedStats: (ownedAircraftId: number) => api.get(`/subsystems/aircraft/${ownedAircraftId}/stats`),
 
+  // Research & Development
+  getResearchItems: () => api.get('/research/items'),
+  getResearchStatus: () => api.get('/research/status'),
+  startResearch: (itemId: number) => api.post(`/research/${itemId}/start`),
+  completeResearch: (itemId: number) => api.post(`/research/${itemId}/complete`),
+
   // Battle system
   startBattle: (data: any) => api.post('/battle/start', data),
   submitLoadout: (battleId: number, data: any) => api.post(`/battle/${battleId}/loadout`, data),

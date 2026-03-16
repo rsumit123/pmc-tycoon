@@ -647,6 +647,11 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 battle, report.total_damage_taken, report.turns_played, db,
             )
 
+            # Award research points based on performance
+            rp_earned = 10 + int(report.turns_played * 2)  # 10 base + 2 per turn
+            if report.success:
+                rp_earned = int(rp_earned * 1.5)
+
             battle.final_result = json.dumps({
                 "success": report.success,
                 "exit_reason": report.exit_reason,
@@ -658,12 +663,14 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 "fuel_remaining": report.fuel_remaining,
                 "narrative": report.narrative_summary,
                 "subsystem_wear": wear_report,
+                "rp_earned": rp_earned,
             })
 
             user = db.query(User).filter(User.id == battle.user_id).first()
             if user:
                 user.balance += report.payout
                 user.reputation = max(0, min(100, user.reputation + report.reputation_change))
+                user.research_points = getattr(user, 'research_points', 0) + rp_earned
 
             if battle.contract_id:
                 contract = db.query(ActiveContract).filter(ActiveContract.id == battle.contract_id).first()
@@ -745,6 +752,11 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 battle, report.total_damage_taken, 5, db,
             )
 
+            # Award research points (v1 uses 5 turns)
+            rp_earned_v1 = 10 + int(5 * 2)  # 10 base + 2 per turn
+            if report.success:
+                rp_earned_v1 = int(rp_earned_v1 * 1.5)
+
             battle.final_result = json.dumps({
                 "success": report.success,
                 "payout": report.payout,
@@ -753,6 +765,7 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 "damage_taken": report.total_damage_taken,
                 "narrative": report.narrative_summary,
                 "subsystem_wear": wear_report,
+                "rp_earned": rp_earned_v1,
             })
 
             # Apply rewards to user
@@ -760,6 +773,7 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
             if user:
                 user.balance += report.payout
                 user.reputation = max(0, min(100, user.reputation + report.reputation_change))
+                user.research_points = getattr(user, 'research_points', 0) + rp_earned_v1
 
             # Update contract if linked
             if battle.contract_id:
@@ -810,6 +824,11 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
             report = engine.get_battle_result()
             battle.status = BattleStatus.COMPLETED_SUCCESS if report.success else BattleStatus.COMPLETED_FAILURE
             battle.completed_at = datetime.now()
+            # Award research points (naval, 5 turns)
+            rp_earned_naval = 10 + int(5 * 2)
+            if report.success:
+                rp_earned_naval = int(rp_earned_naval * 1.5)
+
             battle.final_result = json.dumps({
                 "success": report.success,
                 "payout": report.payout,
@@ -817,11 +836,13 @@ def submit_choice(battle_id: int, data: BattleChoiceSubmit, db: Session = Depend
                 "damage_dealt": report.total_damage_dealt,
                 "damage_taken": report.total_damage_taken,
                 "narrative": report.narrative_summary,
+                "rp_earned": rp_earned_naval,
             })
             user = db.query(User).filter(User.id == battle.user_id).first()
             if user:
                 user.balance += report.payout
                 user.reputation = max(0, min(100, user.reputation + report.reputation_change))
+                user.research_points = getattr(user, 'research_points', 0) + rp_earned_naval
 
     # Save phase to DB
     phase_record = BattlePhase(

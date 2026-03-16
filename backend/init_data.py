@@ -15,6 +15,8 @@ from app.models.owned_weapon import OwnedWeapon
 from app.seed.hardware_data import seed_hardware
 from app.models.subsystem import SubsystemModule, AircraftSubsystem
 from app.seed.subsystem_data import seed_subsystems
+from app.models.research import ResearchItem, UserResearch
+from app.seed.research_data import seed_research
 
 def init_db(db: Session) -> None:
     # Create tables if they don't exist
@@ -191,6 +193,10 @@ def init_db(db: Session) -> None:
     # Seed subsystem modules and install defaults on owned aircraft
     seed_subsystems(db)
     print("Subsystem data seeded.")
+
+    # Seed research tech tree
+    seed_research(db)
+    print("Research data seeded.")
 
 if __name__ == "__main__":
     db = SessionLocal()

@@ -20,6 +20,7 @@ from app.models.owned_aircraft import OwnedAircraft
 from app.models.owned_ship import OwnedShip
 from app.models.owned_weapon import OwnedWeapon
 from app.models.subsystem import SubsystemModule, AircraftSubsystem
+from app.models.research import ResearchItem, UserResearch
 
 from app.api.units import router as units_router
 from app.api.contractors import router as contractors_router
@@ -30,6 +31,7 @@ from app.api.weapons import router as weapons_router
 from app.api.ships import router as ships_router
 from app.api.battle import router as battle_router
 from app.api.subsystems import router as subsystems_router
+from app.api.research import router as research_router
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -69,6 +71,7 @@ app.include_router(weapons_router)
 app.include_router(ships_router)
 app.include_router(battle_router)
 app.include_router(subsystems_router)
+app.include_router(research_router)
 
 @app.get("/")
 async def root():
@@ -89,13 +92,15 @@ def get_user_stats(user_id: int, db: Session = Depends(get_db)):
         "username": user.username,
         "balance": user.balance,
         "reputation": user.reputation,
-        "tech_level": user.tech_level
+        "tech_level": user.tech_level,
+        "research_points": getattr(user, "research_points", 0),
     }
 
 class UserUpdate(BaseModel):
     balance: Optional[int] = None
     reputation: Optional[int] = None
     tech_level: Optional[int] = None
+    research_points: Optional[int] = None
 
 @app.put("/api/user/{user_id}")
 def update_user_stats(user_id: int, update: UserUpdate, db: Session = Depends(get_db)):
@@ -109,6 +114,8 @@ def update_user_stats(user_id: int, update: UserUpdate, db: Session = Depends(ge
         user.reputation = update.reputation
     if update.tech_level is not None:
         user.tech_level = update.tech_level
+    if update.research_points is not None:
+        user.research_points = update.research_points
 
     db.commit()
     db.refresh(user)
@@ -117,5 +124,6 @@ def update_user_stats(user_id: int, update: UserUpdate, db: Session = Depends(ge
         "username": user.username,
         "balance": user.balance,
         "reputation": user.reputation,
-        "tech_level": user.tech_level
+        "tech_level": user.tech_level,
+        "research_points": getattr(user, "research_points", 0),
     }

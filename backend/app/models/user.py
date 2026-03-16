@@ -15,6 +15,7 @@ class User(Base):
     balance = Column(Integer, default=10000)  # Starting credits
     reputation = Column(Integer, default=50)  # 0-100
     tech_level = Column(Integer, default=1)   # Research level
+    research_points = Column(Integer, default=150)  # starting RP
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
