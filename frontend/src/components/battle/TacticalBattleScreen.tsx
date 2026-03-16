@@ -115,18 +115,24 @@ const zoneBadge: Record<string, { bg: string; text: string }> = {
   WVR: { bg: 'bg-red-500/20', text: 'text-red-400' },
 };
 
-const pkColor = (pk: number) =>
-  pk >= 0.6 ? 'text-emerald-400' : pk >= 0.3 ? 'text-amber-400' : 'text-red-400';
-
-const pkBg = (pk: number) =>
-  pk >= 0.6 ? 'bg-emerald-500/20 border-emerald-500/30' : pk >= 0.3 ? 'bg-amber-500/20 border-amber-500/30' : 'bg-red-500/20 border-red-500/30';
-
 // Timeout wrapper for API calls
 const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> => {
   return Promise.race([
     promise,
     new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Request timed out')), ms)),
   ]);
+};
+
+const ACTION_ICONS: Record<string, string> = {
+  scan: '\uD83D\uDCE1',
+  ecm: '\uD83D\uDCF4',
+  flares: '\uD83D\uDCA8',
+  close: '\u27A1',
+  extend: '\u2B05',
+  break_turn: '\u21A9',
+  go_passive: '\uD83D\uDC41',
+  disengage: '\uD83C\uDFC3',
+  guns: '\uD83D\uDD2B',
 };
 
 export const TacticalBattleScreen = ({ battleId, initialState, objective, playerImageUrl, enemyImageUrl, onComplete }: TacticalBattleScreenProps) => {
@@ -137,6 +143,9 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, player
   const [showingResult, setShowingResult] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<TacticalAction | null>(null); // For retry
+  const [engagementMarkers, setEngagementMarkers] = useState<Array<{range: number; hit: boolean; isEnemy: boolean}>>([]);
+  const [showEnemyIntel, setShowEnemyIntel] = useState(false);
+  const [ticker, setTicker] = useState<string[]>([]);
   const [combatLog, setCombatLog] = useState<LogEntry[]>([
     { prefix: 'SYS', color: 'text-[#D4A843]', text: `TACTICAL ENGAGEMENT — ${initialState.player_name} vs ${initialState.enemy_intel.name}` },
     { prefix: 'SYS', color: 'text-gray-500', text: `Range: ${initialState.range_km}km — Zone: ${initialState.zone} — Awaiting orders...` },
@@ -207,6 +216,7 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, player
         } else {
           addLog('MISS', 'text-red-400', `${data.weapon_fired} — MISS (Pk ${((data.shot_pk || 0) * 100).toFixed(0)}%)`);
         }
+        setEngagementMarkers(prev => [...prev, { range: data.new_range, hit: data.shot_hit!, isEnemy: false }]);
       }
 
       // Enemy shot logs
@@ -216,6 +226,19 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, player
         } else {
           addLog('DEF', 'text-emerald-400', `${data.enemy_weapon_fired} — EVADED`);
         }
+        setEngagementMarkers(prev => [...prev, { range: data.new_range, hit: data.enemy_shot_hit!, isEnemy: true }]);
+      }
+
+      // Build ticker entry
+      const tickerParts: string[] = [];
+      if (data.shot_hit !== undefined && data.shot_hit !== null) {
+        tickerParts.push(`T${data.turn_number}: ${data.weapon_fired?.split(' ').pop() || 'Shot'} \u2192 ${data.shot_hit ? `HIT ${data.damage_dealt.toFixed(0)}%` : 'MISS'}`);
+      }
+      if (data.enemy_shot_hit !== undefined && data.enemy_shot_hit !== null) {
+        tickerParts.push(`Enemy ${data.enemy_weapon_fired?.split(' ').pop() || 'Shot'} \u2192 ${data.enemy_shot_hit ? `HIT ${data.damage_taken.toFixed(0)}%` : 'EVADED'}`);
+      }
+      if (tickerParts.length > 0) {
+        setTicker(prev => [...prev.slice(-2), tickerParts.join(' | ')]);
       }
 
       // Intel reveal
@@ -456,6 +479,16 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, player
               <div className="absolute top-0 h-3 flex items-center" style={{ left: `${Math.min(100, Math.max(0, (1 - state.range_km / 250) * 100))}%`, transform: 'translateX(-50%)' }}>
                 <div className="w-2.5 h-5 rounded-sm" style={{ background: 'var(--color-amber)', boxShadow: '0 0 6px var(--color-amber)' }} />
               </div>
+              {/* Engagement hit/miss markers */}
+              {engagementMarkers.map((m, i) => (
+                <div key={i} className="absolute top-0" style={{
+                  left: `${Math.min(100, Math.max(0, (1 - m.range / 250) * 100))}%`,
+                  transform: 'translateX(-50%)',
+                }}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${m.hit ? (m.isEnemy ? 'bg-red-400' : 'bg-emerald-400') : 'bg-gray-500'}`}
+                    style={{ marginTop: m.isEnemy ? '-2px' : '14px' }} />
+                </div>
+              ))}
               {/* Zone labels */}
               <div className="flex justify-between mt-1">
                 <span className="text-[8px] hud-text text-emerald-400/50">BVR</span>
@@ -485,31 +518,12 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, player
                 )}
               </div>
               <p className="text-[10px] text-red-400 hud-text font-bold truncate max-w-[64px]">{state.enemy_intel.name.split(' ').pop()}</p>
-              {/* Enemy intel — full fog of war display */}
-              <div className="flex gap-0.5 justify-center mt-0.5 flex-wrap max-w-[80px]">
-                {state.enemy_intel.radar_known && (
-                  <span className="text-[9px] text-violet-400 bg-violet-500/10 rounded px-1">R:{state.enemy_intel.radar_range_km}km</span>
-                )}
-                {state.enemy_intel.rcs_known && (
-                  <span className="text-[9px] text-violet-400 bg-violet-500/10 rounded px-1">{state.enemy_intel.rcs_m2}m²</span>
-                )}
-                {state.enemy_intel.ecm_known && (
-                  <span className="text-[9px] text-violet-400 bg-violet-500/10 rounded px-1">ECM:{state.enemy_intel.ecm_rating}</span>
-                )}
-                {state.enemy_intel.loadout_known && (
-                  <span className="text-[9px] text-violet-400 bg-violet-500/10 rounded px-1">WPN</span>
-                )}
-                {state.enemy_intel.fuel_known && (
-                  <span className="text-[9px] text-amber-400 bg-amber-500/10 rounded px-1">F:{state.enemy_intel.fuel_pct?.toFixed(0)}%</span>
-                )}
-                {state.enemy_intel.damage_known && (
-                  <span className="text-[9px] text-red-400 bg-red-500/10 rounded px-1">-{state.enemy_intel.damage_pct?.toFixed(0)}%</span>
-                )}
-                {/* Observed weapons (passive intel) */}
-                {state.enemy_intel.observed_weapons?.map((w, i) => (
-                  <span key={i} className="text-[9px] text-gray-400 bg-gray-500/10 rounded px-1">{w.split(' ').pop()}</span>
-                ))}
-              </div>
+              {/* Enemy intel summary - tap to expand */}
+              <button onClick={() => setShowEnemyIntel(!showEnemyIntel)} className="mt-0.5">
+                <span className="text-[9px] font-data" style={{ color: 'var(--color-text-muted)' }}>
+                  INTEL {intelCount}/6 {showEnemyIntel ? '\u25B2' : '\u25BC'}
+                </span>
+              </button>
             </div>
           </div>
 
@@ -544,6 +558,55 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, player
           </div>
         </div>
       </div>
+
+      {/* ═══ ENEMY INTEL CARD (expandable) ═══ */}
+      {showEnemyIntel && (
+        <div className="mx-3 mb-1 rounded-lg p-2.5" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-display tracking-wider" style={{ color: 'var(--color-amber)' }}>ENEMY INTELLIGENCE</span>
+            <span className="text-[10px] font-data" style={{ color: 'var(--color-text-muted)' }}>{intelCount}/6 revealed</span>
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            {[
+              { label: 'RADAR', known: state.enemy_intel.radar_known, value: state.enemy_intel.radar_known ? `${state.enemy_intel.radar_range_km}km` : '\u2588\u2588\u2588' },
+              { label: 'RCS', known: state.enemy_intel.rcs_known, value: state.enemy_intel.rcs_known ? `${state.enemy_intel.rcs_m2}m\u00B2` : '\u2588\u2588\u2588' },
+              { label: 'ECM', known: state.enemy_intel.ecm_known, value: state.enemy_intel.ecm_known ? `${state.enemy_intel.ecm_rating}` : '\u2588\u2588\u2588' },
+              { label: 'LOADOUT', known: state.enemy_intel.loadout_known, value: state.enemy_intel.loadout_known ? 'KNOWN' : '\u2588\u2588\u2588' },
+              { label: 'FUEL', known: state.enemy_intel.fuel_known, value: state.enemy_intel.fuel_known ? `${state.enemy_intel.fuel_pct?.toFixed(0)}%` : '\u2588\u2588\u2588' },
+              { label: 'DAMAGE', known: state.enemy_intel.damage_known, value: state.enemy_intel.damage_known ? `${state.enemy_intel.damage_pct?.toFixed(0)}%` : '\u2588\u2588\u2588' },
+            ].map(item => (
+              <div key={item.label} className="rounded p-1.5 text-center" style={{ background: 'var(--color-surface-raised)' }}>
+                <p className="text-[8px] font-display tracking-wider" style={{ color: 'var(--color-text-muted)' }}>{item.label}</p>
+                <p className={`text-[10px] font-data font-bold ${item.known ? '' : 'redacted'}`} style={{ color: item.known ? 'var(--color-text)' : 'var(--color-text-muted)' }}>
+                  {item.value}
+                </p>
+              </div>
+            ))}
+          </div>
+          {/* Observed weapons */}
+          {state.enemy_intel.observed_weapons?.length > 0 && (
+            <div className="mt-1.5">
+              <p className="text-[8px] font-display tracking-wider mb-0.5" style={{ color: 'var(--color-text-muted)' }}>OBSERVED WEAPONS</p>
+              <div className="flex gap-1 flex-wrap">
+                {state.enemy_intel.observed_weapons.map((w: string, i: number) => (
+                  <span key={i} className="text-[9px] font-data px-1.5 py-0.5 rounded" style={{ background: 'rgba(196,69,60,0.1)', color: 'var(--color-red)' }}>{w}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══ ENGAGEMENT TICKER ═══ */}
+      {ticker.length > 0 && (
+        <div className="mx-3 py-1 overflow-hidden" style={{ borderBottom: '1px solid var(--color-border)' }}>
+          <div className="flex gap-4 text-[10px] font-data overflow-x-auto whitespace-nowrap" style={{ color: 'var(--color-text-secondary)' }}>
+            {ticker.map((t, i) => (
+              <span key={i} className={i === ticker.length - 1 ? 'text-[var(--color-text)]' : ''}>{t}</span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ═══ COMBAT LOG ═══ */}
       <div
@@ -710,33 +773,49 @@ export const TacticalBattleScreen = ({ battleId, initialState, objective, player
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto space-y-1.5 pb-2">
+            <div className="grid grid-cols-4 gap-1.5 pb-2">
               {state.available_actions.map((action) => {
                 const isSelected = selectedAction === action.key;
                 const isFire = action.pk_preview !== undefined && action.pk_preview !== null;
+                const icon = action.key.startsWith('fire_bvr') ? '\uD83D\uDE80' : action.key.startsWith('fire_ir') ? '\uD83D\uDD25' : ACTION_ICONS[action.key] || '\u26A1';
+
+                // Short label: for fire actions extract weapon short name, otherwise first word max 5 chars
+                let shortLabel: string;
+                if (action.key.startsWith('fire_')) {
+                  const parts = action.label.split(' ');
+                  shortLabel = (parts.length > 1 ? parts.slice(1).join(' ') : parts[0]).slice(0, 5).toUpperCase();
+                } else {
+                  shortLabel = action.label.split(' ')[0].toUpperCase().slice(0, 5);
+                }
+
                 return (
                   <button
                     key={action.key}
                     onClick={() => handleAction(action)}
                     disabled={choosing}
-                    className={`w-full rounded-xl p-3 text-left transition-all active:scale-[0.98] disabled:opacity-40 bg-dossier-base/80 ${
-                      isSelected ? 'border-[rgba(212,168,67,0.6)] bg-[rgba(212,168,67,0.1)] hud-border' : 'hud-border'
+                    className={`rounded-lg p-2 text-center transition-all active:scale-95 disabled:opacity-40 ${
+                      isSelected ? 'bg-[rgba(212,168,67,0.15)] border-[#D4A843]' : ''
                     }`}
+                    style={{
+                      background: isSelected ? 'rgba(212,168,67,0.15)' : 'var(--color-surface)',
+                      border: `1px solid ${isSelected ? 'var(--color-amber)' : 'var(--color-border)'}`,
+                    }}
+                    title={action.description}
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-white hud-text">{action.label.toUpperCase()}</span>
-                          {isFire && action.pk_preview != null && (
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border hud-text ${pkBg(action.pk_preview)} ${pkColor(action.pk_preview)}`}>
-                              Pk {(action.pk_preview * 100).toFixed(0)}%
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-gray-500 mt-0.5 hud-text">{action.description}</p>
-                      </div>
-                      {isSelected && choosing && <Loader2 className="w-4 h-4 text-[#D4A843] animate-spin shrink-0" />}
-                    </div>
+                    <span className="text-lg block">{icon}</span>
+                    <span className="text-[8px] font-display tracking-wider block mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
+                      {shortLabel}
+                    </span>
+                    {isFire && action.pk_preview != null && (
+                      <span className={`text-[8px] font-data font-bold block ${
+                        action.pk_preview >= 0.6 ? 'text-emerald-400' : action.pk_preview >= 0.3 ? 'text-amber-400' : 'text-red-400'
+                      }`}>
+                        {(action.pk_preview * 100).toFixed(0)}%
+                      </span>
+                    )}
+                    {isSelected && choosing && (
+                      <Loader2 className="w-3 h-3 animate-spin mx-auto mt-0.5" style={{ color: 'var(--color-amber)' }} />
+                    )}
                   </button>
                 );
               })}
