@@ -189,7 +189,22 @@ export const SimulatedBattleScreen = ({
           </div>
 
           <button
-            onClick={() => onComplete(report)}
+            onClick={() => onComplete({
+              ...report,
+              player_name: playerName,
+              enemy_name: enemyName,
+              narrative_summary: report.narrative || report.narrative_summary || '',
+              phases: turns.map(t => ({
+                phase_number: t.turn_number,
+                phase_name: `Turn ${t.turn_number}`,
+                player_choice: t.player_action,
+                choice_quality: t.shot_hit ? 'good' : 'neutral',
+                factors: t.factors || [],
+                outcome: t,
+                narrative: t.narrative,
+              })),
+              engine_version: 2,
+            })}
             className="btn-primary w-full flex items-center justify-center gap-2"
           >
             VIEW AFTER-ACTION REPORT

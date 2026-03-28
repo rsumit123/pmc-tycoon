@@ -89,13 +89,14 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
   const navigate = useNavigate();
   const [expandedTurns, setExpandedTurns] = useState(false);
   const isV2 = (report.engine_version || 1) >= 2;
-  const manyTurns = isV2 && report.phases.length > 6;
+  const phases = report.phases || [];
+  const manyTurns = isV2 && phases.length > 6;
 
   // For v2 with many turns, show first 3 + last 3, collapsible middle
   const visiblePhases = manyTurns && !expandedTurns
-    ? [...report.phases.slice(0, 3), ...report.phases.slice(-3)]
-    : report.phases;
-  const hiddenCount = manyTurns ? report.phases.length - 6 : 0;
+    ? [...phases.slice(0, 3), ...phases.slice(-3)]
+    : phases;
+  const hiddenCount = manyTurns ? phases.length - 6 : 0;
 
   return (
     <div className="min-h-[100dvh] bg-dossier-base flex flex-col">
@@ -379,7 +380,7 @@ export const AfterActionReport = ({ report }: AfterActionReportProps) => {
         {/* Narrative summary */}
         <div className="bg-dossier-surface rounded-xl border border-border p-3.5">
           <p className="text-[10px] text-ink-secondary uppercase tracking-wider font-semibold mb-2">Summary</p>
-          <p className="text-xs text-ink leading-relaxed">{report.narrative_summary}</p>
+          <p className="text-xs text-ink leading-relaxed">{report.narrative_summary || (report as any).narrative}</p>
         </div>
       </div>
 
