@@ -804,6 +804,86 @@ class TacticalAirBattleEngine:
             narrative_summary=summary,
         )
 
+    # ═══ Simulated battle (auto-pilot) ═══
+
+    def run_full_battle(self) -> List[Dict[str, Any]]:
+        """Auto-play the entire battle and return all turns serialized for replay."""
+        while self.status == "in_progress":
+            available = self.get_available_actions()
+            available_keys = {a.key for a in available}
+            action = self._auto_select_action(available_keys)
+            weapon_id = None
+            parts = action.rsplit("_", 1)
+            if len(parts) == 2 and parts[-1].isdigit():
+                weapon_id = int(parts[-1])
+            self.run_turn(action, weapon_id)
+        return [self._turn_result_to_dict(t) for t in self.turns_completed]
+
+    def _auto_select_action(self, available_keys: set) -> str:
+        """Choose best action for simulated (aggressive engagement) doctrine."""
+        zone = self.zone
+        # Bingo fuel — disengage immediately
+        if self.fuel_pct < 20 and "disengage" in available_keys:
+            return "disengage"
+        # Scan for intel every 4 turns
+        if self.turn % 4 == 1 and "scan" in available_keys and self._intel_index < len(INTEL_REVEAL_ORDER):
+            return "scan"
+        if zone == "BVR":
+            fires = [k for k in available_keys if k.startswith("fire_bvr_")]
+            if fires:
+                return max(fires, key=self._pk_for_key)
+            return "close"
+        elif zone == "TRANSITION":
+            ir = [k for k in available_keys if k.startswith("fire_ir_")]
+            if ir:
+                return max(ir, key=self._pk_for_key)
+            bvr = [k for k in available_keys if k.startswith("fire_bvr_")]
+            if bvr:
+                return max(bvr, key=self._pk_for_key)
+            return "close"
+        else:  # WVR
+            ir = [k for k in available_keys if k.startswith("fire_ir_")]
+            if ir:
+                return max(ir, key=self._pk_for_key)
+            if "guns" in available_keys:
+                return "guns"
+            if "break_turn" in available_keys:
+                return "break_turn"
+            return "disengage"
+
+    def _pk_for_key(self, key: str) -> float:
+        """Get Pk preview for a fire action key (for action selection)."""
+        parts = key.rsplit("_", 1)
+        if len(parts) == 2 and parts[-1].isdigit():
+            wid = int(parts[-1])
+            for item in self.player_loadout:
+                if item.weapon.id == wid and item.quantity > 0:
+                    return self._calc_pk_preview(item.weapon)
+        return 0.0
+
+    def _turn_result_to_dict(self, t: TurnResult) -> Dict[str, Any]:
+        """Serialize a TurnResult for JSON transport."""
+        return {
+            "turn_number": t.turn_number,
+            "player_action": t.player_action,
+            "enemy_action": t.enemy_action,
+            "weapon_fired": t.weapon_fired,
+            "shot_pk": t.shot_pk,
+            "shot_hit": t.shot_hit,
+            "damage_dealt": t.damage_dealt,
+            "enemy_weapon_fired": t.enemy_weapon_fired,
+            "enemy_shot_pk": t.enemy_shot_pk,
+            "enemy_shot_hit": t.enemy_shot_hit,
+            "damage_taken": t.damage_taken,
+            "range_change": t.range_change,
+            "new_range": t.new_range,
+            "zone": t.zone,
+            "intel_revealed": t.intel_revealed,
+            "fuel_consumed": t.fuel_consumed,
+            "narrative": t.narrative,
+            "factors": t.factors,
+        }
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize engine state for storage."""
         return {

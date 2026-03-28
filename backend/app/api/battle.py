@@ -706,8 +706,121 @@ def submit_loadout(battle_id: int, data: LoadoutSubmit, db: Session = Depends(ge
     if battle.battle_type == BattleType.AIR:
         if getattr(battle, 'engine_version', 1) == 2:
             engine = _build_tactical_air_engine(battle, db)
-            state = engine.get_current_state()
-            return _tactical_state_to_dict(state)
+            initial_range = engine.range_km
+            initial_fuel = engine.fuel_pct
+
+            # ─── Run full simulation ───
+            turns = engine.run_full_battle()
+            report = engine.get_battle_result()
+
+            # Persist final engine state
+            _save_tactical_engine_state(engine, battle)
+            battle.status = BattleStatus.COMPLETED_SUCCESS if report.success else BattleStatus.COMPLETED_FAILURE
+            battle.completed_at = datetime.now()
+
+            # Subsystem wear
+            wear_report = _apply_subsystem_wear(battle, report.total_damage_taken, report.turns_played, db)
+
+            # RP reward
+            rp_earned = 10 + int(report.turns_played * 2)
+            if report.success:
+                rp_earned = int(rp_earned * 1.5)
+
+            # Risk level from contract (for loot roll)
+            risk_level = 50
+            if battle.contract_id:
+                _rc = db.query(ActiveContract).filter(ActiveContract.id == battle.contract_id).first()
+                if _rc:
+                    _rm = db.query(MissionTemplate).filter(MissionTemplate.id == _rc.mission_template_id).first()
+                    if _rm:
+                        risk_level = _rm.risk_level
+
+            module_loot = _roll_module_loot(battle, report.success, risk_level, db)
+
+            # Pilot XP
+            pilot_xp_earned = 0
+            pilot_level_up = False
+
+            # Apply rewards to user
+            user = db.query(User).filter(User.id == battle.user_id).first()
+            if user:
+                user.balance += report.payout
+                user.reputation = max(0, min(100, user.reputation + report.reputation_change))
+                user.research_points = getattr(user, 'research_points', 0) + rp_earned
+                user.missions_completed = getattr(user, 'missions_completed', 0) + 1
+
+            if battle.contractor_id:
+                from app.engine.progression import calc_pilot_level
+                contractor = db.query(OwnedContractor).filter(OwnedContractor.id == battle.contractor_id).first()
+                if contractor:
+                    pilot_xp_earned = 50 + int(report.turns_played * 10)
+                    if report.success:
+                        pilot_xp_earned = int(pilot_xp_earned * 1.5)
+                    contractor.xp = getattr(contractor, 'xp', 0) + pilot_xp_earned
+                    from app.engine.progression import calc_pilot_level
+                    new_level = calc_pilot_level(contractor.xp)
+                    if new_level > getattr(contractor, 'level', 1):
+                        contractor.level = new_level
+                        contractor.skill_level = min(100, contractor.skill_level + 2)
+                        pilot_level_up = True
+
+            report_dict = {
+                "success": report.success,
+                "exit_reason": report.exit_reason,
+                "turns_played": report.turns_played,
+                "payout": report.payout,
+                "reputation_change": report.reputation_change,
+                "damage_dealt": report.total_damage_dealt,
+                "damage_taken": report.total_damage_taken,
+                "fuel_remaining": report.fuel_remaining,
+                "narrative": report.narrative_summary,
+                "subsystem_wear": wear_report,
+                "rp_earned": rp_earned,
+                "module_loot": module_loot,
+                "missions_completed": getattr(user, 'missions_completed', 0) if user else 0,
+                "pilot_xp_earned": pilot_xp_earned,
+                "pilot_level_up": pilot_level_up,
+            }
+            battle.final_result = json.dumps(report_dict)
+
+            # Update contract
+            if battle.contract_id:
+                _c2 = db.query(ActiveContract).filter(ActiveContract.id == battle.contract_id).first()
+                if _c2:
+                    _m2 = db.query(MissionTemplate).filter(MissionTemplate.id == _c2.mission_template_id).first()
+                    _c2.status = MissionStatus.COMPLETED_SUCCESS if report.success else MissionStatus.COMPLETED_FAILURE
+                    _c2.payout_received = report.payout
+                    _c2.reputation_change = report.reputation_change
+                    _c2.completed_at = datetime.now()
+                    if _m2:
+                        mission_log = MissionLog(
+                            user_id=battle.user_id,
+                            mission_template_id=_c2.mission_template_id,
+                            status=MissionStatus.COMPLETED_SUCCESS if report.success else MissionStatus.COMPLETED_FAILURE,
+                            payout_earned=report.payout,
+                            reputation_change=report.reputation_change,
+                            enemy_strength=int(report.total_damage_dealt),
+                            ally_strength=int(100 - report.total_damage_taken),
+                            random_events=json.dumps([]),
+                            started_at=_c2.started_at or datetime.now(),
+                            ended_at=datetime.now(),
+                        )
+                        db.add(mission_log)
+
+            db.commit()
+
+            return {
+                "mode": "simulated",
+                "initial_range": initial_range,
+                "initial_fuel": initial_fuel,
+                "objective": engine.objective,
+                "player_name": engine.player.name,
+                "enemy_name": engine.enemy.name,
+                "max_turns": engine.max_turns,
+                "turns": turns,
+                "report": report_dict,
+            }
+
         engine = _build_air_engine(battle, db)
         state = engine.get_current_state()
     else:

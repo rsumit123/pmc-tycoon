@@ -5,6 +5,7 @@ import { LoadoutScreen } from './LoadoutScreen';
 import { BattleScreen } from './BattleScreen';
 import { TacticalBattleScreen } from './TacticalBattleScreen';
 import { TacticalNavalScreen } from './TacticalNavalScreen';
+import { SimulatedBattleScreen } from './SimulatedBattleScreen';
 import { MissionBriefing } from './MissionBriefing';
 import { AfterActionReport } from './AfterActionReport';
 import { Loader2, AlertTriangle, ArrowLeft } from 'lucide-react';
@@ -180,6 +181,28 @@ export const BattlePage = () => {
   }
 
   if (phase === 'battle' && battleState) {
+    // Simulated replay — detected by mode field
+    if (battleState.mode === 'simulated') {
+      return (
+        <SimulatedBattleScreen
+          turns={battleState.turns}
+          report={battleState.report}
+          playerName={battleState.player_name || playerImageUrl ? (battleState.player_name || 'Player') : 'Player'}
+          enemyName={battleState.enemy_name || 'Enemy'}
+          objective={missionObjective || battleState.objective || 'air_superiority'}
+          playerImageUrl={playerImageUrl}
+          enemyImageUrl={enemyImageUrl}
+          initialRange={battleState.initial_range || 250}
+          initialFuel={battleState.initial_fuel || 85}
+          maxTurns={battleState.max_turns || 20}
+          onComplete={(report) => {
+            setReportData(report);
+            setPhase('report');
+          }}
+        />
+      );
+    }
+
     // v2 tactical engine — detected by max_turns field
     if (battleState.max_turns || battleState.engine_version === 2) {
       // Naval v2 — detected by player_compartments field
