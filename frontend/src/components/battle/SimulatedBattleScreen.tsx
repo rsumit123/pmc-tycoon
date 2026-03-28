@@ -38,28 +38,11 @@ interface SimulatedBattleScreenProps {
   onComplete: (report: any) => void;
 }
 
-const ACTION_LABEL: Record<string, string> = {
-  scan: 'SCAN',
-  ecm: 'ECM JAM',
-  flares: 'FLARES',
-  close: 'CLOSING',
-  extend: 'EXTENDING',
-  break_turn: 'BREAK TURN',
-  disengage: 'DISENGAGE',
-  go_passive: 'GO PASSIVE',
-  guns: 'GUNS',
-};
-
 const ZONE_COLORS: Record<string, string> = {
   BVR: 'var(--color-accent-blue, #3b82f6)',
   TRANSITION: 'var(--color-amber)',
   WVR: 'var(--color-red, #ef4444)',
 };
-
-function getActionLabel(action: string): string {
-  if (action.startsWith('fire_bvr_') || action.startsWith('fire_ir_')) return 'LAUNCH';
-  return ACTION_LABEL[action] || action.toUpperCase();
-}
 
 function zoneLabel(zone: string): string {
   if (zone === 'TRANSITION') return 'TRANS';
@@ -71,7 +54,6 @@ export const SimulatedBattleScreen = ({
   report,
   playerName,
   enemyName,
-  objective,
   playerImageUrl,
   enemyImageUrl,
   initialRange,
