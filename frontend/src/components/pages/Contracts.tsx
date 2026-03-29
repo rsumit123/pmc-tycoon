@@ -914,10 +914,10 @@ export const Contracts = () => {
             </div>
           )}
 
-          {missionTemplates.length === 0 ? (
-            <EmptyState message="No contracts available. Check back later." />
+          {missionTemplates.filter(t => t.battle_type === 'ground').length === 0 ? (
+            <EmptyState message="No ground contracts available. Check back later." />
           ) : (
-            missionTemplates.map((template) => {
+            missionTemplates.filter(t => t.battle_type === 'ground').map((template) => {
               const faction = factionColors[template.faction] ?? factionColors['atlantic_coalition'];
               const fName = factionDisplayName[template.faction] ?? template.faction;
               const risk = riskBadge(template.risk_level);
