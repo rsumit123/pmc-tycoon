@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../../services/api';
-import { Loader2, ShieldAlert, Wrench, Trash2, Plus, DollarSign, Heart } from 'lucide-react';
+import { Loader2, ShieldAlert, Wrench, Trash2, Plus, Heart } from 'lucide-react';
 import '../../styles/design-system.css';
 
 interface GroundUnit {
@@ -117,7 +117,6 @@ export const Barracks = () => {
   };
 
   const handleSell = async (owned: OwnedGroundUnit) => {
-    const price = Math.round(owned.unit.cost_usd * 0.3 * (owned.hp_pct / 100));
     setActionLoading(owned.id);
     setConfirmSell(null);
     try {
