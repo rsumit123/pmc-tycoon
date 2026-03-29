@@ -36,6 +36,9 @@ interface MissionTemplate {
   battle_type: string | null;
   enemy_aircraft_id: number | null;
   enemy_ship_id: number | null;
+  terrain_type: string | null;
+  enemy_ground_composition: string | null;
+  difficulty: number;
 }
 
 interface ActiveContractData {
@@ -228,6 +231,12 @@ export const Contracts = () => {
   };
 
   const openDeployModal = async (template: MissionTemplate) => {
+    // Ground battle — go straight to force selection screen
+    if (template.battle_type === 'ground') {
+      navigate(`/battle/new?ground=1&template=${template.id}`);
+      return;
+    }
+
     // Battle-type missions show vehicle picker
     if (template.battle_type) {
       const list = template.battle_type === 'air' ? aircraftList : shipList;
@@ -332,6 +341,10 @@ export const Contracts = () => {
     const contract = activeContracts.find((c) => c.id === contractId);
     if (contract) {
       const template = templateMap[contract.mission_template_id];
+      if (template?.battle_type === 'ground') {
+        navigate(`/battle/new?ground=1&template=${template.id}`);
+        return;
+      }
       if (template?.battle_type) {
         // Navigate to battle screen
         const params = new URLSearchParams({ contract: contractId.toString() });
@@ -926,8 +939,14 @@ export const Contracts = () => {
                       </div>
                       <div className="flex items-center gap-1.5">
                         {template.battle_type && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md" style={{ background: 'rgba(91,139,160,0.15)', color: 'var(--color-blue)' }}>
-                            {template.battle_type === 'air' ? '✈ Tactical' : '🚢 Naval'}
+                          <span
+                            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md"
+                            style={{
+                              background: template.battle_type === 'ground' ? 'rgba(107,174,114,0.15)' : 'rgba(91,139,160,0.15)',
+                              color: template.battle_type === 'ground' ? 'var(--color-green)' : 'var(--color-blue)',
+                            }}
+                          >
+                            {template.battle_type === 'air' ? '✈ Tactical' : template.battle_type === 'naval' ? '🚢 Naval' : '⚔ Ground'}
                           </span>
                         )}
                         <span className={`stamp ${riskStampClass(template.risk_level)}`} style={{ fontSize: '10px', transform: 'none', padding: '2px 8px' }}>
@@ -938,7 +957,17 @@ export const Contracts = () => {
 
                     <h3 className="text-base font-bold mb-1" style={{ color: 'var(--color-text)' }}>{template.title}</h3>
                     {template.description && (
-                      <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>{template.description}</p>
+                      <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>{template.description}</p>
+                    )}
+                    {template.terrain_type && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: 'rgba(107,174,114,0.12)', color: 'var(--color-green)' }}>
+                          {template.terrain_type.toUpperCase()} TERRAIN
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: 'rgba(229,62,62,0.12)', color: 'var(--color-red)' }}>
+                          DIFF {template.difficulty || 1}
+                        </span>
+                      </div>
                     )}
 
                     <div className="grid grid-cols-3 gap-2 mb-3">

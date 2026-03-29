@@ -12,6 +12,7 @@ const navItems = [
   { path: '/', label: 'HQ', icon: LayoutDashboard },
   { path: '/hangar', label: 'Hangar', icon: Warehouse },
   { path: '/personnel', label: 'Personnel', icon: Users },
+  { path: '/barracks', label: 'Barracks', icon: Shield },
   { path: '/contracts', label: 'Operations', icon: Crosshair },
   { path: '/research', label: 'R&D', icon: FlaskConical },
 ];

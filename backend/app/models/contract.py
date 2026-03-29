@@ -49,6 +49,8 @@ class MissionTemplate(Base):
 
     mission_objective = Column(String, nullable=True)  # "air_superiority", "interception", "escort", "strike", "recon"
     difficulty = Column(Integer, default=1)  # 1-3 (determines enemy selection)
+    terrain_type = Column(String, nullable=True)  # "urban", "open", "mountain", "forest"
+    enemy_ground_composition = Column(String, nullable=True)  # JSON: {"infantry": 4, ...}
 
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

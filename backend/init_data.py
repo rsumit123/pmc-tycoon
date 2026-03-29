@@ -18,6 +18,92 @@ from app.seed.subsystem_data import seed_subsystems
 from app.models.research import ResearchItem, UserResearch
 from app.seed.research_data import seed_research
 from app.seed.chapter_data import seed_chapters
+from app.models.ground_unit import GroundUnit, OwnedGroundUnit
+from app.seed.ground_unit_data import seed_ground_units
+
+GROUND_CONTRACTS = [
+    {
+        "title": "Desert Convoy Ambush",
+        "description": "Intercept an enemy armored column moving through open desert. Multiple tanks and IFVs escorted by infantry. Air support available.",
+        "faction": "desert_bloc",
+        "required_unit_types": '["infantry", "armor"]',
+        "min_unit_count": 2, "max_unit_count": 8,
+        "base_payout": 70000, "risk_level": 35,
+        "estimated_duration_hours": 2,
+        "battle_type": "ground", "difficulty": 1,
+        "terrain_type": "open",
+        "enemy_ground_composition": '{"infantry": 4, "rpg_team": 2, "light_tank": 1, "mortar": 1}',
+        "mission_objective": "destroy_convoy",
+    },
+    {
+        "title": "Urban Stronghold Assault",
+        "description": "Clear enemy militia from a fortified urban district. Infantry-heavy defense with RPG teams in every building.",
+        "faction": "sahara_sindicate",
+        "required_unit_types": '["infantry", "spec_ops"]',
+        "min_unit_count": 3, "max_unit_count": 10,
+        "base_payout": 100000, "risk_level": 60,
+        "estimated_duration_hours": 4,
+        "battle_type": "ground", "difficulty": 2,
+        "terrain_type": "urban",
+        "enemy_ground_composition": '{"infantry": 6, "rpg_team": 3, "sniper": 2, "mortar": 1}',
+        "mission_objective": "clear_district",
+    },
+    {
+        "title": "Mountain Pass Seizure",
+        "description": "Seize a strategic mountain pass before enemy reinforcements arrive. Artillery positions on high ground. Drone coverage limited.",
+        "faction": "pacific_alliance",
+        "required_unit_types": '["infantry", "artillery"]',
+        "min_unit_count": 3, "max_unit_count": 10,
+        "base_payout": 90000, "risk_level": 55,
+        "estimated_duration_hours": 3,
+        "battle_type": "ground", "difficulty": 2,
+        "terrain_type": "mountain",
+        "enemy_ground_composition": '{"infantry": 5, "rpg_team": 2, "sniper": 2, "sph": 1, "drone_isr": 1}',
+        "mission_objective": "seize_pass",
+    },
+    {
+        "title": "Forest Recon in Force",
+        "description": "Advance through dense forest to destroy enemy HQ. Enemy armor ineffective in trees — but spec ops are everywhere.",
+        "faction": "atlantic_coalition",
+        "required_unit_types": '["infantry", "spec_ops"]',
+        "min_unit_count": 2, "max_unit_count": 8,
+        "base_payout": 60000, "risk_level": 40,
+        "estimated_duration_hours": 2,
+        "battle_type": "ground", "difficulty": 1,
+        "terrain_type": "forest",
+        "enemy_ground_composition": '{"infantry": 4, "sniper": 2, "rpg_team": 2, "drone_isr": 1}',
+        "mission_objective": "destroy_hq",
+    },
+    {
+        "title": "Armored Breakthrough",
+        "description": "Lead an armored spearhead through enemy lines. MBTs, artillery, and drone attack — maximum combined arms. High casualties expected.",
+        "faction": "desert_bloc",
+        "required_unit_types": '["mbt", "artillery", "drone"]',
+        "min_unit_count": 4, "max_unit_count": 12,
+        "base_payout": 160000, "risk_level": 80,
+        "estimated_duration_hours": 6,
+        "battle_type": "ground", "difficulty": 3,
+        "terrain_type": "open",
+        "enemy_ground_composition": '{"infantry": 8, "rpg_team": 3, "mbt": 3, "sph": 2, "drone_attack": 1, "drone_isr": 1}',
+        "mission_objective": "breakthrough",
+    },
+]
+
+
+def _seed_ground_contracts(db: Session) -> None:
+    """Seed ground battle contract templates if not already present."""
+    from app.models.contract import MissionTemplate, Faction
+    existing_ground = db.query(MissionTemplate).filter(
+        MissionTemplate.battle_type == "ground"
+    ).count()
+    if existing_ground > 0:
+        return
+    for c in GROUND_CONTRACTS:
+        faction_val = Faction(c.pop("faction"))
+        tmpl = MissionTemplate(faction=faction_val, **c)
+        db.add(tmpl)
+    db.commit()
+
 
 def init_db(db: Session) -> None:
     # Create tables if they don't exist
@@ -202,6 +288,27 @@ def init_db(db: Session) -> None:
     # Seed campaign chapters (tags existing missions)
     seed_chapters(db)
     print("Campaign chapters seeded.")
+
+    # DB migrations: add new columns if they don't exist
+    from sqlalchemy import text as _sql_text
+    _migrations = [
+        "ALTER TABLE mission_templates ADD COLUMN IF NOT EXISTS terrain_type VARCHAR",
+        "ALTER TABLE mission_templates ADD COLUMN IF NOT EXISTS enemy_ground_composition TEXT",
+    ]
+    for _stmt in _migrations:
+        try:
+            db.execute(_sql_text(_stmt))
+            db.commit()
+        except Exception:
+            db.rollback()
+
+    # Seed ground unit templates
+    seed_ground_units(db)
+    print("Ground units seeded.")
+
+    # Seed ground battle contracts
+    _seed_ground_contracts(db)
+    print("Ground contracts seeded.")
 
 if __name__ == "__main__":
     db = SessionLocal()

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Warehouse,
-  Users,
+  Shield,
   Crosshair,
   FlaskConical,
 } from 'lucide-react';
@@ -10,7 +10,7 @@ import {
 const navItems = [
   { path: '/', label: 'HQ', icon: LayoutDashboard },
   { path: '/hangar', label: 'Hangar', icon: Warehouse },
-  { path: '/personnel', label: 'Crew', icon: Users },
+  { path: '/barracks', label: 'Forces', icon: Shield },
   { path: '/contracts', label: 'Ops', icon: Crosshair },
   { path: '/research', label: 'R&D', icon: FlaskConical },
 ];

@@ -6,6 +6,7 @@ import { Hangar } from './components/pages/Hangar';
 import { Personnel } from './components/pages/Personnel';
 import { Contracts } from './components/pages/Contracts';
 import { RAndD } from './components/pages/RAndD';
+import { Barracks } from './components/pages/Barracks';
 import { BattlePage } from './components/battle/BattlePage';
 
 function AppShell() {
@@ -36,6 +37,7 @@ function AppShell() {
             <Route path="/personnel" element={<Personnel />} />
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/research" element={<RAndD />} />
+            <Route path="/barracks" element={<Barracks />} />
           </Routes>
         </div>
 

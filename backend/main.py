@@ -21,6 +21,7 @@ from app.models.owned_ship import OwnedShip
 from app.models.owned_weapon import OwnedWeapon
 from app.models.subsystem import SubsystemModule, AircraftSubsystem
 from app.models.research import ResearchItem, UserResearch
+from app.models.ground_unit import GroundUnit, OwnedGroundUnit
 
 from app.api.units import router as units_router
 from app.api.contractors import router as contractors_router
@@ -32,6 +33,7 @@ from app.api.ships import router as ships_router
 from app.api.battle import router as battle_router
 from app.api.subsystems import router as subsystems_router
 from app.api.research import router as research_router
+from app.api.ground_units import router as ground_units_router
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -72,6 +74,7 @@ app.include_router(ships_router)
 app.include_router(battle_router)
 app.include_router(subsystems_router)
 app.include_router(research_router)
+app.include_router(ground_units_router)
 
 @app.get("/")
 async def root():

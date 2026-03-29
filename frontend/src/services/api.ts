@@ -124,6 +124,16 @@ export const apiService = {
   getBattleState: (battleId: number) => api.get(`/battle/${battleId}/state`),
   submitChoice: (battleId: number, choice: string, weaponId?: number) => api.post(`/battle/${battleId}/choose`, { choice, weapon_id: weaponId }),
   getBattleReport: (battleId: number) => api.get(`/battle/${battleId}/report`),
+  startGroundBattle: (data: { mission_template_id: number; ground_unit_ids: number[]; owned_aircraft_id?: number }) =>
+    api.post('/battle/ground/start', data),
+
+  // Ground units
+  getGroundUnitCatalog: () => api.get('/ground-units/catalog'),
+  getOwnedGroundUnits: () => api.get('/ground-units/owned'),
+  purchaseGroundUnit: (groundUnitId: number, customName?: string) =>
+    api.post('/ground-units/purchase', { ground_unit_id: groundUnitId, custom_name: customName }),
+  repairGroundUnit: (ownedUnitId: number) => api.post('/ground-units/repair', { owned_unit_id: ownedUnitId }),
+  sellGroundUnit: (ownedUnitId: number) => api.delete(`/ground-units/${ownedUnitId}`),
 };
 
 export default apiService;

@@ -16,7 +16,7 @@ from app.models.owned_weapon import OwnedWeapon
 from app.models.owned_aircraft import OwnedAircraft
 from app.models.subsystem import AircraftSubsystem
 from app.models.user import User
-from app.schemas.battle import BattleCreate, LoadoutSubmit, BattleChoiceSubmit, TacticalChoiceSubmit
+from app.schemas.battle import BattleCreate, LoadoutSubmit, BattleChoiceSubmit, TacticalChoiceSubmit, GroundBattleStart
 
 from app.engine.types import AircraftData, WeaponData, ShipData, LoadoutItem
 from app.engine.air_battle import AirBattleEngine
@@ -1539,6 +1539,154 @@ def _tactical_state_to_dict(state) -> dict:
         "status": state.status,
         "exit_reason": state.exit_reason,
         "objective": getattr(state, 'objective', None),
+    }
+
+
+@router.post("/ground/start")
+def start_ground_battle(data: GroundBattleStart, db: Session = Depends(get_db)):
+    """Run a ground battle simulation. Returns full turn replay + report."""
+    from app.engine.ground_battle import GroundBattleEngine, ENEMY_COMPOSITIONS
+    from app.models.ground_unit import OwnedGroundUnit
+    from app.models.owned_aircraft import OwnedAircraft
+
+    user = db.query(User).filter(User.id == 1).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Load mission template
+    from app.models.contract import MissionTemplate, ActiveContract, MissionLog, MissionStatus
+    mission = db.query(MissionTemplate).filter(MissionTemplate.id == data.mission_template_id).first()
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission template not found")
+
+    # Load owned ground units
+    if not data.ground_unit_ids:
+        raise HTTPException(status_code=400, detail="No ground units selected")
+
+    owned_units = db.query(OwnedGroundUnit).filter(
+        OwnedGroundUnit.id.in_(data.ground_unit_ids),
+        OwnedGroundUnit.user_id == 1,
+    ).all()
+
+    if not owned_units:
+        raise HTTPException(status_code=400, detail="No valid ground units found")
+
+    player_units = []
+    for ou in owned_units:
+        if ou.hp_pct <= 0:
+            continue  # Skip destroyed units
+        player_units.append({
+            "id": ou.id,
+            "name": ou.custom_name or ou.unit.name,
+            "unit_type": ou.unit.unit_type,
+            "combat_power": ou.unit.combat_power,
+            "anti_armor": ou.unit.anti_armor,
+            "anti_infantry": ou.unit.anti_infantry,
+            "anti_air": ou.unit.anti_air,
+            "survivability": ou.unit.survivability,
+            "hp_pct": ou.hp_pct,
+        })
+
+    if not player_units:
+        raise HTTPException(status_code=400, detail="All selected units are destroyed")
+
+    # Optional aircraft support
+    aircraft_role: str | None = None
+    aircraft_name: str | None = None
+    if data.owned_aircraft_id:
+        owned_ac = db.query(OwnedAircraft).filter(
+            OwnedAircraft.id == data.owned_aircraft_id,
+            OwnedAircraft.user_id == 1,
+        ).first()
+        if owned_ac:
+            from app.models.aircraft import Aircraft
+            ac = db.query(Aircraft).filter(Aircraft.id == owned_ac.aircraft_id).first()
+            if ac:
+                aircraft_role = ac.role
+                aircraft_name = ac.name
+
+    # Mission parameters
+    terrain = getattr(mission, 'terrain_type', None) or "open"
+    enemy_comp_json = getattr(mission, 'enemy_ground_composition', None)
+    difficulty = getattr(mission, 'difficulty', 1)
+    enemy_comp = None
+    if enemy_comp_json:
+        import json as _json
+        try:
+            enemy_comp = _json.loads(enemy_comp_json)
+        except Exception:
+            pass
+
+    # Run battle
+    engine = GroundBattleEngine(
+        player_units=player_units,
+        aircraft_role=aircraft_role,
+        aircraft_name=aircraft_name,
+        difficulty=difficulty,
+        terrain=terrain,
+        enemy_composition=enemy_comp,
+        seed=data.mission_template_id * 7 + len(data.ground_unit_ids),
+    )
+    turns = engine.run_full_battle()
+    report = engine.get_battle_result()
+
+    # Apply unit HP changes back to DB
+    for pu in engine.player_units:
+        for ou in owned_units:
+            if (ou.custom_name or ou.unit.name) == pu["name"]:
+                ou.hp_pct = pu["hp_pct"]
+                ou.battles_fought = (ou.battles_fought or 0) + 1
+                break
+
+    # Deduct upkeep
+    total_upkeep = sum(ou.unit.upkeep_per_mission for ou in owned_units)
+
+    # Apply rewards
+    user.balance += report["payout"] - total_upkeep
+    user.reputation = max(0, min(100, user.reputation + report["reputation_change"]))
+    user.missions_completed = getattr(user, 'missions_completed', 0) + 1
+
+    # Create ActiveContract + mark completed
+    expires_at = datetime.now()
+    contract = ActiveContract(
+        user_id=1,
+        mission_template_id=data.mission_template_id,
+        status=MissionStatus.COMPLETED_SUCCESS if report["success"] else MissionStatus.COMPLETED_FAILURE,
+        payout_received=report["payout"],
+        reputation_change=report["reputation_change"],
+        started_at=datetime.now(),
+        completed_at=datetime.now(),
+        expires_at=expires_at,
+    )
+    db.add(contract)
+
+    mission_log = MissionLog(
+        user_id=1,
+        mission_template_id=data.mission_template_id,
+        status=MissionStatus.COMPLETED_SUCCESS if report["success"] else MissionStatus.COMPLETED_FAILURE,
+        payout_earned=report["payout"],
+        reputation_change=report["reputation_change"],
+        enemy_strength=int(report["damage_dealt"]),
+        ally_strength=int(100 - report["damage_taken"]),
+        random_events="[]",
+        started_at=datetime.now(),
+        ended_at=datetime.now(),
+    )
+    db.add(mission_log)
+    db.commit()
+
+    return {
+        "mode": "simulated",
+        "battle_type": "ground",
+        "initial_range": 100.0,
+        "initial_fuel": 100.0,
+        "objective": "ground_assault",
+        "player_name": player_units[0]["name"] if player_units else "Force",
+        "enemy_name": f"Enemy {terrain.title()} Defense",
+        "max_turns": engine.MAX_TURNS,
+        "terrain": terrain,
+        "turns": turns,
+        "report": report,
     }
 
 

@@ -25,6 +25,12 @@ class TacticalChoiceSubmit(BaseModel):
     weapon_id: Optional[int] = None
 
 
+class GroundBattleStart(BaseModel):
+    mission_template_id: int
+    ground_unit_ids: List[int]
+    owned_aircraft_id: Optional[int] = None  # OwnedAircraft.id for air support
+
+
 class BattlePhaseResponse(BaseModel):
     phase_number: int
     phase_name: str

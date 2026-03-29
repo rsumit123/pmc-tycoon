@@ -23,6 +23,8 @@ class MissionTemplateBase(BaseModel):
     mission_objective: Optional[str] = None
     difficulty: int = 1
     is_active: bool = True
+    terrain_type: Optional[str] = None
+    enemy_ground_composition: Optional[str] = None
 
 class MissionTemplateCreate(MissionTemplateBase):
     pass

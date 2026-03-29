@@ -6,12 +6,13 @@ import { BattleScreen } from './BattleScreen';
 import { TacticalBattleScreen } from './TacticalBattleScreen';
 import { TacticalNavalScreen } from './TacticalNavalScreen';
 import { SimulatedBattleScreen } from './SimulatedBattleScreen';
+import { GroundForceScreen } from './GroundForceScreen';
 import { MissionBriefing } from './MissionBriefing';
 import { AfterActionReport } from './AfterActionReport';
 import { Loader2, AlertTriangle, ArrowLeft } from 'lucide-react';
 import '../../styles/design-system.css';
 
-type Phase = 'loading' | 'briefing' | 'loadout' | 'battle' | 'report' | 'error';
+type Phase = 'loading' | 'briefing' | 'loadout' | 'ground_loadout' | 'battle' | 'report' | 'error';
 
 export const BattlePage = () => {
   const { battleId: battleIdParam } = useParams();
@@ -33,6 +34,13 @@ export const BattlePage = () => {
 
   useEffect(() => {
     const init = async () => {
+      // Ground battle — skip start_battle, go straight to force selection
+      const groundParam = searchParams.get('ground');
+      if (groundParam === '1') {
+        setPhase('ground_loadout');
+        return;
+      }
+
       // If we have a battleId param, we're resuming an existing battle
       if (battleIdParam) {
         const bid = Number(battleIdParam);
@@ -141,6 +149,19 @@ export const BattlePage = () => {
           </button>
         </div>
       </div>
+    );
+  }
+
+  if (phase === 'ground_loadout') {
+    const templateId = Number(searchParams.get('template'));
+    return (
+      <GroundForceScreen
+        missionTemplateId={templateId}
+        onReady={(simState) => {
+          setBattleState(simState);
+          setPhase('battle');
+        }}
+      />
     );
   }
 
