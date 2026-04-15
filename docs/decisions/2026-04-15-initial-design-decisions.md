@@ -235,6 +235,22 @@ Read this before iterating on the design. If you want to change a decision, read
 
 ---
 
+## D21 — Campaign grounded in real 2026 state (starting backdrop)
+
+**Decision:** The default campaign (2026-Q2 start) opens against a historically real backdrop. Player inherits a real 31-squadron IAF, the just-signed MRFA Rafale deal (114 jets, Feb 2026), the Tejas Mk1A 97-jet contract (Sep 2025), active S-400 deliveries, Astra Mk2 series production starting Jul 2026, and active R&D on AMCA, Tejas Mk2, Astra Mk3, Rudram-2/3, BrahMos-NG, Ghatak, TEDBF. Backstory frame: one year after the May 2025 India-Pak limited air engagement.
+
+Adversary starting posture is also real: PLAAF ~500 J-20s, J-35A inducting, J-36 demonstrator; Pakistan J-35E deal (signed Jan 2026) visible at campaign start as imminent threat evolution.
+
+**Alternatives considered:** Neutral/generic 2026 with pre-seeded queues empty; player builds from scratch.
+
+**Reasoning:** Defense-nerd target audience already carries this world-state in their head. Fighting the player's real-world knowledge is worse than embracing it. Pre-seeded queues also give the opening turns immediate decisions ("do I exercise the MRFA's in-built Make-in-India transfer clauses?") rather than empty-calendar drift.
+
+**What we gave up:** Some flexibility in counterfactual "what if India had bought Su-57 instead" scenarios. Mitigated by offering difficulty presets and "what-if" posture options at Turn-0.
+
+**Living reference:** `docs/content/platforms-seed-2026.md` holds all pre-seeded state (platform stats, delivery queue, R&D state, adversary OOB, missile specs). It will evolve; treat as the canonical seed rather than this decision entry.
+
+---
+
 ## Future Improvements (from the design — not decisions, but parked ideas)
 
 - Player-managed intel capability

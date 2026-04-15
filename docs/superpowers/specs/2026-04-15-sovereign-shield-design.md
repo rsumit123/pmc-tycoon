@@ -65,7 +65,18 @@ Adversaries are not a threat curve — they are a **parallel simulated world**.
 
 ## 5. Campaign Arc
 
-**Setup (Turn 0).** Player picks: starting year (default 2026), difficulty preset (*Relaxed / Realistic / Hard-Peer / Worst-Case*), 3–5 objectives from ~12, starting force posture (default historical).
+**Setup (Turn 0).** Player picks: starting year (default **2026-Q2**), difficulty preset (*Relaxed / Realistic / Hard-Peer / Worst-Case*), 3–5 objectives from ~12, starting force posture (default historical).
+
+**Historical grounding.** The campaign opens against a real 2026 backdrop, one year after the **May 2025 India-Pak limited air engagement** ("Operation Sindoor" reference). The player inherits:
+- 31 active IAF fighter squadrons against authorized 42 (real 2024-25 parliamentary finding)
+- A pre-signed **MRFA Rafale deal** (114 jets, F4 standard, Feb 2026 DAC approval, first sqn 2027-Q4)
+- **Tejas Mk1A contract** (97 jets signed Sep 2025, delivery rolling 2026-2030)
+- **S-400 deliveries in flight**: 4th sqn May 2026, 5th Nov 2026, follow-on 5-sqn AoN cleared Mar 2026
+- **Astra Mk2** series production starting Jul 2026
+- Active R&D: AMCA (first flight 2028-29, serial prod 2035), Tejas Mk2 (LRIP 2033), Astra Mk3 ramjet, Rudram-2/3, BrahMos-NG, Ghatak UCAV, TEDBF
+- **Adversary starting posture**: PLAAF ~500 J-20 airframes, J-35A inducting, J-36 demonstrator flying; Pakistan J-35E deal signed Jan 2026 (40 + 30 option, first deliveries early 2026)
+
+Full seed data maintained in `docs/content/platforms-seed-2026.md` — the content pipeline uses this as its starting state.
 
 **Sample objectives:** Operational AMCA Mk1 squadron by 2035; 65% indigenization in air-launched weapons by 2036; no loss of sovereign territory; 3 operational CBGs; maintain 42+ fighter squadron strength; zero CAATSA sanctions; deter Pakistan below escalation threshold; dominate IOR; defense exports ≥ ₹50,000 cr cumulative.
 
