@@ -251,6 +251,26 @@ Adversary starting posture is also real: PLAAF ~500 J-20s, J-35A inducting, J-36
 
 ---
 
+## D22 — UX: map-first, media-rich, gesture-driven (with an aggressive MVP cut)
+
+**Decision:** The game's primary screen is a **spatial map of the subcontinent**, not a menu sidebar. Every platform, squadron, and intel contact is visually represented with real public-domain media (Wikimedia Commons photos, 3-view silhouettes, squadron crests). Interaction model is mobile-gesture-first (swipe-stack intel cards, long-press dossiers, commit-by-hold on irreversible spends). Platform comparisons use radar charts, not stat tables.
+
+**MVP UX commitments:** real media on cards, map-first landing screen (MapLibre + OSM), swipe-stack intel, long-press dossier, commit-by-hold, radar chart comparisons, named squadrons with call signs + XP + LLM-named emerging aces, end-of-year one-line LLM recap, shareable campaign-card PNG at campaign end.
+
+**Alternatives considered:** (a) Traditional dashboard with a "map tab" among others. (b) Full luxe UX from day one (tactical replays, audio, diegetic teletype, sankey budgets, retirement ceremonies, AI-generated press feeds).
+
+**Reasoning:** Text-heavy defense stats are the game's biggest failure mode — the whole thing has to feel like an IBMS/MoD workstation, not a form. Map-first is the single largest differentiator. Real public-domain media is effectively free (Wikimedia is a huge resource). Gesture interactions are mobile-native. Luxe features were real but would blow MVP scope.
+
+**Deferred to V1.5+ (explicitly not MVP):** animated logistics lines, R&D facility glow, weather/heatmap overlays, drag-to-rebase on map, draw-strike-route gesture, Tinder-style platform comparison, diegetic teletype reveals + CRT themes, animated signing stamps, 2D tactical replay of vignettes, audio + haptics, sankey budget flows, fake-headline press feed, Twitter OSINT simulation, pilot-quote interviews, chai-stall rumors, retirement ceremonies, year-end video montage, full career yearbook, commissioned portrait, squadron banter channel.
+
+**What we gave up:** The polished "game feels alive" depth of full diegetic UI and multi-layer map interactivity in MVP. Accepted because MVP must be shippable — polish after first playable slice is the only sustainable path for a solo hobby project.
+
+**Sub-decision on tactical vignette replay:** Parked for V1.1. The LLM-generated AAR prose carries the moment in MVP. If playtesting shows vignette payoff feels flat, add a simple SVG NATO-symbol replay as first post-MVP addition.
+
+**Asset pipeline:** Build-time fetch script (`scripts/fetch_platform_assets.py`) pulls Wikimedia Commons imagery into `frontend/public/platforms/`, committed with attribution. One settings screen lists CC attributions. Fallback SVG silhouettes for platforms missing imagery.
+
+---
+
 ## Future Improvements (from the design — not decisions, but parked ideas)
 
 - Player-managed intel capability
@@ -259,6 +279,25 @@ Adversary starting posture is also real: PLAAF ~500 J-20s, J-35A inducting, J-36
 - Real-world news ingestion ("Defense News Desk")
 - Tactical live-play vignettes (player makes turn-by-turn calls inside vignettes)
 - Tri-service expansion (army, navy, strategic triad)
+
+**Parked UX upgrades (from D22):**
+- Animated logistics lines, R&D facility glow, weather/heatmap overlays on map
+- Drag-to-rebase squadrons on map
+- Draw-strike-route gesture during vignette planning
+- Tinder-style platform comparison swipes
+- Diegetic teletype text reveals + CRT/amber themes
+- Animated signing-stamp procurement ceremony
+- 2D NATO-symbol tactical replay of vignettes (candidate first V1.1 addition)
+- Audio cues (radar pings, teletype clacks, Vajra drum) + haptic feedback
+- Sankey diagrams for budget flow
+- Fake-headline press feed (Indian / Chinese / Pakistani newspapers)
+- Twitter/X OSINT simulation
+- Pilot-quote interviews after vignettes
+- Chai-stall rumor channel for low-confidence intel
+- Retirement ceremonies for outgoing platforms / squadrons
+- Year-end montage / cinematic reel
+- Full career yearbook + commissioned portrait at campaign end
+- Squadron banter text channel with personality
 
 ---
 

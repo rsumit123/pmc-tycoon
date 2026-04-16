@@ -114,7 +114,59 @@ Full seed data maintained in `docs/content/platforms-seed-2026.md` — the conte
 
 **Domain model (static content, YAML in repo):** `platforms.yaml`, `scenario_templates.yaml`, `rd_programs.yaml`, `bases.yaml`, `objectives.yaml`, `doctrines.yaml`.
 
-## 7. Content Pipeline
+## 7. UX Direction
+
+The game is a single-player browser experience for a defense-nerd audience. Text-heavy stat tables are the default failure mode. The UX target is an **IBMS / MoD workstation feel** — authentic, visually rich, spatial, gesture-driven on mobile.
+
+**7.1 MVP UX commitments (all shippable in-scope)**
+
+- **Real media on every card.** Platform hero photos, 3-view silhouettes, and squadron crests pulled from Wikimedia Commons. Built-time fetch script populates `frontend/public/platforms/`. Fallback SVG silhouettes for missing assets.
+- **Map-first primary interface.** Subcontinent map (MapLibre + OSM tiles — free) is the landing screen. Airbase pinpoints, adversary base pinpoints, two layer toggles (AD coverage = SVG radar bubbles; intel contacts = fading dots with confidence rings). Tap a base → squadron stack modal. Procurement dashboards are *entered from the map*, not from a sidebar.
+- **Swipe-stack intel cards.** Each quarter's intel feed is a Tinder-style swipeable stack. Swipe to dismiss, tap to expand, long-press for actions.
+- **Long-press anywhere → platform dossier.** Every platform reference in the UI supports a long-press gesture that opens a full spec sheet (hero photo, 3-view, radar chart, history). Reused everywhere.
+- **Commit-by-hold for irreversible decisions.** Signing a ₹3L cr deal or cancelling a major R&D program requires a 2-second press-and-hold on a confirm button with a progress ring. Makes the weight real.
+- **Radar charts for platform comparisons.** When evaluating acquisitions or comparing own vs. adversary fleets, use radar charts (the standard defense-journalism visual). No side-by-side stat tables.
+- **Named squadrons with call signs + XP + emerging aces.** Squadrons carry real-or-plausible names (Golden Arrows, Tigersharks). XP accumulates across vignettes. After notable wins, an "emerging ace" is named by the LLM with a one-line trait, attached to the squadron card.
+- **End-of-year one-line LLM recap.** When Q4 rolls over, an LLM-generated single sentence summarizes the in-game year. Displayed during year-transition animation.
+- **Shareable campaign card** at campaign end. `html2canvas` renders a PNG of the end-of-campaign infographic: grade, 6 key stats, highlight headline, timeline sparkline. Screenshot-shareable.
+
+**7.2 UX principles**
+
+- **Mobile-first responsive.** Card-stack and bottom-sheet patterns on phone, multi-column reflow on laptop. No info-dense desktop-only dashboards.
+- **Spatial before list.** If data has a location, it lives on the map first.
+- **Progressive disclosure.** Long-press / tap-to-expand, never cram a stat block into a summary card.
+- **Physical weight for big decisions.** Commit-by-hold, explicit confirmations for >₹1L cr spends.
+- **Diegetic minimum** — classification banners, IST clock, military iconography, but no over-stylized teletype/CRT effects in MVP (saved for later).
+
+**7.3 Deferred to V1.5+ (explicitly not MVP)**
+
+To keep MVP shippable, these are named out loud and left until post-MVP:
+
+- Animated logistics lines, R&D facility glow, weather overlays, sector heatmaps on map
+- Drag-to-rebase squadrons on map (use modal action in MVP)
+- Draw-strike-route gesture during vignette planning
+- Tinder-style platform comparison swipes (use radar chart comparison modal instead)
+- Diegetic teletype text reveals and CRT/amber themes
+- Animated signing stamp / procurement certificate ceremony
+- 2D tactical replay of vignettes (the LLM-generated AAR carries the moment in MVP)
+- Audio and haptic feedback
+- Sankey budget flow diagrams (use simple stacked bar in MVP)
+- Fake-headline press feed (Hindustan Times / Global Times style)
+- Twitter/X OSINT simulation
+- Pilot-quote interviews after vignettes
+- Chai-stall rumor channels
+- Retirement ceremonies, year-end video montage, full career yearbook, commissioned portrait
+- Squadron banter text channel
+
+These are real features worth building — just not in MVP. Revisit post-first-playable.
+
+**7.4 Asset pipeline**
+
+- **Build-time fetch script** at `scripts/fetch_platform_assets.py` — reads `platforms.yaml`, resolves Wikimedia Commons URLs per platform, downloads hero image + 3-view silhouette + squadron crest where applicable, writes to `frontend/public/platforms/{platform_id}/`, commits manifest with attribution. Run manually during content updates.
+- **Fallback SVG silhouettes** — hand-authored or pulled from Wikimedia vector sources for platforms missing imagery.
+- **Attribution screen** — one low-traffic settings page listing sources and Creative Commons attributions.
+
+## 8. Content Pipeline
 
 **Platform stats (~15 fields each):** combat_radius_km, payload_kg, max_speed_mach, ceiling_ft, rcs_band, radar_type, radar_range_km, ewi_capability, bvr/wvr/agm slots, cost_cr, operating_cost_per_hour, gen, intro_year, retirement_year.
 
@@ -129,7 +181,7 @@ Full seed data maintained in `docs/content/platforms-seed-2026.md` — the conte
 - **V1**: ~60 platforms, ~20 templates, ~12 objectives, ~25 R&D programs, full adversary roadmap. First complete campaign.
 - **V2**: balancing passes, expanded variety.
 
-## 8. Future Improvements (Explicitly Deferred)
+## 9. Future Improvements (Explicitly Deferred)
 
 Parked during design discussion; worth revisiting post-V1:
 
@@ -140,7 +192,7 @@ Parked during design discussion; worth revisiting post-V1:
 - **Tactical live-play vignettes** — player makes turn-by-turn calls inside the vignette instead of auto-resolve.
 - **Tri-service expansion** — ground forces (armor, artillery, MLRS), full naval surface/sub management, strategic triad depth.
 
-## 9. Open Questions
+## 10. Open Questions
 
 Nothing blocking implementation planning. The following are tuning questions, answerable during playtesting:
 
