@@ -24,6 +24,8 @@ class CampaignRead(BaseModel):
     difficulty: Difficulty
     objectives_json: list[str]
     budget_cr: int
+    quarterly_grant_cr: int
+    current_allocation_json: dict | None
     reputation: int
     created_at: datetime
     updated_at: datetime

@@ -14,3 +14,5 @@ class RDProgramState(Base):
     funding_level: Mapped[str] = mapped_column(String(32), default="standard")
     status: Mapped[str] = mapped_column(String(32), default="active")
     milestones_hit: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    cost_invested_cr: Mapped[int] = mapped_column(Integer, default=0)
+    quarters_active: Mapped[int] = mapped_column(Integer, default=0)

@@ -18,3 +18,4 @@ class AcquisitionOrder(Base):
     foc_year: Mapped[int] = mapped_column(Integer)
     foc_quarter: Mapped[int] = mapped_column(Integer)
     delivered: Mapped[int] = mapped_column(Integer, default=0)
+    total_cost_cr: Mapped[int] = mapped_column(Integer, default=0)

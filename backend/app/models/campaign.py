@@ -18,6 +18,8 @@ class Campaign(Base):
     difficulty: Mapped[str] = mapped_column(String(32))
     objectives_json: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
     budget_cr: Mapped[int] = mapped_column(Integer)
+    quarterly_grant_cr: Mapped[int] = mapped_column(Integer, default=155000)
+    current_allocation_json: Mapped[dict | None] = mapped_column(JSON, nullable=True, default=None)
     reputation: Mapped[int] = mapped_column(Integer, default=50)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

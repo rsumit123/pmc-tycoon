@@ -55,3 +55,23 @@ def test_create_campaign_event(db):
     assert e.id is not None
     assert e.event_type == "campaign_created"
     assert e.payload["note"] == "test"
+
+
+def test_campaign_has_default_grant_and_null_allocation(db):
+    c = Campaign(
+        name="T",
+        seed=1,
+        starting_year=2026,
+        starting_quarter=2,
+        current_year=2026,
+        current_quarter=2,
+        difficulty="realistic",
+        objectives_json=[],
+        budget_cr=620000,
+        reputation=50,
+    )
+    db.add(c)
+    db.commit()
+    db.refresh(c)
+    assert c.quarterly_grant_cr == 155000
+    assert c.current_allocation_json is None
