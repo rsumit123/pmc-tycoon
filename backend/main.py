@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -7,11 +9,12 @@ from app.db.session import engine
 import app.models  # noqa: F401  # register all models with Base.metadata
 from app.api.campaigns import router as campaigns_router
 
+logger = logging.getLogger(__name__)
 
 try:
     Base.metadata.create_all(bind=engine)
-except Exception:
-    pass  # Database directory may not exist in test/CI environments
+except Exception as exc:  # noqa: BLE001
+    logger.warning("create_all skipped at startup: %s", exc)
 
 app = FastAPI(title="Sovereign Shield API", version="0.1.0")
 

@@ -62,3 +62,12 @@ def test_get_campaign_returns_same_state(client):
 def test_get_campaign_not_found(client):
     response = client.get("/api/campaigns/99999")
     assert response.status_code == 404
+
+
+def test_create_campaign_rejects_invalid_difficulty(client):
+    response = client.post("/api/campaigns", json={
+        "name": "Bad",
+        "difficulty": "ultra_god_mode",
+        "objectives": [],
+    })
+    assert response.status_code == 422
