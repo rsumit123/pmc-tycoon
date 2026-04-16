@@ -8,6 +8,7 @@ from app.db.base import Base
 from app.db.session import engine
 import app.models  # noqa: F401  # register all models with Base.metadata
 from app.api.campaigns import router as campaigns_router
+from app.api.budget import router as budget_router
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ app.add_middleware(
 )
 
 app.include_router(campaigns_router)
+app.include_router(budget_router)
 
 
 @app.get("/")
