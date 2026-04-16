@@ -1,0 +1,135 @@
+"""R&D program progression: funding, progress, milestones, risk events.
+
+Pure function. Takes a list of program-state dicts + spec registry +
+the R&D budget bucket + a Random instance. Returns (updated_states, events).
+
+Funding levels:
+    slow:        0.5x cost, 0.5x progress
+    standard:    1.0x / 1.0x
+    accelerated: 1.5x cost, 1.4x progress (efficiency penalty)
+
+Milestone rolls (at 25/50/75/100): once per crossing.
+    70% routine — no event
+    15% breakthrough — +5% progress, rd_breakthrough event
+    15% setback — rd_setback event (no progress penalty in MVP)
+
+If R&D bucket can't cover all programs at their requested funding,
+all programs scale by the same pro-rata factor and an rd_underfunded
+event is logged.
+"""
+
+from __future__ import annotations
+
+import random
+from typing import Any
+
+FUNDING_FACTORS: dict[str, tuple[float, float]] = {
+    "slow": (0.5, 0.5),
+    "standard": (1.0, 1.0),
+    "accelerated": (1.5, 1.4),
+}
+
+MILESTONES: list[int] = [25, 50, 75, 100]
+
+ROLL_BREAKTHROUGH_PROGRESS_BONUS = 5
+
+
+def _funded_program_states(states: list[dict]) -> list[dict]:
+    return [s for s in states if s["status"] == "active" and s["progress_pct"] < 100]
+
+
+def tick_rd(
+    states: list[dict],
+    specs: dict[str, Any],
+    rd_bucket_cr: int,
+    rng: random.Random,
+) -> tuple[list[dict], list[dict]]:
+    out: list[dict] = [dict(s) for s in states]
+    events: list[dict] = []
+
+    fundable = _funded_program_states(out)
+    if not fundable:
+        return out, events
+
+    # Total cost requested at full funding
+    requested = 0
+    for s in fundable:
+        spec = specs[s["program_id"]]
+        cost_factor, _ = FUNDING_FACTORS[s["funding_level"]]
+        per_quarter_base = spec["base_cost_cr"] / spec["base_duration_quarters"]
+        requested += per_quarter_base * cost_factor
+
+    # Pro-rata factor if bucket short
+    pro_rata = 1.0
+    if requested > 0 and rd_bucket_cr < requested:
+        pro_rata = rd_bucket_cr / requested
+        events.append({
+            "event_type": "rd_underfunded",
+            "payload": {"requested_cr": int(requested), "available_cr": rd_bucket_cr, "scale": round(pro_rata, 3)},
+        })
+
+    for s in fundable:
+        spec = specs[s["program_id"]]
+        cost_factor, prog_factor = FUNDING_FACTORS[s["funding_level"]]
+        per_quarter_base_cost = spec["base_cost_cr"] / spec["base_duration_quarters"]
+        per_quarter_base_prog = 100 / spec["base_duration_quarters"]
+
+        cost_this_qtr = int(per_quarter_base_cost * cost_factor * pro_rata)
+        prog_inc = int(per_quarter_base_prog * prog_factor * pro_rata)
+
+        # Milestone rolls — one per threshold crossed by this turn's progress increment
+        old_progress = s["progress_pct"]
+        new_progress = min(100, old_progress + prog_inc)
+
+        for threshold in MILESTONES:
+            if old_progress < threshold <= new_progress and threshold not in s["milestones_hit"]:
+                roll = rng.random()
+                if roll < 0.70:
+                    outcome = "routine"
+                elif roll < 0.85:
+                    outcome = "breakthrough"
+                    new_progress = min(100, new_progress + ROLL_BREAKTHROUGH_PROGRESS_BONUS)
+                else:
+                    outcome = "setback"
+                s["milestones_hit"].append(threshold)
+                events.append({
+                    "event_type": "rd_milestone",
+                    "payload": {
+                        "program_id": s["program_id"],
+                        "threshold": threshold,
+                        "outcome": outcome,
+                    },
+                })
+                if outcome == "breakthrough":
+                    events.append({
+                        "event_type": "rd_breakthrough",
+                        "payload": {"program_id": s["program_id"], "threshold": threshold},
+                    })
+                if outcome == "setback":
+                    events.append({
+                        "event_type": "rd_setback",
+                        "payload": {"program_id": s["program_id"], "threshold": threshold},
+                    })
+
+        s["progress_pct"] = new_progress
+        s["cost_invested_cr"] += cost_this_qtr
+        s["quarters_active"] += 1
+
+        events.append({
+            "event_type": "rd_progressed",
+            "payload": {
+                "program_id": s["program_id"],
+                "progress_pct": new_progress,
+                "delta_pct": new_progress - old_progress,
+                "cost_this_qtr_cr": cost_this_qtr,
+            },
+        })
+
+        if new_progress >= 100 and s["status"] != "completed":
+            s["status"] = "completed"
+            events.append({
+                "event_type": "rd_completed",
+                "payload": {"program_id": s["program_id"]},
+            })
+
+    return out, events
