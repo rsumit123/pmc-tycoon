@@ -13,5 +13,5 @@ class CampaignEvent(Base):
     year: Mapped[int] = mapped_column(Integer)
     quarter: Mapped[int] = mapped_column(Integer)
     event_type: Mapped[str] = mapped_column(String(64), index=True)
-    payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    payload: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -16,7 +16,7 @@ class Campaign(Base):
     current_year: Mapped[int] = mapped_column(Integer)
     current_quarter: Mapped[int] = mapped_column(Integer)
     difficulty: Mapped[str] = mapped_column(String(32))
-    objectives_json: Mapped[list] = mapped_column(JSON, default=list)
+    objectives_json: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
     budget_cr: Mapped[int] = mapped_column(Integer)
     reputation: Mapped[int] = mapped_column(Integer, default=50)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -12,7 +12,7 @@ class Squadron(Base):
     name: Mapped[str] = mapped_column(String(200))
     call_sign: Mapped[str] = mapped_column(String(32))
     platform_id: Mapped[str] = mapped_column(String(64))
-    base_id: Mapped[int] = mapped_column(ForeignKey("campaign_bases.id"))
+    base_id: Mapped[int] = mapped_column(ForeignKey("campaign_bases.id"), index=True)
     strength: Mapped[int] = mapped_column(Integer)
     readiness_pct: Mapped[int] = mapped_column(Integer, default=80)
     xp: Mapped[int] = mapped_column(Integer, default=0)

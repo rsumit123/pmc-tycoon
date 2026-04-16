@@ -1,5 +1,5 @@
 from app.models.campaign import Campaign
-from app.models.campaign_base import Base as CampaignBase
+from app.models.campaign_base import CampaignBase
 from app.models.squadron import Squadron
 from app.models.rd_program import RDProgramState
 from app.models.acquisition import AcquisitionOrder

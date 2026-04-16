@@ -12,6 +12,6 @@ class Vignette(Base):
     year: Mapped[int] = mapped_column(Integer)
     quarter: Mapped[int] = mapped_column(Integer)
     scenario_id: Mapped[str] = mapped_column(String(64))
-    event_trace: Mapped[list] = mapped_column(JSON, default=list)
+    event_trace: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
     aar_text: Mapped[str] = mapped_column(Text, default="")
-    outcome: Mapped[dict] = mapped_column(JSON, default=dict)
+    outcome: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)

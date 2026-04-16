@@ -14,4 +14,4 @@ class IntelCard(Base):
     source_type: Mapped[str] = mapped_column(String(16))
     confidence: Mapped[float] = mapped_column(Float)
     truth_value: Mapped[bool] = mapped_column(Boolean, default=True)
-    payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    payload: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)

@@ -1,10 +1,10 @@
 from sqlalchemy import String, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base as SqlBase
+from app.db.base import Base
 
 
-class Base(SqlBase):
+class CampaignBase(Base):
     __tablename__ = "campaign_bases"
 
     id: Mapped[int] = mapped_column(primary_key=True)
