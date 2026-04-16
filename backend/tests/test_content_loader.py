@@ -52,3 +52,15 @@ def test_load_platforms_empty_file_returns_empty_dict(tmp_path: Path):
     result = load_platforms(yaml_path)
 
     assert result == {}
+
+
+def test_rd_programs_yaml_has_mvp_set():
+    from pathlib import Path
+    from app.content.loader import load_rd_programs
+    progs = load_rd_programs(Path("content/rd_programs.yaml"))
+    expected_ids = {
+        "amca_mk1", "amca_mk1_engine", "tejas_mk2", "tedbf", "ghatak_ucav",
+        "astra_mk2", "astra_mk3", "rudram_2", "rudram_3", "brahmos_ng",
+    }
+    assert expected_ids.issubset(progs.keys())
+    assert len(progs) >= 10

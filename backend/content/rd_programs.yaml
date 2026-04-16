@@ -1,13 +1,61 @@
 programs:
   - id: amca_mk1
     name: AMCA Mk1
-    description: Indigenous 5th-generation stealth multirole fighter.
+    description: Indigenous 5th-generation stealth multirole fighter. First flight 2028-29, serial production 2035.
     base_duration_quarters: 36
     base_cost_cr: 150000
     dependencies: []
+  - id: amca_mk1_engine
+    name: AMCA Mk1 Engine (Safran-GTRE)
+    description: 120-140 kN class engine, co-developed with Safran. Critical-path for AMCA serial production.
+    base_duration_quarters: 36
+    base_cost_cr: 60000
+    dependencies: []
+  - id: tejas_mk2
+    name: Tejas Mk2
+    description: Indigenous 4.75-gen multirole. LRIP ~2033, FRP 2034 at 24/yr.
+    base_duration_quarters: 28
+    base_cost_cr: 50000
+    dependencies: []
+  - id: tedbf
+    name: TEDBF (Twin Engine Deck-Based Fighter)
+    description: Carrier-based naval fighter. First flight late-decade.
+    base_duration_quarters: 24
+    base_cost_cr: 40000
+    dependencies: []
+  - id: ghatak_ucav
+    name: Ghatak UCAV
+    description: Stealth flying-wing UCAV. Operational prototype ~2028, induction ~2031.
+    base_duration_quarters: 20
+    base_cost_cr: 25000
+    dependencies: []
   - id: astra_mk2
     name: Astra Mk2
-    description: 240km BVR air-to-air missile, entering series production July 2026.
+    description: 240km BVR air-to-air missile. Series production July 2026.
     base_duration_quarters: 4
     base_cost_cr: 8000
+    dependencies: []
+  - id: astra_mk3
+    name: Astra Mk3 (Gandiva)
+    description: 350km dual-pulse ramjet BVR AAM. Combat-ready ~2029.
+    base_duration_quarters: 12
+    base_cost_cr: 15000
+    dependencies: []
+  - id: rudram_2
+    name: Rudram-2
+    description: Multi-target anti-radiation missile, 300km range. Production ~2027.
+    base_duration_quarters: 6
+    base_cost_cr: 6000
+    dependencies: []
+  - id: rudram_3
+    name: Rudram-3
+    description: Long-range ARM, 550+ km. Production nod 2026, IOC ~2028.
+    base_duration_quarters: 8
+    base_cost_cr: 8000
+    dependencies: []
+  - id: brahmos_ng
+    name: BrahMos-NG
+    description: Next-gen smaller supersonic cruise missile. First flight ~2027, IOC ~2028-29.
+    base_duration_quarters: 10
+    base_cost_cr: 12000
     dependencies: []
