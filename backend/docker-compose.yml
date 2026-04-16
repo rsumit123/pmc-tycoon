@@ -8,7 +8,7 @@ services:
     volumes:
       - pmc-data:/app/data
     environment:
-      - DATABASE_URL=sqlite:///data/pmc_tycoon.db
+      - DATABASE_URL=sqlite:///data/sovereign_shield.db
 
 volumes:
   pmc-data:
