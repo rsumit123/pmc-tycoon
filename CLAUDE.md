@@ -18,10 +18,11 @@ The repo was previously called **PMC Tycoon** (a mercenary-contractor game). All
 - `docs/DEPLOYMENT.md` — prod deploy runbook (Vercel frontend + GCP VM Docker backend).
 - `README.md` — dev workflow pointers.
 
-## Current status (last updated 2026-04-16)
+## Current status (last updated 2026-04-17)
 
-- **Plan 1 (Foundation)** — ✅ done. 22 commits, 22 backend tests passing. End-to-end loop works: create campaign in browser → advance turn → see state update.
-- **Next up: Plan 2 (Turn Engine Core)** — budget math, R&D progression with milestones/risk events, acquisition delivery queue, readiness regen/degradation, seeded-RNG turn orchestrator. Scope outlined in `ROADMAP.md` §Plan 2. Detailed task-level plan not yet written — invoke `writing-plans` skill when executing.
+- **Plan 1 (Foundation)** — ✅ done. End-to-end loop works: create campaign in browser → advance turn → see state update.
+- **Plan 2 (Turn Engine Core)** — ✅ done. 110 backend tests passing. Pure-function engine (`backend/app/engine/`: rng / budget / rd / acquisition / readiness / turn), seeded-RNG orchestrator with subsystem namespacing, replay-determinism test locks in the contract. Three new APIs (`POST /budget`, `POST /rd`, `POST /acquisitions`). `create_campaign` now seeds the 2026-Q2 historical inheritance (3 bases, 3 named squadrons, MRFA Rafale + Tejas Mk1A acquisitions, AMCA/AMCA-engine/Astra Mk2/Tejas Mk2 R&D). Known limitations documented in the ROADMAP plan-done commit message.
+- **Next up: Plan 3 (Adversary Simulation & Intel)** — PLAAF/PAF/PLAN parallel-world sim on authored roadmap, intel card generation with HUMINT/SIGINT/IMINT/OSINT/ELINT sources, fog-of-war filter, some intel can be wrong. Scope outlined in `ROADMAP.md` §Plan 3. Detailed task-level plan not yet written — invoke `writing-plans` skill when executing.
 
 ## Working rules (important — these are user preferences, not defaults)
 
