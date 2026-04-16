@@ -11,7 +11,7 @@ def db():
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
     # Import all models so Base.metadata knows about them
-    from app.models import campaign, event  # noqa: F401
+    import app.models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
