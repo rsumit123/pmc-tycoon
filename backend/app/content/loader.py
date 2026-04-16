@@ -47,7 +47,10 @@ class RDProgramSpec(BaseModel):
 
 def _load_yaml(path: Path) -> dict:
     with open(path) as f:
-        return yaml.safe_load(f)
+        data = yaml.safe_load(f)
+    if data is None:
+        return {}
+    return data
 
 
 def load_platforms(path: Path) -> dict[str, PlatformSpec]:

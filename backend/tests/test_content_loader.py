@@ -43,3 +43,12 @@ def test_load_platforms_missing_required_field_raises(tmp_path: Path):
 
     with pytest.raises(Exception):
         load_platforms(yaml_path)
+
+
+def test_load_platforms_empty_file_returns_empty_dict(tmp_path: Path):
+    yaml_path = tmp_path / "platforms.yaml"
+    yaml_path.write_text("")
+
+    result = load_platforms(yaml_path)
+
+    assert result == {}
