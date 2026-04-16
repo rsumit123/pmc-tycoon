@@ -1,0 +1,111 @@
+platforms:
+  - id: rafale_f4
+    name: Dassault Rafale F4
+    origin: FR
+    role: multirole
+    generation: "4.5"
+    combat_radius_km: 1850
+    payload_kg: 9500
+    rcs_band: reduced
+    radar_range_km: 200
+    cost_cr: 4500
+    intro_year: 2020
+  - id: rafale_f5
+    name: Dassault Rafale F5
+    origin: FR
+    role: multirole
+    generation: "4.75"
+    combat_radius_km: 1900
+    payload_kg: 9500
+    rcs_band: reduced
+    radar_range_km: 220
+    cost_cr: 5000
+    intro_year: 2030
+  - id: tejas_mk1a
+    name: HAL Tejas Mk1A
+    origin: IND
+    role: multirole
+    generation: "4.5"
+    combat_radius_km: 500
+    payload_kg: 5300
+    rcs_band: reduced
+    radar_range_km: 150
+    cost_cr: 500
+    intro_year: 2024
+  - id: tejas_mk2
+    name: HAL Tejas Mk2
+    origin: IND
+    role: multirole
+    generation: "4.75"
+    combat_radius_km: 1500
+    payload_kg: 6500
+    rcs_band: reduced
+    radar_range_km: 180
+    cost_cr: 800
+    intro_year: 2033
+  - id: su30_mki
+    name: Sukhoi Su-30 MKI
+    origin: IND
+    role: air_superiority
+    generation: "4.5"
+    combat_radius_km: 1500
+    payload_kg: 8000
+    rcs_band: conventional
+    radar_range_km: 180
+    cost_cr: 400
+    intro_year: 2002
+  - id: mirage2000
+    name: Dassault Mirage 2000
+    origin: IND
+    role: multirole
+    generation: "4"
+    combat_radius_km: 1550
+    payload_kg: 6300
+    rcs_band: conventional
+    radar_range_km: 110
+    cost_cr: 200
+    intro_year: 1985
+  - id: amca_mk1
+    name: HAL AMCA Mk1
+    origin: IND
+    role: stealth_multirole
+    generation: "5"
+    combat_radius_km: 1620
+    payload_kg: 6500
+    rcs_band: VLO
+    radar_range_km: 200
+    cost_cr: 1500
+    intro_year: 2035
+  - id: j20a
+    name: Chengdu J-20A
+    origin: CHN
+    role: stealth_superiority
+    generation: "5"
+    combat_radius_km: 2000
+    payload_kg: 6500
+    rcs_band: VLO
+    radar_range_km: 220
+    cost_cr: 0
+    intro_year: 2017
+  - id: j10c
+    name: Chengdu J-10C
+    origin: CHN
+    role: multirole
+    generation: "4.5"
+    combat_radius_km: 1240
+    payload_kg: 5600
+    rcs_band: reduced
+    radar_range_km: 170
+    cost_cr: 0
+    intro_year: 2018
+  - id: j35a
+    name: Shenyang J-35A
+    origin: CHN
+    role: stealth_multirole
+    generation: "5"
+    combat_radius_km: 1250
+    payload_kg: 8000
+    rcs_band: VLO
+    radar_range_km: 200
+    cost_cr: 0
+    intro_year: 2025

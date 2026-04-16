@@ -1,0 +1,16 @@
+objectives:
+  - id: amca_operational_by_2035
+    title: Operational AMCA Mk1 squadron by 2035
+    description: Field a combat-ready squadron of AMCA Mk1 stealth fighters by end of FY 2034-35.
+    weight: 3
+    target_year: 2035
+  - id: maintain_42_squadrons
+    title: Maintain 42+ fighter squadron strength
+    description: End the campaign with 42 or more combat-ready IAF fighter squadrons.
+    weight: 2
+    target_year: 2036
+  - id: no_territorial_loss
+    title: No loss of sovereign territory in 10 years
+    description: Do not cede territorial control to adversary action across the campaign.
+    weight: 3
+    target_year: 2036

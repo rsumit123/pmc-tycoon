@@ -1,0 +1,19 @@
+bases:
+  - id: ambala
+    name: Ambala Air Force Station
+    lat: 30.3687
+    lon: 76.8100
+    runway_class: heavy
+    faction: IND
+  - id: hasimara
+    name: Hasimara Air Force Station
+    lat: 26.6833
+    lon: 89.3500
+    runway_class: heavy
+    faction: IND
+  - id: jodhpur
+    name: Jodhpur Air Force Station
+    lat: 26.2506
+    lon: 73.0489
+    runway_class: heavy
+    faction: IND

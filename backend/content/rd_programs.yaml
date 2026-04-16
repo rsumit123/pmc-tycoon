@@ -1,0 +1,13 @@
+programs:
+  - id: amca_mk1
+    name: AMCA Mk1
+    description: Indigenous 5th-generation stealth multirole fighter.
+    base_duration_quarters: 36
+    base_cost_cr: 150000
+    dependencies: []
+  - id: astra_mk2
+    name: Astra Mk2
+    description: 240km BVR air-to-air missile, entering series production July 2026.
+    base_duration_quarters: 4
+    base_cost_cr: 8000
+    dependencies: []
