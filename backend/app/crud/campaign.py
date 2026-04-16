@@ -41,3 +41,23 @@ def create_campaign(db: Session, payload: CampaignCreate) -> Campaign:
 
 def get_campaign(db: Session, campaign_id: int) -> Campaign | None:
     return db.query(Campaign).filter(Campaign.id == campaign_id).first()
+
+
+def advance_turn(db: Session, campaign: Campaign) -> Campaign:
+    if campaign.current_quarter == 4:
+        campaign.current_year += 1
+        campaign.current_quarter = 1
+    else:
+        campaign.current_quarter += 1
+
+    event = CampaignEvent(
+        campaign_id=campaign.id,
+        year=campaign.current_year,
+        quarter=campaign.current_quarter,
+        event_type="turn_advanced",
+        payload={},
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(campaign)
+    return campaign

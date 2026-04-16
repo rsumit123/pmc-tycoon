@@ -71,3 +71,39 @@ def test_create_campaign_rejects_invalid_difficulty(client):
         "objectives": [],
     })
     assert response.status_code == 422
+
+
+def test_advance_turn_increments_quarter(client):
+    created = client.post("/api/campaigns", json={
+        "name": "T",
+        "difficulty": "realistic",
+        "objectives": [],
+    }).json()
+
+    r = client.post(f"/api/campaigns/{created['id']}/advance")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["current_year"] == 2026
+    assert body["current_quarter"] == 3
+
+
+def test_advance_turn_rolls_year(client):
+    created = client.post("/api/campaigns", json={
+        "name": "T",
+        "difficulty": "realistic",
+        "objectives": [],
+    }).json()
+
+    # 2026 Q2 -> Q3 -> Q4 -> 2027 Q1
+    for _ in range(3):
+        r = client.post(f"/api/campaigns/{created['id']}/advance")
+        assert r.status_code == 200
+
+    final = client.get(f"/api/campaigns/{created['id']}").json()
+    assert final["current_year"] == 2027
+    assert final["current_quarter"] == 1
+
+
+def test_advance_turn_not_found(client):
+    r = client.post("/api/campaigns/99999/advance")
+    assert r.status_code == 404
