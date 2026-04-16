@@ -121,10 +121,10 @@ gcloud compute ssh socialflow \
 ### Database
 
 - **Engine:** SQLite
-- **Location:** `~/pmc-tycoon/backend/data/pmc_tycoon.db` (host-mounted volume)
-- **Init:** `init_data.py` runs automatically on container start (seeds aircraft, weapons, ships, missions)
+- **Location:** `~/pmc-tycoon/backend/data/sovereign_shield.db` (host-mounted volume)
+- **Init:** `Base.metadata.create_all` creates missing tables on container start; content is loaded from YAML files in `backend/content/` at request time.
 - **Schema changes:** SQLAlchemy `create_all` adds new columns/tables on restart. Existing data is preserved.
-- **Full reset:** Delete `backend/data/pmc_tycoon.db` on the VM, then restart the container.
+- **Full reset:** Delete `backend/data/sovereign_shield.db` on the VM, then restart the container.
 
 ### First-time VM setup
 

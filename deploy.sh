@@ -1,5 +1,5 @@
 #!/bin/bash
-# PMC Tycoon — One-command deploy script
+# Sovereign Shield — One-command deploy script
 # Usage: ./deploy.sh [frontend|backend|both]
 
 set -e
@@ -19,25 +19,15 @@ deploy_backend() {
     gcloud compute ssh socialflow \
         --project=polar-pillar-450607-b7 \
         --zone=us-east1-d \
-        --command="cd /home/rsumit123/pmc-tycoon && git pull && docker build -t defense-game-backend ./backend && docker stop defense-game-backend && docker rm defense-game-backend && docker run -d --name defense-game-backend -p 8010:8010 defense-game-backend"
+        --command="cd /home/rsumit123/pmc-tycoon && git pull && docker build -t defense-game-backend ./backend && docker rm -f defense-game-backend 2>/dev/null; docker run -d --name defense-game-backend -p 8010:8010 -v /home/rsumit123/pmc-tycoon/backend/data:/app/data -e OPENROUTER_API_KEY=\"\$OPENROUTER_API_KEY\" defense-game-backend"
     echo "✓ Backend deployed"
 }
 
 case "$TARGET" in
-    frontend|fe|f)
-        deploy_frontend
-        ;;
-    backend|be|b)
-        deploy_backend
-        ;;
-    both|all)
-        deploy_frontend
-        deploy_backend
-        ;;
-    *)
-        echo "Usage: ./deploy.sh [frontend|backend|both]"
-        exit 1
-        ;;
+    frontend|fe|f) deploy_frontend ;;
+    backend|be|b) deploy_backend ;;
+    both|all) deploy_frontend; deploy_backend ;;
+    *) echo "Usage: ./deploy.sh [frontend|backend|both]"; exit 1 ;;
 esac
 
 echo "═══ Deploy complete ═══"
