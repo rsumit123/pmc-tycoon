@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-04-16
+**Last updated:** 2026-04-17
 
 ---
 
@@ -13,7 +13,7 @@
 | # | Plan | Status | Plan file |
 |---|---|---|---|
 | 1 | Foundation (repo cleanup + minimal campaign lifecycle) | 🟢 done | [2026-04-16-foundation-plan.md](2026-04-16-foundation-plan.md) |
-| 2 | Turn Engine Core | 🔴 not started | *to be written* |
+| 2 | Turn Engine Core | 🟢 done | [2026-04-16-turn-engine-core-plan.md](2026-04-16-turn-engine-core-plan.md) |
 | 3 | Adversary Simulation & Intel | 🔴 not started | *to be written* |
 | 4 | Vignette Engine | 🔴 not started | *to be written* |
 | 5 | LLM Integration (OpenRouter) | 🔴 not started | *to be written* |
