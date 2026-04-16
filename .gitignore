@@ -8,8 +8,10 @@ frontend/dist/
 # Python
 __pycache__/
 *.py[cod]
+*.pyc
 *.egg-info/
 .venv/
+backend/.venv
 venv/
 env/
 
