@@ -117,6 +117,14 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         "rd_specs": specs,
     }
 
+    # Capture the FROM clock so events that describe this turn are tagged
+    # with the quarter they happened in (not the quarter we're advancing into).
+    # The exception is `turn_advanced`, which the engine emits with the post-
+    # advance clock in its payload — we still tag its DB row with the FROM
+    # clock for consistency with all other events from the same turn.
+    from_year = campaign.current_year
+    from_quarter = campaign.current_quarter
+
     result = engine_advance(ctx)
 
     campaign.current_year = result.next_year
@@ -145,8 +153,8 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
     for e in result.events:
         db.add(CampaignEvent(
             campaign_id=campaign.id,
-            year=campaign.current_year,
-            quarter=campaign.current_quarter,
+            year=from_year,
+            quarter=from_quarter,
             event_type=e["event_type"],
             payload=e["payload"],
         ))
