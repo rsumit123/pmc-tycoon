@@ -11,6 +11,7 @@ import { IntelContactsLayer } from "../components/map/IntelContactsLayer";
 import { LayerTogglePanel } from "../components/map/LayerTogglePanel";
 import { BaseSheet } from "../components/map/BaseSheet";
 import { YearEndRecapToast } from "../components/endgame/YearEndRecapToast";
+import { synthesizeContacts } from "../lib/intelContacts";
 
 export function CampaignMapView() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +27,7 @@ export function CampaignMapView() {
   const error = useCampaignStore((s) => s.error);
   const pendingVignettes = useCampaignStore((s) => s.pendingVignettes);
   const loadPendingVignettes = useCampaignStore((s) => s.loadPendingVignettes);
+  const intelCards = useCampaignStore((s) => s.intelCards);
 
   const selectedBaseId = useMapStore((s) => s.selectedBaseId);
   const setSelectedBase = useMapStore((s) => s.setSelectedBase);
@@ -76,6 +78,8 @@ export function CampaignMapView() {
     () => bases.find((b) => b.id === selectedBaseId) ?? null,
     [bases, selectedBaseId],
   );
+
+  const intelContacts = useMemo(() => synthesizeContacts(intelCards), [intelCards]);
 
   if (!campaign) return <div className="p-6">Loading…</div>;
 
@@ -150,7 +154,7 @@ export function CampaignMapView() {
         {activeLayers.intel_contacts && (
           <IntelContactsLayer
             map={mapInstance}
-            contacts={[]}
+            contacts={intelContacts}
             projectionVersion={projectionVersion}
           />
         )}
