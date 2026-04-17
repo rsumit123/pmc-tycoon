@@ -221,4 +221,10 @@ export const api = {
     );
     return data;
   },
+
+  exportCampaign: (campaignId: number) =>
+    http.get(`/api/campaigns/${campaignId}/export`).then((r) => r.data),
+
+  importCampaign: (data: Record<string, unknown>) =>
+    http.post<{ id: number }>("/api/campaigns/import", data).then((r) => r.data),
 };
