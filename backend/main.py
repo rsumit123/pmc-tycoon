@@ -13,6 +13,7 @@ from app.api.rd import router as rd_router
 from app.api.acquisitions import router as acquisitions_router
 from app.api.intel import router as intel_router
 from app.api.adversary import router as adversary_router
+from app.api.vignettes import router as vignettes_router
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ app.include_router(rd_router)
 app.include_router(acquisitions_router)
 app.include_router(intel_router)
 app.include_router(adversary_router)
+app.include_router(vignettes_router)
 
 
 @app.get("/")
