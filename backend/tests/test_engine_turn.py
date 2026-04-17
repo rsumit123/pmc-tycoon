@@ -107,3 +107,67 @@ def test_invalid_allocation_raises():
     import pytest
     with pytest.raises(AllocationError):
         advance(_ctx(allocation=bad))
+
+
+def test_adversary_subsystem_runs_and_returns_updated_states():
+    from app.content.loader import RoadmapEvent, RoadmapEffect
+    specs = {}
+    ctx = _ctx(
+        year=2026, quarter=3,
+        programs=[], orders=[], squadrons=[], specs=specs,
+    )
+    ctx["adversary_states"] = {
+        "PLAAF": {"inventory": {"j20a": 500}, "doctrine": "conservative",
+                  "active_systems": [], "forward_bases": ["hotan"]},
+    }
+    ctx["adversary_roadmap"] = [
+        RoadmapEvent(year=2026, quarter=3, faction="PLAAF",
+                     effect=RoadmapEffect(kind="inventory_delta", payload={"j20a": 60})),
+    ]
+    ctx["intel_templates"] = []
+    result = advance(ctx)
+    assert result.next_adversary_states["PLAAF"]["inventory"]["j20a"] == 560
+
+
+def test_intel_subsystem_generates_cards():
+    from app.content.loader import IntelTemplate
+    ctx = _ctx(year=2026, quarter=3)
+    ctx["adversary_states"] = {
+        "PLAAF": {"inventory": {"j20a": 500}, "doctrine": "conservative",
+                  "active_systems": [], "forward_bases": ["hotan"]},
+    }
+    ctx["adversary_roadmap"] = []
+    ctx["intel_templates"] = [
+        IntelTemplate(id=f"t{i}", faction="PLAAF", source_types=["IMINT"],
+                      headline_template="{count} J-20A observed",
+                      subject_type="force_count",
+                      payload_keys={"count": {"source": "inventory", "key": "j20a"}},
+                      trigger=None)
+        for i in range(6)
+    ]
+    result = advance(ctx)
+    assert 4 <= len(result.new_intel_cards) <= 7
+
+
+def test_doctrine_progression_runs_after_adversary_tick():
+    ctx = _ctx(year=2028, quarter=1)
+    ctx["adversary_states"] = {
+        "PLAAF": {"inventory": {"j20a": 680, "j35a": 100},
+                  "doctrine": "conservative",
+                  "active_systems": [], "forward_bases": []},
+    }
+    ctx["adversary_roadmap"] = []
+    ctx["intel_templates"] = []
+    result = advance(ctx)
+    assert result.next_adversary_states["PLAAF"]["doctrine"] == "integrated_ew"
+    assert any(e["event_type"] == "adversary_doctrine_shifted" for e in result.events)
+
+
+def test_missing_adversary_ctx_keys_default_to_empty():
+    """Existing tests don't pass adversary_states / roadmap / templates —
+    advance() should fall back to empty defaults gracefully."""
+    ctx = _ctx(year=2026, quarter=2)
+    # Do NOT set adversary_states / adversary_roadmap / intel_templates
+    result = advance(ctx)
+    assert result.next_adversary_states == {}
+    assert result.new_intel_cards == []
