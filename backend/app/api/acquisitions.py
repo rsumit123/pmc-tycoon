@@ -3,10 +3,20 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.crud.campaign import get_campaign
-from app.crud.acquisition import create_order, PlatformNotFound, InvalidDeliveryWindow
-from app.schemas.acquisition import AcquisitionCreatePayload, AcquisitionRead
+from app.crud.acquisition import create_order, list_orders, PlatformNotFound, InvalidDeliveryWindow
+from app.schemas.acquisition import AcquisitionCreatePayload, AcquisitionRead, AcquisitionListResponse
 
 router = APIRouter(prefix="/api/campaigns", tags=["acquisitions"])
+
+
+@router.get("/{campaign_id}/acquisitions", response_model=AcquisitionListResponse)
+def list_acquisitions_endpoint(campaign_id: int, db: Session = Depends(get_db)):
+    if get_campaign(db, campaign_id) is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    rows = list_orders(db, campaign_id)
+    return AcquisitionListResponse(
+        orders=[AcquisitionRead.model_validate(r) for r in rows]
+    )
 
 
 @router.post(

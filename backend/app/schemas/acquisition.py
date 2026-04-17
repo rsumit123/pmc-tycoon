@@ -25,3 +25,7 @@ class AcquisitionRead(BaseModel):
     total_cost_cr: int
 
     model_config = {"from_attributes": True}
+
+
+class AcquisitionListResponse(BaseModel):
+    orders: list[AcquisitionRead]

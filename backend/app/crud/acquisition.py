@@ -49,3 +49,9 @@ def create_order(
     db.commit()
     db.refresh(order)
     return order
+
+
+def list_orders(db: Session, campaign_id: int):
+    return db.query(AcquisitionOrder).filter(
+        AcquisitionOrder.campaign_id == campaign_id
+    ).order_by(AcquisitionOrder.id.asc()).all()
