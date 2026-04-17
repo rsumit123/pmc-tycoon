@@ -18,6 +18,9 @@ class PlatformSpec(BaseModel):
     cost_cr: int = 0
     intro_year: int = 2000
     image_url: str | None = None
+    procurable_by: list[str] = Field(default_factory=list)
+    default_first_delivery_quarters: int = 8
+    default_foc_quarters: int = 16
 
 
 class BaseSpec(BaseModel):

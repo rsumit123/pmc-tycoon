@@ -18,6 +18,8 @@ WEAPONS: dict[str, dict] = {
     "pl15":      {"nez_km":  85, "max_range_km": 250, "gen_bonus":  0.05},
     "pl17":      {"nez_km": 175, "max_range_km": 400, "gen_bonus":  0.10},
     "pl10":      {"nez_km":  15, "max_range_km":  20, "gen_bonus":  0.00},
+    "aim120d":   {"nez_km":  60, "max_range_km": 160, "gen_bonus":  0.08},
+    "aim9x":     {"nez_km":  15, "max_range_km":  35, "gen_bonus":  0.10},
 }
 
 PLATFORM_LOADOUTS: dict[str, dict[str, list[str]]] = {
@@ -42,6 +44,26 @@ PLATFORM_LOADOUTS: dict[str, dict[str, list[str]]] = {
     "j36_prototype": {"bvr": ["pl15"],       "wvr": ["pl10"]},
     "h6kj":       {"bvr": [],                "wvr": []},
     "kj500":      {"bvr": [],                "wvr": []},
+    "mig29_upg":  {"bvr": ["r77"],           "wvr": ["r73"]},
+    "jaguar_darin3": {"bvr": [],             "wvr": []},
+    "mig21_bison": {"bvr": ["r77"],          "wvr": ["r73"]},
+    "tejas_mk1":  {"bvr": ["astra_mk1"],     "wvr": ["r73"]},
+    "netra_aewc": {"bvr": [],                "wvr": []},
+    "il78_tanker": {"bvr": [],               "wvr": []},
+    "tedbf":      {"bvr": ["astra_mk2"],     "wvr": ["astra_mk1"]},
+    "ghatak_ucav": {"bvr": [],               "wvr": []},
+    "su35":       {"bvr": ["r77"],           "wvr": ["r73"]},
+    "f18e_super_hornet": {"bvr": ["aim120d"], "wvr": ["aim9x"]},
+    "f15ex":      {"bvr": ["aim120d"],       "wvr": ["aim9x"]},
+    "gripen_e":   {"bvr": ["meteor"],        "wvr": ["mica_ir"]},
+    "eurofighter_typhoon": {"bvr": ["meteor"], "wvr": ["mica_ir"]},
+    "mq9b_seaguardian": {"bvr": [],          "wvr": []},
+    "heron_tp":   {"bvr": [],                "wvr": []},
+    "h6n":        {"bvr": [],                "wvr": []},
+    "fujian":     {"bvr": [],                "wvr": []},
+    "type004_carrier": {"bvr": [],           "wvr": []},
+    "type055_destroyer": {"bvr": [],         "wvr": []},
+    "type093b_ssn": {"bvr": [],              "wvr": []},
 }
 
 GENERATION_SCORES: dict[str, float] = {

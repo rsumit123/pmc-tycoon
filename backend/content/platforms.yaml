@@ -1,4 +1,5 @@
 platforms:
+  # ===== INDIAN — Player procurable =====
   - id: rafale_f4
     name: Dassault Rafale F4
     origin: FR
@@ -10,6 +11,10 @@ platforms:
     radar_range_km: 200
     cost_cr: 4500
     intro_year: 2020
+    procurable_by: [IND]
+    default_first_delivery_quarters: 6
+    default_foc_quarters: 20
+
   - id: rafale_f5
     name: Dassault Rafale F5
     origin: FR
@@ -21,6 +26,10 @@ platforms:
     radar_range_km: 220
     cost_cr: 5000
     intro_year: 2030
+    procurable_by: [IND]
+    default_first_delivery_quarters: 8
+    default_foc_quarters: 24
+
   - id: tejas_mk1a
     name: HAL Tejas Mk1A
     origin: IND
@@ -32,6 +41,10 @@ platforms:
     radar_range_km: 150
     cost_cr: 500
     intro_year: 2024
+    procurable_by: [IND]
+    default_first_delivery_quarters: 4
+    default_foc_quarters: 12
+
   - id: tejas_mk2
     name: HAL Tejas Mk2
     origin: IND
@@ -43,6 +56,10 @@ platforms:
     radar_range_km: 180
     cost_cr: 800
     intro_year: 2033
+    procurable_by: [IND]
+    default_first_delivery_quarters: 4
+    default_foc_quarters: 16
+
   - id: su30_mki
     name: Sukhoi Su-30 MKI
     origin: IND
@@ -54,6 +71,10 @@ platforms:
     radar_range_km: 180
     cost_cr: 400
     intro_year: 2002
+    procurable_by: [IND]
+    default_first_delivery_quarters: 6
+    default_foc_quarters: 16
+
   - id: mirage2000
     name: Dassault Mirage 2000
     origin: IND
@@ -65,6 +86,10 @@ platforms:
     radar_range_km: 110
     cost_cr: 200
     intro_year: 1985
+    procurable_by: [IND]
+    default_first_delivery_quarters: 4
+    default_foc_quarters: 12
+
   - id: amca_mk1
     name: HAL AMCA Mk1
     origin: IND
@@ -76,6 +101,237 @@ platforms:
     radar_range_km: 200
     cost_cr: 1500
     intro_year: 2035
+    procurable_by: [IND]
+    default_first_delivery_quarters: 6
+    default_foc_quarters: 20
+
+  - id: tejas_mk1
+    name: HAL Tejas Mk1
+    origin: IND
+    role: multirole
+    generation: "4.5"
+    combat_radius_km: 400
+    payload_kg: 4000
+    rcs_band: reduced
+    radar_range_km: 120
+    cost_cr: 350
+    intro_year: 2019
+    procurable_by: [IND]
+    default_first_delivery_quarters: 4
+    default_foc_quarters: 10
+
+  - id: mig29_upg
+    name: MiG-29UPG
+    origin: IND
+    role: air_superiority
+    generation: "4"
+    combat_radius_km: 700
+    payload_kg: 4000
+    rcs_band: conventional
+    radar_range_km: 130
+    cost_cr: 250
+    intro_year: 2013
+    procurable_by: [IND]
+    default_first_delivery_quarters: 4
+    default_foc_quarters: 12
+
+  - id: jaguar_darin3
+    name: SEPECAT Jaguar DARIN-III
+    origin: IND
+    role: strike
+    generation: "4"
+    combat_radius_km: 1600
+    payload_kg: 4775
+    rcs_band: conventional
+    radar_range_km: 80
+    cost_cr: 180
+    intro_year: 2017
+    procurable_by: [IND]
+    default_first_delivery_quarters: 4
+    default_foc_quarters: 10
+
+  - id: mig21_bison
+    name: MiG-21 Bison
+    origin: IND
+    role: interceptor
+    generation: "3"
+    combat_radius_km: 660
+    payload_kg: 1500
+    rcs_band: conventional
+    radar_range_km: 80
+    cost_cr: 50
+    intro_year: 2006
+    procurable_by: []
+    default_first_delivery_quarters: 0
+    default_foc_quarters: 0
+
+  - id: netra_aewc
+    name: DRDO Netra AEW&C
+    origin: IND
+    role: awacs
+    generation: "4.5"
+    combat_radius_km: 2500
+    payload_kg: 0
+    rcs_band: large
+    radar_range_km: 375
+    cost_cr: 3000
+    intro_year: 2017
+    procurable_by: [IND]
+    default_first_delivery_quarters: 8
+    default_foc_quarters: 20
+
+  - id: il78_tanker
+    name: IL-78MKI Tanker
+    origin: IND
+    role: tanker
+    generation: "4"
+    combat_radius_km: 4000
+    payload_kg: 0
+    rcs_band: large
+    radar_range_km: 0
+    cost_cr: 1500
+    intro_year: 2003
+    procurable_by: [IND]
+    default_first_delivery_quarters: 6
+    default_foc_quarters: 16
+
+  - id: tedbf
+    name: HAL TEDBF
+    origin: IND
+    role: stealth_multirole
+    generation: "5"
+    combat_radius_km: 1200
+    payload_kg: 6000
+    rcs_band: LO
+    radar_range_km: 190
+    cost_cr: 1200
+    intro_year: 2032
+    procurable_by: [IND]
+    default_first_delivery_quarters: 6
+    default_foc_quarters: 20
+
+  - id: ghatak_ucav
+    name: Ghatak UCAV
+    origin: IND
+    role: stealth_strike
+    generation: "5"
+    combat_radius_km: 1500
+    payload_kg: 2000
+    rcs_band: VLO
+    radar_range_km: 0
+    cost_cr: 800
+    intro_year: 2031
+    procurable_by: [IND]
+    default_first_delivery_quarters: 4
+    default_foc_quarters: 12
+
+  # ===== FOREIGN — Player procurement options =====
+  - id: su35
+    name: Sukhoi Su-35
+    origin: RU
+    role: air_superiority
+    generation: "4.75"
+    combat_radius_km: 1600
+    payload_kg: 8000
+    rcs_band: conventional
+    radar_range_km: 200
+    cost_cr: 3500
+    intro_year: 2014
+    procurable_by: [IND]
+    default_first_delivery_quarters: 8
+    default_foc_quarters: 20
+
+  - id: f18e_super_hornet
+    name: F/A-18E Super Hornet
+    origin: US
+    role: multirole
+    generation: "4.5"
+    combat_radius_km: 740
+    payload_kg: 8050
+    rcs_band: reduced
+    radar_range_km: 190
+    cost_cr: 4000
+    intro_year: 2001
+    procurable_by: [IND]
+    default_first_delivery_quarters: 10
+    default_foc_quarters: 24
+
+  - id: f15ex
+    name: F-15EX Eagle II
+    origin: US
+    role: air_superiority
+    generation: "4.5"
+    combat_radius_km: 1270
+    payload_kg: 10400
+    rcs_band: conventional
+    radar_range_km: 210
+    cost_cr: 5500
+    intro_year: 2021
+    procurable_by: [IND]
+    default_first_delivery_quarters: 10
+    default_foc_quarters: 24
+
+  - id: gripen_e
+    name: Saab Gripen E
+    origin: SE
+    role: multirole
+    generation: "4.5"
+    combat_radius_km: 1350
+    payload_kg: 5300
+    rcs_band: reduced
+    radar_range_km: 180
+    cost_cr: 3200
+    intro_year: 2019
+    procurable_by: [IND]
+    default_first_delivery_quarters: 8
+    default_foc_quarters: 20
+
+  - id: eurofighter_typhoon
+    name: Eurofighter Typhoon
+    origin: EU
+    role: air_superiority
+    generation: "4.5"
+    combat_radius_km: 1400
+    payload_kg: 7500
+    rcs_band: reduced
+    radar_range_km: 200
+    cost_cr: 5000
+    intro_year: 2003
+    procurable_by: [IND]
+    default_first_delivery_quarters: 10
+    default_foc_quarters: 24
+
+  - id: mq9b_seaguardian
+    name: MQ-9B SeaGuardian
+    origin: US
+    role: isr
+    generation: "4.5"
+    combat_radius_km: 5500
+    payload_kg: 2150
+    rcs_band: conventional
+    radar_range_km: 180
+    cost_cr: 2000
+    intro_year: 2020
+    procurable_by: [IND]
+    default_first_delivery_quarters: 6
+    default_foc_quarters: 12
+
+  - id: heron_tp
+    name: IAI Heron TP
+    origin: IL
+    role: isr
+    generation: "4.5"
+    combat_radius_km: 4500
+    payload_kg: 1000
+    rcs_band: conventional
+    radar_range_km: 100
+    cost_cr: 800
+    intro_year: 2010
+    procurable_by: [IND]
+    default_first_delivery_quarters: 4
+    default_foc_quarters: 10
+
+  # ===== PLAAF — Adversary only =====
   - id: j20a
     name: Chengdu J-20A
     origin: CHN
@@ -87,17 +343,19 @@ platforms:
     radar_range_km: 220
     cost_cr: 0
     intro_year: 2017
-  - id: j10c
-    name: Chengdu J-10C
+
+  - id: j20s
+    name: Chengdu J-20S
     origin: CHN
-    role: multirole
-    generation: "4.5"
-    combat_radius_km: 1240
-    payload_kg: 5600
-    rcs_band: reduced
-    radar_range_km: 170
+    role: stealth_superiority
+    generation: "5"
+    combat_radius_km: 2000
+    payload_kg: 6500
+    rcs_band: VLO
+    radar_range_km: 230
     cost_cr: 0
-    intro_year: 2018
+    intro_year: 2024
+
   - id: j35a
     name: Shenyang J-35A
     origin: CHN
@@ -109,3 +367,197 @@ platforms:
     radar_range_km: 200
     cost_cr: 0
     intro_year: 2025
+
+  - id: j10c
+    name: Chengdu J-10C
+    origin: CHN
+    role: multirole
+    generation: "4.5"
+    combat_radius_km: 1240
+    payload_kg: 5600
+    rcs_band: reduced
+    radar_range_km: 170
+    cost_cr: 0
+    intro_year: 2018
+
+  - id: j16
+    name: Shenyang J-16
+    origin: CHN
+    role: multirole
+    generation: "4.5"
+    combat_radius_km: 1500
+    payload_kg: 12000
+    rcs_band: conventional
+    radar_range_km: 180
+    cost_cr: 0
+    intro_year: 2015
+
+  - id: j11b
+    name: Shenyang J-11B
+    origin: CHN
+    role: air_superiority
+    generation: "4"
+    combat_radius_km: 1500
+    payload_kg: 8000
+    rcs_band: conventional
+    radar_range_km: 160
+    cost_cr: 0
+    intro_year: 2007
+
+  - id: j36
+    name: Chengdu J-36
+    origin: CHN
+    role: stealth_superiority
+    generation: "6"
+    combat_radius_km: 2500
+    payload_kg: 8000
+    rcs_band: VLO
+    radar_range_km: 280
+    cost_cr: 0
+    intro_year: 2031
+
+  - id: j36_prototype
+    name: J-36 Prototype
+    origin: CHN
+    role: stealth_superiority
+    generation: "6"
+    combat_radius_km: 2200
+    payload_kg: 6000
+    rcs_band: VLO
+    radar_range_km: 250
+    cost_cr: 0
+    intro_year: 2028
+
+  - id: kj500
+    name: KJ-500 AEW&C
+    origin: CHN
+    role: awacs
+    generation: "4.5"
+    combat_radius_km: 3000
+    payload_kg: 0
+    rcs_band: large
+    radar_range_km: 450
+    cost_cr: 0
+    intro_year: 2015
+
+  - id: h6kj
+    name: Xian H-6K/J
+    origin: CHN
+    role: bomber
+    generation: "4"
+    combat_radius_km: 3500
+    payload_kg: 12000
+    rcs_band: large
+    radar_range_km: 120
+    cost_cr: 0
+    intro_year: 2011
+
+  - id: h6n
+    name: Xian H-6N
+    origin: CHN
+    role: bomber
+    generation: "4"
+    combat_radius_km: 4000
+    payload_kg: 15000
+    rcs_band: large
+    radar_range_km: 120
+    cost_cr: 0
+    intro_year: 2020
+
+  # ===== PAF — Adversary only =====
+  - id: j35e
+    name: Shenyang J-35E
+    origin: PAK
+    role: stealth_multirole
+    generation: "5"
+    combat_radius_km: 1200
+    payload_kg: 7500
+    rcs_band: VLO
+    radar_range_km: 190
+    cost_cr: 0
+    intro_year: 2026
+
+  - id: j10ce
+    name: Chengdu J-10CE
+    origin: PAK
+    role: multirole
+    generation: "4.5"
+    combat_radius_km: 1200
+    payload_kg: 5600
+    rcs_band: reduced
+    radar_range_km: 170
+    cost_cr: 0
+    intro_year: 2022
+
+  - id: jf17_blk3
+    name: PAC JF-17 Block 3
+    origin: PAK
+    role: multirole
+    generation: "4.5"
+    combat_radius_km: 1350
+    payload_kg: 3800
+    rcs_band: reduced
+    radar_range_km: 150
+    cost_cr: 0
+    intro_year: 2022
+
+  - id: f16_blk52
+    name: F-16 Block 52+
+    origin: PAK
+    role: multirole
+    generation: "4"
+    combat_radius_km: 1400
+    payload_kg: 7700
+    rcs_band: conventional
+    radar_range_km: 160
+    cost_cr: 0
+    intro_year: 2010
+
+  # ===== PLAN — Inventory-tracked naval assets =====
+  - id: fujian
+    name: CV-18 Fujian
+    origin: CHN
+    role: carrier
+    generation: "5"
+    combat_radius_km: 0
+    payload_kg: 0
+    rcs_band: large
+    radar_range_km: 300
+    cost_cr: 0
+    intro_year: 2024
+
+  - id: type004_carrier
+    name: Type 004
+    origin: CHN
+    role: carrier
+    generation: "5"
+    combat_radius_km: 0
+    payload_kg: 0
+    rcs_band: large
+    radar_range_km: 350
+    cost_cr: 0
+    intro_year: 2032
+
+  - id: type055_destroyer
+    name: Type 055 Renhai
+    origin: CHN
+    role: destroyer
+    generation: "5"
+    combat_radius_km: 0
+    payload_kg: 0
+    rcs_band: reduced
+    radar_range_km: 400
+    cost_cr: 0
+    intro_year: 2020
+
+  - id: type093b_ssn
+    name: Type 093B SSN
+    origin: CHN
+    role: submarine
+    generation: "5"
+    combat_radius_km: 0
+    payload_kg: 0
+    rcs_band: VLO
+    radar_range_km: 0
+    cost_cr: 0
+    intro_year: 2020
