@@ -18,6 +18,7 @@ The repo was previously called **PMC Tycoon** (a mercenary-contractor game). All
 - `docs/superpowers/plans/2026-04-16-turn-engine-core-plan.md` — Plan 2 (Turn Engine Core). **Done.** Pattern reference for engine + CRUD + API layering.
 - `docs/superpowers/plans/2026-04-17-adversary-simulation-intel-plan.md` — Plan 3 (Adversary + Intel). **Done.**
 - `docs/superpowers/plans/2026-04-17-vignette-engine-plan.md` — Plan 4 (Vignette Engine). **Done.**
+- `docs/superpowers/plans/2026-04-17-llm-integration-plan.md` — Plan 5 (LLM Integration / OpenRouter). **Done.**
 - `docs/DEPLOYMENT.md` — prod deploy runbook (Vercel frontend + GCP VM Docker backend).
 - `README.md` — dev workflow pointers.
 
@@ -27,7 +28,8 @@ The repo was previously called **PMC Tycoon** (a mercenary-contractor game). All
 - **Plan 2 (Turn Engine Core)** — ✅ done. Pure-function engine (rng / budget / rd / acquisition / readiness / turn), seeded-RNG orchestrator, replay-determinism test, 3 player-action APIs.
 - **Plan 3 (Adversary Simulation & Intel)** — ✅ done. Roadmap-driven PLAAF/PAF/PLAN evolution + intel generator with 5 source types + fog filter.
 - **Plan 4 (Vignette Engine)** — ✅ done. 260 backend tests passing. 8 MVP scenario archetypes; threat curve 0.15→0.55 linear over 40 quarters. Full engine: `engine/vignette/` (threat, generator, planning with haversine, detection vs RCS bands, BVR weapon table + engagement_pk, 3-round resolver with ROE modifiers). Three new APIs: `GET /vignettes/pending`, `GET /vignettes/{id}`, `POST /vignettes/{id}/commit`. Resolver deterministic per (campaign.seed, year, quarter); replay test locks this in end-to-end. Backpressure via pending_vignette_exists check.
-- **Next up: Plan 5 (LLM Integration — OpenRouter)** — LLM-generated AAR narratives (reads `Vignette.event_trace` + outcome), intel briefs every 2–3 quarters, emerging-ace names, year-end recaps, end-of-campaign retrospective. All cached by input hash. Scope in `ROADMAP.md` §Plan 5.
+- **Plan 5 (LLM Integration — OpenRouter)** — ✅ done. 296 backend tests passing. `backend/app/llm/` layered as client → cache → service → prompts. Five versioned prompt modules (`aar_v1`, `intel_brief_v1`, `ace_name_v1`, `year_recap_v1`, `retrospective_v1`) self-register via `REGISTRY`. `LLMCache` de-duplicates by sha256(kind:version:model:input_hash). `CampaignNarrative` persists per-campaign output with `UniqueConstraint(campaign_id, kind, subject_id)` — idempotent generate-if-missing. Six endpoints under `/api/campaigns/{id}/…`: vignette AAR, intel-briefs generate, vignette ace-name, year-recap generate, retrospective, list narratives. 409 on eligibility failure (NarrativeIneligibleError), 502 on upstream 5xx, 500 on bad requests. **No auto-emission from `advance_turn`** — frontend triggers explicitly, replay determinism guarded by `test_advance_turn_does_not_create_llm_rows`. Tests stub `llm_service.chat_completion` via monkeypatch; httpx.MockTransport used in client tests; no network ever touched in CI.
+- **Next up: Plan 6 (Frontend — Map + Core UI Primitives)** — MapLibre subcontinent map, platform-media pipeline from Wikimedia, reusable primitives (long-press dossier, commit-by-hold button, radar chart, swipe-stack). Scope in `ROADMAP.md` §Plan 6.
 
 ## Working rules (important — these are user preferences, not defaults)
 
@@ -79,6 +81,12 @@ Items flagged by post-review that deserve attention when the relevant future pla
 - **RCS_DETECTION_MULTIPLIER is dual-purposed** (drives both detection range and P_kill multiplier). Consider split or rename before Plan 10 content migration. (Plan 4)
 - **`datetime.utcnow()` deprecation** warnings across several CRUD files — opportunistic sweep when touching each file next. (Plans 1–4)
 - **`vignette_resolved` CampaignEvent payload** lacks AO + scenario_name (only `vignette_fired` has them). Retrospective (Plan 9) may want this on both. (Plan 4)
+- **No retry/backoff around OpenRouter.** A flaky upstream returns 502 to the frontend; re-clicking generate retries. Add single-retry with jitter in `app/llm/client.py::chat_completion` if playtesting shows friction. (Plan 5)
+- **Year-recap + retrospective inputs are partial in MVP.** `acquisitions_delivered`, `rd_milestones`, `notable_adversary_shifts`, `budget_efficiency_pct`, `notable_engagements`, `fifth_gen_squadrons_end` are all `[]` / `0` placeholders in `app/llm/service.py`. Plan 9 (Campaign End + Polish) should materialize these from `CampaignEvent` rows tagged with the year. (Plan 5)
+- **No auto-invocation from `advance_turn`.** Frontend must explicitly POST to generate each narrative (deliberate — keeps replay deterministic and `advance_turn` fast). Reconsider if playtesting shows friction; add a fire-and-forget background job path before landing any auto-triggers. (Plan 5)
+- **Ace-name endpoint returns `subject_id=null`** in its response because the picker is internal (`_pick_ace_squadron` picks squadron with most airframes). Clients resolve via `GET /narratives?kind=ace_name` which returns the proper `subject_id="sqn-{id}"`. If a cleaner API is needed, include the winning `squadron_id` in `GenerateResponse`. (Plan 5)
+- **`year_recap.vignettes_won`** currently counts all resolved vignettes, not wins (placeholder). Refine to filter on `outcome.objective_met` when Plan 9 revisits year-recap. (Plan 5)
+- **Token usage is logged in `LLMCache` but never surfaced.** Consider `GET /api/admin/llm-usage` before committing to OpenRouter credit spend tracking. (Plan 5)
 
 ## Conventions that matter across plans
 
