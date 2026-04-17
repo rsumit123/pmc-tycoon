@@ -3,6 +3,9 @@ import type {
   Campaign, CampaignCreatePayload, BaseMarker, Platform,
   RDProgramSpec, RDProgramState, AcquisitionOrder,
   BudgetAllocation, RDFundingLevel, RDUpdatePayload, AcquisitionCreatePayload,
+  Vignette, VignetteCommitPayload,
+  IntelCard,
+  GenerateNarrativeResponse,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -13,6 +16,11 @@ interface CampaignState {
   rdCatalog: RDProgramSpec[];
   rdActive: RDProgramState[];
   acquisitions: AcquisitionOrder[];
+  pendingVignettes: Vignette[];
+  vignetteById: Record<number, Vignette>;
+  intelCards: IntelCard[];
+  intelFilter: { year: number; quarter: number } | null;
+  narrativeCache: Record<string, GenerateNarrativeResponse>;
   loading: boolean;
   error: string | null;
 
@@ -28,6 +36,12 @@ interface CampaignState {
   startRdProgram: (programId: string, fundingLevel: RDFundingLevel) => Promise<void>;
   updateRdProgram: (programId: string, payload: RDUpdatePayload) => Promise<void>;
   createAcquisition: (payload: AcquisitionCreatePayload) => Promise<void>;
+  loadPendingVignettes: (campaignId: number) => Promise<void>;
+  loadVignette: (campaignId: number, vignetteId: number) => Promise<Vignette | null>;
+  commitVignette: (campaignId: number, vignetteId: number, payload: VignetteCommitPayload) => Promise<Vignette>;
+  loadIntel: (campaignId: number, filter?: { year: number; quarter: number }) => Promise<void>;
+  generateAAR: (campaignId: number, vignetteId: number) => Promise<GenerateNarrativeResponse>;
+  generateIntelBrief: (campaignId: number) => Promise<GenerateNarrativeResponse>;
   reset: () => void;
 }
 
@@ -38,6 +52,11 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   rdCatalog: [],
   rdActive: [],
   acquisitions: [],
+  pendingVignettes: [],
+  vignetteById: {},
+  intelCards: [],
+  intelFilter: null,
+  narrativeCache: {},
   loading: false,
   error: null,
 
@@ -72,6 +91,8 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       void get().loadBases(cid);
       void get().loadRdActive(cid);
       void get().loadAcquisitions(cid);
+      void get().loadPendingVignettes(cid);
+      void get().loadIntel(cid, { year: campaign.current_year, quarter: campaign.current_quarter });
     } catch (e) {
       set({ error: (e as Error).message, loading: false });
     }
@@ -176,9 +197,70 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     }
   },
 
+  loadPendingVignettes: async (campaignId) => {
+    try {
+      const { vignettes } = await api.getVignettesPending(campaignId);
+      set({ pendingVignettes: vignettes });
+    } catch (e) {
+      set({ error: (e as Error).message });
+    }
+  },
+
+  loadVignette: async (campaignId, vignetteId) => {
+    try {
+      const v = await api.getVignette(campaignId, vignetteId);
+      set((s) => ({ vignetteById: { ...s.vignetteById, [v.id]: v } }));
+      return v;
+    } catch (e) {
+      set({ error: (e as Error).message });
+      return null;
+    }
+  },
+
+  commitVignette: async (campaignId, vignetteId, payload) => {
+    set({ loading: true, error: null });
+    const v = await api.commitVignette(campaignId, vignetteId, payload);
+    set((s) => ({
+      vignetteById: { ...s.vignetteById, [v.id]: v },
+      pendingVignettes: s.pendingVignettes.filter((pv) => pv.id !== v.id),
+      loading: false,
+    }));
+    return v;
+  },
+
+  loadIntel: async (campaignId, filter) => {
+    try {
+      const { cards } = await api.getIntel(campaignId, filter ?? {});
+      set({ intelCards: cards, intelFilter: filter ?? null });
+    } catch (e) {
+      set({ error: (e as Error).message });
+    }
+  },
+
+  generateAAR: async (campaignId, vignetteId) => {
+    const key = `aar:vig-${vignetteId}`;
+    const cached = get().narrativeCache[key];
+    if (cached) return cached;
+    const resp = await api.generateAAR(campaignId, vignetteId);
+    set((s) => ({ narrativeCache: { ...s.narrativeCache, [key]: resp } }));
+    return resp;
+  },
+
+  generateIntelBrief: async (campaignId) => {
+    const c = get().campaign;
+    const key = c ? `intel_brief:${c.current_year}-Q${c.current_quarter}` : "intel_brief:current";
+    const cached = get().narrativeCache[key];
+    if (cached) return cached;
+    const resp = await api.generateIntelBrief(campaignId);
+    set((s) => ({ narrativeCache: { ...s.narrativeCache, [key]: resp } }));
+    return resp;
+  },
+
   reset: () => set({
     campaign: null, bases: [], platformsById: {},
     rdCatalog: [], rdActive: [], acquisitions: [],
+    pendingVignettes: [], vignetteById: {},
+    intelCards: [], intelFilter: null, narrativeCache: {},
     loading: false, error: null,
   }),
 }));
