@@ -20,9 +20,10 @@ The repo was previously called **PMC Tycoon** (a mercenary-contractor game). All
 
 ## Current status (last updated 2026-04-17)
 
-- **Plan 1 (Foundation)** — ✅ done. End-to-end loop works: create campaign in browser → advance turn → see state update.
-- **Plan 2 (Turn Engine Core)** — ✅ done. 110 backend tests passing. Pure-function engine (`backend/app/engine/`: rng / budget / rd / acquisition / readiness / turn), seeded-RNG orchestrator with subsystem namespacing, replay-determinism test locks in the contract. Three new APIs (`POST /budget`, `POST /rd`, `POST /acquisitions`). `create_campaign` now seeds the 2026-Q2 historical inheritance (3 bases, 3 named squadrons, MRFA Rafale + Tejas Mk1A acquisitions, AMCA/AMCA-engine/Astra Mk2/Tejas Mk2 R&D). Known limitations documented in the ROADMAP plan-done commit message.
-- **Next up: Plan 3 (Adversary Simulation & Intel)** — PLAAF/PAF/PLAN parallel-world sim on authored roadmap, intel card generation with HUMINT/SIGINT/IMINT/OSINT/ELINT sources, fog-of-war filter, some intel can be wrong. Scope outlined in `ROADMAP.md` §Plan 3. Detailed task-level plan not yet written — invoke `writing-plans` skill when executing.
+- **Plan 1 (Foundation)** — ✅ done. End-to-end loop works.
+- **Plan 2 (Turn Engine Core)** — ✅ done. Pure-function engine (rng / budget / rd / acquisition / readiness / turn), seeded-RNG orchestrator, replay-determinism test, 3 player-action APIs.
+- **Plan 3 (Adversary Simulation & Intel)** — ✅ done. 189 backend tests passing. PLAAF/PAF/PLAN evolve on a 30-event authored roadmap (2026-Q3 → 2036-Q1) with 3-tier doctrine progression per faction. Intel generator emits 4–7 cards/turn from 15 templates × 5 source types (HUMINT/SIGINT/IMINT/OSINT/ELINT) with per-source false-rates (10%–40%). Fog filter mutates `observed` but preserves `ground_truth` for retrospective. Two new APIs (`GET /intel`, `GET /adversary`). Determinism contract extended — same seed produces identical intel-card fingerprint + adversary state. Known carry-overs: false-rate skews low (~0.18 vs spec's ~0.33) due to source-type mix; tune later if needed.
+- **Next up: Plan 4 (Vignette Engine)** — scenario template system, procedural fill, deterministic combat resolver, threat-curve roll per turn (~35% mid-campaign). Ops Room planning state + commit API. Adversary state from Plan 3 feeds vignette adversary force composition. Scope in `ROADMAP.md` §Plan 4. Detailed task-level plan not yet written.
 
 ## Working rules (important — these are user preferences, not defaults)
 
