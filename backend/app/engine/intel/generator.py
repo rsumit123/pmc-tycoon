@@ -73,6 +73,15 @@ def _render_card(
         },
     }
 
+    # Populate alternates so the fog filter has something to swap to.
+    alternates: dict[str, list] = {}
+    if template.subject_type == "base_rotation":
+        alternates["base"] = list(state["forward_bases"])
+    if template.subject_type == "doctrine_guess":
+        from app.engine.adversary.state import DOCTRINE_LADDER
+        alternates["doctrine"] = list(DOCTRINE_LADDER.get(faction, []))
+    card["payload"]["_fog_alternates"] = alternates
+
     if not truth_value:
         apply_fog(card, rng)
         # Re-render headline from (mutated) observed values if applicable.
@@ -81,6 +90,8 @@ def _render_card(
         except (KeyError, ValueError):
             pass  # leave original headline if mutation dropped a placeholder key
 
+    # Strip alternates before returning so persisted payload is clean.
+    card["payload"].pop("_fog_alternates", None)
     return card
 
 
