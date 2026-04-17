@@ -33,6 +33,9 @@ from app.engine.readiness import tick_readiness
 from app.engine.adversary.tick import tick_adversary
 from app.engine.adversary.doctrine import progress_doctrine
 from app.engine.intel.generator import generate_intel
+from app.engine.vignette.threat import should_fire_vignette
+from app.engine.vignette.generator import pick_scenario, build_planning_state
+from app.engine.vignette.planning import compute_eligible_squadrons
 
 
 @dataclass
@@ -45,6 +48,7 @@ class EngineResult:
     next_squadrons: list[dict]
     next_adversary_states: dict[str, dict] = field(default_factory=dict)
     new_intel_cards: list[dict] = field(default_factory=list)
+    new_vignettes: list[dict] = field(default_factory=list)
     events: list[dict] = field(default_factory=list)
 
 
@@ -111,6 +115,37 @@ def advance(ctx: dict[str, Any]) -> EngineResult:
         )
         events.extend(intel_events)
 
+    # Vignette threat roll (skip if player already has a pending vignette)
+    new_vignettes: list[dict] = []
+    pending_exists = ctx.get("pending_vignette_exists", False)
+    scenario_templates_list = ctx.get("scenario_templates", [])
+    bases_reg = ctx.get("bases_registry", {})
+    platforms_reg = ctx.get("platforms_registry", {})
+    if not pending_exists and scenario_templates_list:
+        vignette_rng = subsystem_rng(seed, "vignette", year, quarter)
+        if should_fire_vignette(vignette_rng, year, quarter):
+            scenario = pick_scenario(scenario_templates_list, next_adversary,
+                                     year, quarter, vignette_rng)
+            if scenario is not None:
+                planning_state = build_planning_state(scenario, next_adversary, vignette_rng)
+                planning_state["eligible_squadrons"] = compute_eligible_squadrons(
+                    planning_state, next_squadrons, bases_reg, platforms_reg,
+                )
+                new_vignettes.append({
+                    "scenario_id": scenario.id,
+                    "planning_state": planning_state,
+                    "year": year,
+                    "quarter": quarter,
+                })
+                events.append({
+                    "event_type": "vignette_fired",
+                    "payload": {
+                        "scenario_id": scenario.id,
+                        "scenario_name": scenario.name,
+                        "ao": planning_state["ao"],
+                    },
+                })
+
     next_treasury = available_cr - sum(allocation.values())
     next_year, next_quarter = _next_clock(year, quarter)
 
@@ -134,5 +169,6 @@ def advance(ctx: dict[str, Any]) -> EngineResult:
         next_squadrons=next_squadrons,
         next_adversary_states=next_adversary,
         new_intel_cards=new_cards,
+        new_vignettes=new_vignettes,
         events=events,
     )

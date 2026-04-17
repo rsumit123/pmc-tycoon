@@ -171,3 +171,87 @@ def test_missing_adversary_ctx_keys_default_to_empty():
     result = advance(ctx)
     assert result.next_adversary_states == {}
     assert result.new_intel_cards == []
+
+
+def test_orchestrator_skips_vignette_when_pending_exists():
+    from app.content.loader import ScenarioTemplate
+    tpl = ScenarioTemplate(
+        id="tpl", name="X",
+        ao={"region": "x", "name": "X", "lat": 34.0, "lon": 78.5},
+        response_clock_minutes=45,
+        q_index_min=0, q_index_max=39, weight=1.0, requires={},
+        adversary_roster=[{"role": "CAP", "faction": "PLAAF",
+                            "platform_pool": ["j20a"], "count_range": [4, 4]}],
+        allowed_ind_roles=["CAP"], roe_options=["weapons_free"],
+        objective={"kind": "defend_airspace",
+                   "success_threshold": {"adv_kills_min": 1, "ind_losses_max": 4}},
+    )
+    ctx = _ctx(year=2031, quarter=1)
+    ctx["adversary_states"] = {
+        "PLAAF": {"inventory": {"j20a": 500}, "doctrine": "conservative",
+                  "active_systems": [], "forward_bases": []},
+    }
+    ctx["scenario_templates"] = [tpl]
+    ctx["pending_vignette_exists"] = True  # backpressure
+    result = advance(ctx)
+    assert result.new_vignettes == []
+
+
+def test_orchestrator_emits_vignette_when_threat_fires():
+    from app.content.loader import ScenarioTemplate
+    tpl = ScenarioTemplate(
+        id="tpl", name="X",
+        ao={"region": "x", "name": "X", "lat": 34.0, "lon": 78.5},
+        response_clock_minutes=45,
+        q_index_min=0, q_index_max=39, weight=1.0, requires={},
+        adversary_roster=[{"role": "CAP", "faction": "PLAAF",
+                            "platform_pool": ["j20a"], "count_range": [4, 4]}],
+        allowed_ind_roles=["CAP"], roe_options=["weapons_free"],
+        objective={"kind": "defend_airspace",
+                   "success_threshold": {"adv_kills_min": 1, "ind_losses_max": 4}},
+    )
+    fired = 0
+    for seed in range(20):
+        ctx = _ctx(seed=seed, year=2031, quarter=1)
+        ctx["adversary_states"] = {
+            "PLAAF": {"inventory": {"j20a": 500}, "doctrine": "conservative",
+                      "active_systems": [], "forward_bases": []},
+        }
+        ctx["scenario_templates"] = [tpl]
+        ctx["pending_vignette_exists"] = False
+        result = advance(ctx)
+        if result.new_vignettes:
+            fired += 1
+    assert 2 <= fired <= 15, f"fired={fired}/20, expected 2-15"
+
+
+def test_orchestrator_vignette_has_planning_state():
+    from app.content.loader import ScenarioTemplate
+    tpl = ScenarioTemplate(
+        id="tpl", name="X",
+        ao={"region": "x", "name": "X", "lat": 34.0, "lon": 78.5},
+        response_clock_minutes=45,
+        q_index_min=0, q_index_max=39, weight=1.0, requires={},
+        adversary_roster=[{"role": "CAP", "faction": "PLAAF",
+                            "platform_pool": ["j20a"], "count_range": [4, 4]}],
+        allowed_ind_roles=["CAP"], roe_options=["weapons_free"],
+        objective={"kind": "defend_airspace",
+                   "success_threshold": {"adv_kills_min": 1, "ind_losses_max": 4}},
+    )
+    for seed in range(100):
+        ctx = _ctx(seed=seed, year=2031, quarter=1)
+        ctx["adversary_states"] = {
+            "PLAAF": {"inventory": {"j20a": 500}, "doctrine": "conservative",
+                      "active_systems": [], "forward_bases": []},
+        }
+        ctx["scenario_templates"] = [tpl]
+        ctx["pending_vignette_exists"] = False
+        result = advance(ctx)
+        if result.new_vignettes:
+            v = result.new_vignettes[0]
+            assert v["scenario_id"] == "tpl"
+            assert v["planning_state"]["ao"]["lat"] == 34.0
+            assert v["year"] == 2031
+            assert v["quarter"] == 1
+            return
+    raise AssertionError("no vignette fired in 100 seeds")
