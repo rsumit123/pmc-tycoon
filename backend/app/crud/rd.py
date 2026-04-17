@@ -58,3 +58,12 @@ def update_program(
     db.commit()
     db.refresh(state)
     return state
+
+
+def list_active_programs(db: Session, campaign_id: int):
+    """Return ALL RDProgramState rows for a campaign (active, completed,
+    and cancelled). Name is a historical artifact — we want the full state
+    so the frontend can render status badges."""
+    return db.query(RDProgramState).filter(
+        RDProgramState.campaign_id == campaign_id
+    ).order_by(RDProgramState.id.asc()).all()

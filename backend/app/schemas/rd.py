@@ -26,3 +26,7 @@ class RDProgramRead(BaseModel):
     quarters_active: int
 
     model_config = {"from_attributes": True}
+
+
+class RDProgramStateListResponse(BaseModel):
+    programs: list[RDProgramRead]

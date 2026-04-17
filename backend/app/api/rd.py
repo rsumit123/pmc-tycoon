@@ -3,10 +3,20 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.crud.campaign import get_campaign
-from app.crud.rd import start_program, update_program, ProgramNotFound, ProgramAlreadyActive
-from app.schemas.rd import RDStartPayload, RDUpdatePayload, RDProgramRead
+from app.crud.rd import start_program, update_program, list_active_programs, ProgramNotFound, ProgramAlreadyActive
+from app.schemas.rd import RDStartPayload, RDUpdatePayload, RDProgramRead, RDProgramStateListResponse
 
 router = APIRouter(prefix="/api/campaigns", tags=["rd"])
+
+
+@router.get("/{campaign_id}/rd", response_model=RDProgramStateListResponse)
+def list_rd_programs_endpoint(campaign_id: int, db: Session = Depends(get_db)):
+    if get_campaign(db, campaign_id) is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    rows = list_active_programs(db, campaign_id)
+    return RDProgramStateListResponse(
+        programs=[RDProgramRead.model_validate(r) for r in rows]
+    )
 
 
 @router.post("/{campaign_id}/rd", response_model=RDProgramRead, status_code=status.HTTP_201_CREATED)

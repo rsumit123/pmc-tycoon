@@ -97,3 +97,82 @@ def test_update_unknown_program_404(client):
         "funding_level": "slow",
     })
     assert r.status_code == 404
+
+
+# --- Task 2: GET /api/campaigns/{id}/rd ---
+
+def _client():
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.pool import StaticPool
+    eng = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=eng)
+    Base.metadata.create_all(bind=eng)
+
+    def override_get_db():
+        db = TestingSessionLocal()
+        try: yield db
+        finally: db.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+    return TestClient(app), eng
+
+
+def test_list_rd_programs_404_for_missing_campaign():
+    client, eng = _client()
+    try:
+        r = client.get("/api/campaigns/99999/rd")
+        assert r.status_code == 404
+    finally:
+        app.dependency_overrides.clear()
+        Base.metadata.drop_all(bind=eng)
+
+
+def test_list_rd_programs_returns_seeded_programs():
+    client, eng = _client()
+    try:
+        created = client.post("/api/campaigns", json={
+            "name": "rd", "difficulty": "realistic", "objectives": [], "seed": 5,
+        }).json()
+        cid = created["id"]
+        r = client.get(f"/api/campaigns/{cid}/rd")
+        assert r.status_code == 200
+        body = r.json()
+        assert "programs" in body
+        assert len(body["programs"]) >= 1
+        first = body["programs"][0]
+        for key in ("id", "program_id", "progress_pct", "funding_level",
+                    "status", "milestones_hit", "cost_invested_cr",
+                    "quarters_active"):
+            assert key in first
+    finally:
+        app.dependency_overrides.clear()
+        Base.metadata.drop_all(bind=eng)
+
+
+def test_list_rd_programs_includes_cancelled_and_completed():
+    client, eng = _client()
+    try:
+        created = client.post("/api/campaigns", json={
+            "name": "rd2", "difficulty": "realistic", "objectives": [], "seed": 6,
+        }).json()
+        cid = created["id"]
+        s = client.post(f"/api/campaigns/{cid}/rd", json={
+            "program_id": "ghatak_ucav", "funding_level": "standard",
+        })
+        assert s.status_code == 201
+        c = client.post(f"/api/campaigns/{cid}/rd/ghatak_ucav", json={
+            "status": "cancelled",
+        })
+        assert c.status_code == 200
+
+        r = client.get(f"/api/campaigns/{cid}/rd")
+        program_ids = [p["program_id"] for p in r.json()["programs"]]
+        assert "ghatak_ucav" in program_ids
+    finally:
+        app.dependency_overrides.clear()
+        Base.metadata.drop_all(bind=eng)
