@@ -20,6 +20,7 @@ import type {
   CampaignNarrativeListResponse,
   GenerateNarrativeResponse,
   NarrativeKind,
+  CampaignSummary,
 } from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
@@ -178,6 +179,32 @@ export const api = {
   async generateIntelBrief(campaignId: number): Promise<GenerateNarrativeResponse> {
     const { data } = await http.post<GenerateNarrativeResponse>(
       `/api/campaigns/${campaignId}/intel-briefs/generate`,
+    );
+    return data;
+  },
+
+  async getCampaignSummary(campaignId: number): Promise<CampaignSummary> {
+    const { data } = await http.get<CampaignSummary>(
+      `/api/campaigns/${campaignId}/summary`,
+    );
+    return data;
+  },
+
+  async generateYearRecap(
+    campaignId: number,
+    year: number,
+  ): Promise<GenerateNarrativeResponse> {
+    const { data } = await http.post<GenerateNarrativeResponse>(
+      `/api/campaigns/${campaignId}/year-recap/generate`,
+      null,
+      { params: { year } },
+    );
+    return data;
+  },
+
+  async generateRetrospective(campaignId: number): Promise<GenerateNarrativeResponse> {
+    const { data } = await http.post<GenerateNarrativeResponse>(
+      `/api/campaigns/${campaignId}/retrospective`,
     );
     return data;
   },

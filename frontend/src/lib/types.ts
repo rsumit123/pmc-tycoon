@@ -310,3 +310,48 @@ export interface RDUpdatePayload {
   funding_level?: RDFundingLevel;
   status?: RDStatus;
 }
+
+// ---------- Plan 9: endgame types ----------
+
+export interface YearSnapshot {
+  year: number;
+  end_treasury_cr: number;
+  vignettes_resolved: number;
+  vignettes_won: number;
+  deliveries: number;
+  rd_completions: number;
+}
+
+export interface ForceStructureSummary {
+  squadrons_end: number;
+  total_airframes: number;
+  fifth_gen_squadrons: number;
+}
+
+export interface AceSummary {
+  squadron_id: number;
+  squadron_name: string;
+  platform_id: string;
+  ace_name: string;
+  awarded_year: number;
+  awarded_quarter: number;
+}
+
+export interface CampaignSummary {
+  campaign_id: number;
+  name: string;
+  difficulty: Difficulty;
+  starting_year: number;
+  current_year: number;
+  current_quarter: number;
+  budget_cr: number;
+  reputation: number;
+  year_snapshots: YearSnapshot[];
+  force_structure: ForceStructureSummary;
+  vignettes_won: number;
+  vignettes_lost: number;
+  vignettes_total: number;
+  ace_count: number;
+  aces: AceSummary[];
+  is_complete: boolean;
+}
