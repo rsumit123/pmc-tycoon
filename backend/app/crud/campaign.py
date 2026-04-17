@@ -8,11 +8,18 @@ from app.models.acquisition import AcquisitionOrder
 from app.models.squadron import Squadron
 from app.models.adversary import AdversaryState
 from app.models.intel import IntelCard
+from app.models.vignette import Vignette
+from app.models.campaign_base import CampaignBase
 from app.schemas.campaign import CampaignCreate
 from app.engine.turn import advance as engine_advance
 from app.content.registry import rd_programs as rd_program_specs
 from app.content.registry import adversary_roadmap as adversary_roadmap_reg
 from app.content.registry import intel_templates as intel_templates_reg
+from app.content.registry import (
+    scenario_templates as scenario_templates_reg,
+    bases as bases_reg,
+    platforms as platforms_reg,
+)
 
 
 STARTING_BUDGET_CR = 620000  # ~₹6.2L cr — 1 year cushion of pre-existing reserves
@@ -87,7 +94,15 @@ def _serialize_order(order: AcquisitionOrder) -> dict:
 
 
 def _serialize_squadron(sq: Squadron) -> dict:
-    return {"id": sq.id, "readiness_pct": sq.readiness_pct}
+    return {
+        "id": sq.id,
+        "name": sq.name,
+        "platform_id": sq.platform_id,
+        "base_id": sq.base_id,
+        "strength": sq.strength,
+        "readiness_pct": sq.readiness_pct,
+        "xp": sq.xp,
+    }
 
 
 def advance_turn(db: Session, campaign: Campaign) -> Campaign:
@@ -95,6 +110,36 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
     acq_rows = db.query(AcquisitionOrder).filter(AcquisitionOrder.campaign_id == campaign.id).all()
     sq_rows = db.query(Squadron).filter(Squadron.campaign_id == campaign.id).all()
     adv_rows = db.query(AdversaryState).filter(AdversaryState.campaign_id == campaign.id).all()
+
+    base_rows = db.query(CampaignBase).filter(CampaignBase.campaign_id == campaign.id).all()
+    # Build a mapping from base_id -> {name, lat, lon} using the content
+    # registry for lat/lon (CampaignBase only carries template_id + config).
+    base_templates = bases_reg()
+    bases_dict = {}
+    for row in base_rows:
+        tpl = base_templates.get(row.template_id)
+        if tpl is None:
+            continue
+        bases_dict[row.id] = {
+            "name": tpl.name,
+            "lat": tpl.lat,
+            "lon": tpl.lon,
+        }
+    # Platforms registry: flat dict of platform_id -> {combat_radius_km, generation, radar_range_km, rcs_band}
+    platforms_dict = {
+        pid: {
+            "combat_radius_km": p.combat_radius_km,
+            "generation": p.generation,
+            "radar_range_km": p.radar_range_km,
+            "rcs_band": p.rcs_band,
+        }
+        for pid, p in platforms_reg().items()
+    }
+
+    pending_exists = db.query(Vignette).filter(
+        Vignette.campaign_id == campaign.id,
+        Vignette.status == "pending",
+    ).first() is not None
 
     # Convert content RDProgramSpec -> dict the engine expects
     specs = {
@@ -123,6 +168,10 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         "adversary_states": {row.faction: dict(row.state) for row in adv_rows},
         "adversary_roadmap": adversary_roadmap_reg(),
         "intel_templates": intel_templates_reg(),
+        "scenario_templates": scenario_templates_reg(),
+        "bases_registry": bases_dict,
+        "platforms_registry": platforms_dict,
+        "pending_vignette_exists": pending_exists,
     }
 
     # Capture the FROM clock so events that describe this turn are tagged
@@ -174,6 +223,20 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
             confidence=card["confidence"],
             truth_value=card["truth_value"],
             payload=card["payload"],
+        ))
+
+    for v in result.new_vignettes:
+        db.add(Vignette(
+            campaign_id=campaign.id,
+            year=v["year"],
+            quarter=v["quarter"],
+            scenario_id=v["scenario_id"],
+            status="pending",
+            planning_state=v["planning_state"],
+            committed_force=None,
+            event_trace=[],
+            aar_text="",
+            outcome={},
         ))
 
     for e in result.events:
