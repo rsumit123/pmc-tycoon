@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.llm.client import chat_completion
 from app.llm.cache import get_or_generate
-from app.llm.prompts import aar_v1, intel_brief_v1, ace_name_v1, year_recap_v1, year_recap_v2, retrospective_v1
+from app.llm.prompts import aar_v1, intel_brief_v1, ace_name_v1, year_recap_v1, year_recap_v2, retrospective_v1, retrospective_v2
 from app.llm.prompts import cache_key as make_cache_key
 from app.crud.narrative import find_narrative, write_narrative
 
@@ -288,6 +288,24 @@ def _q40_completed(campaign: Campaign) -> bool:
     )
 
 
+_FIFTH_GEN_PLATFORM_IDS = {"amca_mk1", "amca_mk2"}
+
+_SQUADRONS_START_APPROX = 31  # Historical snapshot unavailable; IAF ~31 sq in 2026
+
+
+def _evaluate_objective(obj_id: str, squadrons: list, resolved_vigs: list) -> str:
+    """Return 'pass' or 'fail' for a known objective id, else 'unknown'."""
+    if obj_id == "amca_operational_by_2035":
+        return "pass" if any(s.platform_id in _FIFTH_GEN_PLATFORM_IDS for s in squadrons) else "fail"
+    if obj_id == "maintain_42_squadrons":
+        return "pass" if len(squadrons) >= 42 else "fail"
+    if obj_id == "no_territorial_loss":
+        # Fail if ANY resolved vignette had objective not met
+        any_lost = any(not (v.outcome or {}).get("objective_met", True) for v in resolved_vigs)
+        return "fail" if any_lost else "pass"
+    return "unknown"
+
+
 def generate_retrospective(db: Session, campaign: Campaign) -> tuple[str, bool]:
     if not _q40_completed(campaign):
         raise NarrativeIneligibleError("Q40 (2036-Q1) not yet completed")
@@ -296,42 +314,81 @@ def generate_retrospective(db: Session, campaign: Campaign) -> tuple[str, bool]:
     if existing is not None:
         return existing.text, True
 
+    from app.content.registry import objectives as objectives_reg
+
     adv_rows = db.query(AdversaryState).filter(AdversaryState.campaign_id == campaign.id).all()
     ace_count = db.query(Squadron).filter(
         Squadron.campaign_id == campaign.id, Squadron.ace_name.isnot(None)
     ).count()
-    squadrons_end = db.query(Squadron).filter(Squadron.campaign_id == campaign.id).count()
+    squadrons = db.query(Squadron).filter(Squadron.campaign_id == campaign.id).all()
+    squadrons_end = len(squadrons)
+
+    fifth_gen_count = sum(1 for s in squadrons if s.platform_id in _FIFTH_GEN_PLATFORM_IDS)
+
+    # Resolved vignettes for notable_engagements + objective evaluation
+    resolved_vigs = db.query(Vignette).filter(
+        Vignette.campaign_id == campaign.id,
+        Vignette.status == "resolved",
+    ).all()
+
+    notable_engagements = [
+        {
+            "scenario_name": v.planning_state.get("scenario_name", v.scenario_id),
+            "year": v.year,
+            "quarter": v.quarter,
+            "won": bool((v.outcome or {}).get("objective_met", False)),
+        }
+        for v in resolved_vigs
+    ]
+
+    # Budget efficiency: derived from turn_advanced events
+    turn_events = db.query(CampaignEvent).filter(
+        CampaignEvent.campaign_id == campaign.id,
+        CampaignEvent.event_type == "turn_advanced",
+    ).all()
+    total_grants = sum(e.payload.get("budget_grant_cr", 0) for e in turn_events)
+    spent = total_grants - campaign.budget_cr
+    if total_grants > 0:
+        budget_efficiency_pct = max(0, min(100, round(100 * spent / total_grants)))
+    else:
+        budget_efficiency_pct = 0
+
+    # Objective scorecard
+    obj_registry = objectives_reg()
+    obj_ids: list[str] = campaign.objectives_json or []
+    objectives_scorecard = []
+    for obj_id in obj_ids:
+        spec = obj_registry.get(obj_id)
+        name = spec.title if spec else obj_id
+        status = _evaluate_objective(obj_id, squadrons, resolved_vigs)
+        objectives_scorecard.append({"id": obj_id, "name": name, "status": status, "detail": ""})
 
     inputs = {
         "final_year": campaign.current_year, "final_quarter": campaign.current_quarter,
-        "objectives_scorecard": [
-            {"id": obj.get("id", "?"), "name": obj.get("name", ""),
-             "status": "unknown", "detail": ""}
-            for obj in (campaign.objectives_json or [])
-        ],
+        "objectives_scorecard": objectives_scorecard,
         "force_structure_delta": {
-            "squadrons_start": 0,  # MVP placeholder
+            "squadrons_start": _SQUADRONS_START_APPROX,
             "squadrons_end": squadrons_end,
-            "fifth_gen_squadrons_end": 0,  # MVP placeholder; Plan 9 polishes
+            "fifth_gen_squadrons_end": fifth_gen_count,
         },
-        "budget_efficiency_pct": 0,
+        "budget_efficiency_pct": budget_efficiency_pct,
         "ace_count": ace_count,
-        "notable_engagements": [],
+        "notable_engagements": notable_engagements,
         "adversary_final_state": {r.faction: dict(r.state) for r in adv_rows},
     }
-    ihash = retrospective_v1.build_input_hash(inputs)
-    ckey = make_cache_key(retrospective_v1.KIND, retrospective_v1.VERSION, settings.openrouter_model, ihash)
+    ihash = retrospective_v2.build_input_hash(inputs)
+    ckey = make_cache_key(retrospective_v2.KIND, retrospective_v2.VERSION, settings.openrouter_model, ihash)
     text, cached = get_or_generate(
-        db, cache_key=ckey, prompt_kind=retrospective_v1.KIND,
-        prompt_version=retrospective_v1.VERSION,
-        build_messages=lambda: retrospective_v1.build_messages(inputs),
+        db, cache_key=ckey, prompt_kind=retrospective_v2.KIND,
+        prompt_version=retrospective_v2.VERSION,
+        build_messages=lambda: retrospective_v2.build_messages(inputs),
         chat_completion_fn=chat_completion,
     )
     write_narrative(
         db, campaign_id=campaign.id, kind="retrospective",
         year=campaign.current_year, quarter=campaign.current_quarter,
         subject_id=subject_id, text=text,
-        prompt_version=retrospective_v1.VERSION, input_hash=ihash,
+        prompt_version=retrospective_v2.VERSION, input_hash=ihash,
     )
     db.commit()
     return text, cached
