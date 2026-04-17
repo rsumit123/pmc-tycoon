@@ -4,6 +4,7 @@ import { useCampaignStore } from "../store/campaignStore";
 import { BudgetAllocator } from "../components/procurement/BudgetAllocator";
 import { RDDashboard } from "../components/procurement/RDDashboard";
 import { AcquisitionPipeline } from "../components/procurement/AcquisitionPipeline";
+import { DiplomacyStrip } from "../components/procurement/DiplomacyStrip";
 import type { BudgetAllocation } from "../lib/types";
 
 type Tab = "budget" | "rd" | "acquisitions";
@@ -131,14 +132,17 @@ export function ProcurementHub() {
           />
         )}
         {activeTab === "acquisitions" && (
-          <AcquisitionPipeline
-            platforms={platformList}
-            orders={acquisitions}
-            currentYear={campaign.current_year}
-            currentQuarter={campaign.current_quarter}
-            onSign={(payload) => createAcquisition(payload)}
-            disabled={loading}
-          />
+          <>
+            <DiplomacyStrip />
+            <AcquisitionPipeline
+              platforms={platformList}
+              orders={acquisitions}
+              currentYear={campaign.current_year}
+              currentQuarter={campaign.current_quarter}
+              onSign={(payload) => createAcquisition(payload)}
+              disabled={loading}
+            />
+          </>
         )}
       </main>
     </div>

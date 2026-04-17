@@ -1,0 +1,25 @@
+relations:
+  - country: France
+    code: FR
+    level: allied
+    description: Strategic partner. Rafale deal anchor. Full technology transfer.
+  - country: Russia
+    code: RU
+    level: warm
+    description: Legacy defense partner. Su-30 backbone. S-400 delivered.
+  - country: United States
+    code: US
+    level: warm
+    description: Growing defense ties. MQ-9B SeaGuardian offered. DTTI framework.
+  - country: Israel
+    code: IL
+    level: allied
+    description: Close defense-tech partner. Heron TP, Barak systems, sensors.
+  - country: Sweden
+    code: SE
+    level: neutral
+    description: Gripen E offered through MRFA. No prior defense relationship.
+  - country: European Union
+    code: EU
+    level: warm
+    description: Eurofighter consortium offered through MRFA. Mixed bilateral ties.
