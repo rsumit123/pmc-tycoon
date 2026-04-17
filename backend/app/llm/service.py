@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.llm.client import chat_completion
 from app.llm.cache import get_or_generate
-from app.llm.prompts import aar_v1, intel_brief_v1, ace_name_v1, year_recap_v1, retrospective_v1
+from app.llm.prompts import aar_v1, intel_brief_v1, ace_name_v1, year_recap_v1, year_recap_v2, retrospective_v1
 from app.llm.prompts import cache_key as make_cache_key
 from app.crud.narrative import find_narrative, write_narrative
 
@@ -24,6 +24,7 @@ from app.models.squadron import Squadron
 from app.models.adversary import AdversaryState
 from app.models.intel import IntelCard
 from app.models.campaign_narrative import CampaignNarrative
+from app.models.event import CampaignEvent
 
 
 class NarrativeIneligibleError(RuntimeError):
@@ -187,6 +188,72 @@ def generate_ace_name(db: Session, campaign: Campaign, vignette: Vignette) -> tu
 
 # ----- Year recap --------------------------------------------------------
 
+def _enrich_year_recap_inputs(db: Session, campaign: Campaign, year: int) -> dict:
+    """Build enriched input dict for year_recap_v2 from CampaignEvent rows."""
+    events = db.query(CampaignEvent).filter(
+        CampaignEvent.campaign_id == campaign.id,
+        CampaignEvent.year == year,
+    ).all()
+
+    # Treasury: first Q's starting value from turn_advanced, last Q's ending value
+    turn_events = [e for e in events if e.event_type == "turn_advanced"]
+    turn_events_sorted = sorted(turn_events, key=lambda e: e.quarter)
+    starting_treasury_cr = (
+        turn_events_sorted[0].payload.get("treasury_before_cr", 0)
+        if turn_events_sorted else 0
+    )
+    ending_treasury_cr = (
+        turn_events_sorted[-1].payload.get("treasury_after_cr", campaign.budget_cr)
+        if turn_events_sorted else (campaign.budget_cr if year + 1 == campaign.current_year else 0)
+    )
+
+    # Deliveries from acquisition_delivery events
+    acquisitions_delivered = [
+        e.payload.get("platform_id", "unknown")
+        for e in events if e.event_type == "acquisition_delivery"
+    ]
+
+    # R&D milestones from rd_milestone + rd_completed events
+    rd_milestones = [
+        e.payload.get("program_id", "unknown")
+        for e in events if e.event_type in ("rd_milestone", "rd_completed")
+    ]
+
+    # Vignette counts — resolved and actually won (objective_met)
+    resolved_vigs = db.query(Vignette).filter(
+        Vignette.campaign_id == campaign.id,
+        Vignette.year == year,
+        Vignette.status == "resolved",
+    ).all()
+    vignettes_resolved = len(resolved_vigs)
+    vignettes_won = sum(
+        1 for v in resolved_vigs
+        if (v.outcome or {}).get("objective_met", False)
+    )
+
+    # Adversary shifts from roadmap + doctrine events
+    adv_shift_types = ("adversary_roadmap_event_applied", "adversary_doctrine_shifted")
+    notable_adversary_shifts = []
+    for e in events:
+        if e.event_type in adv_shift_types:
+            faction = e.payload.get("faction", "")
+            description = e.payload.get("description") or e.payload.get("event_id", "")
+            shift = f"{faction}: {description}".strip(": ")
+            if shift:
+                notable_adversary_shifts.append(shift)
+
+    return {
+        "year": year,
+        "starting_treasury_cr": starting_treasury_cr,
+        "ending_treasury_cr": ending_treasury_cr,
+        "acquisitions_delivered": acquisitions_delivered,
+        "rd_milestones": rd_milestones,
+        "vignettes_resolved": vignettes_resolved,
+        "vignettes_won": vignettes_won,
+        "notable_adversary_shifts": notable_adversary_shifts,
+    }
+
+
 def generate_year_recap(db: Session, campaign: Campaign, year: int) -> tuple[str, bool]:
     if year >= campaign.current_year:
         raise NarrativeIneligibleError(f"year {year} is not yet closed")
@@ -195,34 +262,19 @@ def generate_year_recap(db: Session, campaign: Campaign, year: int) -> tuple[str
     if existing is not None:
         return existing.text, True
 
-    inputs = {
-        "year": year,
-        "starting_treasury_cr": 0,  # MVP: we don't snapshot historical treasury
-        "ending_treasury_cr": campaign.budget_cr if year + 1 == campaign.current_year else 0,
-        "acquisitions_delivered": [],   # MVP: left empty; Plan 9 polish fills these in
-        "rd_milestones": [],
-        "vignettes_resolved": db.query(Vignette).filter(
-            Vignette.campaign_id == campaign.id, Vignette.year == year,
-            Vignette.status == "resolved",
-        ).count(),
-        "vignettes_won": db.query(Vignette).filter(
-            Vignette.campaign_id == campaign.id, Vignette.year == year,
-            Vignette.status == "resolved",
-        ).count(),  # placeholder; Plan 9 refines with outcome.objective_met filter
-        "notable_adversary_shifts": [],
-    }
-    ihash = year_recap_v1.build_input_hash(inputs)
-    ckey = make_cache_key(year_recap_v1.KIND, year_recap_v1.VERSION, settings.openrouter_model, ihash)
+    inputs = _enrich_year_recap_inputs(db, campaign, year)
+    ihash = year_recap_v2.build_input_hash(inputs)
+    ckey = make_cache_key(year_recap_v2.KIND, year_recap_v2.VERSION, settings.openrouter_model, ihash)
     text, cached = get_or_generate(
-        db, cache_key=ckey, prompt_kind=year_recap_v1.KIND,
-        prompt_version=year_recap_v1.VERSION,
-        build_messages=lambda: year_recap_v1.build_messages(inputs),
+        db, cache_key=ckey, prompt_kind=year_recap_v2.KIND,
+        prompt_version=year_recap_v2.VERSION,
+        build_messages=lambda: year_recap_v2.build_messages(inputs),
         chat_completion_fn=chat_completion,
     )
     write_narrative(
         db, campaign_id=campaign.id, kind="year_recap",
         year=year, quarter=4, subject_id=subject_id, text=text,
-        prompt_version=year_recap_v1.VERSION, input_hash=ihash,
+        prompt_version=year_recap_v2.VERSION, input_hash=ihash,
     )
     db.commit()
     return text, cached
