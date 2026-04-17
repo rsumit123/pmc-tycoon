@@ -124,10 +124,18 @@ def test_vignette_create(db):
         year=2029,
         quarter=3,
         scenario_id="lac_air_incursion_limited",
-        event_trace=[{"t": 0, "evt": "detect"}],
-        aar_text="...",
-        outcome={"india_kia": 1, "adversary_kia": 3},
+        status="pending",
+        planning_state={"ao": {"lat": 34.0, "lon": 78.5}},
+        committed_force=None,
+        event_trace=[],
+        aar_text="",
+        outcome={},
     )
     db.add(v)
     db.commit()
+    db.refresh(v)
     assert v.id is not None
+    assert v.status == "pending"
+    assert v.planning_state["ao"]["lat"] == 34.0
+    assert v.committed_force is None
+    assert v.resolved_at is None
