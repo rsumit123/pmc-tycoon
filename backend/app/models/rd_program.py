@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, ForeignKey, JSON
+from sqlalchemy import String, Integer, ForeignKey, JSON, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -6,6 +6,9 @@ from app.db.base import Base
 
 class RDProgramState(Base):
     __tablename__ = "rd_program_states"
+    __table_args__ = (
+        UniqueConstraint("campaign_id", "program_id", name="uq_campaign_program"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     campaign_id: Mapped[int] = mapped_column(ForeignKey("campaigns.id"), index=True)
