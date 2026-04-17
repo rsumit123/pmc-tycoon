@@ -1,9 +1,14 @@
 import axios from "axios";
-import type { Campaign, CampaignCreatePayload } from "./types";
+import type {
+  Campaign,
+  CampaignCreatePayload,
+  PlatformListResponse,
+  BaseListResponse,
+} from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
 
-const http = axios.create({ baseURL, timeout: 10_000 });
+export const http = axios.create({ baseURL, timeout: 10_000 });
 
 export const api = {
   async createCampaign(payload: CampaignCreatePayload): Promise<Campaign> {
@@ -18,6 +23,18 @@ export const api = {
 
   async advanceTurn(id: number): Promise<Campaign> {
     const { data } = await http.post<Campaign>(`/api/campaigns/${id}/advance`);
+    return data;
+  },
+
+  async getPlatforms(): Promise<PlatformListResponse> {
+    const { data } = await http.get<PlatformListResponse>("/api/content/platforms");
+    return data;
+  },
+
+  async getBases(campaignId: number): Promise<BaseListResponse> {
+    const { data } = await http.get<BaseListResponse>(
+      `/api/campaigns/${campaignId}/bases`,
+    );
     return data;
   },
 };

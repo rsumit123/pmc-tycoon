@@ -202,3 +202,45 @@ export interface GenerateNarrativeResponse {
 export interface CampaignNarrativeListResponse {
   narratives: CampaignNarrative[];
 }
+
+export interface Platform {
+  id: string;
+  name: string;
+  origin: string;
+  role: string;
+  generation: string;
+  combat_radius_km: number;
+  payload_kg: number;
+  rcs_band: string;
+  radar_range_km: number;
+  cost_cr: number;
+  intro_year: number;
+}
+
+export interface PlatformListResponse {
+  platforms: Platform[];
+}
+
+export interface BaseSquadronSummary {
+  id: number;
+  name: string;
+  call_sign: string;
+  platform_id: string;
+  strength: number;
+  readiness_pct: number;
+  xp: number;
+  ace_name: string | null;
+}
+
+export interface BaseMarker {
+  id: number;
+  template_id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  squadrons: BaseSquadronSummary[];
+}
+
+export interface BaseListResponse {
+  bases: BaseMarker[];
+}
