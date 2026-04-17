@@ -87,6 +87,9 @@ Items flagged by post-review that deserve attention when the relevant future pla
 - **Ace-name endpoint returns `subject_id=null`** in its response because the picker is internal (`_pick_ace_squadron` picks squadron with most airframes). Clients resolve via `GET /narratives?kind=ace_name` which returns the proper `subject_id="sqn-{id}"`. If a cleaner API is needed, include the winning `squadron_id` in `GenerateResponse`. (Plan 5)
 - **`year_recap.vignettes_won`** currently counts all resolved vignettes, not wins (placeholder). Refine to filter on `outcome.objective_met` when Plan 9 revisits year-recap. (Plan 5)
 - **Token usage is logged in `LLMCache` but never surfaced.** Consider `GET /api/admin/llm-usage` before committing to OpenRouter credit spend tracking. (Plan 5)
+- **Race between `find_narrative` and `write_narrative`** is not atomic in `app/llm/service.py`. Single-user hobby repo so a double-click surfaces as a 500 from `IntegrityError` on the `UniqueConstraint`. Catch `IntegrityError` in `app/api/narratives.py::_wrap` and re-read via `find_narrative` if it becomes a playtest annoyance. (Plan 5)
+- **LLM cache row is flushed before `CampaignNarrative` row is committed.** If the narrative insert fails, the flushed cache row is rolled back too — but the upstream OpenRouter call already spent tokens. Retry spends tokens again. Fold both writes into a single flush if this surfaces as wasted spend. (Plan 5)
+- **Plan 9 will enrich year-recap / retrospective input payloads** (currently `[]`/`0` placeholders). Bump the prompt `VERSION` from `"v1"` to `"v2"` rather than editing in place — otherwise existing cached v1 narratives stay cached for identical-looking inputs even after the enrichment lands. (Plan 5 → Plan 9)
 
 ## Conventions that matter across plans
 
