@@ -59,3 +59,93 @@ programs:
     base_duration_quarters: 10
     base_cost_cr: 12000
     dependencies: []
+  - id: netra_mk2
+    name: Netra AEW&C Mk2
+    description: Next-gen airborne early warning on Airbus A321neo platform. 6 units planned.
+    base_duration_quarters: 16
+    base_cost_cr: 20000
+    dependencies: []
+  - id: pralay_srbm
+    name: Pralay SRBM
+    description: Short-range ballistic missile system. 150-500 km range, tri-service.
+    base_duration_quarters: 8
+    base_cost_cr: 10000
+    dependencies: []
+  - id: tapas_uav
+    name: DRDO Tapas MALE UAV
+    description: Indigenous medium-altitude long-endurance UAV for ISR.
+    base_duration_quarters: 12
+    base_cost_cr: 8000
+    dependencies: []
+  - id: amca_mk2
+    name: AMCA Mk2
+    description: 6th-gen evolution with loyal wingman integration and optional manning.
+    base_duration_quarters: 40
+    base_cost_cr: 200000
+    dependencies: [amca_mk1]
+  - id: su30_super
+    name: Su-30 MKI Super Upgrade
+    description: Deep upgrade package — Uttam AESA radar, new EW suite, structural life extension.
+    base_duration_quarters: 16
+    base_cost_cr: 30000
+    dependencies: [uttam_aesa]
+  - id: uttam_aesa
+    name: Uttam AESA Radar
+    description: Indigenous AESA radar for Tejas Mk2 and AMCA integration.
+    base_duration_quarters: 12
+    base_cost_cr: 12000
+    dependencies: []
+  - id: kaveri_engine
+    name: Kaveri Turbojet
+    description: Backup dry turbojet development. 80-90 kN class for Tejas derivatives.
+    base_duration_quarters: 20
+    base_cost_cr: 25000
+    dependencies: []
+  - id: maya_ew
+    name: DRDO Maya EW Suite
+    description: Next-gen electronic warfare and ECM pod system for IAF platforms.
+    base_duration_quarters: 10
+    base_cost_cr: 8000
+    dependencies: []
+  - id: abhyas_lwm
+    name: Abhyas Loyal Wingman
+    description: High-speed loyal wingman drone. AI-assisted formation flying with manned aircraft.
+    base_duration_quarters: 14
+    base_cost_cr: 10000
+    dependencies: []
+  - id: saaw
+    name: DRDO SAAW
+    description: Smart Anti-Airfield Weapon — precision-guided anti-runway/shelter munition.
+    base_duration_quarters: 6
+    base_cost_cr: 5000
+    dependencies: []
+  - id: long_range_sam
+    name: Indigenous Long-Range SAM
+    description: S-400 class indigenous surface-to-air missile. 400+ km intercept range.
+    base_duration_quarters: 20
+    base_cost_cr: 35000
+    dependencies: []
+  - id: project_kusha
+    name: Project Kusha BMD
+    description: Ballistic missile defense system with layered interception.
+    base_duration_quarters: 24
+    base_cost_cr: 45000
+    dependencies: []
+  - id: air_brahmos2
+    name: Air-Launched BrahMos-II
+    description: Hypersonic air-launched cruise missile. Mach 7+ with scramjet propulsion.
+    base_duration_quarters: 16
+    base_cost_cr: 20000
+    dependencies: [brahmos_ng]
+  - id: mrsam_air
+    name: MR-SAM Air Defense
+    description: Medium-range SAM integration with IAF airbase defense network.
+    base_duration_quarters: 8
+    base_cost_cr: 12000
+    dependencies: []
+  - id: ngarm
+    name: Next-Gen Anti-Radiation Missile
+    description: Follow-on to Rudram series. Dual-mode seeker, 600+ km standoff.
+    base_duration_quarters: 10
+    base_cost_cr: 9000
+    dependencies: [rudram_3]
