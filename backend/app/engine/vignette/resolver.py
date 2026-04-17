@@ -124,7 +124,10 @@ def _resolve_round(
         pk = max(0.0, min(0.70, pk + pk_bonus + min(0.10, a["xp"] * 0.01)))
         trace.append({
             "t_min": t_min, "kind": "bvr_launch" if weapon_kind == "bvr" else "wvr_launch",
-            "side": side_label, "weapon": weapon, "target_platform": target["platform_id"],
+            "side": side_label, "weapon": weapon,
+            "attacker_platform": a["platform_id"],
+            "attacker_squadron_id": a.get("squadron_id"),
+            "target_platform": target["platform_id"],
             "pk": round(pk, 3), "distance_km": distance_km,
         })
         if rng.random() < pk:
@@ -133,6 +136,8 @@ def _resolve_round(
             trace.append({
                 "t_min": t_min, "kind": "kill",
                 "side": side_label,
+                "attacker_platform": a["platform_id"],
+                "attacker_squadron_id": a.get("squadron_id"),
                 "victim_platform": target["platform_id"],
                 "victim_squadron_id": target.get("squadron_id"),
                 "weapon": weapon,
