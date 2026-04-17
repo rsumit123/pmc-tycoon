@@ -14,7 +14,10 @@ The repo was previously called **PMC Tycoon** (a mercenary-contractor game). All
 - `docs/superpowers/specs/2026-04-15-sovereign-shield-design.md` — canonical game design spec (7 sections: core loop, vignettes, adversary intel, campaign arc, tech architecture, UX direction, content pipeline).
 - `docs/decisions/2026-04-15-initial-design-decisions.md` — 22 design decisions (D1–D22) with alternatives considered, reasoning, and what was given up for each. **Read this before proposing a design change** — many decisions intentionally traded off things that might look tempting now.
 - `docs/content/platforms-seed-2026.md` — real-world 2026 defense state used to populate starting conditions (MRFA Rafale deal, S-400 queue, PAF J-35E, etc.).
-- `docs/superpowers/plans/2026-04-16-foundation-plan.md` — Plan 1 (Foundation) detailed task-level plan. **Done.**
+- `docs/superpowers/plans/2026-04-16-foundation-plan.md` — Plan 1 (Foundation). **Done.**
+- `docs/superpowers/plans/2026-04-16-turn-engine-core-plan.md` — Plan 2 (Turn Engine Core). **Done.** Pattern reference for engine + CRUD + API layering.
+- `docs/superpowers/plans/2026-04-17-adversary-simulation-intel-plan.md` — Plan 3 (Adversary + Intel). **Done.**
+- `docs/superpowers/plans/2026-04-17-vignette-engine-plan.md` — Plan 4 (Vignette Engine). **Done.**
 - `docs/DEPLOYMENT.md` — prod deploy runbook (Vercel frontend + GCP VM Docker backend).
 - `README.md` — dev workflow pointers.
 
@@ -43,22 +46,49 @@ The repo was previously called **PMC Tycoon** (a mercenary-contractor game). All
 
 ## How to pick up work (fresh session kickoff)
 
-For the next plan (Plan 2):
+1. Read `ROADMAP.md` §"Current Status Summary" — find the first `🔴 not started` row, note the plan number.
+2. Read that plan's scope section in ROADMAP (e.g., `§Plan N`) for module boundaries + what's in/out of scope.
+3. Skim the most recently-done plan doc in `docs/superpowers/plans/` — that's the current per-task convention (bite-sized TDD steps, exact code in every step, 13–15 tasks, intentional-red when one task's import comes from a later one).
+4. Read `docs/content/platforms-seed-2026.md` if the plan touches content / starting state.
+5. Invoke `superpowers:writing-plans` to produce the detailed task-level plan, saved as `docs/superpowers/plans/YYYY-MM-DD-<feature>-plan.md`.
+6. Execute via `superpowers:subagent-driven-development`. Memory-saved preference: always pick subagent-driven, don't re-ask. Commit to `main`.
+7. When the plan is done: mark it 🟢 in `ROADMAP.md`, bump the "Last updated" line, update the "Current status" block in this file (CLAUDE.md), and append any new tuning/carry-over items to the list below.
 
-1. Read `ROADMAP.md` §Plan 2 for scope + module boundaries.
-2. Read Plan 1's `foundation-plan.md` briefly to see the per-task structure convention.
-3. Read `docs/content/platforms-seed-2026.md` §"Campaign Starting Conditions" — Plan 2 populates the pre-seeded acquisition queue (MRFA, Tejas Mk1A, S-400) and R&D state (AMCA, Astra Mk2, etc.) into real DB rows.
-4. Invoke the `writing-plans` skill (`superpowers:writing-plans`) to produce a detailed task-level plan, saved as `docs/superpowers/plans/YYYY-MM-DD-turn-engine-core-plan.md`.
-5. Execute via `superpowers:subagent-driven-development`. Commit to `main`.
-6. When the plan is done, update `ROADMAP.md` to mark Plan 2 🟢 done and bump the "Last updated" line.
+## Execution pattern that's been working
+
+Each plan so far (2/3/4) lands in one session with this rhythm:
+- **13–15 tasks** per plan. Too few → tasks too big to review; too many → excessive subagent dispatch cost.
+- **Model per task:** cheapest that fits. Mechanical schema/YAML/types tasks → fast model, minimal review. Engine logic → standard model + optional spec review. Orchestrator + final → standard model + full review.
+- **Intentional-red pattern:** when module A imports from module B not yet implemented, commit A with failing tests and a clear "Tests will fail until Task N lands B" caveat in the commit message. Next task closes the loop.
+- **Final code review after all tasks** via `superpowers:code-reviewer`. Reviewers have caught real issues every time — never skip this.
+- **Expect ~1 small plan bug per plan.** I (plan author) have consistently introduced small correctness bugs: off-by-one in formulas, sign-inversion in math, destructure order, stray YAML keys, test math not matching implementation. Implementers catch them. Accept their deviations when well-reasoned; don't force verbatim.
+- Current backend test baseline (end of Plan 4): **260 tests**. Fresh work should preserve or grow this.
+
+## Known carry-overs / tuning backlog
+
+Items flagged by post-review that deserve attention when the relevant future plan lands — none block current plans:
+
+- **Intel false-rate** lands ~0.18 not spec's "1-in-3" due to IMINT-heavy roadmap cards. Either rebalance source mix or update the spec target to ~0.22. (Plan 3)
+- **Cancelled R&D program restart** creates duplicate rows in `rd_program_states` for the same `(campaign_id, program_id)`. No UI exposes cancel-then-restart yet; fix before Plan 7 wires the cancel button. Add `UniqueConstraint("campaign_id", "program_id")` or have `update_program` target only the active row. (Plan 2)
+- **Underfunded acquisitions are effectively free** in MVP — orchestrator deducts full allocation from treasury regardless of bucket consumption, and the resolver logs a warning but delivery still proceeds. Plan to add schedule-slip-from-underfunding later. (Plan 2)
+- **Integer cost rounding** accumulates over long R&D programs (~hundreds of cr under-invested at AMCA completion). Decimal or end-of-program reconciliation if financial reports get scrutinized. (Plan 2)
+- **No `UniqueConstraint("campaign_id", "faction")` on AdversaryState** — re-seeding would silently duplicate. Add before any data-migration path. (Plan 3)
+- **H-6KJ bombers have empty loadouts** in `PLATFORM_LOADOUTS`, so they're free kills that inflate `adv_kia` counts for saturation-raid scenarios; re-tune `success_threshold.adv_kills_min` when playtesting. (Plan 4)
+- **Adversary platform picking is inventory-weighted, not doctrine-aware** — PLAAF often sends J-16s on modern CAPs because they have more of them. Narration will read flat in Plan 5 AARs. (Plan 4)
+- **Target selection in resolver is uniform random** — no role-based prioritization (strike packages don't target AWACS first). Worth adding before Plan 5 LLM narration gets scrutiny. (Plan 4)
+- **RCS_DETECTION_MULTIPLIER is dual-purposed** (drives both detection range and P_kill multiplier). Consider split or rename before Plan 10 content migration. (Plan 4)
+- **`datetime.utcnow()` deprecation** warnings across several CRUD files — opportunistic sweep when touching each file next. (Plans 1–4)
+- **`vignette_resolved` CampaignEvent payload** lacks AO + scenario_name (only `vignette_fired` has them). Retrospective (Plan 9) may want this on both. (Plan 4)
 
 ## Conventions that matter across plans
 
-- **Pure-function engine layer.** `backend/app/engine/` code takes state + seed in, returns new state. Deterministic. Side effects confined to `app/llm/` (OpenRouter calls) and `app/crud/` (DB writes).
-- **Every campaign has an RNG seed** (`Campaign.seed`). Subsystems request a seeded `random.Random` instance via `app/core/rng.py::make_rng(seed)` so runs are replay-deterministic.
-- **CampaignEvent is the unified log.** Every meaningful state change (R&D milestone, acquisition delivery, intel update, vignette outcome) writes a typed `CampaignEvent`. The end-of-campaign retrospective reads from this log.
-- **Tests use in-memory SQLite** with `poolclass=StaticPool` (see `backend/tests/test_campaigns_api.py` fixture). Plan 1's `conftest.py` fixture is the template.
-- **New content files go to `backend/content/`** and are loaded by `app/content/loader.py`. Add a loader function + registry singleton per new content type.
+- **Pure-function engine layer.** `backend/app/engine/` code takes state + seed in, returns new state. Deterministic. Side effects confined to `app/crud/` (DB writes) and the future `app/llm/` (OpenRouter calls).
+- **Every campaign has an RNG seed** (`Campaign.seed`). Each subsystem draws from its own stream via `app/engine/rng.py::subsystem_rng(seed, "<subsystem_name>", year, quarter)` — sha256-derived, isolated per (subsystem, turn). Subsystem names in use: `rd`, `readiness`, `adversary`, `intel`, `vignette` (threat roll + scenario pick), `vignette_resolve` (combat resolver). When adding a new subsystem, pick a unique name.
+- **Orchestrator deep-copies inputs.** `engine/turn.py::advance` deep-copies all mutable state from ctx before handing to subsystems, so subsystem shallow-copy bugs don't leak across turns. Preserve this when extending.
+- **CampaignEvent is the unified log.** Every meaningful state change writes a typed `CampaignEvent` tagged with the FROM clock (the turn it happened in, NOT the post-advance clock). Canonical event types pinned in `backend/tests/test_event_vocabulary.py::CANONICAL_EVENT_TYPES` — new event types must be registered there.
+- **Replay determinism** is tested end-to-end in `backend/tests/test_replay_determinism.py`: same seed + same actions on two independent in-memory DBs → identical fingerprint (Campaign fields + intel cards + adversary state + pending vignettes). Extend the fingerprint when adding new persistent player-visible state.
+- **Tests use in-memory SQLite** with `poolclass=StaticPool` (see `backend/tests/test_campaigns_api.py` fixture). Every API test file uses the same fixture pattern.
+- **New content files go to `backend/content/`** and are loaded by `app/content/loader.py`. Add a `@dataclass(frozen=True)` loader + `@lru_cache(maxsize=1)` registry singleton per new content type. Remember to add to `registry.reload_all()`.
 
 ## What NOT to do
 
