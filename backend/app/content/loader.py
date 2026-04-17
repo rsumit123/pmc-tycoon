@@ -121,3 +121,30 @@ def load_adversary_roadmap(path: Path) -> list[RoadmapEvent]:
             intel=intel,
         ))
     return out
+
+
+@dataclass(frozen=True)
+class IntelTemplate:
+    id: str
+    faction: str
+    source_types: list[str]
+    headline_template: str
+    subject_type: str
+    payload_keys: dict
+    trigger: dict | None = None
+
+
+def load_intel_templates(path: Path) -> list[IntelTemplate]:
+    data = _load_yaml(path)
+    out: list[IntelTemplate] = []
+    for raw in data.get("templates", []):
+        out.append(IntelTemplate(
+            id=raw["id"],
+            faction=raw["faction"],
+            source_types=list(raw["source_types"]),
+            headline_template=raw["headline_template"],
+            subject_type=raw["subject_type"],
+            payload_keys=dict(raw["payload_keys"]),
+            trigger=raw.get("trigger"),
+        ))
+    return out

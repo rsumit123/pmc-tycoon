@@ -5,7 +5,7 @@ from app.core.config import settings
 from app.content.loader import (
     PlatformSpec, BaseSpec, ObjectiveSpec, RDProgramSpec,
     load_platforms, load_bases, load_objectives, load_rd_programs,
-    load_adversary_roadmap,
+    load_adversary_roadmap, load_intel_templates,
 )
 
 
@@ -34,6 +34,11 @@ def adversary_roadmap() -> list:
     return load_adversary_roadmap(Path(settings.content_dir) / "adversary_roadmap.yaml")
 
 
+@lru_cache(maxsize=1)
+def intel_templates() -> list:
+    return load_intel_templates(Path(settings.content_dir) / "intel_templates.yaml")
+
+
 def reload_all() -> None:
-    for fn in (platforms, bases, objectives, rd_programs, adversary_roadmap):
+    for fn in (platforms, bases, objectives, rd_programs, adversary_roadmap, intel_templates):
         fn.cache_clear()

@@ -1,0 +1,141 @@
+# Sovereign Shield intel card archetypes for Plan 3 generator.
+# Each template is a parameterized card shape. The generator picks eligible
+# templates (trigger conditions met), renders payload_keys from adversary
+# state, then the fog filter may mutate observed values.
+
+templates:
+  # ===== PLAAF =====
+  - id: plaaf_j20_brigade_rotation
+    faction: PLAAF
+    source_types: [IMINT, HUMINT]
+    headline_template: "{count} J-20A airframes observed rotating through {base}"
+    subject_type: base_rotation
+    trigger: {min_inventory: {j20a: 300}}
+    payload_keys:
+      count: {source: inventory, key: j20a, scale: 0.05, noise: 0.15}
+      base: {source: forward_bases, pick: random}
+
+  - id: plaaf_j35a_induction_update
+    faction: PLAAF
+    source_types: [OSINT, SIGINT]
+    headline_template: "PLAAF J-35A fleet assessed at approximately {count} airframes"
+    subject_type: force_count
+    trigger: {min_inventory: {j35a: 20}}
+    payload_keys:
+      count: {source: inventory, key: j35a, noise: 0.20}
+
+  - id: plaaf_doctrine_chatter
+    faction: PLAAF
+    source_types: [HUMINT, SIGINT]
+    headline_template: "PLAAF doctrine assessed as {doctrine}"
+    subject_type: doctrine_guess
+    payload_keys:
+      doctrine: {source: doctrine}
+
+  - id: plaaf_pl17_employment
+    faction: PLAAF
+    source_types: [ELINT]
+    headline_template: "PL-17 VLRAAM detected in AWACS-range engagement profile"
+    subject_type: system_activation
+    trigger: {requires_system: pl17_widespread}
+    payload_keys:
+      active: {source: literal, value: true}
+
+  - id: plaaf_j36_sighting
+    faction: PLAAF
+    source_types: [OSINT, IMINT]
+    headline_template: "J-36 sixth-gen demonstrator photographed at Chengdu"
+    subject_type: deployment_observation
+    trigger: {min_inventory: {j36_prototype: 1}}
+    payload_keys:
+      count: {source: inventory, key: j36_prototype, noise: 0.30}
+
+  - id: plaaf_h6k_dispersal
+    faction: PLAAF
+    source_types: [IMINT]
+    headline_template: "{count} H-6K bombers dispersed across western airfields"
+    subject_type: force_count
+    trigger: {min_inventory: {h6kj: 1}}
+    payload_keys:
+      count: {source: inventory, key: h6kj, noise: 0.10}
+
+  # ===== PAF =====
+  - id: paf_j35e_induction
+    faction: PAF
+    source_types: [IMINT, OSINT]
+    headline_template: "PAF J-35E fleet at {count} airframes — stealth fighter ops begin"
+    subject_type: force_count
+    trigger: {min_inventory: {j35e: 1}}
+    payload_keys:
+      count: {source: inventory, key: j35e, noise: 0.10}
+
+  - id: paf_j10ce_basing
+    faction: PAF
+    source_types: [IMINT]
+    headline_template: "PAF J-10CE squadron rotating through {base}"
+    subject_type: base_rotation
+    trigger: {min_inventory: {j10ce: 20}}
+    payload_keys:
+      base: {source: forward_bases, pick: random}
+
+  - id: paf_jf17_activity
+    faction: PAF
+    source_types: [OSINT, HUMINT]
+    headline_template: "PAF JF-17 Block 3 surge activity reported"
+    subject_type: deployment_observation
+    trigger: {min_inventory: {jf17_blk3: 40}}
+    payload_keys:
+      count: {source: inventory, key: jf17_blk3, noise: 0.15}
+
+  - id: paf_doctrine_shift
+    faction: PAF
+    source_types: [HUMINT]
+    headline_template: "PAF doctrine assessed as {doctrine}"
+    subject_type: doctrine_guess
+    payload_keys:
+      doctrine: {source: doctrine}
+
+  # ===== PLAN =====
+  - id: plan_carrier_sortie
+    faction: PLAN
+    source_types: [IMINT, OSINT]
+    headline_template: "PLAN carrier group transit observed in IOR"
+    subject_type: deployment_observation
+    trigger: {min_inventory: {fujian: 1}}
+    payload_keys:
+      count: {source: literal, value: 1}
+
+  - id: plan_type055_presence
+    faction: PLAN
+    source_types: [IMINT, SIGINT]
+    headline_template: "PLAN Type-055 destroyer assessment: approximately {count} hulls"
+    subject_type: force_count
+    trigger: {min_inventory: {type055_destroyer: 1}}
+    payload_keys:
+      count: {source: inventory, key: type055_destroyer, noise: 0.15}
+
+  - id: plan_doctrine_chatter
+    faction: PLAN
+    source_types: [HUMINT]
+    headline_template: "PLAN surface force doctrine shifting toward {doctrine}"
+    subject_type: doctrine_guess
+    payload_keys:
+      doctrine: {source: doctrine}
+
+  - id: plan_ssn_transit
+    faction: PLAN
+    source_types: [SIGINT, ELINT]
+    headline_template: "PLAN SSN transit detected in Indian Ocean"
+    subject_type: deployment_observation
+    trigger: {min_inventory: {type093b_ssn: 1}}
+    payload_keys:
+      count: {source: inventory, key: type093b_ssn, noise: 0.20}
+
+  - id: plan_h6n_dispersal
+    faction: PLAN
+    source_types: [IMINT]
+    headline_template: "PLAN H-6N dispersal exercise — YJ-21 carry profile"
+    subject_type: system_activation
+    trigger: {requires_system: yj21_operational}
+    payload_keys:
+      active: {source: literal, value: true}
