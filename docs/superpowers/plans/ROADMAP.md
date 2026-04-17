@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-04-17 (Plan 5 done)
+**Last updated:** 2026-04-17 (Plan 6 done)
 
 ---
 
@@ -17,7 +17,7 @@
 | 3 | Adversary Simulation & Intel | 🟢 done | [2026-04-17-adversary-simulation-intel-plan.md](2026-04-17-adversary-simulation-intel-plan.md) |
 | 4 | Vignette Engine | 🟢 done | [2026-04-17-vignette-engine-plan.md](2026-04-17-vignette-engine-plan.md) |
 | 5 | LLM Integration (OpenRouter) | 🟢 done | [2026-04-17-llm-integration-plan.md](2026-04-17-llm-integration-plan.md) |
-| 6 | Frontend — Map + Core UI Primitives | 🔴 not started | *to be written* |
+| 6 | Frontend — Map + Core UI Primitives | 🟢 done | [2026-04-17-frontend-map-primitives-plan.md](2026-04-17-frontend-map-primitives-plan.md) |
 | 7 | Frontend — Procurement Flows | 🔴 not started | *to be written* |
 | 8 | Frontend — Vignettes + Intel Screens | 🔴 not started | *to be written* |
 | 9 | Campaign End + Polish | 🔴 not started | *to be written* |
