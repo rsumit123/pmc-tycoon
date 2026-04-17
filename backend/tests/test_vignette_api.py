@@ -83,3 +83,117 @@ def test_get_single_vignette_404(client):
 def test_pending_404_for_unknown_campaign(client):
     r = client.get("/api/campaigns/99999/vignettes/pending")
     assert r.status_code == 404
+
+
+def _valid_commit(eligible_squadrons):
+    sq = eligible_squadrons[0]
+    return {
+        "squadrons": [{"squadron_id": sq["squadron_id"], "airframes": min(4, sq["airframes_available"])}],
+        "support": {"awacs": True, "tanker": False, "sead_package": False},
+        "roe": "weapons_free",
+    }
+
+
+def test_commit_resolves_vignette(client):
+    c = _create_campaign(client, seed=7)
+    v = _advance_until_vignette(client, c["id"])
+    assert v is not None
+    eligible = v["planning_state"]["eligible_squadrons"]
+    if not eligible:
+        pytest.skip("no eligible squadron for this seed")
+    body = _valid_commit(eligible)
+    r = client.post(f"/api/campaigns/{c['id']}/vignettes/{v['id']}/commit", json=body)
+    assert r.status_code == 200
+    resolved = r.json()
+    assert resolved["status"] == "resolved"
+    assert resolved["outcome"]
+    assert resolved["event_trace"]
+    assert resolved["resolved_at"] is not None
+
+
+def test_commit_rejects_unknown_squadron(client):
+    c = _create_campaign(client, seed=7)
+    v = _advance_until_vignette(client, c["id"])
+    if v is None:
+        pytest.skip("no vignette fired")
+    body = {
+        "squadrons": [{"squadron_id": 999999, "airframes": 1}],
+        "support": {"awacs": False, "tanker": False, "sead_package": False},
+        "roe": "weapons_free",
+    }
+    r = client.post(f"/api/campaigns/{c['id']}/vignettes/{v['id']}/commit", json=body)
+    assert r.status_code == 400
+
+
+def test_commit_rejects_too_many_airframes(client):
+    c = _create_campaign(client, seed=7)
+    v = _advance_until_vignette(client, c["id"])
+    if v is None:
+        pytest.skip("no vignette fired")
+    eligible = v["planning_state"]["eligible_squadrons"]
+    if not eligible:
+        pytest.skip("no eligible squadron")
+    sq = eligible[0]
+    body = {
+        "squadrons": [{"squadron_id": sq["squadron_id"],
+                        "airframes": sq["airframes_available"] + 100}],
+        "support": {"awacs": False, "tanker": False, "sead_package": False},
+        "roe": "weapons_free",
+    }
+    r = client.post(f"/api/campaigns/{c['id']}/vignettes/{v['id']}/commit", json=body)
+    assert r.status_code == 400
+
+
+def test_commit_rejects_invalid_roe(client):
+    c = _create_campaign(client, seed=7)
+    v = _advance_until_vignette(client, c["id"])
+    if v is None:
+        pytest.skip("no vignette fired")
+    eligible = v["planning_state"]["eligible_squadrons"]
+    if not eligible:
+        pytest.skip("no eligible squadron")
+    sq = eligible[0]
+    body = {
+        "squadrons": [{"squadron_id": sq["squadron_id"], "airframes": 1}],
+        "support": {"awacs": False, "tanker": False, "sead_package": False},
+        "roe": "nukes_from_orbit",
+    }
+    r = client.post(f"/api/campaigns/{c['id']}/vignettes/{v['id']}/commit", json=body)
+    assert r.status_code == 400
+
+
+def test_commit_already_resolved_409(client):
+    c = _create_campaign(client, seed=7)
+    v = _advance_until_vignette(client, c["id"])
+    if v is None:
+        pytest.skip("no vignette fired")
+    eligible = v["planning_state"]["eligible_squadrons"]
+    if not eligible:
+        pytest.skip("no eligible squadron")
+    body = _valid_commit(eligible)
+    client.post(f"/api/campaigns/{c['id']}/vignettes/{v['id']}/commit", json=body)
+    r2 = client.post(f"/api/campaigns/{c['id']}/vignettes/{v['id']}/commit", json=body)
+    assert r2.status_code == 409
+
+
+def test_commit_deterministic_with_same_seed(client):
+    c1 = _create_campaign(client, seed=7)
+    v1 = _advance_until_vignette(client, c1["id"])
+    if v1 is None:
+        pytest.skip("no vignette fired")
+    eligible1 = v1["planning_state"]["eligible_squadrons"]
+    if not eligible1:
+        pytest.skip("no eligible squadron")
+    body1 = _valid_commit(eligible1)
+    r1 = client.post(f"/api/campaigns/{c1['id']}/vignettes/{v1['id']}/commit", json=body1)
+    outcome1 = r1.json()["outcome"]
+
+    c2 = _create_campaign(client, seed=7)
+    v2 = _advance_until_vignette(client, c2["id"])
+    assert v2 is not None
+    eligible2 = v2["planning_state"]["eligible_squadrons"]
+    body2 = _valid_commit(eligible2)
+    r2 = client.post(f"/api/campaigns/{c2['id']}/vignettes/{v2['id']}/commit", json=body2)
+    outcome2 = r2.json()["outcome"]
+
+    assert outcome1 == outcome2
