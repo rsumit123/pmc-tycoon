@@ -198,10 +198,15 @@ def _enrich_year_recap_inputs(db: Session, campaign: Campaign, year: int) -> dic
     # Treasury: first Q's starting value from turn_advanced, last Q's ending value
     turn_events = [e for e in events if e.event_type == "turn_advanced"]
     turn_events_sorted = sorted(turn_events, key=lambda e: e.quarter)
-    starting_treasury_cr = (
-        turn_events_sorted[0].payload.get("treasury_before_cr", 0)
-        if turn_events_sorted else 0
-    )
+    # Derive starting treasury: treasury_after_cr - grant_cr + total allocation spent
+    # Or use previous year's last treasury_after_cr. Simplest: reverse from first turn event.
+    if turn_events_sorted:
+        first = turn_events_sorted[0].payload
+        alloc = first.get("allocation", {})
+        alloc_total = sum(alloc.values()) if isinstance(alloc, dict) else 0
+        starting_treasury_cr = first.get("treasury_after_cr", 0) - first.get("grant_cr", 0) + alloc_total
+    else:
+        starting_treasury_cr = 0
     ending_treasury_cr = (
         turn_events_sorted[-1].payload.get("treasury_after_cr", campaign.budget_cr)
         if turn_events_sorted else (campaign.budget_cr if year + 1 == campaign.current_year else 0)
@@ -346,7 +351,7 @@ def generate_retrospective(db: Session, campaign: Campaign) -> tuple[str, bool]:
         CampaignEvent.campaign_id == campaign.id,
         CampaignEvent.event_type == "turn_advanced",
     ).all()
-    total_grants = sum(e.payload.get("budget_grant_cr", 0) for e in turn_events)
+    total_grants = sum(e.payload.get("grant_cr", 0) for e in turn_events)
     spent = total_grants - campaign.budget_cr
     if total_grants > 0:
         budget_efficiency_pct = max(0, min(100, round(100 * spent / total_grants)))

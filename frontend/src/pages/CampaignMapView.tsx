@@ -126,7 +126,7 @@ export function CampaignMapView() {
           )}
           <button
             onClick={handleAdvanceTurn}
-            disabled={loading}
+            disabled={loading || isCampaignComplete}
             className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-slate-900 font-semibold rounded-lg px-3 py-1.5 text-sm"
           >
             {loading ? "Ending…" : "End Turn"}
