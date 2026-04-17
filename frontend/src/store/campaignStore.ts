@@ -6,6 +6,7 @@ import type {
   Vignette, VignetteCommitPayload,
   IntelCard,
   GenerateNarrativeResponse,
+  CampaignSummary,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -21,6 +22,8 @@ interface CampaignState {
   intelCards: IntelCard[];
   intelFilter: { year: number; quarter: number } | null;
   narrativeCache: Record<string, GenerateNarrativeResponse>;
+  campaignSummary: CampaignSummary | null;
+  yearRecapToast: string | null;
   loading: boolean;
   error: string | null;
 
@@ -42,6 +45,10 @@ interface CampaignState {
   loadIntel: (campaignId: number, filter?: { year: number; quarter: number }) => Promise<void>;
   generateAAR: (campaignId: number, vignetteId: number) => Promise<GenerateNarrativeResponse>;
   generateIntelBrief: (campaignId: number) => Promise<GenerateNarrativeResponse>;
+  loadCampaignSummary: (campaignId: number) => Promise<void>;
+  generateYearRecap: (campaignId: number, year: number) => Promise<GenerateNarrativeResponse>;
+  generateRetrospective: (campaignId: number) => Promise<GenerateNarrativeResponse>;
+  dismissYearRecapToast: () => void;
   reset: () => void;
 }
 
@@ -57,6 +64,8 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   intelCards: [],
   intelFilter: null,
   narrativeCache: {},
+  campaignSummary: null,
+  yearRecapToast: null,
   loading: false,
   error: null,
 
@@ -87,6 +96,13 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     try {
       const campaign = await api.advanceTurn(current.id);
       set({ campaign, loading: false });
+      // Fire year-recap toast on Q4→Q1 rollover
+      if (current.current_quarter === 4 && campaign.current_quarter === 1) {
+        const closedYear = current.current_year;
+        api.generateYearRecap(campaign.id, closedYear)
+          .then((resp) => set({ yearRecapToast: resp.text }))
+          .catch(() => {});
+      }
       const cid = campaign.id;
       void get().loadBases(cid);
       void get().loadRdActive(cid);
@@ -251,6 +267,35 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     return resp;
   },
 
+  loadCampaignSummary: async (campaignId) => {
+    try {
+      const summary = await api.getCampaignSummary(campaignId);
+      set({ campaignSummary: summary });
+    } catch (e) {
+      set({ error: (e as Error).message });
+    }
+  },
+
+  generateYearRecap: async (campaignId, year) => {
+    const key = `year_recap:${year}`;
+    const cached = get().narrativeCache[key];
+    if (cached) return cached;
+    const resp = await api.generateYearRecap(campaignId, year);
+    set((s) => ({ narrativeCache: { ...s.narrativeCache, [key]: resp } }));
+    return resp;
+  },
+
+  generateRetrospective: async (campaignId) => {
+    const key = "retrospective:campaign";
+    const cached = get().narrativeCache[key];
+    if (cached) return cached;
+    const resp = await api.generateRetrospective(campaignId);
+    set((s) => ({ narrativeCache: { ...s.narrativeCache, [key]: resp } }));
+    return resp;
+  },
+
+  dismissYearRecapToast: () => set({ yearRecapToast: null }),
+
   generateIntelBrief: async (campaignId) => {
     const c = get().campaign;
     const key = c ? `intel_brief:${c.current_year}-Q${c.current_quarter}` : "intel_brief:current";
@@ -266,6 +311,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     rdCatalog: [], rdActive: [], acquisitions: [],
     pendingVignettes: [], vignetteById: {},
     intelCards: [], intelFilter: null, narrativeCache: {},
+    campaignSummary: null, yearRecapToast: null,
     loading: false, error: null,
   }),
 }));
