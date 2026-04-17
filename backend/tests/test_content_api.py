@@ -54,3 +54,31 @@ def test_list_platforms_includes_rafale_f4():
     finally:
         app.dependency_overrides.clear()
         Base.metadata.drop_all(bind=eng)
+
+
+def test_list_rd_programs_returns_catalog():
+    client, eng = _client()
+    try:
+        r = client.get("/api/content/rd-programs")
+        assert r.status_code == 200
+        body = r.json()
+        assert "programs" in body
+        assert len(body["programs"]) > 0
+        first = body["programs"][0]
+        for key in ("id", "name", "description", "base_duration_quarters",
+                    "base_cost_cr", "dependencies"):
+            assert key in first, f"missing {key} in {first}"
+    finally:
+        app.dependency_overrides.clear()
+        Base.metadata.drop_all(bind=eng)
+
+
+def test_rd_programs_includes_amca_mk1():
+    client, eng = _client()
+    try:
+        r = client.get("/api/content/rd-programs")
+        ids = {p["id"] for p in r.json()["programs"]}
+        assert "amca_mk1" in ids
+    finally:
+        app.dependency_overrides.clear()
+        Base.metadata.drop_all(bind=eng)

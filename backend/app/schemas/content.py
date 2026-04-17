@@ -17,3 +17,16 @@ class PlatformOut(BaseModel):
 
 class PlatformListResponse(BaseModel):
     platforms: list[PlatformOut]
+
+
+class RDProgramSpecOut(BaseModel):
+    id: str
+    name: str
+    description: str
+    base_duration_quarters: int
+    base_cost_cr: int
+    dependencies: list[str]
+
+
+class RDProgramSpecListResponse(BaseModel):
+    programs: list[RDProgramSpecOut]

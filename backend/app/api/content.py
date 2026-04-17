@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 
 from app.content.registry import platforms as platforms_reg
+from app.content.registry import rd_programs as rd_programs_reg
 from app.schemas.content import PlatformOut, PlatformListResponse
+from app.schemas.content import RDProgramSpecOut, RDProgramSpecListResponse
 
 router = APIRouter(prefix="/api/content", tags=["content"])
 
@@ -26,3 +28,20 @@ def list_platforms_endpoint():
         ))
     out.sort(key=lambda p: p.id)
     return PlatformListResponse(platforms=out)
+
+
+@router.get("/rd-programs", response_model=RDProgramSpecListResponse)
+def list_rd_programs_endpoint():
+    registry = rd_programs_reg()
+    out: list[RDProgramSpecOut] = []
+    for spec in registry.values():
+        out.append(RDProgramSpecOut(
+            id=spec.id,
+            name=spec.name,
+            description=spec.description,
+            base_duration_quarters=int(spec.base_duration_quarters),
+            base_cost_cr=int(spec.base_cost_cr),
+            dependencies=list(spec.dependencies),
+        ))
+    out.sort(key=lambda p: p.id)
+    return RDProgramSpecListResponse(programs=out)
