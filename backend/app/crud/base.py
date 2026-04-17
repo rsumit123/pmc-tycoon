@@ -31,6 +31,10 @@ def list_bases_for_campaign(db: Session, campaign_id: int) -> list[dict]:
             "name": tpl.name,
             "lat": tpl.lat,
             "lon": tpl.lon,
+            "shelter_count": row.shelter_count,
+            "fuel_depot_size": row.fuel_depot_size,
+            "ad_integration_level": row.ad_integration_level,
+            "runway_class": row.runway_class,
             "squadrons": [
                 {
                     "id": sq.id,

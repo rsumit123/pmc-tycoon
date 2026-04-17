@@ -18,6 +18,7 @@ from app.api.narratives import router as narratives_router
 from app.api.content import router as content_router
 from app.api.bases import router as bases_router
 from app.api.summary import router as summary_router
+from app.api.base_upgrade import router as base_upgrade_router
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ app.include_router(narratives_router)
 app.include_router(content_router)
 app.include_router(bases_router)
 app.include_router(summary_router)
+app.include_router(base_upgrade_router)
 
 
 @app.get("/")

@@ -241,7 +241,22 @@ export interface BaseMarker {
   name: string;
   lat: number;
   lon: number;
+  shelter_count: number;
+  fuel_depot_size: number;
+  ad_integration_level: number;
+  runway_class: string;
   squadrons: BaseSquadronSummary[];
+}
+
+export interface BaseUpgradeResponse {
+  base_template_id: string;
+  upgrade_type: string;
+  cost_cr: number;
+  shelter_count: number;
+  fuel_depot_size: number;
+  ad_integration_level: number;
+  runway_class: string;
+  remaining_budget_cr: number;
 }
 
 export interface BaseListResponse {

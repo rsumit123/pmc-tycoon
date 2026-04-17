@@ -4,6 +4,7 @@ import type {
   CampaignCreatePayload,
   PlatformListResponse,
   BaseListResponse,
+  BaseUpgradeResponse,
   RDProgramSpecListResponse,
   RDProgramStateListResponse,
   RDProgramState,
@@ -205,6 +206,18 @@ export const api = {
   async generateRetrospective(campaignId: number): Promise<GenerateNarrativeResponse> {
     const { data } = await http.post<GenerateNarrativeResponse>(
       `/api/campaigns/${campaignId}/retrospective`,
+    );
+    return data;
+  },
+
+  async upgradeBase(
+    campaignId: number,
+    baseTemplateId: string,
+    upgradeType: string,
+  ): Promise<BaseUpgradeResponse> {
+    const { data } = await http.post<BaseUpgradeResponse>(
+      `/api/campaigns/${campaignId}/bases/${baseTemplateId}/upgrade`,
+      { upgrade_type: upgradeType },
     );
     return data;
   },

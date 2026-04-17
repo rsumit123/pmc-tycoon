@@ -18,6 +18,10 @@ class BaseOut(BaseModel):
     name: str
     lat: float
     lon: float
+    shelter_count: int = 0
+    fuel_depot_size: int = 1
+    ad_integration_level: int = 1
+    runway_class: str = "medium"
     squadrons: list[BaseSquadronOut]
 
 
