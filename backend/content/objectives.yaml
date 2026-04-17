@@ -4,13 +4,69 @@ objectives:
     description: Field a combat-ready squadron of AMCA Mk1 stealth fighters by end of FY 2034-35.
     weight: 3
     target_year: 2035
+
   - id: maintain_42_squadrons
     title: Maintain 42+ fighter squadron strength
     description: End the campaign with 42 or more combat-ready IAF fighter squadrons.
     weight: 2
     target_year: 2036
+
   - id: no_territorial_loss
     title: No loss of sovereign territory in 10 years
     description: Do not cede territorial control to adversary action across the campaign.
     weight: 3
+    target_year: 2036
+
+  - id: modernize_fleet
+    title: Modernize fleet to 4.5+ gen majority
+    description: Ensure >50% of squadrons fly 4.5-generation or newer platforms by 2036.
+    weight: 2
+    target_year: 2036
+
+  - id: indigenous_backbone
+    title: Build indigenous fighter backbone
+    description: Field 5 or more squadrons on indigenous platforms (Tejas, AMCA) by 2036.
+    weight: 2
+    target_year: 2036
+
+  - id: missile_sovereignty
+    title: Achieve missile sovereignty
+    description: Complete both Astra Mk3 and BrahMos-NG R&D programs.
+    weight: 2
+    target_year: 2036
+
+  - id: maritime_reach
+    title: Develop carrier-capable fighter
+    description: Complete the TEDBF R&D program for deck-based naval fighter.
+    weight: 2
+    target_year: 2035
+
+  - id: budget_discipline
+    title: Maintain fiscal discipline
+    description: End the campaign with positive treasury (>0 cr remaining).
+    weight: 1
+    target_year: 2036
+
+  - id: combat_excellence
+    title: Demonstrate combat excellence
+    description: Win more than 65% of all vignettes across the campaign.
+    weight: 2
+    target_year: 2036
+
+  - id: stealth_fleet
+    title: Establish stealth air capability
+    description: Field 2 or more squadrons on VLO (stealth) platforms by 2035.
+    weight: 3
+    target_year: 2035
+
+  - id: ace_squadrons
+    title: Cultivate emerging aces
+    description: Earn ace names for 3 or more squadrons through vignette performance.
+    weight: 1
+    target_year: 2036
+
+  - id: deterrence_posture
+    title: Build comprehensive deterrence
+    description: Complete 4 or more missile, EW, or sensor R&D programs.
+    weight: 2
     target_year: 2036
