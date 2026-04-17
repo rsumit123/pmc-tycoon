@@ -10,5 +10,8 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     css: false,
     exclude: ["**/node_modules/**", "**/dist/**", "e2e/**"],
+    fakeTimers: {
+      toFake: ["setTimeout", "clearTimeout", "performance"],
+    },
   },
 });
