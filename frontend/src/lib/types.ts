@@ -244,3 +244,69 @@ export interface BaseMarker {
 export interface BaseListResponse {
   bases: BaseMarker[];
 }
+
+// ---------- Plan 7: procurement types ----------
+
+export interface RDProgramSpec {
+  id: string;
+  name: string;
+  description: string;
+  base_duration_quarters: number;
+  base_cost_cr: number;
+  dependencies: string[];
+}
+
+export interface RDProgramSpecListResponse {
+  programs: RDProgramSpec[];
+}
+
+export type RDFundingLevel = "slow" | "standard" | "accelerated";
+export type RDStatus = "active" | "completed" | "cancelled";
+
+export interface RDProgramState {
+  id: number;
+  program_id: string;
+  progress_pct: number;
+  funding_level: RDFundingLevel;
+  status: RDStatus;
+  milestones_hit: number[];
+  cost_invested_cr: number;
+  quarters_active: number;
+}
+
+export interface RDProgramStateListResponse {
+  programs: RDProgramState[];
+}
+
+export interface AcquisitionOrder {
+  id: number;
+  platform_id: string;
+  quantity: number;
+  signed_year: number;
+  signed_quarter: number;
+  first_delivery_year: number;
+  first_delivery_quarter: number;
+  foc_year: number;
+  foc_quarter: number;
+  delivered: number;
+  total_cost_cr: number;
+}
+
+export interface AcquisitionListResponse {
+  orders: AcquisitionOrder[];
+}
+
+export interface AcquisitionCreatePayload {
+  platform_id: string;
+  quantity: number;
+  first_delivery_year: number;
+  first_delivery_quarter: number;
+  foc_year: number;
+  foc_quarter: number;
+  total_cost_cr: number;
+}
+
+export interface RDUpdatePayload {
+  funding_level?: RDFundingLevel;
+  status?: RDStatus;
+}
