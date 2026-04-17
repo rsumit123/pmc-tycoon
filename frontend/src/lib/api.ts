@@ -13,6 +13,13 @@ import type {
   AcquisitionOrder,
   AcquisitionCreatePayload,
   BudgetAllocation,
+  VignetteListResponse,
+  Vignette,
+  VignetteCommitPayload,
+  IntelListResponse,
+  CampaignNarrativeListResponse,
+  GenerateNarrativeResponse,
+  NarrativeKind,
 } from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
@@ -105,6 +112,72 @@ export const api = {
     const { data } = await http.post<AcquisitionOrder>(
       `/api/campaigns/${campaignId}/acquisitions`,
       payload,
+    );
+    return data;
+  },
+
+  async getVignettesPending(campaignId: number): Promise<VignetteListResponse> {
+    const { data } = await http.get<VignetteListResponse>(
+      `/api/campaigns/${campaignId}/vignettes/pending`,
+    );
+    return data;
+  },
+
+  async getVignette(campaignId: number, vignetteId: number): Promise<Vignette> {
+    const { data } = await http.get<Vignette>(
+      `/api/campaigns/${campaignId}/vignettes/${vignetteId}`,
+    );
+    return data;
+  },
+
+  async commitVignette(
+    campaignId: number,
+    vignetteId: number,
+    payload: VignetteCommitPayload,
+  ): Promise<Vignette> {
+    const { data } = await http.post<Vignette>(
+      `/api/campaigns/${campaignId}/vignettes/${vignetteId}/commit`,
+      payload,
+    );
+    return data;
+  },
+
+  async getIntel(
+    campaignId: number,
+    filter: { year?: number; quarter?: number } = {},
+  ): Promise<IntelListResponse> {
+    const params: Record<string, number> = {};
+    if (filter.year != null) params.year = filter.year;
+    if (filter.quarter != null) params.quarter = filter.quarter;
+    const { data } = await http.get<IntelListResponse>(
+      `/api/campaigns/${campaignId}/intel`,
+      { params },
+    );
+    return data;
+  },
+
+  async listNarratives(
+    campaignId: number,
+    kind?: NarrativeKind,
+  ): Promise<CampaignNarrativeListResponse> {
+    const params = kind ? { kind } : {};
+    const { data } = await http.get<CampaignNarrativeListResponse>(
+      `/api/campaigns/${campaignId}/narratives`,
+      { params },
+    );
+    return data;
+  },
+
+  async generateAAR(campaignId: number, vignetteId: number): Promise<GenerateNarrativeResponse> {
+    const { data } = await http.post<GenerateNarrativeResponse>(
+      `/api/campaigns/${campaignId}/vignettes/${vignetteId}/aar`,
+    );
+    return data;
+  },
+
+  async generateIntelBrief(campaignId: number): Promise<GenerateNarrativeResponse> {
+    const { data } = await http.post<GenerateNarrativeResponse>(
+      `/api/campaigns/${campaignId}/intel-briefs/generate`,
     );
     return data;
   },
