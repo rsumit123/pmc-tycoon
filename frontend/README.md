@@ -2,6 +2,16 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Testing
+
+Unit + component tests run via Vitest + jsdom.
+
+- `npm test` — one-shot run
+- `npm run test:watch` — watch mode
+- `npm run test:ui` — browser-based UI runner
+
+E2E tests (Playwright) hit a deployed environment; see `playwright.config.ts`.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
