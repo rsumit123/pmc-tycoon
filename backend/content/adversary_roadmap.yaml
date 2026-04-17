@@ -34,6 +34,15 @@ events:
   # ===== 2027 =====
   - year: 2027
     quarter: 1
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j20a: 50, j35a: 20}}
+    intel:
+      headline: "PLAAF accelerates J-20A production — new batch reaches operational units"
+      source_type: OSINT
+      confidence: 0.72
+
+  - year: 2027
+    quarter: 1
     faction: PAF
     effect: {kind: inventory_delta, payload: {j35e: 36}}
     intel:
@@ -89,6 +98,15 @@ events:
     faction: PLAAF
     effect: {kind: inventory_delta, payload: {j20a: 50, j35a: 40}}
 
+  - year: 2028
+    quarter: 4
+    faction: PLAN
+    effect: {kind: inventory_delta, payload: {type055_destroyer: 1}}
+    intel:
+      headline: "New Type-055 destroyer enters service — Indian Ocean deployment expected"
+      source_type: IMINT
+      confidence: 0.85
+
   # ===== 2029 =====
   - year: 2029
     quarter: 1
@@ -113,6 +131,11 @@ events:
     quarter: 4
     faction: PLAN
     effect: {kind: inventory_delta, payload: {type055_destroyer: 2}}
+
+  - year: 2029
+    quarter: 4
+    faction: PAF
+    effect: {kind: inventory_delta, payload: {j35e: 6}}
 
   # ===== 2030 =====
   - year: 2030
@@ -141,6 +164,15 @@ events:
 
   # ===== 2031 =====
   - year: 2031
+    quarter: 1
+    faction: PAF
+    effect: {kind: base_activate, payload: masroor_expanded}
+    intel:
+      headline: "PAF expanding Masroor AFS for J-35E operational readiness"
+      source_type: HUMINT
+      confidence: 0.55
+
+  - year: 2031
     quarter: 2
     faction: PLAAF
     effect: {kind: inventory_delta, payload: {j20a: 40, j35a: 80, j36: 8}}
@@ -165,6 +197,11 @@ events:
       confidence: 0.95
 
   - year: 2032
+    quarter: 2
+    faction: PLAN
+    effect: {kind: inventory_delta, payload: {type093b_ssn: 1}}
+
+  - year: 2032
     quarter: 3
     faction: PLAAF
     effect: {kind: inventory_delta, payload: {j35a: 80, j36: 18}}
@@ -180,6 +217,15 @@ events:
 
   # ===== 2033 =====
   - year: 2033
+    quarter: 1
+    faction: PAF
+    effect: {kind: inventory_delta, payload: {j35e: 10}}
+    intel:
+      headline: "PAF exercising third tranche option on J-35E contract"
+      source_type: OSINT
+      confidence: 0.65
+
+  - year: 2033
     quarter: 2
     faction: PLAAF
     effect: {kind: inventory_delta, payload: {j35a: 80, j36: 24}}
@@ -190,6 +236,11 @@ events:
     effect: {kind: system_activate, payload: pl17_ew_integrated}
 
   # ===== 2034 =====
+  - year: 2034
+    quarter: 1
+    faction: PLAN
+    effect: {kind: inventory_delta, payload: {type055_destroyer: 1, h6n: 12}}
+
   - year: 2034
     quarter: 2
     faction: PLAAF
@@ -209,6 +260,15 @@ events:
     quarter: 2
     faction: PLAAF
     effect: {kind: inventory_delta, payload: {j35a: 60, j36: 36}}
+
+  - year: 2035
+    quarter: 4
+    faction: PLAN
+    effect: {kind: system_activate, payload: plan_ior_permanent_presence}
+    intel:
+      headline: "PLAN establishes permanent Indian Ocean task force rotation"
+      source_type: SIGINT
+      confidence: 0.78
 
   - year: 2035
     quarter: 4

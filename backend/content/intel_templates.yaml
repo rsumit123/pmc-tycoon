@@ -139,3 +139,70 @@ templates:
     trigger: {requires_system: yj21_operational}
     payload_keys:
       active: {source: literal, value: true}
+
+  # ===== NEW — PLAAF expansion =====
+  - id: plaaf_j20s_wingman
+    faction: PLAAF
+    source_types: [SIGINT, HUMINT]
+    headline_template: "PLAAF J-20S loyal wingman exercises observed — {count} airframes"
+    subject_type: deployment_observation
+    trigger: {min_inventory: {j20s: 20}}
+    payload_keys:
+      count: {source: inventory, key: j20s, noise: 0.20}
+
+  - id: plaaf_western_buildup
+    faction: PLAAF
+    source_types: [IMINT]
+    headline_template: "Satellite imagery shows expanded hardened shelters at western theater bases"
+    subject_type: base_rotation
+    trigger: {min_inventory: {j20a: 600}}
+    payload_keys:
+      count: {source: inventory, key: j20a, scale: 0.02, noise: 0.20}
+      base: {source: forward_bases, pick: random}
+
+  - id: plaaf_j16_sead
+    faction: PLAAF
+    source_types: [ELINT, SIGINT]
+    headline_template: "PLAAF J-16 SEAD squadron practicing anti-radiation missile profiles"
+    subject_type: system_activation
+    trigger: {min_inventory: {j16: 300}}
+    payload_keys:
+      active: {source: literal, value: true}
+
+  # ===== NEW — PAF expansion =====
+  - id: paf_j35e_exercises
+    faction: PAF
+    source_types: [OSINT, IMINT]
+    headline_template: "PAF conducts multi-role exercises with J-35E fleet — assessed {count} airframes"
+    subject_type: force_count
+    trigger: {min_inventory: {j35e: 30}}
+    payload_keys:
+      count: {source: inventory, key: j35e, noise: 0.15}
+
+  - id: paf_forward_basing
+    faction: PAF
+    source_types: [IMINT]
+    headline_template: "PAF dispersing fighters to forward operating bases near border"
+    subject_type: base_rotation
+    trigger: {min_inventory: {j35e: 40}}
+    payload_keys:
+      base: {source: forward_bases, pick: random}
+
+  # ===== NEW — PLAN expansion =====
+  - id: plan_type004_operations
+    faction: PLAN
+    source_types: [IMINT, OSINT]
+    headline_template: "PLAN Type 004 nuclear carrier conducting flight operations in South China Sea"
+    subject_type: deployment_observation
+    trigger: {min_inventory: {type004_carrier: 1}}
+    payload_keys:
+      count: {source: inventory, key: type004_carrier, noise: 0.0}
+
+  - id: plan_ior_expansion
+    faction: PLAN
+    source_types: [SIGINT, HUMINT]
+    headline_template: "PLAN expanding Indian Ocean presence — additional surface combatants detected"
+    subject_type: force_count
+    trigger: {min_inventory: {type055_destroyer: 2}}
+    payload_keys:
+      count: {source: inventory, key: type055_destroyer, noise: 0.15}

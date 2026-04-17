@@ -53,10 +53,11 @@ def test_paf_j35e_reaches_authored_total_by_end_of_campaign(client):
     cid = _run_full_campaign(client)
     body = client.get(f"/api/campaigns/{cid}/adversary").json()
     paf = next(f for f in body["factions"] if f["faction"] == "PAF")
-    # Roadmap delivers 4 + 36 + 20 + 10 + 20 + 10 = 100 airframes by 2035-Q4.
+    # Roadmap delivers 4 + 36 + 20 + 10 + 6 + 20 + 10 + 10 = 116 airframes by 2035-Q4.
+    # Expanded in Task 6 Plan 10: added 2029-Q4 (6) and 2033-Q1 (10) events.
     # Tight assertion: matches the authored YAML exactly. If a roadmap edit
     # changes the cumulative, update this number deliberately.
-    assert paf["state"]["inventory"]["j35e"] == 100
+    assert paf["state"]["inventory"]["j35e"] == 116
 
 
 def test_plaaf_doctrine_reaches_saturation_raid_by_end(client):
