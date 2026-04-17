@@ -62,20 +62,28 @@ The repo was previously called **PMC Tycoon** (a mercenary-contractor game). All
 
 ## Execution pattern that's been working
 
-Each plan so far (2/3/4) lands in one session with this rhythm:
-- **13–15 tasks** per plan. Too few → tasks too big to review; too many → excessive subagent dispatch cost.
-- **Model per task:** cheapest that fits. Mechanical schema/YAML/types tasks → fast model, minimal review. Engine logic → standard model + optional spec review. Orchestrator + final → standard model + full review.
-- **Intentional-red pattern:** when module A imports from module B not yet implemented, commit A with failing tests and a clear "Tests will fail until Task N lands B" caveat in the commit message. Next task closes the loop.
-- **Final code review after all tasks** via `superpowers:code-reviewer`. Reviewers have caught real issues every time — never skip this.
-- **Expect ~1 small plan bug per plan.** I (plan author) have consistently introduced small correctness bugs: off-by-one in formulas, sign-inversion in math, destructure order, stray YAML keys, test math not matching implementation. Implementers catch them. Accept their deviations when well-reasoned; don't force verbatim.
-- Current backend test baseline (end of Plan 4): **260 tests**. Fresh work should preserve or grow this.
+Plans 2–7 all landed in single sessions with this rhythm:
+- **12–15 tasks** per plan. Too few → tasks too big to review; too many → excessive subagent dispatch cost. Plan 5 = 14, Plan 6 = 15, Plan 7 = 12 (scope narrowed on purpose — airbase + diplomacy deferred).
+- **Model per task:** cheapest that fits. Mechanical schema/YAML/types tasks → haiku, minimal review. Engine logic + API wiring + component tests → sonnet + optional spec review. Plan-final code-reviewer → capable model (opus-class).
+- **Intentional-red pattern:** when module A imports from module B not yet implemented, commit A with failing tests and a clear "Tests will fail until Task N lands B" caveat in the commit message. Next task closes the loop. (Used heavily in Plans 3/4/5 for multi-file engine modules.)
+- **Final code review after all tasks** via `superpowers:code-reviewer`. Reviewers caught real issues in Plans 4, 5 (race conditions, cache-before-commit, async patterns). Never skip it for plans with engine logic or new DB writes. For frontend-only polish plans (like Plan 7's three screens), the per-task vitest suite is sufficient — final review is optional.
+- **Expect ~1 small plan bug per plan.** Historical list: off-by-one in formulas (Plan 2), sign-inversion in math (Plan 3), destructure order (Plan 4), stray YAML keys (Plan 5), test math not matching implementation (Plan 6). Implementers catch them. Accept their deviations when well-reasoned; don't force verbatim.
+- **Expect ~1 scope-creep moment per plan from the implementer subagent.** Under test pressure, subagents sometimes modify production behavior to avoid test conflicts rather than fix the test. Examples: Plan 5 Task 9 made `Squadron.call_sign` nullable (reverted inline — was wrong), Plan 7 Task 8 changed R&D funding buttons from text to icons (accepted — reasonable UX call), Plan 7 Task 9 added a platform-already-ordered filter that blocks multi-batch procurement (accepted + flagged as carry-over for Plan 10). **Controller discipline:** read the implementer's "deviations" list in every report. Revert when the deviation changes schema or gameplay semantics; accept when it's UX/cosmetic and defensible. When in doubt, revert and fix the test instead.
+- **User preferences confirmed across 6 plans** (saved as feedback memories): subagent-driven-development always (no re-asking execution mode), commit directly to `main` (no worktrees/branches), don't over-review mechanical tasks, don't force-revert reasonable implementer judgments.
+- **Test baselines (end of Plan 7):** backend **308 tests**, frontend **52 vitest tests**. Fresh work should preserve or grow this; a regression means something's off.
+
+### Plan-specific handoff context (Plans 5–7)
+
+- **Plan 5** shipped the OpenRouter LLM layer with 5 versioned prompt modules (`aar_v1`, `intel_brief_v1`, `ace_name_v1`, `year_recap_v1`, `retrospective_v1`) + `LLMCache` dedup + `CampaignNarrative` idempotent persistence + 6 API endpoints. Deliberately does NOT auto-trigger from `advance_turn` — replay determinism guarded by `test_advance_turn_does_not_create_llm_rows`. Plan 8 will invoke these endpoints from the AAR reader + intel brief display.
+- **Plan 6** shipped the MapLibre subcontinent map + 6 reusable primitives under `frontend/src/components/primitives/` (`useLongPress`, `CommitHoldButton`, `RadarChart`, `SwipeStack`, `PlatformDossier`, `SquadronCard`) + 5 map components under `frontend/src/components/map/` + the asset fetcher scaffolding. **Primitives to reuse in Plan 8:** `SwipeStack` for the intel card stack, `CommitHoldButton` for vignette commit, `RadarChart` for adversary force composition display, `PlatformDossier` for tapping any platform in the Ops Room.
+- **Plan 7** shipped three procurement screens + `Stepper` primitive + 3 new backend read endpoints (`/api/content/rd-programs`, `/api/campaigns/{id}/rd`, `/api/campaigns/{id}/acquisitions`). Procurement hub at `/campaign/:id/procurement`. `campaignStore` now holds `rdCatalog`, `rdActive`, `acquisitions`. Airbase management + diplomacy panels deferred to Plan 10 (scope narrowed deliberately).
 
 ## Known carry-overs / tuning backlog
 
 Items flagged by post-review that deserve attention when the relevant future plan lands — none block current plans:
 
 - **Intel false-rate** lands ~0.18 not spec's "1-in-3" due to IMINT-heavy roadmap cards. Either rebalance source mix or update the spec target to ~0.22. (Plan 3)
-- **Cancelled R&D program restart** creates duplicate rows in `rd_program_states` for the same `(campaign_id, program_id)`. No UI exposes cancel-then-restart yet; fix before Plan 7 wires the cancel button. Add `UniqueConstraint("campaign_id", "program_id")` or have `update_program` target only the active row. (Plan 2)
+- **Cancelled R&D program restart** creates duplicate rows in `rd_program_states` for the same `(campaign_id, program_id)`. Plan 7 shipped the cancel button — the restart path is now user-reachable. Before real playtesting, add `UniqueConstraint("campaign_id", "program_id")` or have `update_program` target only the active row. (Plan 2 → Plan 7 observation → Plan 10)
 - **Underfunded acquisitions are effectively free** in MVP — orchestrator deducts full allocation from treasury regardless of bucket consumption, and the resolver logs a warning but delivery still proceeds. Plan to add schedule-slip-from-underfunding later. (Plan 2)
 - **Integer cost rounding** accumulates over long R&D programs (~hundreds of cr under-invested at AMCA completion). Decimal or end-of-program reconciliation if financial reports get scrutinized. (Plan 2)
 - **No `UniqueConstraint("campaign_id", "faction")` on AdversaryState** — re-seeding would silently duplicate. Add before any data-migration path. (Plan 3)
@@ -100,8 +108,7 @@ Items flagged by post-review that deserve attention when the relevant future pla
 - **`kmToPixels` in `ADCoverageLayer`** uses a latitude-only approximation (~±3% within the subcontinent bbox). If zoom or AO extent exceeds ~20° latitude span, add cosine-correction. (Plan 6)
 - **Platform asset manifest seeds 6 platforms.** The other ~24 platforms in `platforms.yaml` fall back to the generic `PlatformSilhouette` SVG. Plan 10's content expansion should expand the manifest + re-run the fetcher. (Plan 6 → Plan 10)
 - **`mapStore.activeLayers` is session-local** — reload loses toggles. Intentional MVP; add localStorage persistence if playtesting shows friction. (Plan 6)
-- **Vitest fake timers + `performance.now()`** — `vitest.config.ts` includes `performance` in `fakeTimers.toFake`, and `src/test/setup.ts` unconditionally replaces jsdom's rAF stub with a setTimeout-based polyfill. Required for `CommitHoldButton` to tick under fake timers. (Plan 6)
-- **`api.ts` now exports `http`** (the axios instance) so vitest can spy on it. No runtime impact; the export is consumed only in tests. (Plan 6)
+- **Frontend test-environment quirks** (Plans 6/7 — see "Frontend test environment" section under Conventions).
 - **Airbase management UI unshipped.** Plan 7 was scoped down. Pick up in Plan 10 alongside content expansion — per spec §2.6 airbase upgrades include shelters, fuel depots, AD integration, runway class, forward-repair. Existing `CampaignBase.config` JSON column is the natural persistence target. (Plan 7 → Plan 10)
 - **Diplomacy panel unshipped.** Per spec §2 diplomacy is "lightweight" (relations with France/US/Russia/Israel/UK gate offers). A dedicated screen is probably overkill; a "Relations" read-only strip in the Acquisitions tab may be enough. Decide in Plan 10. (Plan 7 → Plan 10)
 - **Force-structure rebase UI unshipped** — drag-to-rebase is a V1.1 candidate per ROADMAP §V1.5+ Backlog. Plan 6's `BaseSheet` renders the read-only squadron stack, which covers the MVP "see force structure" need. (Plan 7 → V1.1)
@@ -110,9 +117,6 @@ Items flagged by post-review that deserve attention when the relevant future pla
 - **Acquisition offers use hard-coded default delivery windows** (first delivery = +2 years Q1, FOC = +4 years Q1). Real-world timelines vary by platform (e.g. Rafale F5 has longer integration than Tejas Mk1A). Plan 10 should load per-platform default windows from `platforms.yaml`. (Plan 7 → Plan 10)
 - **Acquisition offers filter out CHN/PAK origin platforms by hardcoded string match** in `ProcurementHub.tsx::platformList`. A `procurable_by: ["IND"]` field on `PlatformSpec` would be cleaner. Worth a tiny refactor when Plan 10 touches the schema. (Plan 7 → Plan 10)
 - **R&D program cancellation writes off invested cash** per existing Plan 2 engine semantics. The confirmation UI makes this explicit. Some players may expect partial refunds. Current behavior is deliberate (sunk-cost realism); revisit if playtest feedback says otherwise. (Plan 7)
-- **Cancel-then-restart a program creates a duplicate `rd_program_states` row** — Plan 2 carry-over that becomes user-facing in Plan 7. Before real playtesting, add `UniqueConstraint("campaign_id", "program_id")` or update `start_program` to re-activate a cancelled row. (Plan 2 → Plan 7 observation → Plan 10)
-- **Budget allocator uses `en-US` locale hardcoded** for `toLocaleString` to avoid Indian-numbering (`1,55,000` vs `155,000`) ambiguity in tests. Revisit if localization becomes a real requirement. (Plan 7)
-- **`BudgetAllocator` copy "Funds active programs..."** (was "Funds active R&D programs..." in the plan) — shortened to avoid matching the R&D bucket label twice in `getByText` queries. Cosmetic. (Plan 7)
 - **`ProcurementHub` tab state lives in URL search params** (`?tab=budget|rd|acquisitions`). Good enough for MVP; links shareable. (Plan 7)
 
 ## Conventions that matter across plans
@@ -124,6 +128,18 @@ Items flagged by post-review that deserve attention when the relevant future pla
 - **Replay determinism** is tested end-to-end in `backend/tests/test_replay_determinism.py`: same seed + same actions on two independent in-memory DBs → identical fingerprint (Campaign fields + intel cards + adversary state + pending vignettes). Extend the fingerprint when adding new persistent player-visible state.
 - **Tests use in-memory SQLite** with `poolclass=StaticPool` (see `backend/tests/test_campaigns_api.py` fixture). Every API test file uses the same fixture pattern.
 - **New content files go to `backend/content/`** and are loaded by `app/content/loader.py`. Add a `@dataclass(frozen=True)` loader + `@lru_cache(maxsize=1)` registry singleton per new content type. Remember to add to `registry.reload_all()`.
+
+### Frontend test environment
+
+Plans 6/7 wired Vitest + `@testing-library/react` + jsdom. The setup has three non-obvious pieces a fresh agent will stub into without documentation:
+
+- **`frontend/src/test/setup.ts`** unconditionally replaces jsdom's `requestAnimationFrame` with a `setTimeout`-based polyfill (jsdom's version doesn't tick under fake timers) and defines a `PointerEvent` class extending `MouseEvent` (jsdom omits it, breaking `fireEvent.pointerDown/Up` with `clientX`).
+- **`vitest.config.ts`** has `test.fakeTimers.toFake: ["setTimeout", "clearTimeout", "performance"]`. The `performance` include is load-bearing — `CommitHoldButton` reads `performance.now()`, and without the override, fake-timer `advanceTimersByTime` doesn't move the clock for rAF-driven progress bars. **Don't remove any of these entries when adding new test categories.**
+- **`frontend/src/lib/api.ts` exports `http`** (the axios instance) so tests can do `vi.spyOn(http, "get")`. Runtime code still goes through the `api` object; the `http` export is for tests only. When adding new API methods, prefer `http.get/post` via this export — don't call `axios.create()` in each method.
+- **Locale:** all money/number display uses `toLocaleString("en-US")` explicitly. System-default Indian locale formats `155000` as `1,55,000`, which breaks `getByText(/155,000/)` regex tests. If localization is ever prioritized, re-architect the tests first (e.g., query by `data-testid`), not the display.
+- **Element disambiguation in component tests:** `getByText(/foo/i)` fails when multiple elements contain "foo". In Plans 6/7 this surfaced with labels vs help-text, and with funding-level button text. Options: change copy to de-duplicate, scope to a closer parent via `within(card).getByText(...)`, or switch to `data-testid`. The codebase leans on de-duplication for now.
+- **Testable seam for MapLibre:** `SubcontinentMap.tsx` is WebGL and untestable under jsdom. Pure projection math lives in `frontend/src/components/map/markerProjection.ts` and IS tested. Future canvas/WebGL components should follow the same split.
+- **Current frontend test baseline:** 52 tests across 14 files. Playwright E2E (`frontend/e2e/`) is configured but empty — planned as a complement to vitest once a staging env is stable.
 
 ## What NOT to do
 
