@@ -48,6 +48,9 @@ CANONICAL_EVENT_TYPES = {
     # intel engine (Plan 3)
     "intel_card_generated",
     "intel_underfilled",
+    # vignette engine (Plan 4)
+    "vignette_fired",
+    "vignette_resolved",
 }
 
 

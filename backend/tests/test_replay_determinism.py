@@ -62,6 +62,13 @@ def _run_scenario(client, seed: int) -> dict:
         f["faction"]: f["state"]
         for f in adv_body["factions"]
     }
+    vig_body = client.get(f"/api/campaigns/{campaign_id}/vignettes/pending").json()
+    final["_pending_vignettes"] = [
+        (v["year"], v["quarter"], v["scenario_id"],
+         v["planning_state"].get("ao", {}).get("lat"),
+         v["planning_state"].get("ao", {}).get("lon"))
+        for v in vig_body["vignettes"]
+    ]
     return final
 
 
@@ -79,6 +86,7 @@ def test_replay_via_two_independent_runs():
     fields = [
         "current_year", "current_quarter", "budget_cr", "current_allocation_json",
         "_intel_fingerprint", "_adversary_fingerprint",
+        "_pending_vignettes",
     ]
     for f in fields:
         assert final_a[f] == final_b[f], f"mismatch on {f}"
