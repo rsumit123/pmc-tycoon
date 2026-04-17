@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 
-export function CampaignConsole() {
+export function CampaignConsoleRaw() {
   const { id } = useParams<{ id: string }>();
   const campaign = useCampaignStore((s) => s.campaign);
   const loadCampaign = useCampaignStore((s) => s.loadCampaign);
