@@ -90,8 +90,9 @@ def test_generate_aar_idempotent(session, monkeypatch):
 
 def test_generate_ace_name_requires_notable_win(session, monkeypatch):
     c = _campaign(session)
-    sq = Squadron(campaign_id=c.id, name="17 Sqn", platform_id="rafale_f4",
-                  base_id=1, strength=16, readiness_pct=80, xp=0)
+    sq = Squadron(campaign_id=c.id, name="17 Sqn", call_sign="17A",
+                  platform_id="rafale_f4", base_id=1, strength=16,
+                  readiness_pct=80, xp=0)
     session.add(sq); session.commit()
     v = Vignette(
         campaign_id=c.id, year=2029, quarter=3, scenario_id="sc1",
