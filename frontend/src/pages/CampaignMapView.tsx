@@ -69,6 +69,12 @@ export function CampaignMapView() {
         </div>
         <div className="flex items-center gap-2">
           <Link
+            to={`/campaign/${campaign.id}/procurement`}
+            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-semibold rounded-lg px-3 py-1.5"
+          >
+            Procurement
+          </Link>
+          <Link
             to={`/campaign/${campaign.id}/raw`}
             className="text-xs opacity-60 hover:opacity-100 underline"
           >
