@@ -3,6 +3,9 @@ import { Landing } from "./pages/Landing";
 import { CampaignMapView } from "./pages/CampaignMapView";
 import { CampaignConsoleRaw } from "./pages/CampaignConsoleRaw";
 import { ProcurementHub } from "./pages/ProcurementHub";
+import { IntelInbox } from "./pages/IntelInbox";
+import { OpsRoom } from "./pages/OpsRoom";
+import { VignetteAAR } from "./pages/VignetteAAR";
 
 export default function App() {
   return (
@@ -10,6 +13,9 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/campaign/:id" element={<CampaignMapView />} />
       <Route path="/campaign/:id/procurement" element={<ProcurementHub />} />
+      <Route path="/campaign/:id/intel" element={<IntelInbox />} />
+      <Route path="/campaign/:id/vignette/:vid" element={<OpsRoom />} />
+      <Route path="/campaign/:id/vignette/:vid/aar" element={<VignetteAAR />} />
       <Route path="/campaign/:id/raw" element={<CampaignConsoleRaw />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
