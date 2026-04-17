@@ -12,6 +12,7 @@ const platform: Platform = {
   id: "rafale_f4", name: "Rafale F4", origin: "FR", role: "multirole",
   generation: "4.5", combat_radius_km: 1850, payload_kg: 9500,
   rcs_band: "reduced", radar_range_km: 200, cost_cr: 4500, intro_year: 2020,
+  procurable_by: ["IND"], default_first_delivery_quarters: 8, default_foc_quarters: 16,
 };
 
 describe("SquadronCard", () => {

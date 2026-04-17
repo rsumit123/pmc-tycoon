@@ -215,6 +215,9 @@ export interface Platform {
   radar_range_km: number;
   cost_cr: number;
   intro_year: number;
+  procurable_by: string[];
+  default_first_delivery_quarters: number;
+  default_foc_quarters: number;
 }
 
 export interface PlatformListResponse {

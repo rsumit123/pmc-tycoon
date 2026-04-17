@@ -33,26 +33,31 @@ function qFraction(year: number, quarter: number): number {
 }
 
 function OfferCard({
-  platform, currentYear, onSign, disabled,
+  platform, currentYear, currentQuarter, onSign, disabled,
 }: {
   platform: Platform;
   currentYear: number;
+  currentQuarter: number;
   onSign: AcquisitionPipelineProps["onSign"];
   disabled?: boolean;
 }) {
   const [qty, setQty] = useState<number>(DEFAULT_QTY);
   const totalCost = qty * platform.cost_cr;
-  const firstDeliveryYear = currentYear + 2;
-  const focYear = currentYear + 4;
+  const firstDeliveryQ = platform.default_first_delivery_quarters ?? 8;
+  const focQ = platform.default_foc_quarters ?? 16;
+  const firstDeliveryYear = currentYear + Math.floor((currentQuarter - 1 + firstDeliveryQ) / 4);
+  const firstDeliveryQuarter = ((currentQuarter - 1 + firstDeliveryQ) % 4) + 1;
+  const focYear = currentYear + Math.floor((currentQuarter - 1 + focQ) / 4);
+  const focQuarter = ((currentQuarter - 1 + focQ) % 4) + 1;
 
   const sign = () => {
     onSign({
       platform_id: platform.id,
       quantity: qty,
       first_delivery_year: firstDeliveryYear,
-      first_delivery_quarter: 1,
+      first_delivery_quarter: firstDeliveryQuarter,
       foc_year: focYear,
-      foc_quarter: 1,
+      foc_quarter: focQuarter,
       total_cost_cr: totalCost,
     });
   };
@@ -81,8 +86,8 @@ function OfferCard({
       </div>
       <div className="text-xs opacity-70">
         Total: <span className="font-semibold">₹{totalCost.toLocaleString("en-US")} cr</span>
-        {" • First delivery "}{firstDeliveryYear}-Q1
-        {" • FOC "}{focYear}-Q1
+        {" • First delivery "}{firstDeliveryYear}-Q{firstDeliveryQuarter}
+        {" • FOC "}{focYear}-Q{focQuarter}
       </div>
       <CommitHoldButton
         label={`Hold to sign ₹${totalCost.toLocaleString("en-US")}`}
@@ -143,8 +148,7 @@ export function AcquisitionPipeline({
   platforms, orders, currentYear, currentQuarter, onSign, disabled,
 }: AcquisitionPipelineProps) {
   const byId = Object.fromEntries(platforms.map((p) => [p.id, p]));
-  const orderedPlatformIds = new Set(orders.map((o) => o.platform_id));
-  const availablePlatforms = platforms.filter((p) => !orderedPlatformIds.has(p.id));
+  const availablePlatforms = platforms;
   return (
     <div className="space-y-6">
       <section className="space-y-3">
@@ -157,6 +161,7 @@ export function AcquisitionPipeline({
               key={p.id}
               platform={p}
               currentYear={currentYear}
+              currentQuarter={currentQuarter}
               onSign={onSign}
               disabled={disabled}
             />

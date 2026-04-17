@@ -64,7 +64,7 @@ export function ProcurementHub() {
     };
 
   const platformList = Object.values(platformsById)
-    .filter((p) => p.origin !== "CHN" && p.origin !== "PAK")
+    .filter((p) => p.procurable_by && p.procurable_by.includes("IND"))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (

@@ -58,6 +58,7 @@ function ActiveRow({
                 <button
                   key={lvl}
                   type="button"
+                  title={lvl}
                   aria-label={`Set funding ${lvl}`}
                   onClick={() => onUpdate(state.program_id, { funding_level: lvl })}
                   className={[
@@ -139,6 +140,7 @@ function CatalogRow({
             <button
               key={lvl}
               type="button"
+              title={lvl}
               aria-label={`Set funding ${lvl}`}
               onClick={() => setFunding(lvl)}
               className={[
