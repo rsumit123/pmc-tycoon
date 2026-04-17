@@ -22,6 +22,8 @@ export function CampaignMapView() {
   const advanceTurn = useCampaignStore((s) => s.advanceTurn);
   const loading = useCampaignStore((s) => s.loading);
   const error = useCampaignStore((s) => s.error);
+  const pendingVignettes = useCampaignStore((s) => s.pendingVignettes);
+  const loadPendingVignettes = useCampaignStore((s) => s.loadPendingVignettes);
 
   const selectedBaseId = useMapStore((s) => s.selectedBaseId);
   const setSelectedBase = useMapStore((s) => s.setSelectedBase);
@@ -42,6 +44,12 @@ export function CampaignMapView() {
       loadPlatforms();
     }
   }, [campaign, loadBases, loadPlatforms]);
+
+  useEffect(() => {
+    if (campaign) {
+      loadPendingVignettes(campaign.id);
+    }
+  }, [campaign, loadPendingVignettes]);
 
   useEffect(() => {
     if (!mapInstance) return;
@@ -68,6 +76,20 @@ export function CampaignMapView() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {pendingVignettes.length > 0 && (
+            <Link
+              to={`/campaign/${campaign.id}/vignette/${pendingVignettes[0].id}`}
+              className="bg-red-600 hover:bg-red-500 text-slate-100 text-xs font-semibold rounded-lg px-3 py-1.5 animate-pulse"
+            >
+              ⚠ Pending vignette
+            </Link>
+          )}
+          <Link
+            to={`/campaign/${campaign.id}/intel`}
+            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-semibold rounded-lg px-3 py-1.5"
+          >
+            Intel
+          </Link>
           <Link
             to={`/campaign/${campaign.id}/procurement`}
             className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-semibold rounded-lg px-3 py-1.5"
