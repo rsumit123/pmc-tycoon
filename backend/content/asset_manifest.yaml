@@ -1,0 +1,28 @@
+# Hand-curated Wikimedia Commons hero-image URLs for platform dossiers.
+# Fetcher: scripts/fetch_platform_assets.py. Results land in
+# frontend/public/platforms/{id}/hero.jpg + attribution.json.
+platforms:
+  - id: rafale_f4
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Dassault_Rafale_%28sideview%29.jpg/960px-Dassault_Rafale_%28sideview%29.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "Dassault Rafale — Wikimedia Commons"
+  - id: tejas_mk1a
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/HAL_Tejas_MK1.jpg/960px-HAL_Tejas_MK1.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "HAL Tejas — Wikimedia Commons"
+  - id: su30_mki
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Sukhoi_Su-30MKI_Indian_Air_Force.jpg/960px-Sukhoi_Su-30MKI_Indian_Air_Force.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "Su-30MKI — Wikimedia Commons"
+  - id: mirage2000
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Mirage_2000H.jpg/960px-Mirage_2000H.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "Mirage 2000 — Wikimedia Commons"
+  - id: j20a
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Chengdu_J-20_at_Airshow_China_2016.jpg/960px-Chengdu_J-20_at_Airshow_China_2016.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "Chengdu J-20 — Wikimedia Commons"
+  - id: j35a
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Shenyang_J-35.jpg/960px-Shenyang_J-35.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "Shenyang J-35 — Wikimedia Commons"
