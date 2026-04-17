@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-04-17 (Plan 7 done)
+**Last updated:** 2026-04-17 (Plan 8 done)
 
 ---
 
@@ -19,7 +19,7 @@
 | 5 | LLM Integration (OpenRouter) | 🟢 done | [2026-04-17-llm-integration-plan.md](2026-04-17-llm-integration-plan.md) |
 | 6 | Frontend — Map + Core UI Primitives | 🟢 done | [2026-04-17-frontend-map-primitives-plan.md](2026-04-17-frontend-map-primitives-plan.md) |
 | 7 | Frontend — Procurement Flows | 🟢 done | [2026-04-17-frontend-procurement-flows-plan.md](2026-04-17-frontend-procurement-flows-plan.md) |
-| 8 | Frontend — Vignettes + Intel Screens | 🔴 not started | *to be written* |
+| 8 | Frontend — Vignettes + Intel Screens | 🟢 done | [2026-04-17-frontend-vignettes-intel-plan.md](2026-04-17-frontend-vignettes-intel-plan.md) |
 | 9 | Campaign End + Polish | 🔴 not started | *to be written* |
 | 10 | V1 Content Expansion + Balancing | 🔴 not started | *to be written* |
 
