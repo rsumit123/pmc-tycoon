@@ -1,0 +1,188 @@
+# Sovereign Shield scenario template archetypes — MVP set of 8 scenarios
+# spanning western LAC, eastern LAC, PAF western probe, IOR CBG threat,
+# PLAN SSN transit, airbase strike, ISR intrusion, and YJ-21 saturation raid.
+
+templates:
+  - id: lac_air_incursion_limited
+    name: "LAC Air Incursion (Limited)"
+    ao: {region: lac_western, name: "Ladakh / Pangong sector", lat: 34.0, lon: 78.5}
+    response_clock_minutes: 45
+    q_index_min: 0
+    q_index_max: 39
+    weight: 1.5
+    requires:
+      adversary_inventory: {}
+    adversary_roster:
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j20a, j35a, j16]
+        count_range: [4, 8]
+      - role: strike
+        faction: PLAAF
+        platform_pool: [j16]
+        count_range: [0, 4]
+    allowed_ind_roles: [CAP, SEAD, strike, awacs, tanker]
+    roe_options: [weapons_free, weapons_tight, visual_id_required]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 2, ind_losses_max: 4}
+
+  - id: lac_eastern_probe
+    name: "Eastern LAC Fighter Probe"
+    ao: {region: lac_eastern, name: "Arunachal Pradesh sector", lat: 28.0, lon: 95.5}
+    response_clock_minutes: 60
+    q_index_min: 4
+    q_index_max: 39
+    weight: 1.0
+    requires:
+      adversary_inventory: {}
+    adversary_roster:
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j20a, j10c, j11b]
+        count_range: [4, 6]
+    allowed_ind_roles: [CAP, awacs, tanker]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 2, ind_losses_max: 3}
+
+  - id: paf_stealth_probe
+    name: "PAF J-35E Stealth Probe"
+    ao: {region: western_border, name: "Rajasthan / Punjab sector", lat: 30.5, lon: 72.5}
+    response_clock_minutes: 40
+    q_index_min: 4
+    q_index_max: 39
+    weight: 1.2
+    requires:
+      adversary_inventory: {PAF: {j35e: 10}}
+    adversary_roster:
+      - role: CAP
+        faction: PAF
+        platform_pool: [j35e]
+        count_range: [2, 6]
+      - role: CAP
+        faction: PAF
+        platform_pool: [j10ce, jf17_blk3]
+        count_range: [2, 4]
+    allowed_ind_roles: [CAP, SEAD, awacs, tanker]
+    roe_options: [weapons_free, weapons_tight, visual_id_required]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 2, ind_losses_max: 3}
+
+  - id: ior_cbg_transit
+    name: "PLAN Carrier Group IOR Transit"
+    ao: {region: ior_central, name: "Central Indian Ocean", lat: 5.0, lon: 80.0}
+    response_clock_minutes: 120
+    q_index_min: 8
+    q_index_max: 39
+    weight: 0.8
+    requires:
+      adversary_inventory: {PLAN: {fujian: 1}}
+    adversary_roster:
+      - role: CAP
+        faction: PLAN
+        platform_pool: [j35a]
+        count_range: [4, 8]
+    allowed_ind_roles: [CAP, strike, awacs, tanker]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: escort_carrier
+      success_threshold: {adv_kills_min: 3, ind_losses_max: 6}
+
+  - id: plan_ssn_transit
+    name: "PLAN SSN Transit Detection"
+    ao: {region: ior_malacca, name: "Andaman Sea / Malacca approach", lat: 8.0, lon: 93.0}
+    response_clock_minutes: 90
+    q_index_min: 0
+    q_index_max: 39
+    weight: 0.7
+    requires:
+      adversary_inventory: {PLAN: {type093b_ssn: 1}}
+    adversary_roster:
+      - role: CAP
+        faction: PLAN
+        platform_pool: [j35a]
+        count_range: [2, 4]
+    allowed_ind_roles: [CAP, awacs]
+    roe_options: [weapons_tight, visual_id_required]
+    objective:
+      kind: defeat_strike
+      success_threshold: {adv_kills_min: 1, ind_losses_max: 2}
+
+  - id: paf_airbase_strike
+    name: "PAF Surge Strike on Western Sector"
+    ao: {region: western_border, name: "Indian Punjab sector", lat: 31.0, lon: 74.5}
+    response_clock_minutes: 35
+    q_index_min: 8
+    q_index_max: 39
+    weight: 1.0
+    requires:
+      adversary_inventory: {PAF: {j35e: 20}}
+    adversary_roster:
+      - role: strike
+        faction: PAF
+        platform_pool: [j35e, j10ce]
+        count_range: [6, 10]
+      - role: CAP
+        faction: PAF
+        platform_pool: [jf17_blk3, f16_blk52]
+        count_range: [2, 6]
+    allowed_ind_roles: [CAP, SEAD, awacs, tanker]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: defeat_strike
+      success_threshold: {adv_kills_min: 4, ind_losses_max: 5}
+
+  - id: plaaf_saturation_raid
+    name: "PLAAF Saturation Raid on Hasimara"
+    ao: {region: lac_eastern, name: "Hasimara AFS sector", lat: 26.7, lon: 89.3}
+    response_clock_minutes: 30
+    q_index_min: 24
+    q_index_max: 39
+    weight: 0.8
+    requires:
+      adversary_inventory: {PLAAF: {j35a: 100}}
+    adversary_roster:
+      - role: strike
+        faction: PLAAF
+        platform_pool: [j20a, j35a, j16]
+        count_range: [8, 14]
+      - role: strike
+        faction: PLAAF
+        platform_pool: [h6kj]
+        count_range: [2, 4]
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j20a, j35a]
+        count_range: [4, 8]
+    allowed_ind_roles: [CAP, SEAD, awacs, tanker]
+    roe_options: [weapons_free]
+    objective:
+      kind: defeat_strike
+      success_threshold: {adv_kills_min: 5, ind_losses_max: 8}
+
+  - id: isr_intrusion
+    name: "PLAAF ISR Intrusion"
+    ao: {region: lac_western, name: "Aksai Chin approach", lat: 35.0, lon: 79.5}
+    response_clock_minutes: 90
+    q_index_min: 0
+    q_index_max: 39
+    weight: 0.9
+    requires:
+      adversary_inventory: {}
+    adversary_roster:
+      - role: awacs
+        faction: PLAAF
+        platform_pool: [kj500]
+        count_range: [1, 1]
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j20a, j10c]
+        count_range: [2, 4]
+    allowed_ind_roles: [CAP, awacs, tanker]
+    roe_options: [weapons_tight, visual_id_required]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 1, ind_losses_max: 2}

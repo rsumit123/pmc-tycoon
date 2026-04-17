@@ -148,3 +148,40 @@ def load_intel_templates(path: Path) -> list[IntelTemplate]:
             trigger=raw.get("trigger"),
         ))
     return out
+
+
+@dataclass(frozen=True)
+class ScenarioTemplate:
+    id: str
+    name: str
+    ao: dict
+    response_clock_minutes: int
+    q_index_min: int
+    q_index_max: int
+    weight: float
+    requires: dict
+    adversary_roster: list
+    allowed_ind_roles: list[str]
+    roe_options: list[str]
+    objective: dict
+
+
+def load_scenario_templates(path: Path) -> list[ScenarioTemplate]:
+    data = _load_yaml(path)
+    out: list[ScenarioTemplate] = []
+    for raw in data.get("templates", []):
+        out.append(ScenarioTemplate(
+            id=raw["id"],
+            name=raw["name"],
+            ao=dict(raw["ao"]),
+            response_clock_minutes=raw["response_clock_minutes"],
+            q_index_min=raw["q_index_min"],
+            q_index_max=raw["q_index_max"],
+            weight=float(raw["weight"]),
+            requires=dict(raw.get("requires") or {}),
+            adversary_roster=[dict(r) for r in raw["adversary_roster"]],
+            allowed_ind_roles=list(raw["allowed_ind_roles"]),
+            roe_options=list(raw["roe_options"]),
+            objective=dict(raw["objective"]),
+        ))
+    return out

@@ -5,7 +5,7 @@ from app.core.config import settings
 from app.content.loader import (
     PlatformSpec, BaseSpec, ObjectiveSpec, RDProgramSpec,
     load_platforms, load_bases, load_objectives, load_rd_programs,
-    load_adversary_roadmap, load_intel_templates,
+    load_adversary_roadmap, load_intel_templates, load_scenario_templates,
 )
 
 
@@ -39,6 +39,12 @@ def intel_templates() -> list:
     return load_intel_templates(Path(settings.content_dir) / "intel_templates.yaml")
 
 
+@lru_cache(maxsize=1)
+def scenario_templates() -> list:
+    return load_scenario_templates(Path(settings.content_dir) / "scenario_templates.yaml")
+
+
 def reload_all() -> None:
-    for fn in (platforms, bases, objectives, rd_programs, adversary_roadmap, intel_templates):
+    for fn in (platforms, bases, objectives, rd_programs,
+               adversary_roadmap, intel_templates, scenario_templates):
         fn.cache_clear()
