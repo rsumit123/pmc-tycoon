@@ -186,3 +186,279 @@ templates:
     objective:
       kind: defend_airspace
       success_threshold: {adv_kills_min: 1, ind_losses_max: 2}
+
+  - id: plaaf_sead_package
+    name: "PLAAF SEAD Strike Package"
+    ao: {region: lac_western, name: "Aksai Chin corridor", lat: 35.5, lon: 79.0}
+    response_clock_minutes: 40
+    q_index_min: 4
+    q_index_max: 39
+    weight: 1.0
+    requires:
+      adversary_inventory: {PLAAF: {j16: 200}}
+    adversary_roster:
+      - role: strike
+        faction: PLAAF
+        platform_pool: [j16]
+        count_range: [4, 8]
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j20a, j35a]
+        count_range: [2, 6]
+    allowed_ind_roles: [CAP, SEAD, awacs, tanker]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: defeat_strike
+      success_threshold: {adv_kills_min: 3, ind_losses_max: 4}
+
+  - id: paf_low_level_strike
+    name: "PAF Low-Level Strike Run"
+    ao: {region: western_border, name: "Thar desert sector", lat: 27.0, lon: 71.5}
+    response_clock_minutes: 35
+    q_index_min: 0
+    q_index_max: 39
+    weight: 0.9
+    requires:
+      adversary_inventory: {}
+    adversary_roster:
+      - role: strike
+        faction: PAF
+        platform_pool: [jf17_blk3, f16_blk52]
+        count_range: [4, 8]
+      - role: CAP
+        faction: PAF
+        platform_pool: [j10ce]
+        count_range: [2, 4]
+    allowed_ind_roles: [CAP, SEAD, awacs]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: defeat_strike
+      success_threshold: {adv_kills_min: 3, ind_losses_max: 3}
+
+  - id: joint_two_front
+    name: "Coordinated Two-Front Probe"
+    ao: {region: lac_western, name: "Ladakh / Punjab dual axis", lat: 33.0, lon: 76.0}
+    response_clock_minutes: 30
+    q_index_min: 12
+    q_index_max: 39
+    weight: 0.7
+    requires:
+      adversary_inventory: {PLAAF: {j20a: 600}, PAF: {j35e: 30}}
+    adversary_roster:
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j20a, j35a]
+        count_range: [4, 6]
+      - role: CAP
+        faction: PAF
+        platform_pool: [j35e, j10ce]
+        count_range: [4, 6]
+    allowed_ind_roles: [CAP, SEAD, awacs, tanker]
+    roe_options: [weapons_free]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 4, ind_losses_max: 6}
+
+  - id: plan_maritime_strike
+    name: "PLAN Maritime Strike Escort"
+    ao: {region: ior_central, name: "Arabian Sea western approaches", lat: 15.0, lon: 65.0}
+    response_clock_minutes: 90
+    q_index_min: 8
+    q_index_max: 39
+    weight: 0.6
+    requires:
+      adversary_inventory: {PLAN: {h6n: 20}}
+    adversary_roster:
+      - role: strike
+        faction: PLAN
+        platform_pool: [h6n]
+        count_range: [2, 4]
+      - role: CAP
+        faction: PLAN
+        platform_pool: [j35a]
+        count_range: [2, 6]
+    allowed_ind_roles: [CAP, strike, awacs, tanker]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: defeat_strike
+      success_threshold: {adv_kills_min: 2, ind_losses_max: 4}
+
+  - id: plaaf_j36_debut
+    name: "J-36 Sixth-Gen First Contact"
+    ao: {region: lac_eastern, name: "Sikkim gap", lat: 27.5, lon: 88.5}
+    response_clock_minutes: 45
+    q_index_min: 24
+    q_index_max: 39
+    weight: 0.5
+    requires:
+      adversary_inventory: {PLAAF: {j36: 8}}
+    adversary_roster:
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j36]
+        count_range: [2, 4]
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j20a]
+        count_range: [2, 4]
+    allowed_ind_roles: [CAP, SEAD, awacs, tanker]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 1, ind_losses_max: 3}
+
+  - id: lac_western_surge
+    name: "PLAAF Western Sector Surge"
+    ao: {region: lac_western, name: "Depsang Plains sector", lat: 35.0, lon: 77.5}
+    response_clock_minutes: 35
+    q_index_min: 8
+    q_index_max: 39
+    weight: 0.9
+    requires:
+      adversary_inventory: {PLAAF: {j20a: 400}}
+    adversary_roster:
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j20a, j35a, j10c]
+        count_range: [6, 12]
+      - role: strike
+        faction: PLAAF
+        platform_pool: [j16, j11b]
+        count_range: [4, 8]
+    allowed_ind_roles: [CAP, SEAD, strike, awacs, tanker]
+    roe_options: [weapons_free]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 5, ind_losses_max: 6}
+
+  - id: paf_standoff_cruise
+    name: "PAF Standoff Cruise Missile Profile"
+    ao: {region: western_border, name: "Gujarat / Kutch sector", lat: 24.0, lon: 69.0}
+    response_clock_minutes: 50
+    q_index_min: 8
+    q_index_max: 39
+    weight: 0.8
+    requires:
+      adversary_inventory: {PAF: {j35e: 20}}
+    adversary_roster:
+      - role: strike
+        faction: PAF
+        platform_pool: [j35e, j10ce]
+        count_range: [4, 8]
+      - role: CAP
+        faction: PAF
+        platform_pool: [jf17_blk3, f16_blk52]
+        count_range: [2, 4]
+    allowed_ind_roles: [CAP, SEAD, awacs, tanker]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: defeat_strike
+      success_threshold: {adv_kills_min: 3, ind_losses_max: 4}
+
+  - id: plan_carrier_defense
+    name: "PLAN Carrier Air Defense"
+    ao: {region: ior_central, name: "Bay of Bengal approaches", lat: 10.0, lon: 85.0}
+    response_clock_minutes: 120
+    q_index_min: 16
+    q_index_max: 39
+    weight: 0.6
+    requires:
+      adversary_inventory: {PLAN: {type004_carrier: 1}}
+    adversary_roster:
+      - role: CAP
+        faction: PLAN
+        platform_pool: [j35a]
+        count_range: [6, 10]
+    allowed_ind_roles: [CAP, strike, awacs, tanker]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: escort_carrier
+      success_threshold: {adv_kills_min: 3, ind_losses_max: 5}
+
+  - id: plaaf_night_intercept
+    name: "PLAAF Night Intercept"
+    ao: {region: lac_eastern, name: "Tawang sector", lat: 27.6, lon: 91.8}
+    response_clock_minutes: 30
+    q_index_min: 4
+    q_index_max: 39
+    weight: 0.8
+    requires:
+      adversary_inventory: {}
+    adversary_roster:
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j20a, j10c, j16]
+        count_range: [4, 8]
+    allowed_ind_roles: [CAP, awacs]
+    roe_options: [weapons_free, visual_id_required]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 2, ind_losses_max: 3}
+
+  - id: andaman_patrol
+    name: "Andaman Sea Air Patrol"
+    ao: {region: ior_malacca, name: "Andaman Sea / Car Nicobar sector", lat: 9.5, lon: 93.5}
+    response_clock_minutes: 60
+    q_index_min: 0
+    q_index_max: 39
+    weight: 0.7
+    requires:
+      adversary_inventory: {}
+    adversary_roster:
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j20a, j10c]
+        count_range: [2, 4]
+      - role: awacs
+        faction: PLAAF
+        platform_pool: [kj500]
+        count_range: [0, 1]
+    allowed_ind_roles: [CAP, awacs, tanker]
+    roe_options: [weapons_tight, visual_id_required]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 1, ind_losses_max: 2}
+
+  - id: lac_awacs_hunt
+    name: "PLAAF AWACS Hunt Mission"
+    ao: {region: lac_western, name: "Karakoram corridor", lat: 36.0, lon: 77.0}
+    response_clock_minutes: 45
+    q_index_min: 12
+    q_index_max: 39
+    weight: 0.6
+    requires:
+      adversary_inventory: {PLAAF: {j20a: 500}}
+    adversary_roster:
+      - role: CAP
+        faction: PLAAF
+        platform_pool: [j20a]
+        count_range: [4, 6]
+    allowed_ind_roles: [CAP, awacs, tanker]
+    roe_options: [weapons_free]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 2, ind_losses_max: 2}
+
+  - id: paf_retaliatory_strike
+    name: "PAF Retaliatory Deep Strike"
+    ao: {region: western_border, name: "Sindh border / Barmer sector", lat: 26.0, lon: 70.0}
+    response_clock_minutes: 30
+    q_index_min: 4
+    q_index_max: 39
+    weight: 0.8
+    requires:
+      adversary_inventory: {PAF: {j35e: 10}}
+    adversary_roster:
+      - role: strike
+        faction: PAF
+        platform_pool: [j35e, jf17_blk3]
+        count_range: [6, 10]
+      - role: CAP
+        faction: PAF
+        platform_pool: [j10ce, f16_blk52]
+        count_range: [2, 6]
+    allowed_ind_roles: [CAP, SEAD, awacs, tanker]
+    roe_options: [weapons_free]
+    objective:
+      kind: defeat_strike
+      success_threshold: {adv_kills_min: 4, ind_losses_max: 5}
