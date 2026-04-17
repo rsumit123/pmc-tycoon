@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import type { Map as MLMap } from "maplibre-gl";
 
 import { useCampaignStore } from "../store/campaignStore";
@@ -10,9 +10,11 @@ import { ADCoverageLayer } from "../components/map/ADCoverageLayer";
 import { IntelContactsLayer } from "../components/map/IntelContactsLayer";
 import { LayerTogglePanel } from "../components/map/LayerTogglePanel";
 import { BaseSheet } from "../components/map/BaseSheet";
+import { YearEndRecapToast } from "../components/endgame/YearEndRecapToast";
 
 export function CampaignMapView() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const campaign = useCampaignStore((s) => s.campaign);
   const bases = useCampaignStore((s) => s.bases);
   const platformsById = useCampaignStore((s) => s.platformsById);
@@ -31,6 +33,10 @@ export function CampaignMapView() {
 
   const [mapInstance, setMapInstance] = useState<MLMap | null>(null);
   const [projectionVersion, setProjectionVersion] = useState(0);
+
+  const isCampaignComplete = campaign
+    ? campaign.current_year > 2036 || (campaign.current_year === 2036 && campaign.current_quarter > 1)
+    : false;
 
   useEffect(() => {
     if (id && (!campaign || campaign.id !== Number(id))) {
@@ -57,6 +63,14 @@ export function CampaignMapView() {
     mapInstance.on("move", bump);
     return () => { mapInstance.off("move", bump); };
   }, [mapInstance]);
+
+  const handleAdvanceTurn = async () => {
+    await advanceTurn();
+    const updated = useCampaignStore.getState().campaign;
+    if (updated && (updated.current_year > 2036 || (updated.current_year === 2036 && updated.current_quarter > 1))) {
+      navigate(`/campaign/${updated.id}/white-paper`);
+    }
+  };
 
   const selectedBase = useMemo(
     () => bases.find((b) => b.id === selectedBaseId) ?? null,
@@ -102,8 +116,16 @@ export function CampaignMapView() {
           >
             raw
           </Link>
+          {isCampaignComplete && (
+            <Link
+              to={`/campaign/${campaign.id}/white-paper`}
+              className="bg-amber-600 hover:bg-amber-500 text-slate-900 text-xs font-semibold rounded-lg px-3 py-1.5"
+            >
+              White Paper
+            </Link>
+          )}
           <button
-            onClick={advanceTurn}
+            onClick={handleAdvanceTurn}
             disabled={loading}
             className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-slate-900 font-semibold rounded-lg px-3 py-1.5 text-sm"
           >
@@ -146,6 +168,8 @@ export function CampaignMapView() {
         platforms={platformsById}
         onClose={() => setSelectedBase(null)}
       />
+
+      <YearEndRecapToast />
     </div>
   );
 }
