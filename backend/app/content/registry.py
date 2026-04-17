@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.content.loader import (
     PlatformSpec, BaseSpec, ObjectiveSpec, RDProgramSpec,
     load_platforms, load_bases, load_objectives, load_rd_programs,
+    load_adversary_roadmap,
 )
 
 
@@ -28,6 +29,11 @@ def rd_programs() -> dict[str, RDProgramSpec]:
     return load_rd_programs(Path(settings.content_dir) / "rd_programs.yaml")
 
 
+@lru_cache(maxsize=1)
+def adversary_roadmap() -> list:
+    return load_adversary_roadmap(Path(settings.content_dir) / "adversary_roadmap.yaml")
+
+
 def reload_all() -> None:
-    for fn in (platforms, bases, objectives, rd_programs):
+    for fn in (platforms, bases, objectives, rd_programs, adversary_roadmap):
         fn.cache_clear()

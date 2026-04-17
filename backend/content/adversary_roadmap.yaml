@@ -1,0 +1,222 @@
+# Sovereign Shield adversary roadmap 2026-Q3 .. 2036-Q1
+# Authored from public sources as of 2026-04; semi-realistic, gameable (D10).
+# Must be chronologically sorted by (year, quarter).
+
+events:
+  # ===== 2026 =====
+  - year: 2026
+    quarter: 3
+    faction: PAF
+    effect: {kind: inventory_delta, payload: {j35e: 4}}
+    intel:
+      headline: "First J-35E tranche reaches PAF — 4 airframes in sqn service"
+      source_type: IMINT
+      confidence: 0.90
+
+  - year: 2026
+    quarter: 4
+    faction: PAF
+    effect: {kind: inventory_delta, payload: {j10ce: 16}}
+    intel:
+      headline: "PAF completes J-10CE induction — final 16 airframes delivered"
+      source_type: OSINT
+      confidence: 0.75
+
+  - year: 2026
+    quarter: 4
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j20a: 60, j35a: 20}}
+    intel:
+      headline: "PLAAF Q4 airframe deliveries: J-20 line running hot"
+      source_type: SIGINT
+      confidence: 0.80
+
+  # ===== 2027 =====
+  - year: 2027
+    quarter: 1
+    faction: PAF
+    effect: {kind: inventory_delta, payload: {j35e: 36}}
+    intel:
+      headline: "PAF J-35E first tranche complete — 40 airframes total"
+      source_type: IMINT
+      confidence: 0.92
+
+  - year: 2027
+    quarter: 2
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j20a: 40, j20s: 20}}
+
+  - year: 2027
+    quarter: 3
+    faction: PLAN
+    effect: {kind: system_activate, payload: yj21_saturation_operational}
+    intel:
+      headline: "PLAN H-6N regiments test YJ-21 saturation launch profile"
+      source_type: SIGINT
+      confidence: 0.70
+
+  - year: 2027
+    quarter: 4
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j20a: 50, j35a: 30}}
+
+  # ===== 2028 =====
+  - year: 2028
+    quarter: 1
+    faction: PLAAF
+    effect: {kind: base_activate, payload: shigatse_heavy}
+    intel:
+      headline: "PLAAF expanding Shigatse hardened shelters — J-20 capable"
+      source_type: IMINT
+      confidence: 0.85
+
+  - year: 2028
+    quarter: 2
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j20a: 60, j36_prototype: 2}}
+    intel:
+      headline: "J-36 sixth-gen demonstrator observed with J-20S chase — Chengdu"
+      source_type: OSINT
+      confidence: 0.55
+
+  - year: 2028
+    quarter: 3
+    faction: PAF
+    effect: {kind: inventory_delta, payload: {j35e: 20}}
+
+  - year: 2028
+    quarter: 4
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j20a: 50, j35a: 40}}
+
+  # ===== 2029 =====
+  - year: 2029
+    quarter: 1
+    faction: PLAAF
+    effect: {kind: system_activate, payload: pl17_widespread}
+    intel:
+      headline: "PL-17 VLRAAM enters widespread PLAAF service — AWACS killer"
+      source_type: ELINT
+      confidence: 0.82
+
+  - year: 2029
+    quarter: 2
+    faction: PAF
+    effect: {kind: inventory_delta, payload: {j35e: 10}}
+
+  - year: 2029
+    quarter: 3
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j20a: 40, j35a: 60}}
+
+  - year: 2029
+    quarter: 4
+    faction: PLAN
+    effect: {kind: inventory_delta, payload: {type055_destroyer: 2}}
+
+  # ===== 2030 =====
+  - year: 2030
+    quarter: 1
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j20a: 50, j35a: 50, j36_prototype: 4}}
+
+  - year: 2030
+    quarter: 2
+    faction: PAF
+    effect: {kind: base_activate, payload: skardu_forward}
+    intel:
+      headline: "PAF clears Skardu for forward fighter basing"
+      source_type: HUMINT
+      confidence: 0.60
+
+  - year: 2030
+    quarter: 3
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j20a: 50, j35a: 60}}
+
+  - year: 2030
+    quarter: 4
+    faction: PLAN
+    effect: {kind: inventory_delta, payload: {type055_destroyer: 2, type093b_ssn: 1}}
+
+  # ===== 2031 =====
+  - year: 2031
+    quarter: 2
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j20a: 40, j35a: 80, j36: 8}}
+    intel:
+      headline: "J-36 cleared for limited operational trials"
+      source_type: IMINT
+      confidence: 0.70
+
+  - year: 2031
+    quarter: 4
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j20a: 30, j35a: 80, j36: 12}}
+
+  # ===== 2032 =====
+  - year: 2032
+    quarter: 1
+    faction: PLAN
+    effect: {kind: inventory_delta, payload: {type004_carrier: 1}}
+    intel:
+      headline: "Type 004 nuclear carrier Liaoyang enters PLAN service"
+      source_type: IMINT
+      confidence: 0.95
+
+  - year: 2032
+    quarter: 3
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j35a: 80, j36: 18}}
+
+  - year: 2032
+    quarter: 4
+    faction: PAF
+    effect: {kind: inventory_delta, payload: {j35e: 20}}
+    intel:
+      headline: "PAF exercises 30-airframe option on J-35E contract"
+      source_type: OSINT
+      confidence: 0.68
+
+  # ===== 2033 =====
+  - year: 2033
+    quarter: 2
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j35a: 80, j36: 24}}
+
+  - year: 2033
+    quarter: 4
+    faction: PLAAF
+    effect: {kind: system_activate, payload: pl17_ew_integrated}
+
+  # ===== 2034 =====
+  - year: 2034
+    quarter: 2
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j35a: 80, j36: 30}}
+
+  - year: 2034
+    quarter: 4
+    faction: PLAN
+    effect: {kind: inventory_delta, payload: {type004_carrier: 1}}
+    intel:
+      headline: "PLAN commissions second Type 004 carrier"
+      source_type: IMINT
+      confidence: 0.93
+
+  # ===== 2035 =====
+  - year: 2035
+    quarter: 2
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j35a: 60, j36: 36}}
+
+  - year: 2035
+    quarter: 4
+    faction: PAF
+    effect: {kind: inventory_delta, payload: {j35e: 10}}
+
+  # ===== 2036 =====
+  - year: 2036
+    quarter: 1
+    faction: PLAAF
+    effect: {kind: inventory_delta, payload: {j35a: 40, j36: 40}}
