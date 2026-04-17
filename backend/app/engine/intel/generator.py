@@ -136,21 +136,19 @@ def generate_intel(
             if is_template_eligible(tpl, faction, state):
                 eligible.append((tpl, faction, state))
 
-    if not eligible:
-        emitted_events.append({
-            "event_type": "intel_underfilled",
-            "payload": {"reason": "no_eligible_templates", "target": target, "produced": 0},
-        })
-        # Fall through to roadmap-driven cards
-    else:
-        picks = [rng.choice(eligible) for _ in range(target)] if len(eligible) >= 1 else []
-        for tpl, faction, state in picks:
-            cards.append(_render_card(tpl, faction, state, rng))
+    # Sample without replacement so the player never sees two cards from the
+    # same template in one turn. If fewer eligible templates than target,
+    # take what we can and emit intel_underfilled.
+    pick_count = min(target, len(eligible))
+    picks = rng.sample(eligible, pick_count) if eligible else []
+    for tpl, faction, state in picks:
+        cards.append(_render_card(tpl, faction, state, rng))
 
-    if cards and len(cards) < MIN_CARDS:
+    if pick_count < target:
+        reason = "no_eligible_templates" if pick_count == 0 else "insufficient_cards"
         emitted_events.append({
             "event_type": "intel_underfilled",
-            "payload": {"reason": "insufficient_cards", "target": target, "produced": len(cards)},
+            "payload": {"reason": reason, "target": target, "produced": pick_count},
         })
 
     # Roadmap-driven intel cards (one per event with intel block matching turn)
@@ -163,7 +161,20 @@ def generate_intel(
         truth_value = True if evt.intel.forced_true else (
             rng.random() >= SOURCE_RULES[evt.intel.source_type]["false_rate"]
         )
-        ground_truth = {"event_kind": evt.effect.kind}
+        # Roadmap-driven cards land their effect payload in observed/ground_truth
+        # so Plan 5's LLM AAR can read structured data instead of parsing the
+        # headline. For inventory_delta the effect.payload is a {unit: delta}
+        # dict; for system/base activation it's a string id.
+        if isinstance(evt.effect.payload, dict):
+            ground_truth = {
+                "event_kind": evt.effect.kind,
+                "delta": dict(evt.effect.payload),
+            }
+        else:
+            ground_truth = {
+                "event_kind": evt.effect.kind,
+                "subject": evt.effect.payload,
+            }
         card = {
             "source_type": evt.intel.source_type,
             "confidence": evt.intel.confidence,

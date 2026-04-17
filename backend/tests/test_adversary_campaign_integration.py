@@ -49,13 +49,14 @@ def _run_full_campaign(client, seed=1234):
     return c["id"]
 
 
-def test_paf_j35e_reaches_at_least_90_by_end_of_campaign(client):
+def test_paf_j35e_reaches_authored_total_by_end_of_campaign(client):
     cid = _run_full_campaign(client)
     body = client.get(f"/api/campaigns/{cid}/adversary").json()
     paf = next(f for f in body["factions"] if f["faction"] == "PAF")
     # Roadmap delivers 4 + 36 + 20 + 10 + 20 + 10 = 100 airframes by 2035-Q4.
-    # Allow small slack for authoring tweaks — assert >= 90.
-    assert paf["state"]["inventory"]["j35e"] >= 90
+    # Tight assertion: matches the authored YAML exactly. If a roadmap edit
+    # changes the cumulative, update this number deliberately.
+    assert paf["state"]["inventory"]["j35e"] == 100
 
 
 def test_plaaf_doctrine_reaches_saturation_raid_by_end(client):
@@ -76,8 +77,10 @@ def test_plan_reaches_global_power_projection_with_type004(client):
 def test_intel_feed_produces_reasonable_volume(client):
     cid = _run_full_campaign(client)
     body = client.get(f"/api/campaigns/{cid}/intel?limit=500").json()
-    # 40 turns × ~5 avg cards/turn + roadmap-driven + seed = at least 150
-    assert body["total"] >= 150
+    # 40 turns × ~5.5 avg cards/turn + ~16 roadmap-driven + 1 seed.
+    # Empirically lands at 237-242 across seeds; assert >= 200 to allow
+    # tuning headroom but catch silent regressions.
+    assert body["total"] >= 200
 
 
 def test_intel_false_rate_is_in_band(client):
@@ -86,9 +89,13 @@ def test_intel_false_rate_is_in_band(client):
     body = client.get(f"/api/campaigns/{cid}/intel?limit=500").json()
     total = body["total"]
     false_count = sum(1 for c in body["cards"] if not c["truth_value"])
-    # Spec says ~1-in-3; accept 0.10-0.45 band given source-type mix variance
+    # Effective expected rate is ~0.18: the source-type mix is IMINT-heavy
+    # (40% of all cards via IMINT-only roadmap blocks), and IMINT has the
+    # lowest false_rate (10%). Observed across seeds: 0.155-0.207. Band
+    # [0.10, 0.30] catches catastrophic regressions while tolerating
+    # seed-to-seed sample variance.
     ratio = false_count / total if total else 0
-    assert 0.10 <= ratio <= 0.45, f"false rate {ratio:.2f} outside [0.10, 0.45]"
+    assert 0.10 <= ratio <= 0.30, f"false rate {ratio:.2f} outside [0.10, 0.30]"
 
 
 def test_plaaf_j36_sighting_eventually_appears(client):
