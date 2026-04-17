@@ -6,9 +6,13 @@ from app.models.event import CampaignEvent
 from app.models.rd_program import RDProgramState
 from app.models.acquisition import AcquisitionOrder
 from app.models.squadron import Squadron
+from app.models.adversary import AdversaryState
+from app.models.intel import IntelCard
 from app.schemas.campaign import CampaignCreate
 from app.engine.turn import advance as engine_advance
 from app.content.registry import rd_programs as rd_program_specs
+from app.content.registry import adversary_roadmap as adversary_roadmap_reg
+from app.content.registry import intel_templates as intel_templates_reg
 
 
 STARTING_BUDGET_CR = 620000  # ~₹6.2L cr — 1 year cushion of pre-existing reserves
@@ -90,6 +94,7 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
     rd_rows = db.query(RDProgramState).filter(RDProgramState.campaign_id == campaign.id).all()
     acq_rows = db.query(AcquisitionOrder).filter(AcquisitionOrder.campaign_id == campaign.id).all()
     sq_rows = db.query(Squadron).filter(Squadron.campaign_id == campaign.id).all()
+    adv_rows = db.query(AdversaryState).filter(AdversaryState.campaign_id == campaign.id).all()
 
     # Convert content RDProgramSpec -> dict the engine expects
     specs = {
@@ -115,6 +120,9 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         "acquisition_orders": [_serialize_order(o) for o in acq_rows],
         "squadrons": [_serialize_squadron(s) for s in sq_rows],
         "rd_specs": specs,
+        "adversary_states": {row.faction: dict(row.state) for row in adv_rows},
+        "adversary_roadmap": adversary_roadmap_reg(),
+        "intel_templates": intel_templates_reg(),
     }
 
     # Capture the FROM clock so events that describe this turn are tagged
@@ -149,6 +157,24 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
     for s in result.next_squadrons:
         row = sq_by_id[s["id"]]
         row.readiness_pct = s["readiness_pct"]
+
+    adv_by_faction = {r.faction: r for r in adv_rows}
+    for faction, state in result.next_adversary_states.items():
+        if faction in adv_by_faction:
+            adv_by_faction[faction].state = state
+        else:
+            db.add(AdversaryState(campaign_id=campaign.id, faction=faction, state=state))
+
+    for card in result.new_intel_cards:
+        db.add(IntelCard(
+            campaign_id=campaign.id,
+            appeared_year=from_year,
+            appeared_quarter=from_quarter,
+            source_type=card["source_type"],
+            confidence=card["confidence"],
+            truth_value=card["truth_value"],
+            payload=card["payload"],
+        ))
 
     for e in result.events:
         db.add(CampaignEvent(

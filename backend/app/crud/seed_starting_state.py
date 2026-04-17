@@ -17,6 +17,9 @@ from app.models.campaign_base import CampaignBase
 from app.models.squadron import Squadron
 from app.models.acquisition import AcquisitionOrder
 from app.models.rd_program import RDProgramState
+from app.models.adversary import AdversaryState
+from app.models.intel import IntelCard
+from app.engine.adversary.state import OOB_2026_Q2
 
 
 SEED_BASES = [
@@ -94,3 +97,28 @@ def seed_starting_state(db: Session, campaign: Campaign) -> None:
             cost_invested_cr=0,
             quarters_active=0,
         ))
+
+    for faction, state in OOB_2026_Q2.items():
+        db.add(AdversaryState(
+            campaign_id=campaign.id,
+            faction=faction,
+            state=dict(state),  # shallow copy of the module-level constant
+        ))
+
+    # Pre-seed the PAF J-35E deal as a Turn-0 visible intel card.
+    db.add(IntelCard(
+        campaign_id=campaign.id,
+        appeared_year=campaign.current_year,
+        appeared_quarter=campaign.current_quarter,
+        source_type="IMINT",
+        confidence=0.94,
+        truth_value=True,
+        payload={
+            "headline": "Pakistan finalizes J-35E deal — 40 airframes + 30 option",
+            "template_id": "__turn0_seed__",
+            "subject_faction": "PAF",
+            "subject_type": "deployment_observation",
+            "observed": {"jets_contracted": 40, "option": 30, "first_delivery_q": "2026-Q3"},
+            "ground_truth": {"jets_contracted": 40, "option": 30, "first_delivery_q": "2026-Q3"},
+        },
+    ))
