@@ -173,3 +173,32 @@ export interface Vignette {
 export interface VignetteListResponse {
   vignettes: Vignette[];
 }
+
+export type NarrativeKind =
+  | "aar"
+  | "intel_brief"
+  | "ace_name"
+  | "year_recap"
+  | "retrospective";
+
+export interface CampaignNarrative {
+  id: number;
+  kind: NarrativeKind;
+  year: number;
+  quarter: number;
+  subject_id: string | null;
+  text: string;
+  prompt_version: string;
+  created_at: string;
+}
+
+export interface GenerateNarrativeResponse {
+  text: string;
+  cached: boolean;
+  kind: NarrativeKind;
+  subject_id: string | null;
+}
+
+export interface CampaignNarrativeListResponse {
+  narratives: CampaignNarrative[];
+}
