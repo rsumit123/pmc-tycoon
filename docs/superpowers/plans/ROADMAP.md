@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-04-17 (Plan 9 done)
+**Last updated:** 2026-04-18 (Plan 10 done)
 
 ---
 
@@ -21,7 +21,7 @@
 | 7 | Frontend — Procurement Flows | 🟢 done | [2026-04-17-frontend-procurement-flows-plan.md](2026-04-17-frontend-procurement-flows-plan.md) |
 | 8 | Frontend — Vignettes + Intel Screens | 🟢 done | [2026-04-17-frontend-vignettes-intel-plan.md](2026-04-17-frontend-vignettes-intel-plan.md) |
 | 9 | Campaign End + Polish | 🟢 done | [2026-04-17-campaign-end-polish-plan.md](2026-04-17-campaign-end-polish-plan.md) |
-| 10 | V1 Content Expansion + Balancing | 🔴 not started | *to be written* |
+| 10 | V1 Content Expansion + Balancing | 🟢 done | [2026-04-18-content-expansion-balancing-plan.md](2026-04-18-content-expansion-balancing-plan.md) |
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 
