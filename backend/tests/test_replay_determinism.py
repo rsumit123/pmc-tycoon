@@ -50,6 +50,18 @@ def _run_scenario(client, seed: int) -> dict:
         client.post(f"/api/campaigns/{campaign_id}/advance")
 
     final = client.get(f"/api/campaigns/{campaign_id}").json()
+    intel_body = client.get(f"/api/campaigns/{campaign_id}/intel?limit=500").json()
+    adv_body = client.get(f"/api/campaigns/{campaign_id}/adversary").json()
+    # Collect the deterministic-relevant slices
+    final["_intel_fingerprint"] = [
+        (c["appeared_year"], c["appeared_quarter"], c["source_type"],
+         c["payload"]["headline"], c["truth_value"])
+        for c in intel_body["cards"]
+    ]
+    final["_adversary_fingerprint"] = {
+        f["faction"]: f["state"]
+        for f in adv_body["factions"]
+    }
     return final
 
 
@@ -64,6 +76,9 @@ def test_replay_via_two_independent_runs():
     app.dependency_overrides.clear()
     Base.metadata.drop_all(bind=eng_b)
 
-    fields = ["current_year", "current_quarter", "budget_cr", "current_allocation_json"]
+    fields = [
+        "current_year", "current_quarter", "budget_cr", "current_allocation_json",
+        "_intel_fingerprint", "_adversary_fingerprint",
+    ]
     for f in fields:
-        assert final_a[f] == final_b[f], f"mismatch on {f}: {final_a[f]} vs {final_b[f]}"
+        assert final_a[f] == final_b[f], f"mismatch on {f}"

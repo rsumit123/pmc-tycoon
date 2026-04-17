@@ -42,6 +42,12 @@ CANONICAL_EVENT_TYPES = {
     "acquisition_underfunded",
     # readiness engine
     "readiness_changed",
+    # adversary engine (Plan 3)
+    "adversary_roadmap_event_applied",
+    "adversary_doctrine_shifted",
+    # intel engine (Plan 3)
+    "intel_card_generated",
+    "intel_underfilled",
 }
 
 
