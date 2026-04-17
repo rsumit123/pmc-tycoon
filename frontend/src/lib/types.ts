@@ -78,3 +78,98 @@ export interface CampaignCreatePayload {
   objectives: string[];
   seed?: number;
 }
+
+export type VignetteStatus = "pending" | "resolved";
+
+export type ROE = "weapons_free" | "weapons_tight" | "visual_id_required";
+
+export interface AoCoords {
+  region: string;
+  name: string;
+  lat: number;
+  lon: number;
+}
+
+export interface AdversaryForceEntry {
+  role: string;
+  faction: FactionId;
+  platform_id: string;
+  count: number;
+  loadout: string[];
+}
+
+export interface EligibleSquadron {
+  squadron_id: number;
+  name: string;
+  platform_id: string;
+  base_id: number;
+  base_name: string;
+  distance_km: number;
+  in_range: boolean;
+  airframes_available: number;
+  readiness_pct: number;
+  xp: number;
+  loadout: string[];
+}
+
+export interface ScenarioObjective {
+  kind: "defend_airspace" | "defeat_strike" | "escort_carrier" | "suppress_ad";
+  success_threshold: Record<string, number>;
+}
+
+export interface PlanningState {
+  scenario_id: string;
+  scenario_name: string;
+  ao: AoCoords;
+  response_clock_minutes: number;
+  adversary_force: AdversaryForceEntry[];
+  eligible_squadrons: EligibleSquadron[];
+  allowed_ind_roles: string[];
+  roe_options: ROE[];
+  objective: ScenarioObjective;
+}
+
+export interface EventTraceEntry {
+  t_min: number;
+  kind: string;
+  [key: string]: unknown;
+}
+
+export interface VignetteOutcome {
+  ind_kia: number;
+  adv_kia: number;
+  ind_airframes_lost: number;
+  adv_airframes_lost: number;
+  objective_met: boolean;
+  roe: ROE;
+  support: { awacs: boolean; tanker: boolean; sead_package: boolean };
+}
+
+export interface VignetteCommitSquadron {
+  squadron_id: number;
+  airframes: number;
+}
+
+export interface VignetteCommitPayload {
+  squadrons: VignetteCommitSquadron[];
+  support: { awacs: boolean; tanker: boolean; sead_package: boolean };
+  roe: ROE;
+}
+
+export interface Vignette {
+  id: number;
+  year: number;
+  quarter: number;
+  scenario_id: string;
+  status: VignetteStatus;
+  planning_state: PlanningState;
+  committed_force: VignetteCommitPayload | null;
+  event_trace: EventTraceEntry[];
+  aar_text: string;
+  outcome: VignetteOutcome | Record<string, never>;
+  resolved_at: string | null;
+}
+
+export interface VignetteListResponse {
+  vignettes: Vignette[];
+}
