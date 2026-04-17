@@ -90,3 +90,25 @@ def test_replay_via_two_independent_runs():
     ]
     for f in fields:
         assert final_a[f] == final_b[f], f"mismatch on {f}"
+
+
+def test_advance_turn_does_not_create_llm_rows():
+    """Plan 5 keeps LLM generation out of advance_turn. The llm_cache and
+    campaign_narratives tables must remain empty after gameplay, regardless
+    of how many turns advance.
+    """
+    from sqlalchemy.orm import sessionmaker
+    from app.models.llm_cache import LLMCache
+    from app.models.campaign_narrative import CampaignNarrative
+
+    client, eng = _make_client()
+    try:
+        _run_scenario(client, seed=7777)
+        S = sessionmaker(bind=eng)
+        db = S()
+        assert db.query(LLMCache).count() == 0
+        assert db.query(CampaignNarrative).count() == 0
+        db.close()
+    finally:
+        app.dependency_overrides.clear()
+        Base.metadata.drop_all(bind=eng)

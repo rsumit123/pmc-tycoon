@@ -51,6 +51,9 @@ CANONICAL_EVENT_TYPES = {
     # vignette engine (Plan 4)
     "vignette_fired",
     "vignette_resolved",
+    # LLM / narrative layer (Plan 5 — reserved, not auto-emitted in MVP)
+    "narrative_generated",
+    "ace_awarded",
 }
 
 
