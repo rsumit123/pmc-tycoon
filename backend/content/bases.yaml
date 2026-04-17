@@ -17,3 +17,75 @@ bases:
     lon: 73.0489
     runway_class: heavy
     faction: IND
+  - id: adampur
+    name: Adampur Air Force Station
+    lat: 31.4333
+    lon: 75.7667
+    runway_class: heavy
+    faction: IND
+  - id: halwara
+    name: Halwara Air Force Station
+    lat: 30.7500
+    lon: 75.9500
+    runway_class: heavy
+    faction: IND
+  - id: pathankot
+    name: Pathankot Air Force Station
+    lat: 32.2333
+    lon: 75.6333
+    runway_class: heavy
+    faction: IND
+  - id: srinagar
+    name: Srinagar Air Force Station
+    lat: 33.9872
+    lon: 74.7744
+    runway_class: medium
+    faction: IND
+  - id: bareilly
+    name: Bareilly Air Force Station
+    lat: 28.4225
+    lon: 79.4519
+    runway_class: heavy
+    faction: IND
+  - id: gwalior
+    name: Gwalior Air Force Station
+    lat: 26.2933
+    lon: 78.2278
+    runway_class: heavy
+    faction: IND
+  - id: pune
+    name: Pune Air Force Station (Lohegaon)
+    lat: 18.5822
+    lon: 73.9197
+    runway_class: heavy
+    faction: IND
+  - id: thanjavur
+    name: Thanjavur Air Force Station
+    lat: 10.7225
+    lon: 79.1014
+    runway_class: heavy
+    faction: IND
+  - id: tezpur
+    name: Tezpur Air Force Station
+    lat: 26.7100
+    lon: 92.7847
+    runway_class: heavy
+    faction: IND
+  - id: chabua
+    name: Chabua Air Force Station
+    lat: 27.5333
+    lon: 95.0167
+    runway_class: heavy
+    faction: IND
+  - id: car_nicobar
+    name: Car Nicobar Air Force Station (INS Baaz)
+    lat: 9.1525
+    lon: 92.8197
+    runway_class: medium
+    faction: IND
+  - id: nal
+    name: Nal Air Force Station
+    lat: 25.8650
+    lon: 71.7900
+    runway_class: heavy
+    faction: IND

@@ -37,14 +37,17 @@ def _create(client):
     }).json()
 
 
-def test_create_campaign_seeds_three_bases(client):
+def test_create_campaign_seeds_airbases(client):
     c, Session = client
     created = _create(c)
     from app.models.campaign_base import CampaignBase
     db = Session()
     bases = db.query(CampaignBase).filter(CampaignBase.campaign_id == created["id"]).all()
     template_ids = {b.template_id for b in bases}
-    assert template_ids == {"ambala", "hasimara", "jodhpur"}
+    # Core bases always present
+    assert {"ambala", "hasimara", "jodhpur"}.issubset(template_ids)
+    # Full 15-base expansion
+    assert len(template_ids) == 15
 
 
 def test_create_campaign_seeds_named_squadrons(client):
