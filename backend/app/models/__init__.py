@@ -7,6 +7,8 @@ from app.models.intel import IntelCard
 from app.models.adversary import AdversaryState
 from app.models.vignette import Vignette
 from app.models.event import CampaignEvent
+from app.models.llm_cache import LLMCache  # noqa: F401
+from app.models.campaign_narrative import CampaignNarrative  # noqa: F401
 
 __all__ = [
     "Campaign",
@@ -18,4 +20,6 @@ __all__ = [
     "AdversaryState",
     "Vignette",
     "CampaignEvent",
+    "LLMCache",
+    "CampaignNarrative",
 ]

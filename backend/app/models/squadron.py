@@ -16,3 +16,6 @@ class Squadron(Base):
     strength: Mapped[int] = mapped_column(Integer)
     readiness_pct: Mapped[int] = mapped_column(Integer, default=80)
     xp: Mapped[int] = mapped_column(Integer, default=0)
+    ace_name: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    ace_awarded_year: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    ace_awarded_quarter: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
