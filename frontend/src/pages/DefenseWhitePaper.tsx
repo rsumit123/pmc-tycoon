@@ -26,11 +26,13 @@ export function DefenseWhitePaper() {
 
   if (!campaign || !summary) return <div className="p-6">Loading Defense White Paper…</div>;
 
-  const objectiveEntries = (campaign.objectives_json || []).map((objId: string) => ({
-    id: objId,
-    name: objId.replace(/_/g, " "),
-    status: "unknown" as const,
-  }));
+  const objectiveEntries = summary.objectives.length > 0
+    ? summary.objectives
+    : (campaign.objectives_json || []).map((objId: string) => ({
+        id: objId,
+        name: objId.replace(/_/g, " "),
+        status: "unknown" as const,
+      }));
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">

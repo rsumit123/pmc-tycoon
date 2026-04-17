@@ -353,5 +353,6 @@ export interface CampaignSummary {
   vignettes_total: number;
   ace_count: number;
   aces: AceSummary[];
+  objectives: { id: string; name: string; status: "pass" | "fail" | "unknown" }[];
   is_complete: boolean;
 }

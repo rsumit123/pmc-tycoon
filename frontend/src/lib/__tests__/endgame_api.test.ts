@@ -12,7 +12,7 @@ describe("endgame API methods", () => {
         budget_cr: 100000, reputation: 75,
         year_snapshots: [], force_structure: { squadrons_end: 30, total_airframes: 450, fifth_gen_squadrons: 2 },
         vignettes_won: 5, vignettes_lost: 2, vignettes_total: 7,
-        ace_count: 1, aces: [], is_complete: true,
+        ace_count: 1, aces: [], objectives: [{ id: "amca_operational_by_2035", name: "AMCA Operational by 2035", status: "pass" }], is_complete: true,
       },
     });
     const result = await api.getCampaignSummary(1);

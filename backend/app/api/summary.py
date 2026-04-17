@@ -8,6 +8,7 @@ from app.models.vignette import Vignette
 from app.models.squadron import Squadron
 from app.schemas.summary import (
     CampaignSummaryResponse, YearSnapshot, ForceStructure, AceSummary,
+    ObjectiveResult,
 )
 
 router = APIRouter(prefix="/api/campaigns", tags=["summary"])
@@ -87,6 +88,30 @@ def _aces(db: Session, campaign_id: int) -> list[AceSummary]:
     ]
 
 
+def _evaluate_objective(obj_id: str, campaign, squads, vigs) -> str:
+    if obj_id == "amca_operational_by_2035":
+        has_amca = any(s.platform_id in ("amca_mk1", "amca_mk2") for s in squads)
+        return "pass" if has_amca else "fail"
+    elif obj_id == "maintain_42_squadrons":
+        return "pass" if len(squads) >= 42 else "fail"
+    elif obj_id == "no_territorial_loss":
+        lost = any(not (v.outcome or {}).get("objective_met") for v in vigs)
+        return "fail" if lost else "pass"
+    return "unknown"
+
+
+def _objectives(db: Session, campaign, squads, vigs) -> list[ObjectiveResult]:
+    from app.content.registry import objectives as objectives_reg
+    obj_specs = objectives_reg()
+    results = []
+    for obj_id in (campaign.objectives_json or []):
+        spec = obj_specs.get(obj_id)
+        name = spec.title if spec else obj_id.replace("_", " ")
+        status = _evaluate_objective(obj_id, campaign, squads, vigs)
+        results.append(ObjectiveResult(id=obj_id, name=name, status=status))
+    return results
+
+
 def _is_complete(campaign) -> bool:
     return campaign.current_year > 2036 or (
         campaign.current_year == 2036 and campaign.current_quarter > 1
@@ -110,6 +135,10 @@ def summary_endpoint(campaign_id: int, db: Session = Depends(get_db)):
     won = sum(1 for v in vigs if (v.outcome or {}).get("objective_met"))
     lost = len(vigs) - won
 
+    squads = db.query(Squadron).filter(
+        Squadron.campaign_id == campaign_id).all()
+    objectives = _objectives(db, c, squads, vigs)
+
     return CampaignSummaryResponse(
         campaign_id=c.id, name=c.name, difficulty=c.difficulty,
         starting_year=c.starting_year,
@@ -119,5 +148,6 @@ def summary_endpoint(campaign_id: int, db: Session = Depends(get_db)):
         force_structure=force,
         vignettes_won=won, vignettes_lost=lost, vignettes_total=len(vigs),
         ace_count=len(aces), aces=aces,
+        objectives=objectives,
         is_complete=_is_complete(c),
     )

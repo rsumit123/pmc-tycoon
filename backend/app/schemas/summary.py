@@ -25,6 +25,12 @@ class AceSummary(BaseModel):
     awarded_quarter: int
 
 
+class ObjectiveResult(BaseModel):
+    id: str
+    name: str
+    status: str  # "pass" | "fail" | "unknown"
+
+
 class CampaignSummaryResponse(BaseModel):
     campaign_id: int
     name: str
@@ -41,4 +47,5 @@ class CampaignSummaryResponse(BaseModel):
     vignettes_total: int
     ace_count: int
     aces: list[AceSummary]
+    objectives: list[ObjectiveResult]
     is_complete: bool

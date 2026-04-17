@@ -129,3 +129,23 @@ def test_summary_counts_aces(client):
     assert data["ace_count"] == 1
     assert len(data["aces"]) == 1
     assert data["aces"][0]["squadron_name"] == "17 Sqn"
+
+
+def test_summary_evaluates_objectives(client):
+    http, Session = client
+    db = Session()
+    c = _seed_campaign(db)
+    # No AMCA squadron → amca_operational_by_2035 should be "fail"
+    resp = http.get(f"/api/campaigns/{c.id}/summary")
+    data = resp.json()
+    assert len(data["objectives"]) == 1
+    assert data["objectives"][0]["id"] == "amca_operational_by_2035"
+    assert data["objectives"][0]["status"] == "fail"
+
+    # Add AMCA squadron → should flip to "pass"
+    db.add(Squadron(campaign_id=c.id, name="AMCA Sqn", call_sign="AMCA1",
+                    platform_id="amca_mk1", base_id=1, strength=6))
+    db.commit()
+    resp2 = http.get(f"/api/campaigns/{c.id}/summary")
+    data2 = resp2.json()
+    assert data2["objectives"][0]["status"] == "pass"
