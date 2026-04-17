@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { ForceCommitter } from "../components/vignette/ForceCommitter";
@@ -25,6 +25,7 @@ export function OpsRoom() {
     roe: "weapons_free",
   });
   const [commitError, setCommitError] = useState<string | null>(null);
+  const initROE = useRef(false);
 
   useEffect(() => {
     if (!campaign || campaign.id !== campaignId) loadCampaign(campaignId);
@@ -32,18 +33,16 @@ export function OpsRoom() {
 
   useEffect(() => {
     if (!Number.isFinite(vignetteId)) return;
+    const apply = (v: Vignette) => {
+      setVignette(v);
+      if (!initROE.current) {
+        setPayload((p) => ({ ...p, roe: v.planning_state.roe_options[0] ?? p.roe }));
+        initROE.current = true;
+      }
+    };
     const cached = vignetteById[vignetteId];
-    if (cached) {
-      setVignette(cached);
-      setPayload((p) => ({ ...p, roe: cached.planning_state.roe_options[0] ?? p.roe }));
-    } else {
-      loadVignette(campaignId, vignetteId).then((v) => {
-        if (v) {
-          setVignette(v);
-          setPayload((p) => ({ ...p, roe: v.planning_state.roe_options[0] ?? p.roe }));
-        }
-      });
-    }
+    if (cached) apply(cached);
+    else loadVignette(campaignId, vignetteId).then((v) => v && apply(v));
   }, [campaignId, vignetteId, vignetteById, loadVignette]);
 
   const onCommit = async () => {

@@ -219,13 +219,18 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
 
   commitVignette: async (campaignId, vignetteId, payload) => {
     set({ loading: true, error: null });
-    const v = await api.commitVignette(campaignId, vignetteId, payload);
-    set((s) => ({
-      vignetteById: { ...s.vignetteById, [v.id]: v },
-      pendingVignettes: s.pendingVignettes.filter((pv) => pv.id !== v.id),
-      loading: false,
-    }));
-    return v;
+    try {
+      const v = await api.commitVignette(campaignId, vignetteId, payload);
+      set((s) => ({
+        vignetteById: { ...s.vignetteById, [v.id]: v },
+        pendingVignettes: s.pendingVignettes.filter((pv) => pv.id !== v.id),
+        loading: false,
+      }));
+      return v;
+    } catch (e) {
+      set({ loading: false, error: (e as Error).message });
+      throw e;
+    }
   },
 
   loadIntel: async (campaignId, filter) => {
