@@ -20,6 +20,8 @@ WEAPONS: dict[str, dict] = {
     "pl10":      {"nez_km":  15, "max_range_km":  20, "gen_bonus":  0.00},
     "aim120d":   {"nez_km":  60, "max_range_km": 160, "gen_bonus":  0.08},
     "aim9x":     {"nez_km":  15, "max_range_km":  35, "gen_bonus":  0.10},
+    "yj21":      {"nez_km": 200, "max_range_km": 1500, "gen_bonus":  0.10},
+    "cj20":      {"nez_km": 150, "max_range_km": 2000, "gen_bonus":  0.05},
 }
 
 PLATFORM_LOADOUTS: dict[str, dict[str, list[str]]] = {
@@ -42,7 +44,7 @@ PLATFORM_LOADOUTS: dict[str, dict[str, list[str]]] = {
     "f16_blk52":  {"bvr": ["pl15"],          "wvr": ["pl10"]},
     "j36":        {"bvr": ["pl15", "pl17"],  "wvr": ["pl10"]},
     "j36_prototype": {"bvr": ["pl15"],       "wvr": ["pl10"]},
-    "h6kj":       {"bvr": [],                "wvr": []},
+    "h6kj":       {"bvr": ["yj21", "cj20"], "wvr": []},
     "kj500":      {"bvr": [],                "wvr": []},
     "mig29_upg":  {"bvr": ["r77"],           "wvr": ["r73"]},
     "jaguar_darin3": {"bvr": [],             "wvr": []},
@@ -59,7 +61,7 @@ PLATFORM_LOADOUTS: dict[str, dict[str, list[str]]] = {
     "eurofighter_typhoon": {"bvr": ["meteor"], "wvr": ["mica_ir"]},
     "mq9b_seaguardian": {"bvr": [],          "wvr": []},
     "heron_tp":   {"bvr": [],                "wvr": []},
-    "h6n":        {"bvr": [],                "wvr": []},
+    "h6n":        {"bvr": ["yj21", "cj20"], "wvr": []},
     "fujian":     {"bvr": [],                "wvr": []},
     "type004_carrier": {"bvr": [],           "wvr": []},
     "type055_destroyer": {"bvr": [],         "wvr": []},

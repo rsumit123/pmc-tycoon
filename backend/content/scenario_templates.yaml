@@ -161,7 +161,7 @@ templates:
     roe_options: [weapons_free]
     objective:
       kind: defeat_strike
-      success_threshold: {adv_kills_min: 5, ind_losses_max: 8}
+      success_threshold: {adv_kills_min: 8, ind_losses_max: 8}
 
   - id: isr_intrusion
     name: "PLAAF ISR Intrusion"
