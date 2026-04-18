@@ -13,7 +13,9 @@
     "test:ui": "vitest --ui",
     "test:e2e": "npx playwright test",
     "test:e2e:mobile": "npx playwright test --project=mobile",
-    "test:e2e:desktop": "npx playwright test --project=desktop"
+    "test:e2e:desktop": "npx playwright test --project=desktop",
+    "e2e": "npx playwright test",
+    "e2e:headed": "npx playwright test --headed"
   },
   "dependencies": {
     "axios": "^1.15.0",

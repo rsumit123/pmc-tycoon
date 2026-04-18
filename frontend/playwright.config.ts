@@ -5,7 +5,7 @@ export default defineConfig({
   timeout: 30000,
   retries: 1,
   use: {
-    baseURL: process.env.E2E_BASE_URL || 'https://pmc-tycoon.skdev.one',
+    baseURL: process.env.E2E_BASE_URL || 'http://localhost:5173',
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
     viewport: { width: 375, height: 812 }, // iPhone SE — mobile first
