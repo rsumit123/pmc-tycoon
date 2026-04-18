@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { BaseMarker, Platform } from "../../lib/types";
+import type { BaseMarker, BaseSquadronSummary, Platform } from "../../lib/types";
 import { SquadronCard } from "../primitives/SquadronCard";
 import { PlatformDossier } from "../primitives/PlatformDossier";
 
@@ -7,9 +7,10 @@ export interface BaseSheetProps {
   base: BaseMarker | null;
   platforms: Record<string, Platform>;
   onClose: () => void;
+  onRebaseStart?: (squadron: BaseSquadronSummary, baseId: number) => void;
 }
 
-export function BaseSheet({ base, platforms, onClose }: BaseSheetProps) {
+export function BaseSheet({ base, platforms, onClose, onRebaseStart }: BaseSheetProps) {
   const [dossierFor, setDossierFor] = useState<Platform | null>(null);
   if (!base) return null;
 
@@ -42,15 +43,23 @@ export function BaseSheet({ base, platforms, onClose }: BaseSheetProps) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {base.squadrons.map((sq) => (
-              <SquadronCard
-                key={sq.id}
-                squadron={sq}
-                platform={platforms[sq.platform_id]}
-                onLongPress={() => {
-                  const p = platforms[sq.platform_id];
-                  if (p) setDossierFor(p);
-                }}
-              />
+              <div key={sq.id}>
+                <SquadronCard
+                  squadron={sq}
+                  platform={platforms[sq.platform_id]}
+                  onLongPress={() => {
+                    const p = platforms[sq.platform_id];
+                    if (p) setDossierFor(p);
+                  }}
+                />
+                <button
+                  onClick={() => onRebaseStart?.(sq, base.id)}
+                  className="text-xs text-amber-400 hover:text-amber-300 mt-1"
+                  title="Rebase squadron"
+                >
+                  Rebase →
+                </button>
+              </div>
             ))}
           </div>
         )}

@@ -10,8 +10,10 @@ import { ADCoverageLayer } from "../components/map/ADCoverageLayer";
 import { IntelContactsLayer } from "../components/map/IntelContactsLayer";
 import { LayerTogglePanel } from "../components/map/LayerTogglePanel";
 import { BaseSheet } from "../components/map/BaseSheet";
+import { RebaseOverlay } from "../components/map/RebaseOverlay";
 import { YearEndRecapToast } from "../components/endgame/YearEndRecapToast";
 import { synthesizeContacts } from "../lib/intelContacts";
+import type { BaseSquadronSummary } from "../lib/types";
 
 export function CampaignMapView() {
   const { id } = useParams<{ id: string }>();
@@ -33,8 +35,11 @@ export function CampaignMapView() {
   const setSelectedBase = useMapStore((s) => s.setSelectedBase);
   const activeLayers = useMapStore((s) => s.activeLayers);
 
+  const rebaseSquadron = useCampaignStore((s) => s.rebaseSquadron);
+
   const [mapInstance, setMapInstance] = useState<MLMap | null>(null);
   const [projectionVersion, setProjectionVersion] = useState(0);
+  const [rebaseTarget, setRebaseTarget] = useState<{ squadron: BaseSquadronSummary; baseId: number } | null>(null);
 
   const isCampaignComplete = campaign
     ? campaign.current_year > 2036 || (campaign.current_year === 2036 && campaign.current_quarter > 1)
@@ -72,6 +77,12 @@ export function CampaignMapView() {
     if (updated && (updated.current_year > 2036 || (updated.current_year === 2036 && updated.current_quarter > 1))) {
       navigate(`/campaign/${updated.id}/white-paper`);
     }
+  };
+
+  const handleRebase = async (sqnId: number, targetBaseId: number) => {
+    await rebaseSquadron(sqnId, targetBaseId);
+    setRebaseTarget(null);
+    setSelectedBase(null);
   };
 
   const selectedBase = useMemo(
@@ -171,6 +182,15 @@ export function CampaignMapView() {
         base={selectedBase}
         platforms={platformsById}
         onClose={() => setSelectedBase(null)}
+        onRebaseStart={(sq, baseId) => setRebaseTarget({ squadron: sq, baseId })}
+      />
+
+      <RebaseOverlay
+        squadron={rebaseTarget?.squadron ?? null}
+        bases={bases}
+        currentBaseId={rebaseTarget?.baseId ?? 0}
+        onRebase={handleRebase}
+        onCancel={() => setRebaseTarget(null)}
       />
 
       <YearEndRecapToast />

@@ -20,6 +20,7 @@ from app.api.bases import router as bases_router
 from app.api.summary import router as summary_router
 from app.api.base_upgrade import router as base_upgrade_router
 from app.api.campaign_export import router as campaign_export_router
+from app.api.squadrons import router as squadrons_router
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ app.include_router(bases_router)
 app.include_router(summary_router)
 app.include_router(base_upgrade_router)
 app.include_router(campaign_export_router)
+app.include_router(squadrons_router)
 
 
 @app.get("/")

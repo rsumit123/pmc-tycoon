@@ -227,4 +227,16 @@ export const api = {
 
   importCampaign: (data: Record<string, unknown>) =>
     http.post<{ id: number }>("/api/campaigns/import", data).then((r) => r.data),
+
+  async rebaseSquadron(
+    campaignId: number,
+    squadronId: number,
+    targetBaseId: number,
+  ): Promise<{ id: number; base_id: number }> {
+    const { data } = await http.post(
+      `/api/campaigns/${campaignId}/squadrons/${squadronId}/rebase`,
+      { target_base_id: targetBaseId },
+    );
+    return data;
+  },
 };

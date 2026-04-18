@@ -49,6 +49,7 @@ interface CampaignState {
   generateYearRecap: (campaignId: number, year: number) => Promise<GenerateNarrativeResponse>;
   generateRetrospective: (campaignId: number) => Promise<GenerateNarrativeResponse>;
   dismissYearRecapToast: () => void;
+  rebaseSquadron: (squadronId: number, targetBaseId: number) => Promise<void>;
   reset: () => void;
 }
 
@@ -295,6 +296,20 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   },
 
   dismissYearRecapToast: () => set({ yearRecapToast: null }),
+
+  rebaseSquadron: async (squadronId, targetBaseId) => {
+    const c = get().campaign;
+    if (!c) return;
+    set({ loading: true, error: null });
+    try {
+      await api.rebaseSquadron(c.id, squadronId, targetBaseId);
+      await get().loadBases(c.id);
+    } catch (e: any) {
+      set({ error: e.message ?? "Rebase failed" });
+    } finally {
+      set({ loading: false });
+    }
+  },
 
   generateIntelBrief: async (campaignId) => {
     const c = get().campaign;
