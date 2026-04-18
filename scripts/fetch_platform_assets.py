@@ -43,7 +43,7 @@ def fetch_one(entry: dict) -> bool:
         with httpx.Client(
             follow_redirects=True,
             timeout=30.0,
-            headers={"User-Agent": "sovereign-shield-asset-fetcher/0.1"},
+            headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"},
         ) as client:
             r = client.get(url)
             r.raise_for_status()

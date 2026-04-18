@@ -26,3 +26,63 @@ platforms:
     hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Shenyang_J-35.jpg/960px-Shenyang_J-35.jpg"
     license: "CC BY-SA 4.0"
     attribution: "Shenyang J-35 — Wikimedia Commons"
+
+  - id: su35
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Russian_Air_Force_Sukhoi_Su-35S.jpg/960px-Russian_Air_Force_Sukhoi_Su-35S.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "Sukhoi Su-35S — Wikimedia Commons"
+
+  - id: j16
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Shenyang_J-16.jpg/960px-Shenyang_J-16.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "Shenyang J-16 — Wikimedia Commons"
+
+  - id: j10c
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Chengdu_J-10C.jpg/960px-Chengdu_J-10C.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "Chengdu J-10C — Wikimedia Commons"
+
+  - id: mig29_upg
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/MiG-29_Fulcrum.jpg/960px-MiG-29_Fulcrum.jpg"
+    license: "CC BY-SA 3.0"
+    attribution: "MiG-29 — Wikimedia Commons"
+
+  - id: jaguar_darin3
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Jaguar_Indian_Air_Force.jpg/960px-Jaguar_Indian_Air_Force.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "SEPECAT Jaguar IAF — Wikimedia Commons"
+
+  - id: f16_blk52
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/F-16_June_2008.jpg/960px-F-16_June_2008.jpg"
+    license: "Public domain"
+    attribution: "F-16 Fighting Falcon — Wikimedia Commons"
+
+  - id: jf17_blk3
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Pakistan_Air_Force_JF-17_Thunder.jpg/960px-Pakistan_Air_Force_JF-17_Thunder.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "JF-17 Thunder — Wikimedia Commons"
+
+  - id: f18e_super_hornet
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/FA-18E_Super_Hornet_VFA-143.jpg/960px-FA-18E_Super_Hornet_VFA-143.jpg"
+    license: "Public domain"
+    attribution: "F/A-18E Super Hornet — Wikimedia Commons"
+
+  - id: f15ex
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/F-15EX_Eagle_II.jpg/960px-F-15EX_Eagle_II.jpg"
+    license: "Public domain"
+    attribution: "F-15EX Eagle II — Wikimedia Commons"
+
+  - id: gripen_e
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Saab_JAS_39_Gripen_E.jpg/960px-Saab_JAS_39_Gripen_E.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "Saab JAS 39 Gripen E — Wikimedia Commons"
+
+  - id: eurofighter_typhoon
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Eurofighter_Typhoon_FGR4.jpg/960px-Eurofighter_Typhoon_FGR4.jpg"
+    license: "CC BY-SA 2.0"
+    attribution: "Eurofighter Typhoon — Wikimedia Commons"
+
+  - id: h6kj
+    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Xian_H-6.jpg/960px-Xian_H-6.jpg"
+    license: "CC BY-SA 4.0"
+    attribution: "Xian H-6 — Wikimedia Commons"
