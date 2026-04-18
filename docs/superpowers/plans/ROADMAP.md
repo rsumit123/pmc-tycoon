@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-04-18 (Plan 10 done)
+**Last updated:** 2026-04-18 (Plan 10 done, Plan 11 scoped)
 
 ---
 
@@ -22,6 +22,7 @@
 | 8 | Frontend — Vignettes + Intel Screens | 🟢 done | [2026-04-17-frontend-vignettes-intel-plan.md](2026-04-17-frontend-vignettes-intel-plan.md) |
 | 9 | Campaign End + Polish | 🟢 done | [2026-04-17-campaign-end-polish-plan.md](2026-04-17-campaign-end-polish-plan.md) |
 | 10 | V1 Content Expansion + Balancing | 🟢 done | [2026-04-18-content-expansion-balancing-plan.md](2026-04-18-content-expansion-balancing-plan.md) |
+| 11 | V1 Release Polish + E2E Testing | 🔴 not started | *to be written* |
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 
@@ -311,19 +312,80 @@ Each plan's detailed task-level spec is committed before execution. This ROADMAP
 
 ---
 
+## Plan 11 — V1 Release Polish + E2E Testing
+
+**Goal:** Ship-ready polish pass. Fix remaining gameplay bugs, add the missing UX flourishes that make the game *feel* finished, wire Playwright E2E tests for release confidence, and clean up technical debt. After this plan, the game is deployable as a complete solo hobby product.
+
+**Deliverable:** A polished, tested V1 with: tactical replay on AARs, squadron rebase, map polish, audio/visual feedback, Playwright E2E smoke tests, and all remaining carry-over fixes.
+
+**Depends on:** Plans 1–10 (complete playable game with full content).
+
+**Work — grouped by theme:**
+
+### A. Gameplay Fixes (remaining carry-overs)
+
+Items from the carry-over backlog that affect gameplay correctness:
+
+1. **H-6KJ bomber empty loadouts** — free kills inflating `adv_kia` counts. Add realistic loadouts to `PLATFORM_LOADOUTS` (e.g. YJ-21, CJ-20 cruise missiles) and re-tune `success_threshold.adv_kills_min` on saturation-raid scenarios. (Plan 4 carry-over)
+2. **Doctrine-aware adversary platform picking** — currently inventory-weighted, so PLAAF sends J-16s on modern CAPs. Add role-weighting so VLO platforms get picked for CAP and bombers/strikers get picked for strike roles. (Plan 4 carry-over)
+3. **Role-based target selection in resolver** — currently uniform random. Strike packages should prioritize AWACS, CAP should prioritize strikers. Makes combat feel more realistic and AARs read better. (Plan 4 carry-over)
+4. **LLM single-retry with jitter** — flaky OpenRouter 502s currently pass through. Add one retry with 1–3s jitter in `app/llm/client.py::chat_completion`. (Plan 5 carry-over)
+5. **`vignette_resolved` CampaignEvent payload enrichment** — add AO + scenario_name to resolved events (currently only on `vignette_fired`). Retrospective prompts benefit from this. (Plan 4 carry-over)
+6. **`datetime.utcnow()` deprecation sweep** — replace with `datetime.now(datetime.UTC)` across all CRUD files. (Plans 1–4 carry-over)
+7. **UniqueConstraint on AdversaryState(campaign_id, faction)** — prevent silent duplicate on re-seed. (Plan 3 carry-over)
+8. **Narrative race condition** — catch `IntegrityError` in `app/api/narratives.py::_wrap` and re-read via `find_narrative` on double-click. (Plan 5 carry-over)
+
+### B. V1.1 UX — High Priority (promoted from backlog)
+
+Core UX features that make the game feel complete:
+
+9. **2D NATO-symbol tactical replay** on vignette AAR — lightweight SVG rendering of the 3-round engagement trace. Shows aircraft symbols moving, BVR/WVR exchanges, kills. Addresses "AAR feels flat" risk. Renders inside `VignetteAAR` page below the `AARReader`.
+10. **Drag-to-rebase squadrons on map** — tap a squadron in `BaseSheet`, drag to another base marker. Backend already has `Squadron.base_id` FK. Need a `POST /api/campaigns/{id}/squadrons/{sqn_id}/rebase` endpoint + map gesture handling.
+11. **Map polish** — animated logistics lines between bases with active acquisitions, R&D facility glow markers, force-density heatmap overlay option in `LayerTogglePanel`.
+
+### C. Medium-Priority UX Polish (promoted from backlog)
+
+Audiovisual flourishes that turn "functional" into "delightful":
+
+12. **Audio cues** — radar ping on vignette alert, teletype clack on intel cards, Vajra drum on year-end. Use Web Audio API + small (<50KB each) OGG samples. Volume toggle in settings. Add haptic feedback (`navigator.vibrate`) on mobile for hold-to-commit completion.
+13. **Animated procurement ceremony** — when `CommitHoldButton` completes on acquisition sign, show a brief stamp/seal animation overlay (~500ms). CSS keyframe, no heavy deps.
+14. **CRT/amber theme option** — dark theme with scanline overlay + amber text. CSS custom properties swap. Toggle in a minimal settings menu (localStorage persisted).
+15. **ForceEvolutionChart rename** — rename to `TreasurySparkline` to match what it actually plots. (Plan 9 carry-over)
+
+### D. Platform Assets
+
+16. **Fix asset-fetcher UA + expand manifest** — update `scripts/fetch_platform_assets.py` with browser-like UA. Expand `asset_manifest.yaml` to cover all 41 platforms. Run fetcher. Commit `attribution.json` sidecars (images remain gitignored). (Plan 6 carry-over)
+
+### E. Playwright E2E Tests
+
+17. **Playwright E2E smoke tests** — wire 4–6 critical-path tests against `E2E_BASE_URL` (default: `https://pmc-tycoon.skdev.one`). Config already exists at `frontend/playwright.config.ts` with mobile + desktop projects. Tests:
+    - Create campaign → lands on map view
+    - End Turn → quarter advances, budget changes
+    - Navigate to Procurement → tabs work, can see platforms
+    - Trigger vignette → Ops Room → commit force → AAR page renders
+    - Navigate to Intel → cards display
+    - Play through to Q40 → white paper renders (optional long test, can be `test.slow()`)
+18. **`mapStore.activeLayers` localStorage persistence** — save toggles so page reload doesn't lose them. (Plan 6 carry-over)
+
+### F. Remaining Minor Debt
+
+19. **Duplicate vignette query in summary endpoint** — consolidate `_year_snapshots()` and main query. (Plan 9 carry-over)
+20. **RCS_DETECTION_MULTIPLIER split** — separate detection range multiplier from P_kill multiplier in `bvr.py`. Currently dual-purposed. (Plan 4 carry-over)
+
+**Explicitly NOT in scope (remains in V1.5+ backlog):**
+- Sankey diagrams, retirement ceremonies, year-end montage, career yearbook, squadron banter
+- Fake-headline press feed, Twitter/X OSINT, pilot-quote interviews, chai-stall rumors
+- Draw-strike-route gesture, Tinder-style platform comparison
+- Player-managed intel capability, deterrence feedback loop
+- Multiplayer, real-world news ingestion, tactical live-play, tri-service expansion
+
+---
+
 ## V1.5+ Backlog (parked — not plans, candidate future work)
 
 Items explicitly deferred during design. Revisit after V1 ships.
 
-**Highest-priority V1.1 candidates** (first additions after V1 ships):
-- **2D NATO-symbol tactical replay** on vignette AAR — lightweight SVG, addresses "AAR feels flat" risk
-- **Drag-to-rebase squadrons on map** — biggest missing gesture
-- **Map polish** — animated logistics lines, R&D facility glow, heatmap overlays
-
-**Medium-priority UX upgrades:**
-- Diegetic teletype text reveals + CRT/amber themes
-- Animated signing-stamp procurement ceremony
-- Audio cues (radar pings, teletype clacks, Vajra drum) + haptic feedback
+**UX upgrades (deferred from Plan 11):**
 - Sankey diagrams for budget flow
 - Retirement ceremonies for outgoing platforms / squadrons
 - Year-end montage / cinematic reel
