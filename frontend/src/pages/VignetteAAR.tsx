@@ -4,6 +4,8 @@ import { useCampaignStore } from "../store/campaignStore";
 import { AARReader } from "../components/vignette/AARReader";
 import { CombatReasoning } from "../components/vignette/CombatReasoning";
 import { TacticalReplay } from "../components/vignette/TacticalReplay";
+import { HeroOutcomeBanner } from "../components/vignette/HeroOutcomeBanner";
+import { ForceExchangeViz } from "../components/vignette/ForceExchangeViz";
 import type { Vignette, VignetteOutcome } from "../lib/types";
 
 export function VignetteAAR() {
@@ -31,6 +33,12 @@ export function VignetteAAR() {
   if (!vignette) return <div className="p-6">Loading AAR…</div>;
   const ps = vignette.planning_state;
 
+  const outcome = (vignette.outcome && "objective_met" in vignette.outcome)
+    ? (vignette.outcome as VignetteOutcome)
+    : null;
+  const indCommitted = (vignette.committed_force?.squadrons ?? []).reduce((a, b) => a + b.airframes, 0);
+  const advCommitted = ps.adversary_force.reduce((a, b) => a + b.count, 0);
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
@@ -42,15 +50,10 @@ export function VignetteAAR() {
           Back to map
         </Link>
       </header>
-      <main className="p-4 max-w-3xl mx-auto">
-        <AARReader campaignId={campaignId} vignette={vignette} />
-        {vignette.outcome && "objective_met" in vignette.outcome && vignette.committed_force && (
-          <CombatReasoning
-            eventTrace={vignette.event_trace}
-            planningState={ps}
-            outcome={vignette.outcome as VignetteOutcome}
-            committedForce={vignette.committed_force}
-          />
+      <main className="p-4 max-w-3xl mx-auto space-y-4">
+        {outcome && <HeroOutcomeBanner outcome={outcome} scenarioName={ps.scenario_name} />}
+        {outcome && vignette.committed_force && (
+          <ForceExchangeViz outcome={outcome} indCommitted={indCommitted} advCommitted={advCommitted} />
         )}
         {vignette.event_trace && vignette.event_trace.length > 0 && (
           <TacticalReplay
@@ -66,6 +69,20 @@ export function VignetteAAR() {
             faction={ps.adversary_force[0]?.faction}
           />
         )}
+        {outcome && vignette.committed_force && (
+          <CombatReasoning
+            eventTrace={vignette.event_trace}
+            planningState={ps}
+            outcome={outcome}
+            committedForce={vignette.committed_force}
+          />
+        )}
+        <details className="bg-slate-900 border border-slate-700 rounded-lg p-3">
+          <summary className="text-sm font-semibold cursor-pointer select-none">Read Full AAR Briefing</summary>
+          <div className="mt-3">
+            <AARReader campaignId={campaignId} vignette={vignette} />
+          </div>
+        </details>
       </main>
     </div>
   );
