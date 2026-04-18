@@ -8,6 +8,7 @@ from app.models.event import CampaignEvent
 from app.models.squadron import Squadron
 from app.content.registry import platforms as platforms_reg
 from app.engine.vignette.resolver import resolve
+from app.engine.vignette.non_combat import is_non_combat, resolve_non_combat
 
 
 class CommitValidationError(Exception):
@@ -56,21 +57,25 @@ def commit_vignette(
     if committed_force.get("roe") not in ps.get("roe_options", []):
         raise CommitValidationError(f"roe {committed_force.get('roe')!r} not allowed")
 
-    # Build platforms_registry dict for the resolver
-    platforms_dict = {
-        pid: {
-            "combat_radius_km": p.combat_radius_km,
-            "generation": p.generation,
-            "radar_range_km": p.radar_range_km,
-            "rcs_band": p.rcs_band,
+    # Route to non-combat resolver when objective kind is non-kinetic
+    if is_non_combat(ps.get("objective", {})):
+        outcome, event_trace = resolve_non_combat(ps, committed_force)
+    else:
+        # Build platforms_registry dict for the combat resolver
+        platforms_dict = {
+            pid: {
+                "combat_radius_km": p.combat_radius_km,
+                "generation": p.generation,
+                "radar_range_km": p.radar_range_km,
+                "rcs_band": p.rcs_band,
+            }
+            for pid, p in platforms_reg().items()
         }
-        for pid, p in platforms_reg().items()
-    }
 
-    outcome, event_trace = resolve(
-        ps, committed_force, platforms_dict,
-        seed=campaign.seed, year=vignette.year, quarter=vignette.quarter,
-    )
+        outcome, event_trace = resolve(
+            ps, committed_force, platforms_dict,
+            seed=campaign.seed, year=vignette.year, quarter=vignette.quarter,
+        )
 
     # Apply readiness cost to committed squadrons.
     # Base cost: 5% per committed squadron. Overcommit (>2x adversary) adds penalty.

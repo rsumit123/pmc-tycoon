@@ -6,7 +6,7 @@ from pathlib import Path
 
 def test_scenario_count():
     templates = load_scenario_templates(Path("content/scenario_templates.yaml"))
-    assert len(templates) == 20
+    assert len(templates) == 23
 
 
 def test_all_roster_platforms_have_loadouts():

@@ -462,3 +462,55 @@ templates:
     objective:
       kind: defeat_strike
       success_threshold: {adv_kills_min: 4, ind_losses_max: 5}
+
+  - id: noncombat_airspace_violation
+    name: "Airspace Violation — Civilian Overflight"
+    ao: {region: western_border, name: "Wagah / Attari corridor", lat: 31.6, lon: 74.57}
+    response_clock_minutes: 40
+    q_index_min: 0
+    q_index_max: 39
+    weight: 1.0
+    requires:
+      adversary_inventory: {}
+    adversary_roster:
+      - role: CAP
+        faction: PAF
+        platform_pool: [f16_blk52, jf17_blk3]
+        count_range: [1, 2]
+    allowed_ind_roles: [CAP, awacs]
+    roe_options: [visual_id_required, weapons_tight]
+    objective:
+      kind: escort_intercept
+      success_threshold: {escort_clean: true}
+
+  - id: noncombat_sar
+    name: "Search and Rescue — Aircrew Down"
+    ao: {region: ior_central, name: "Arabian Sea — Aircrew Recovery", lat: 12.0, lon: 70.0}
+    response_clock_minutes: 90
+    q_index_min: 8
+    q_index_max: 39
+    weight: 0.7
+    requires:
+      adversary_inventory: {}
+    adversary_roster: []
+    allowed_ind_roles: [CAP, awacs, tanker]
+    roe_options: [weapons_tight]
+    objective:
+      kind: sar_recovery
+      success_threshold: {awacs_committed: true}
+
+  - id: noncombat_show_of_force
+    name: "Show of Force — Diplomatic Signalling"
+    ao: {region: lac_eastern, name: "Arunachal border demo", lat: 27.5, lon: 93.0}
+    response_clock_minutes: 60
+    q_index_min: 4
+    q_index_max: 39
+    weight: 0.8
+    requires:
+      adversary_inventory: {}
+    adversary_roster: []
+    allowed_ind_roles: [CAP, strike, awacs, tanker]
+    roe_options: [weapons_tight, visual_id_required]
+    objective:
+      kind: show_of_force
+      success_threshold: {airframes_committed_min: 6}

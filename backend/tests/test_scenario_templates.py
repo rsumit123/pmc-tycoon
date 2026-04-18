@@ -16,9 +16,14 @@ def test_every_template_has_required_fields():
         assert 30 <= t.response_clock_minutes <= 180
         assert 0 <= t.q_index_min <= t.q_index_max <= 40
         assert t.weight > 0
-        assert t.adversary_roster, f"{t.id} must have at least one roster entry"
+        # Non-combat templates (escort_intercept, sar_recovery, show_of_force) may have
+        # empty adversary rosters — they resolve via the non-combat resolver, not BVR.
+        NON_COMBAT_KINDS = {"escort_intercept", "sar_recovery", "show_of_force"}
+        if t.objective["kind"] not in NON_COMBAT_KINDS:
+            assert t.adversary_roster, f"{t.id} must have at least one roster entry"
         assert t.objective["kind"] in {
             "defend_airspace", "defeat_strike", "escort_carrier", "suppress_ad",
+            "escort_intercept", "sar_recovery", "show_of_force",
         }
 
 
