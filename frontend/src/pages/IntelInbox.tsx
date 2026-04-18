@@ -27,12 +27,12 @@ export function IntelInbox() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
+      <header className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
         <div>
-          <h1 className="text-base font-bold">Intel Desk</h1>
+          <h1 className="text-sm font-bold">Intel Desk</h1>
           <p className="text-xs opacity-70">Q{campaign.current_quarter} {campaign.current_year}</p>
         </div>
-        <Link to={`/campaign/${campaignId}`} className="text-xs underline opacity-80 hover:opacity-100">
+        <Link to={`/campaign/${campaignId}`} className="text-xs underline opacity-80 hover:opacity-100 whitespace-nowrap flex-shrink-0">
           Back to map
         </Link>
       </header>

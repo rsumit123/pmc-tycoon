@@ -72,14 +72,14 @@ export function OpsRoom() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-slate-950">
-      <header className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800">
-        <div>
-          <h1 className="text-base font-bold">Ops Room — {ps.scenario_name}</h1>
-          <p className="text-xs opacity-70">
+      <header className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
+        <div className="min-w-0">
+          <h1 className="text-sm font-bold truncate">Ops Room — {ps.scenario_name}</h1>
+          <p className="text-xs opacity-70 truncate">
             {ps.ao.region} • {ps.ao.name} • T-{ps.response_clock_minutes} min
           </p>
         </div>
-        <Link to={`/campaign/${campaignId}`} className="text-xs opacity-60 hover:opacity-100 underline">
+        <Link to={`/campaign/${campaignId}`} className="text-xs opacity-60 hover:opacity-100 underline whitespace-nowrap flex-shrink-0">
           Abort → Map
         </Link>
       </header>

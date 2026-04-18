@@ -85,9 +85,9 @@ export function BudgetAllocator({
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {(Object.keys(BUCKET_LABELS) as Array<keyof BudgetAllocation>).map((key) => (
-          <div key={key} className="grid grid-cols-[1fr_auto] gap-3 items-center">
+          <div key={key} className="space-y-2">
             <div>
               <div className="text-sm font-semibold">{BUCKET_LABELS[key]}</div>
               <div className="text-xs opacity-60">{BUCKET_HELP[key]}</div>

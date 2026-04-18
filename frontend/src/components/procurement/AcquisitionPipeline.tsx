@@ -176,16 +176,18 @@ export function AcquisitionPipeline({
         {orders.length === 0 ? (
           <p className="text-xs opacity-60">No active orders.</p>
         ) : (
-          <div className="space-y-3">
-            {orders.map((o) => (
-              <TimelineBar
-                key={o.id}
-                order={o}
-                platformName={byId[o.platform_id]?.name ?? o.platform_id}
-                currentYear={currentYear}
-                currentQuarter={currentQuarter}
-              />
-            ))}
+          <div className="overflow-x-auto">
+            <div className="space-y-3 min-w-min">
+              {orders.map((o) => (
+                <TimelineBar
+                  key={o.id}
+                  order={o}
+                  platformName={byId[o.platform_id]?.name ?? o.platform_id}
+                  currentYear={currentYear}
+                  currentQuarter={currentQuarter}
+                />
+              ))}
+            </div>
           </div>
         )}
       </section>
