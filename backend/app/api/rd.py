@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.crud.campaign import get_campaign
 from app.crud.rd import start_program, update_program, list_active_programs, ProgramNotFound, ProgramAlreadyActive
+from app.engine.rd import project_completion
+from app.content.registry import rd_programs
 from app.schemas.rd import RDStartPayload, RDUpdatePayload, RDProgramRead, RDProgramStateListResponse
 
 router = APIRouter(prefix="/api/campaigns", tags=["rd"])
@@ -11,12 +13,37 @@ router = APIRouter(prefix="/api/campaigns", tags=["rd"])
 
 @router.get("/{campaign_id}/rd", response_model=RDProgramStateListResponse)
 def list_rd_programs_endpoint(campaign_id: int, db: Session = Depends(get_db)):
-    if get_campaign(db, campaign_id) is None:
+    campaign = get_campaign(db, campaign_id)
+    if campaign is None:
         raise HTTPException(status_code=404, detail="Campaign not found")
     rows = list_active_programs(db, campaign_id)
-    return RDProgramStateListResponse(
-        programs=[RDProgramRead.model_validate(r) for r in rows]
-    )
+
+    # Compute projections for each program
+    rd_specs = rd_programs()
+    programs = []
+    for r in rows:
+        prog_dict = RDProgramRead.model_validate(r).model_dump()
+
+        # Only compute projections for active programs not yet completed
+        if r.status == "active" and r.progress_pct < 100:
+            spec = rd_specs.get(r.program_id)
+            if spec:
+                projections = {
+                    lvl: project_completion(
+                        progress_pct=r.progress_pct,
+                        base_duration_quarters=spec.base_duration_quarters,
+                        base_cost_cr=spec.base_cost_cr,
+                        funding_level=lvl,
+                        current_year=campaign.current_year,
+                        current_quarter=campaign.current_quarter,
+                    )
+                    for lvl in ("slow", "standard", "accelerated")
+                }
+                prog_dict["projections"] = projections
+
+        programs.append(RDProgramRead(**prog_dict))
+
+    return RDProgramStateListResponse(programs=programs)
 
 
 @router.post("/{campaign_id}/rd", response_model=RDProgramRead, status_code=status.HTTP_201_CREATED)

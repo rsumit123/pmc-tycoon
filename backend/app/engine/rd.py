@@ -34,6 +34,50 @@ MILESTONES: list[int] = [25, 50, 75, 100]
 ROLL_BREAKTHROUGH_PROGRESS_BONUS = 5
 
 
+def project_completion(
+    progress_pct: int,
+    base_duration_quarters: int,
+    base_cost_cr: int,
+    funding_level: str,
+    current_year: int,
+    current_quarter: int,
+) -> dict:
+    """Pure helper: project when a program would finish at given funding.
+
+    Returns:
+        {
+            "completion_year": int,
+            "completion_quarter": int (1-4),
+            "quarters_remaining": int,
+            "quarterly_cost_cr": int,
+        }
+    """
+    cost_factor, prog_factor = FUNDING_FACTORS.get(funding_level, (1.0, 1.0))
+    base_prog_per_qtr = 100.0 / base_duration_quarters
+    effective_prog_per_qtr = base_prog_per_qtr * prog_factor
+    remaining_pct = max(0, 100 - progress_pct)
+
+    if effective_prog_per_qtr <= 0:
+        quarters_remaining = 0
+    else:
+        # ceiling division: how many quarters to go from remaining_pct to 100%
+        quarters_remaining = int(-(-remaining_pct // effective_prog_per_qtr))
+
+    # Convert to absolute quarter count (from year 0, quarter 1)
+    total_q = (current_year * 4 + (current_quarter - 1)) + quarters_remaining
+    completion_year = total_q // 4
+    completion_quarter = (total_q % 4) + 1
+
+    quarterly_cost_cr = int((base_cost_cr / base_duration_quarters) * cost_factor)
+
+    return {
+        "completion_year": completion_year,
+        "completion_quarter": completion_quarter,
+        "quarters_remaining": quarters_remaining,
+        "quarterly_cost_cr": quarterly_cost_cr,
+    }
+
+
 def _funded_program_states(states: list[dict]) -> list[dict]:
     return [s for s in states if s["status"] == "active" and s["progress_pct"] < 100]
 

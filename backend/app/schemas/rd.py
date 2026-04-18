@@ -24,6 +24,7 @@ class RDProgramRead(BaseModel):
     milestones_hit: list[int]
     cost_invested_cr: int
     quarters_active: int
+    projections: dict[str, dict] | None = None
 
     model_config = {"from_attributes": True}
 
