@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { api, http } from "../api";
-import type { PlatformListResponse, BaseListResponse, ObjectiveListResponse, CampaignListResponse } from "../types";
+import type { PlatformListResponse, BaseListResponse, ObjectiveListResponse, CampaignListResponse, TurnReportResponse } from "../types";
 
 describe("api client — platforms + bases", () => {
   beforeEach(() => {
@@ -63,5 +63,18 @@ describe("api client — platforms + bases", () => {
     const out = await api.listCampaigns();
     expect(out.campaigns).toHaveLength(1);
     expect(http.get).toHaveBeenCalledWith("/api/campaigns");
+  });
+
+  it("getTurnReport returns the report", async () => {
+    const body: TurnReportResponse = {
+      campaign_id: 1, year: 2026, quarter: 2,
+      events: [], deliveries: [], rd_milestones: [],
+      adversary_shifts: [], intel_cards: [],
+      vignette_fired: null, treasury_after_cr: 100000, allocation: null,
+    };
+    vi.spyOn(http, "get").mockResolvedValueOnce({ data: body } as any);
+    const out = await api.getTurnReport(1, 2026, 2);
+    expect(out.year).toBe(2026);
+    expect(http.get).toHaveBeenCalledWith("/api/campaigns/1/turn-report/2026/2");
   });
 });

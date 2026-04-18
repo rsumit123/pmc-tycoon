@@ -24,6 +24,7 @@ import type {
   CampaignSummary,
   ObjectiveListResponse,
   CampaignListResponse,
+  TurnReportResponse,
 } from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
@@ -249,6 +250,13 @@ export const api = {
 
   async listCampaigns(): Promise<CampaignListResponse> {
     const { data } = await http.get<CampaignListResponse>("/api/campaigns");
+    return data;
+  },
+
+  async getTurnReport(campaignId: number, year: number, quarter: number): Promise<TurnReportResponse> {
+    const { data } = await http.get<TurnReportResponse>(
+      `/api/campaigns/${campaignId}/turn-report/${year}/${quarter}`
+    );
     return data;
   },
 };

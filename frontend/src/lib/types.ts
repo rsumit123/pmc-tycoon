@@ -117,6 +117,36 @@ export interface ScenarioObjective {
   success_threshold: Record<string, number>;
 }
 
+export interface IntelQualityModifiers {
+  awacs: number;
+  intel: number;
+  stealth_penalty: number;
+}
+
+export interface IntelQuality {
+  score: number;
+  tier: "low" | "medium" | "high" | "perfect";
+  modifiers: IntelQualityModifiers;
+}
+
+export interface AwacsCovering {
+  squadron_id: number;
+  base_id: number;
+  base_name: string;
+  distance_km: number;
+  strength: number;
+  readiness_pct: number;
+}
+
+export interface AdversaryForceObserved {
+  faction: string;
+  role?: string;
+  count?: number;
+  count_range?: [number, number];
+  probable_platforms: string[];
+  fidelity: "low" | "medium" | "high";
+}
+
 export interface PlanningState {
   scenario_id: string;
   scenario_name: string;
@@ -127,6 +157,9 @@ export interface PlanningState {
   allowed_ind_roles: string[];
   roe_options: ROE[];
   objective: ScenarioObjective;
+  intel_quality?: IntelQuality;
+  awacs_covering?: AwacsCovering[];
+  adversary_force_observed?: AdversaryForceObserved[];
 }
 
 export interface EventTraceEntry {
@@ -281,6 +314,15 @@ export interface RDProgramSpecListResponse {
 export type RDFundingLevel = "slow" | "standard" | "accelerated";
 export type RDStatus = "active" | "completed" | "cancelled";
 
+export interface ProjectedCompletion {
+  completion_year: number;
+  completion_quarter: number;
+  quarters_remaining: number;
+  quarterly_cost_cr: number;
+}
+
+export type RDProjections = Record<"slow" | "standard" | "accelerated", ProjectedCompletion>;
+
 export interface RDProgramState {
   id: number;
   program_id: string;
@@ -290,6 +332,7 @@ export interface RDProgramState {
   milestones_hit: number[];
   cost_invested_cr: number;
   quarters_active: number;
+  projections?: RDProjections;
 }
 
 export interface RDProgramStateListResponse {
@@ -403,4 +446,47 @@ export interface CampaignListItem {
 
 export interface CampaignListResponse {
   campaigns: CampaignListItem[];
+}
+
+// ---------- Plan 13: turn report types ----------
+
+export interface DeliverySummary {
+  order_id: number;
+  platform_id: string;
+  count: number;
+  cost_cr: number;
+  assigned_base_id: number | null;
+  assigned_squadron_id: number | null;
+}
+
+export interface RDMilestoneSummary {
+  program_id: string;
+  kind: "breakthrough" | "setback" | "milestone" | "completed" | "underfunded";
+  progress_pct: number | null;
+}
+
+export interface IntelCardSummary {
+  source_type: string;
+  confidence: number;
+  headline: string;
+}
+
+export interface VignetteFiredSummary {
+  scenario_id: string;
+  scenario_name: string;
+  ao: AoCoords;
+}
+
+export interface TurnReportResponse {
+  campaign_id: number;
+  year: number;
+  quarter: number;
+  events: { event_type: string; payload: Record<string, unknown> }[];
+  deliveries: DeliverySummary[];
+  rd_milestones: RDMilestoneSummary[];
+  adversary_shifts: { event_type: string; payload: Record<string, unknown> }[];
+  intel_cards: IntelCardSummary[];
+  vignette_fired: VignetteFiredSummary | null;
+  treasury_after_cr: number;
+  allocation: Record<string, number> | null;
 }
