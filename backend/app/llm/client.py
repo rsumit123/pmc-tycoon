@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+import random as _random
+import time
 
 import httpx
 
@@ -17,6 +19,10 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MAX_TOKENS = 1200
 DEFAULT_TEMPERATURE = 0.7
 TIMEOUT_SECONDS = 60.0
+
+MAX_RETRIES = 1
+JITTER_MIN = 1.0
+JITTER_MAX = 3.0
 
 
 class LLMRequestError(RuntimeError):
@@ -38,6 +44,22 @@ class LLMResponse:
 def _transport_factory() -> httpx.BaseTransport | None:
     """Overridden by tests to inject MockTransport. None → default httpx network."""
     return None
+
+
+def _do_request(
+    body: dict[str, Any],
+    headers: dict[str, str],
+    transport: httpx.BaseTransport | None,
+) -> httpx.Response:
+    """Execute a single HTTP request to OpenRouter. Raises LLMUnavailableError on network errors."""
+    client_kwargs: dict[str, Any] = {"timeout": TIMEOUT_SECONDS}
+    if transport is not None:
+        client_kwargs["transport"] = transport
+    try:
+        with httpx.Client(**client_kwargs) as client:
+            return client.post(OPENROUTER_URL, json=body, headers=headers)
+    except httpx.RequestError as e:
+        raise LLMUnavailableError(f"OpenRouter transport error: {e}") from e
 
 
 def chat_completion(
@@ -65,21 +87,34 @@ def chat_completion(
     }
 
     transport = _transport_factory()
-    client_kwargs = {"timeout": TIMEOUT_SECONDS}
-    if transport is not None:
-        client_kwargs["transport"] = transport
 
-    try:
-        with httpx.Client(**client_kwargs) as client:
-            r = client.post(OPENROUTER_URL, json=body, headers=headers)
-    except httpx.RequestError as e:
-        raise LLMUnavailableError(f"OpenRouter transport error: {e}") from e
+    last_error: LLMUnavailableError | None = None
+    r: httpx.Response | None = None
 
-    if r.status_code >= 500:
-        raise LLMUnavailableError(f"OpenRouter {r.status_code}: {r.text[:200]}")
-    if r.status_code >= 400:
-        raise LLMRequestError(f"OpenRouter {r.status_code}: {r.text[:200]}")
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            r = _do_request(body, headers, transport)
+        except LLMUnavailableError as e:
+            last_error = e
+            if attempt < MAX_RETRIES:
+                time.sleep(_random.uniform(JITTER_MIN, JITTER_MAX))
+                continue
+            raise
 
+        if r.status_code >= 500:
+            last_error = LLMUnavailableError(f"OpenRouter {r.status_code}: {r.text[:200]}")
+            if attempt < MAX_RETRIES:
+                time.sleep(_random.uniform(JITTER_MIN, JITTER_MAX))
+                continue
+            raise last_error
+
+        if r.status_code >= 400:
+            raise LLMRequestError(f"OpenRouter {r.status_code}: {r.text[:200]}")
+
+        # Success — exit retry loop
+        break
+
+    assert r is not None
     data = r.json()
     try:
         text = data["choices"][0]["message"]["content"]
