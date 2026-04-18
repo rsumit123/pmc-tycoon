@@ -24,9 +24,9 @@ describe("RDDashboard", () => {
       {
         ...active[0],
         projections: {
-          slow: { completion_year: 2028, completion_quarter: 4, quarterly_cost_cr: 2000 },
-          standard: { completion_year: 2027, completion_quarter: 4, quarterly_cost_cr: 4000 },
-          accelerated: { completion_year: 2027, completion_quarter: 2, quarterly_cost_cr: 6000 },
+          slow: { completion_year: 2028, completion_quarter: 4, quarters_remaining: 12, quarterly_cost_cr: 2000 },
+          standard: { completion_year: 2027, completion_quarter: 4, quarters_remaining: 8, quarterly_cost_cr: 4000 },
+          accelerated: { completion_year: 2027, completion_quarter: 2, quarters_remaining: 6, quarterly_cost_cr: 6000 },
         },
       },
     ];
