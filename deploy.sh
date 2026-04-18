@@ -1,6 +1,11 @@
 #!/bin/bash
 # Sovereign Shield — One-command deploy script
 # Usage: ./deploy.sh [frontend|backend|both]
+#
+# Required env vars on the deployment VM (GCP socialflow):
+#   OPENROUTER_API_KEY  — OpenRouter API key for LLM narratives (AARs, intel briefs, recaps).
+#                         If empty, all narrative features fall back to placeholder text.
+#                         Set via: export OPENROUTER_API_KEY="sk-or-..." in ~/.bashrc on the VM.
 
 set -e
 
