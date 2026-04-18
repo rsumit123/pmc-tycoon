@@ -8,6 +8,17 @@ export interface ForceCommitterProps {
   onChange: (next: VignetteCommitPayload) => void;
 }
 
+function estimateAdvTotal(planning: PlanningState): number {
+  if (planning.adversary_force_observed?.length) {
+    return planning.adversary_force_observed.reduce((sum, o) => {
+      if (o.count != null) return sum + o.count;
+      if (o.count_range) return sum + (o.count_range[0] + o.count_range[1]) / 2;
+      return sum;
+    }, 0);
+  }
+  return planning.adversary_force.reduce((s, f) => s + f.count, 0);
+}
+
 export function ForceCommitter({ planning, value, onChange }: ForceCommitterProps) {
   const toggleSquadron = (sqid: number, available: number, checked: boolean) => {
     const rest = value.squadrons.filter((s) => s.squadron_id !== sqid);
@@ -26,8 +37,61 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
 
   const setROE = (roe: ROE) => onChange({ ...value, roe });
 
+  const totalCommitted = value.squadrons.reduce((a, b) => a + b.airframes, 0);
+  const advTotal = Math.max(1, Math.round(estimateAdvTotal(planning)));
+  const overcommit = totalCommitted > advTotal * 2;
+  const awacsCovering = planning.awacs_covering ?? [];
+
   return (
     <div className="flex flex-col gap-5">
+      {/* PROMOTED: Support section first */}
+      <section>
+        <h3 className="text-sm font-semibold mb-2 text-slate-300">Support Assets</h3>
+        <div className="space-y-2">
+          <div className="bg-slate-900 border border-slate-800 rounded-lg p-3">
+            {awacsCovering.length > 0 ? (
+              <label className="flex items-start gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={value.support.awacs}
+                  onChange={(e) => setSupport("awacs", e.target.checked)}
+                />
+                <span className="flex-1">
+                  <span className="font-semibold">AWACS</span>
+                  <span className="block text-xs opacity-70 mt-0.5">
+                    {awacsCovering[0].base_name} • {awacsCovering[0].distance_km}km • +5% missile PK
+                  </span>
+                </span>
+              </label>
+            ) : (
+              <div className="text-xs">
+                <div className="font-semibold text-slate-400">AWACS <span className="text-red-400">unavailable</span></div>
+                <div className="opacity-60 mt-0.5">
+                  No AWACS squadrons cover this AO. Consider rebasing a Netra squadron.
+                </div>
+              </div>
+            )}
+          </div>
+          <label className="flex items-start gap-2 text-sm bg-slate-900 border border-slate-800 rounded-lg p-3 cursor-pointer">
+            <input type="checkbox" className="mt-0.5" checked={value.support.tanker}
+              onChange={(e) => setSupport("tanker", e.target.checked)} />
+            <span className="flex-1">
+              <span className="font-semibold">Tanker (IL-78)</span>
+              <span className="block text-xs opacity-70 mt-0.5">Extends combat radius for committed squadrons</span>
+            </span>
+          </label>
+          <label className="flex items-start gap-2 text-sm bg-slate-900 border border-slate-800 rounded-lg p-3 cursor-pointer">
+            <input type="checkbox" className="mt-0.5" checked={value.support.sead_package}
+              onChange={(e) => setSupport("sead_package", e.target.checked)} />
+            <span className="flex-1">
+              <span className="font-semibold">SEAD package</span>
+              <span className="block text-xs opacity-70 mt-0.5">Suppresses enemy AD threat</span>
+            </span>
+          </label>
+        </div>
+      </section>
+
       <section>
         <h3 className="text-sm font-semibold mb-2 text-slate-300">Squadrons</h3>
         <ul className="flex flex-col gap-2">
@@ -69,24 +133,11 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
             );
           })}
         </ul>
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold mb-2 text-slate-300">Support</h3>
-        <div className="flex flex-wrap gap-3 text-sm">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={value.support.awacs} onChange={(e) => setSupport("awacs", e.target.checked)} />
-            AWACS
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={value.support.tanker} onChange={(e) => setSupport("tanker", e.target.checked)} />
-            Tanker
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={value.support.sead_package} onChange={(e) => setSupport("sead_package", e.target.checked)} />
-            SEAD package
-          </label>
-        </div>
+        {overcommit && (
+          <p className="text-xs text-amber-400 mt-2 border border-amber-800 bg-amber-950/30 rounded p-2">
+            ⚠ Heavy overcommitment ({totalCommitted} vs ~{advTotal} enemy). All committed squadrons lose extra readiness even if they don't engage.
+          </p>
+        )}
       </section>
 
       <section>
@@ -95,7 +146,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
           aria-label="ROE"
           value={value.roe}
           onChange={(e) => setROE(e.target.value as ROE)}
-          className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"
+          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"
         >
           {planning.roe_options.map((o) => (
             <option key={o} value={o}>{o.replace(/_/g, " ")}</option>

@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { ForceCommitter } from "../components/vignette/ForceCommitter";
 import { CommitHoldButton } from "../components/primitives/CommitHoldButton";
+import { AOMiniMap } from "../components/vignette/AOMiniMap";
+import { AdversaryForceFogged } from "../components/vignette/AdversaryForceFogged";
 import type { Vignette, VignetteCommitPayload } from "../lib/types";
 
 export function OpsRoom() {
@@ -17,6 +19,8 @@ export function OpsRoom() {
   const commitVignette = useCampaignStore((s) => s.commitVignette);
   const vignetteById = useCampaignStore((s) => s.vignetteById);
   const loading = useCampaignStore((s) => s.loading);
+  const bases = useCampaignStore((s) => s.bases);
+  const loadBases = useCampaignStore((s) => s.loadBases);
 
   const [vignette, setVignette] = useState<Vignette | null>(null);
   const [payload, setPayload] = useState<VignetteCommitPayload>({
@@ -30,6 +34,10 @@ export function OpsRoom() {
   useEffect(() => {
     if (!campaign || campaign.id !== campaignId) loadCampaign(campaignId);
   }, [campaign, campaignId, loadCampaign]);
+
+  useEffect(() => {
+    if (campaign) loadBases(campaign.id);
+  }, [campaign, loadBases]);
 
   useEffect(() => {
     if (!Number.isFinite(vignetteId)) return;
@@ -85,22 +93,21 @@ export function OpsRoom() {
       </header>
 
       <main className="flex-1 overflow-y-auto p-4 space-y-6 max-w-3xl mx-auto w-full">
-        <section className="bg-slate-900 border border-slate-700 rounded-lg p-4">
-          <h2 className="text-sm font-semibold mb-2 text-slate-300">Adversary Force</h2>
-          {ps.adversary_force.length === 0 ? (
-            <p className="text-xs opacity-60">Unknown.</p>
-          ) : (
-            <ul className="text-xs space-y-1">
-              {ps.adversary_force.map((e, i) => (
-                <li key={i} className="flex gap-2">
-                  <span className="opacity-70">[{e.faction}]</span>
-                  <span className="font-semibold">{e.count}× {e.platform_id}</span>
-                  <span className="opacity-60">({e.role})</span>
-                </li>
-              ))}
-            </ul>
+        <AOMiniMap
+          ao={ps.ao}
+          inRangeBases={bases.filter((b) =>
+            ps.eligible_squadrons.some((e) => e.base_id === b.id && e.in_range)
           )}
-        </section>
+          faction={ps.adversary_force[0]?.faction ?? "UNKNOWN"}
+        />
+        <AdversaryForceFogged
+          observed={ps.adversary_force_observed ?? ps.adversary_force.map(f => ({
+            faction: f.faction, role: f.role, count: f.count,
+            probable_platforms: [f.platform_id], fidelity: "high" as const,
+          }))}
+          tier={ps.intel_quality?.tier ?? "perfect"}
+          score={ps.intel_quality?.score ?? 1}
+        />
 
         <section className="bg-slate-900 border border-slate-700 rounded-lg p-4">
           <h2 className="text-sm font-semibold mb-2 text-slate-300">Objective</h2>
