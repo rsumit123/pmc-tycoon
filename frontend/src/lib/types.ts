@@ -490,3 +490,15 @@ export interface TurnReportResponse {
   treasury_after_cr: number;
   allocation: Record<string, number> | null;
 }
+
+// ---------- Plan 14: toast types ----------
+
+export type ToastVariant = "success" | "info" | "warning" | "error";
+
+export interface Toast {
+  id: string;
+  variant: ToastVariant;
+  message: string;
+  /** ms until auto-dismiss. 0 = never. Default 3000. */
+  duration?: number;
+}
