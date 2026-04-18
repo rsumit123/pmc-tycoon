@@ -14,14 +14,35 @@ export interface RDDashboardProps {
 }
 
 const FUNDING_LEVELS: RDFundingLevel[] = ["slow", "standard", "accelerated"];
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  Fighters: ["amca", "tejas", "tedbf", "rafale", "mig"],
+  Weapons:  ["astra", "brahmos", "rudram", "meteor", "missile"],
+  Sensors:  ["netra", "aewc", "uttam", "aesa", "radar"],
+  Drones:   ["ghatak", "archer", "tapas", "drone", "ucav"],
+  Infrastructure: ["shelter", "runway", "base", "fuel"],
+};
+
+function categorize(spec: RDProgramSpec): string {
+  const id = spec.id.toLowerCase();
+  const name = spec.name.toLowerCase();
+  for (const [cat, keys] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (keys.some((k) => id.includes(k) || name.includes(k))) return cat;
+  }
+  return "Other";
+}
 
 function specOf(catalog: RDProgramSpec[], programId: string): RDProgramSpec | undefined {
   return catalog.find((s) => s.id === programId);
 }
 
 function ActiveRow({
-  state, spec, onUpdate,
-}: { state: RDProgramState; spec?: RDProgramSpec; onUpdate: RDDashboardProps["onUpdate"] }) {
+  state, spec, onUpdate, loading,
+}: {
+  state: RDProgramState;
+  spec?: RDProgramSpec;
+  onUpdate: RDDashboardProps["onUpdate"];
+  loading: boolean;
+}) {
   const [confirming, setConfirming] = useState(false);
 
   const statusBadge =
@@ -32,16 +53,21 @@ function ActiveRow({
       : { text: "Active", classes: "bg-amber-900/50 text-amber-200" };
 
   return (
-    <div className="bg-slate-900/70 border border-slate-800 rounded-lg p-3 space-y-2">
+    <div className="bg-slate-900/70 border border-slate-800 rounded-lg p-3 space-y-2 relative">
+      {loading && (
+        <div className="absolute inset-0 bg-slate-950/40 rounded-lg flex items-center justify-center z-10">
+          <div className="w-5 h-5 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+        </div>
+      )}
       <div className="flex items-baseline justify-between gap-2">
         <div className="text-sm font-semibold">{spec?.name ?? state.program_id}</div>
         <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase ${statusBadge.classes}`}>
           {statusBadge.text}
         </span>
       </div>
-      <div className="relative h-1.5 rounded bg-slate-800 overflow-hidden">
+      <div className="relative h-2 rounded bg-slate-800 overflow-hidden">
         <div
-          className="absolute inset-y-0 left-0 bg-amber-500"
+          className="absolute inset-y-0 left-0 bg-amber-500 transition-all"
           style={{ width: `${Math.min(100, state.progress_pct)}%` }}
         />
       </div>
@@ -63,12 +89,14 @@ function ActiveRow({
                     key={lvl}
                     type="button"
                     aria-label={`Set funding ${lvl}`}
+                    disabled={loading}
                     onClick={() => onUpdate(state.program_id, { funding_level: lvl })}
                     className={[
-                      "text-xs rounded p-1.5 border flex flex-col items-center gap-0.5",
+                      "text-xs rounded p-1.5 border flex flex-col items-center gap-0.5 transition-colors",
                       selected
                         ? "bg-amber-600 border-amber-500 text-slate-900 font-semibold"
                         : "bg-slate-800 border-slate-700 hover:border-slate-500 text-slate-200",
+                      loading ? "opacity-60 cursor-not-allowed" : "",
                     ].join(" ")}
                   >
                     <span className="capitalize">{lvl}</span>
@@ -208,6 +236,17 @@ function CatalogRow({
 export function RDDashboard({
   catalog, active, onStart, onUpdate, disabled,
 }: RDDashboardProps) {
+  const rdLoading = useCampaignStore((s) => s.rdLoading);
+  const campaign = useCampaignStore((s) => s.campaign);
+
+  const [tab, setTab] = useState<"active" | "catalog">(active.length > 0 ? "active" : "catalog");
+  const [category, setCategory] = useState<string>("All");
+
+  const sortedActive = useMemo(
+    () => [...active].sort((a, b) => b.progress_pct - a.progress_pct),
+    [active],
+  );
+
   const activeIds = useMemo(
     () => new Set(
       active.filter((a) => a.status === "active" || a.status === "completed")
@@ -215,52 +254,124 @@ export function RDDashboard({
     ),
     [active],
   );
+
   const availableCatalog = useMemo(
     () => catalog.filter((s) => !activeIds.has(s.id)),
     [catalog, activeIds],
   );
 
-  return (
-    <div className="space-y-6">
-      <section className="space-y-3">
-        <h3 className="text-sm font-bold uppercase tracking-wider opacity-80">
-          Active programs
-        </h3>
-        {active.length === 0 ? (
-          <p className="text-xs opacity-60">No R&D programs underway.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {active.map((a) => (
-              <ActiveRow
-                key={a.id}
-                state={a}
-                spec={specOf(catalog, a.program_id)}
-                onUpdate={onUpdate}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+  const filteredCatalog = useMemo(() => {
+    if (category === "All") return availableCatalog;
+    return availableCatalog.filter((s) => categorize(s) === category);
+  }, [availableCatalog, category]);
 
-      <section className="space-y-3">
-        <h3 className="text-sm font-bold uppercase tracking-wider opacity-80">
-          Catalog
-        </h3>
-        {availableCatalog.length === 0 ? (
-          <p className="text-xs opacity-60">All catalog programs are already underway.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {availableCatalog.map((spec) => (
-              <CatalogRow
-                key={spec.id}
-                spec={spec}
-                onStart={onStart}
-                disabled={disabled}
-              />
+  const totalQuarterlyCost = useMemo(() => {
+    return active.reduce((sum, a) => {
+      if (a.status !== "active") return sum;
+      const proj = a.projections?.[a.funding_level];
+      return sum + (proj?.quarterly_cost_cr ?? 0);
+    }, 0);
+  }, [active]);
+
+  const rdBucket = campaign?.current_allocation_json?.rd ?? 0;
+  const overBudget = totalQuarterlyCost > rdBucket;
+
+  return (
+    <div className="space-y-4">
+      <div className={[
+        "sticky top-0 z-20 -mx-4 sm:mx-0 px-4 py-2 border-b",
+        overBudget ? "bg-rose-950/80 border-rose-800" : "bg-slate-900 border-slate-700",
+      ].join(" ")}>
+        <div className="flex items-baseline justify-between text-xs">
+          <span className="opacity-70">Quarterly R&D spend</span>
+          <span className={overBudget ? "text-rose-300 font-semibold" : "text-slate-200 font-semibold"}>
+            ₹{totalQuarterlyCost.toLocaleString("en-US")} / ₹{rdBucket.toLocaleString("en-US")} cr
+          </span>
+        </div>
+        {overBudget && (
+          <p className="text-[10px] text-rose-300 mt-1">
+            Projected spend exceeds R&D budget bucket — programs will get underfunded pro-rata.
+          </p>
+        )}
+      </div>
+
+      <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
+        <button
+          type="button"
+          onClick={() => setTab("active")}
+          className={[
+            "flex-1 px-3 py-1.5 text-xs font-semibold rounded",
+            tab === "active" ? "bg-amber-600 text-slate-900" : "text-slate-300",
+          ].join(" ")}
+        >
+          Active ({active.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("catalog")}
+          className={[
+            "flex-1 px-3 py-1.5 text-xs font-semibold rounded",
+            tab === "catalog" ? "bg-amber-600 text-slate-900" : "text-slate-300",
+          ].join(" ")}
+        >
+          Catalog ({availableCatalog.length})
+        </button>
+      </div>
+
+      {tab === "active" ? (
+        <section className="space-y-2">
+          {sortedActive.length === 0 ? (
+            <p className="text-xs opacity-60 py-4 text-center">No R&D programs underway. Open Catalog to start one.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {sortedActive.map((a) => (
+                <ActiveRow
+                  key={a.id}
+                  state={a}
+                  spec={specOf(catalog, a.program_id)}
+                  onUpdate={onUpdate}
+                  loading={!!rdLoading[a.program_id]}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <section className="space-y-3">
+          <div className="flex flex-wrap gap-1.5">
+            {["All", "Fighters", "Weapons", "Sensors", "Drones", "Infrastructure", "Other"].map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setCategory(c)}
+                className={[
+                  "text-[11px] rounded-full px-2.5 py-1 border",
+                  category === c
+                    ? "bg-amber-600 border-amber-500 text-slate-900 font-semibold"
+                    : "bg-slate-800 border-slate-700 text-slate-300",
+                ].join(" ")}
+              >
+                {c}
+              </button>
             ))}
           </div>
-        )}
-      </section>
+
+          {filteredCatalog.length === 0 ? (
+            <p className="text-xs opacity-60 py-4 text-center">No programs in this category.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {filteredCatalog.map((spec) => (
+                <CatalogRow
+                  key={spec.id}
+                  spec={spec}
+                  onStart={onStart}
+                  disabled={disabled}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
