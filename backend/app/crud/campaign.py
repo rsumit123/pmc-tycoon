@@ -12,6 +12,7 @@ from app.models.vignette import Vignette
 from app.models.campaign_base import CampaignBase
 from app.schemas.campaign import CampaignCreate
 from app.engine.turn import advance as engine_advance
+from app.engine.delivery_assignment import pick_base_for_delivery
 from app.content.registry import rd_programs as rd_program_specs
 from app.content.registry import adversary_roadmap as adversary_roadmap_reg
 from app.content.registry import intel_templates as intel_templates_reg
@@ -238,6 +239,73 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
             aar_text="",
             outcome={},
         ))
+
+    # ── Delivery → Squadron wiring ──────────────────────────────────────────
+    # For every acquisition_delivery event, create or augment the Squadron row
+    # so delivered airframes actually exist in gameplay. PlatformSpec has no
+    # runway_class_required field, so treat every platform as compatible with
+    # all bases by using runway_class="short" (matches everything).
+    _plats_reg = platforms_reg()
+    _platform_dicts = {
+        pid: {"id": pid, "runway_class": "short"}
+        for pid in _plats_reg
+    }
+    _base_dicts = [
+        {
+            "id": b.id,
+            "template_id": b.template_id,
+            "runway_class": b.runway_class,
+            "shelter_count": b.shelter_count,
+        }
+        for b in base_rows
+    ]
+    _sq_dicts = [
+        {"id": s.id, "base_id": s.base_id, "platform_id": s.platform_id, "strength": s.strength}
+        for s in sq_rows
+    ]
+
+    for ev in result.events:
+        if ev["event_type"] != "acquisition_delivery":
+            continue
+        pid = ev["payload"].get("platform_id")
+        count = ev["payload"].get("count", 0)
+        if not pid or count <= 0:
+            continue
+        plat = _platform_dicts.get(pid, {"id": pid, "runway_class": "short"})
+        existing = next((s for s in sq_rows if s.platform_id == pid), None)
+        if existing is not None:
+            existing.strength = (existing.strength or 0) + count
+            for sd in _sq_dicts:
+                if sd["id"] == existing.id:
+                    sd["strength"] = existing.strength
+                    break
+            ev["payload"]["assigned_base_id"] = existing.base_id
+            ev["payload"]["assigned_squadron_id"] = existing.id
+        else:
+            target_base_id = pick_base_for_delivery(plat, _base_dicts, _sq_dicts)
+            if target_base_id is None:
+                continue
+            new_sqn = Squadron(
+                campaign_id=campaign.id,
+                base_id=target_base_id,
+                platform_id=pid,
+                strength=count,
+                readiness_pct=75,
+                xp=0,
+                name=f"{pid} delivery squadron",
+                call_sign=f"{pid[:6].upper()}-{len(sq_rows) + 1}",
+            )
+            db.add(new_sqn)
+            db.flush()
+            sq_rows.append(new_sqn)
+            _sq_dicts.append({
+                "id": new_sqn.id,
+                "base_id": target_base_id,
+                "platform_id": pid,
+                "strength": count,
+            })
+            ev["payload"]["assigned_base_id"] = target_base_id
+            ev["payload"]["assigned_squadron_id"] = new_sqn.id
 
     for e in result.events:
         db.add(CampaignEvent(
