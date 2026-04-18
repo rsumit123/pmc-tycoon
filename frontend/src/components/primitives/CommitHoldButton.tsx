@@ -17,6 +17,7 @@ export function CommitHoldButton({
   className = "",
 }: CommitHoldButtonProps) {
   const [progress, setProgress] = useState(0);
+  const [showStamp, setShowStamp] = useState(false);
   const rafRef = useRef<number | null>(null);
   const startedAtRef = useRef<number | null>(null);
 
@@ -35,6 +36,8 @@ export function CommitHoldButton({
     if (frac >= 1) {
       stop();
       hapticBuzz();
+      setShowStamp(true);
+      setTimeout(() => setShowStamp(false), 600);
       onCommit();
     } else {
       rafRef.current = requestAnimationFrame(tick);
@@ -70,6 +73,11 @@ export function CommitHoldButton({
         className="absolute inset-0 bg-amber-400/40 origin-left"
         style={{ transform: `scaleX(${progress})` }}
       />
+      {showStamp && (
+        <div className="stamp-animation absolute inset-0 flex items-center justify-center z-10">
+          <span className="text-4xl text-amber-500 font-black tracking-wider">SIGNED</span>
+        </div>
+      )}
       <span className="relative">{label}</span>
     </button>
   );
