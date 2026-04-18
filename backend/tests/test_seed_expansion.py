@@ -56,13 +56,13 @@ def test_base_coordinates_valid():
 
 
 def test_starting_squadron_count(client):
-    """After seeding, 31 squadrons exist."""
+    """After seeding, 34 squadrons exist."""
     c, Session = client
     created = _create_campaign(c)
     from app.models.squadron import Squadron
     db = Session()
     sqs = db.query(Squadron).filter(Squadron.campaign_id == created["id"]).all()
-    assert len(sqs) == 31
+    assert len(sqs) == 34
 
 
 def test_starting_base_count(client):

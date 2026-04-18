@@ -52,7 +52,7 @@ def test_export_campaign_returns_correct_structure(client):
     assert data["seed"] == seed
     assert data["difficulty"] == "realistic"
     assert len(data["bases"]) == 15
-    assert len(data["squadrons"]) == 31
+    assert len(data["squadrons"]) == 34
 
 
 def test_export_missing_campaign_returns_404(client):
@@ -109,4 +109,4 @@ def test_import_preserves_bases_and_squadrons(client):
 
     # Check squadrons via bases (each base has squadrons nested)
     total_squads = sum(len(b.get("squadrons", [])) for b in bases)
-    assert total_squads == 31
+    assert total_squads == 34

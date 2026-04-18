@@ -103,6 +103,11 @@ SEED_SQUADRONS = [
     # Nal — 2 squadrons
     ("51 Sqn Swordarms", "SWORD", "mig21_bison", "nal", 14, 60),
     ("87 Sqn Falcons of Nal", "NALCON", "tejas_mk1a", "nal", 16, 83),
+    # AWACS — Netra AEW&C at Bareilly (western coverage) + Nal (desert coverage)
+    ("50 Sqn Stallions", "STALLION", "netra_aewc", "bareilly", 3, 78),
+    ("25 Sqn Himalayan Eagles", "AWACS-W", "netra_aewc", "nal", 3, 75),
+    # Tanker — IL-78MKI at Ambala
+    ("78 Sqn Tuskers", "TANKER", "il78_tanker", "ambala", 6, 72),
 ]
 
 SEED_ACQUISITIONS = [
