@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { AARReader } from "../components/vignette/AARReader";
+import { CombatReasoning } from "../components/vignette/CombatReasoning";
 import { TacticalReplay } from "../components/vignette/TacticalReplay";
-import type { Vignette } from "../lib/types";
+import type { Vignette, VignetteOutcome } from "../lib/types";
 
 export function VignetteAAR() {
   const { id, vid } = useParams<{ id: string; vid: string }>();
@@ -43,6 +44,14 @@ export function VignetteAAR() {
       </header>
       <main className="p-4 max-w-3xl mx-auto">
         <AARReader campaignId={campaignId} vignette={vignette} />
+        {vignette.outcome && "objective_met" in vignette.outcome && vignette.committed_force && (
+          <CombatReasoning
+            eventTrace={vignette.event_trace}
+            planningState={ps}
+            outcome={vignette.outcome as VignetteOutcome}
+            committedForce={vignette.committed_force}
+          />
+        )}
         {vignette.event_trace && vignette.event_trace.length > 0 && (
           <TacticalReplay
             eventTrace={vignette.event_trace}
