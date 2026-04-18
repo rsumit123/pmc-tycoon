@@ -9,6 +9,7 @@ import type {
   CampaignSummary,
   CampaignListItem,
   ObjectiveSpec,
+  TurnReportResponse,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -28,6 +29,7 @@ interface CampaignState {
   yearRecapToast: string | null;
   campaignList: CampaignListItem[];
   objectivesCatalog: ObjectiveSpec[];
+  turnReport: TurnReportResponse | null;
   loading: boolean;
   error: string | null;
 
@@ -56,6 +58,7 @@ interface CampaignState {
   rebaseSquadron: (squadronId: number, targetBaseId: number) => Promise<void>;
   loadCampaignList: () => Promise<void>;
   loadObjectivesCatalog: () => Promise<void>;
+  loadTurnReport: (campaignId: number, year: number, quarter: number) => Promise<void>;
   reset: () => void;
 }
 
@@ -75,6 +78,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   yearRecapToast: null,
   campaignList: [],
   objectivesCatalog: [],
+  turnReport: null,
   loading: false,
   error: null,
 
@@ -347,6 +351,11 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     }
   },
 
+  loadTurnReport: async (campaignId, year, quarter) => {
+    const r = await api.getTurnReport(campaignId, year, quarter);
+    set({ turnReport: r });
+  },
+
   reset: () => set({
     campaign: null, bases: [], platformsById: {},
     rdCatalog: [], rdActive: [], acquisitions: [],
@@ -354,6 +363,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     intelCards: [], intelFilter: null, narrativeCache: {},
     campaignSummary: null, yearRecapToast: null,
     campaignList: [], objectivesCatalog: [],
+    turnReport: null,
     loading: false, error: null,
   }),
 }));

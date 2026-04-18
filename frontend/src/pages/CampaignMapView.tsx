@@ -82,11 +82,17 @@ export function CampaignMapView() {
   }, [mapInstance]);
 
   const handleAdvanceTurn = async () => {
+    const prev = useCampaignStore.getState().campaign;
+    if (!prev) return;
+    const fromYear = prev.current_year;
+    const fromQuarter = prev.current_quarter;
     await advanceTurn();
     const updated = useCampaignStore.getState().campaign;
     if (updated && (updated.current_year > 2036 || (updated.current_year === 2036 && updated.current_quarter > 1))) {
       navigate(`/campaign/${updated.id}/white-paper`);
+      return;
     }
+    if (updated) navigate(`/campaign/${updated.id}/turn-report/${fromYear}/${fromQuarter}`);
   };
 
   const handleRebase = async (sqnId: number, targetBaseId: number) => {

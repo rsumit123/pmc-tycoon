@@ -7,6 +7,7 @@ import { IntelInbox } from "./pages/IntelInbox";
 import { OpsRoom } from "./pages/OpsRoom";
 import { VignetteAAR } from "./pages/VignetteAAR";
 import { DefenseWhitePaper } from "./pages/DefenseWhitePaper";
+import { TurnReport } from "./pages/TurnReport";
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
       <Route path="/campaign/:id/vignette/:vid" element={<OpsRoom />} />
       <Route path="/campaign/:id/vignette/:vid/aar" element={<VignetteAAR />} />
       <Route path="/campaign/:id/white-paper" element={<DefenseWhitePaper />} />
+      <Route path="/campaign/:id/turn-report/:year/:quarter" element={<TurnReport />} />
       <Route path="/campaign/:id/raw" element={<CampaignConsoleRaw />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
