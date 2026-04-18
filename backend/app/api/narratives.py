@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -23,6 +24,8 @@ def _wrap(call, *, kind: str, subject_id: str | None):
         raise HTTPException(status_code=500, detail=str(e))
     except LLMUnavailableError as e:
         raise HTTPException(status_code=502, detail=str(e))
+    except IntegrityError:
+        raise HTTPException(status_code=409, detail="Narrative already being generated (concurrent request)")
     return GenerateResponse(text=text, cached=cached, kind=kind, subject_id=subject_id)
 
 

@@ -91,6 +91,8 @@ def commit_vignette(
         payload={
             "vignette_id": vignette.id,
             "scenario_id": vignette.scenario_id,
+            "scenario_name": ps.get("scenario_name", ""),
+            "ao": ps.get("ao", {}),
             "outcome": outcome,
         },
     ))
