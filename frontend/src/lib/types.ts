@@ -374,3 +374,33 @@ export interface CampaignSummary {
   objectives: { id: string; name: string; status: "pass" | "fail" | "unknown" }[];
   is_complete: boolean;
 }
+
+// ---------- Plan 12: objectives + campaign list ----------
+
+export interface ObjectiveSpec {
+  id: string;
+  title: string;
+  description: string;
+  weight: number;
+  target_year: number;
+}
+
+export interface ObjectiveListResponse {
+  objectives: ObjectiveSpec[];
+}
+
+export interface CampaignListItem {
+  id: number;
+  name: string;
+  current_year: number;
+  current_quarter: number;
+  difficulty: string;
+  budget_cr: number;
+  reputation: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CampaignListResponse {
+  campaigns: CampaignListItem[];
+}

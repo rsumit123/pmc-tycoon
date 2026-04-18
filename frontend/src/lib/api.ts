@@ -22,6 +22,8 @@ import type {
   GenerateNarrativeResponse,
   NarrativeKind,
   CampaignSummary,
+  ObjectiveListResponse,
+  CampaignListResponse,
 } from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
@@ -237,6 +239,16 @@ export const api = {
       `/api/campaigns/${campaignId}/squadrons/${squadronId}/rebase`,
       { target_base_id: targetBaseId },
     );
+    return data;
+  },
+
+  async getObjectives(): Promise<ObjectiveListResponse> {
+    const { data } = await http.get<ObjectiveListResponse>("/api/content/objectives");
+    return data;
+  },
+
+  async listCampaigns(): Promise<CampaignListResponse> {
+    const { data } = await http.get<CampaignListResponse>("/api/campaigns");
     return data;
   },
 };
