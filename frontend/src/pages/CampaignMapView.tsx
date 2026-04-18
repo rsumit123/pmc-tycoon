@@ -12,8 +12,9 @@ import { LayerTogglePanel } from "../components/map/LayerTogglePanel";
 import { BaseSheet } from "../components/map/BaseSheet";
 import { RebaseOverlay } from "../components/map/RebaseOverlay";
 import { YearEndRecapToast } from "../components/endgame/YearEndRecapToast";
+import { ThemeToggle } from "../components/settings/ThemeToggle";
 import { synthesizeContacts } from "../lib/intelContacts";
-import { playRadarPing } from "../lib/audio";
+import { playRadarPing, getAudioEnabled, setAudioEnabled } from "../lib/audio";
 import type { BaseSquadronSummary } from "../lib/types";
 
 export function CampaignMapView() {
@@ -41,6 +42,7 @@ export function CampaignMapView() {
   const [mapInstance, setMapInstance] = useState<MLMap | null>(null);
   const [projectionVersion, setProjectionVersion] = useState(0);
   const [rebaseTarget, setRebaseTarget] = useState<{ squadron: BaseSquadronSummary; baseId: number } | null>(null);
+  const [audioOn, setAudioOn] = useState(getAudioEnabled);
 
   const isCampaignComplete = campaign
     ? campaign.current_year > 2036 || (campaign.current_year === 2036 && campaign.current_quarter > 1)
@@ -136,6 +138,14 @@ export function CampaignMapView() {
           >
             raw
           </Link>
+          <ThemeToggle />
+          <button
+            onClick={() => { setAudioEnabled(!audioOn); setAudioOn(!audioOn); }}
+            className="text-xs opacity-60 hover:opacity-100 px-2 py-1 rounded bg-slate-800"
+            title={audioOn ? "Mute audio" : "Enable audio"}
+          >
+            {audioOn ? "♪" : "♪̶"}
+          </button>
           {isCampaignComplete && (
             <Link
               to={`/campaign/${campaign.id}/white-paper`}
