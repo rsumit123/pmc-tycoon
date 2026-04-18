@@ -120,8 +120,13 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       // Fire year-recap toast on Q4→Q1 rollover
       if (current.current_quarter === 4 && campaign.current_quarter === 1) {
         const closedYear = current.current_year;
+        const msg = `Year ${closedYear} complete — review in White Paper`;
+        set({ yearRecapToast: msg });
+        get().pushToast("info", msg, 8000);
         api.generateYearRecap(campaign.id, closedYear)
-          .then((resp) => set({ yearRecapToast: resp.text }))
+          .then((resp) => {
+            set((s) => ({ yearRecapToast: resp.text }));
+          })
           .catch(() => {});
       }
       const cid = campaign.id;

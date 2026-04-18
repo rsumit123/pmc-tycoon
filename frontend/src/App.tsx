@@ -8,20 +8,24 @@ import { OpsRoom } from "./pages/OpsRoom";
 import { VignetteAAR } from "./pages/VignetteAAR";
 import { DefenseWhitePaper } from "./pages/DefenseWhitePaper";
 import { TurnReport } from "./pages/TurnReport";
+import { ToastStack } from "./components/primitives/ToastStack";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/campaign/:id" element={<CampaignMapView />} />
-      <Route path="/campaign/:id/procurement" element={<ProcurementHub />} />
-      <Route path="/campaign/:id/intel" element={<IntelInbox />} />
-      <Route path="/campaign/:id/vignette/:vid" element={<OpsRoom />} />
-      <Route path="/campaign/:id/vignette/:vid/aar" element={<VignetteAAR />} />
-      <Route path="/campaign/:id/white-paper" element={<DefenseWhitePaper />} />
-      <Route path="/campaign/:id/turn-report/:year/:quarter" element={<TurnReport />} />
-      <Route path="/campaign/:id/raw" element={<CampaignConsoleRaw />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/campaign/:id" element={<CampaignMapView />} />
+        <Route path="/campaign/:id/procurement" element={<ProcurementHub />} />
+        <Route path="/campaign/:id/intel" element={<IntelInbox />} />
+        <Route path="/campaign/:id/vignette/:vid" element={<OpsRoom />} />
+        <Route path="/campaign/:id/vignette/:vid/aar" element={<VignetteAAR />} />
+        <Route path="/campaign/:id/white-paper" element={<DefenseWhitePaper />} />
+        <Route path="/campaign/:id/turn-report/:year/:quarter" element={<TurnReport />} />
+        <Route path="/campaign/:id/raw" element={<CampaignConsoleRaw />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <ToastStack />
+    </>
   );
 }
