@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { ObjectiveScoreCard } from "../components/endgame/ObjectiveScoreCard";
-import { ForceEvolutionChart } from "../components/endgame/ForceEvolutionChart";
+import { TreasurySparkline } from "../components/endgame/TreasurySparkline";
 import { EmergingAceCard } from "../components/endgame/EmergingAceCard";
 import { RetrospectiveReader } from "../components/endgame/RetrospectiveReader";
 import { CampaignCardGenerator } from "../components/endgame/CampaignCardGenerator";
@@ -75,7 +75,7 @@ export function DefenseWhitePaper() {
         <section>
           <h2 className="text-sm font-semibold mb-3 text-slate-300 uppercase tracking-wide">Treasury Evolution</h2>
           <div className="bg-slate-900 border border-slate-700 rounded-lg p-4">
-            <ForceEvolutionChart snapshots={summary.year_snapshots} />
+            <TreasurySparkline snapshots={summary.year_snapshots} />
           </div>
         </section>
 

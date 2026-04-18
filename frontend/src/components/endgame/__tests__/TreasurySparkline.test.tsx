@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
-import { ForceEvolutionChart } from "../ForceEvolutionChart";
+import { TreasurySparkline } from "../TreasurySparkline";
 import type { YearSnapshot } from "../../../lib/types";
 
 const snapshots: YearSnapshot[] = [
@@ -9,9 +9,9 @@ const snapshots: YearSnapshot[] = [
   { year: 2028, end_treasury_cr: 450000, vignettes_resolved: 2, vignettes_won: 1, deliveries: 3, rd_completions: 1 },
 ];
 
-describe("ForceEvolutionChart", () => {
+describe("TreasurySparkline", () => {
   it("renders an SVG with a polyline for treasury", () => {
-    const { container } = render(<ForceEvolutionChart snapshots={snapshots} />);
+    const { container } = render(<TreasurySparkline snapshots={snapshots} />);
     const svg = container.querySelector("svg");
     expect(svg).toBeTruthy();
     const polyline = svg?.querySelector("polyline");
@@ -19,13 +19,13 @@ describe("ForceEvolutionChart", () => {
   });
 
   it("renders year labels", () => {
-    const { container } = render(<ForceEvolutionChart snapshots={snapshots} />);
+    const { container } = render(<TreasurySparkline snapshots={snapshots} />);
     expect(container.textContent).toContain("2026");
     expect(container.textContent).toContain("2028");
   });
 
   it("handles empty snapshots gracefully", () => {
-    const { container } = render(<ForceEvolutionChart snapshots={[]} />);
+    const { container } = render(<TreasurySparkline snapshots={[]} />);
     expect(container.querySelector("svg")).toBeTruthy();
   });
 });

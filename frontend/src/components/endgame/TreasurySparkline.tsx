@@ -1,16 +1,16 @@
 import type { YearSnapshot } from "../../lib/types";
 
-export interface ForceEvolutionChartProps {
+export interface TreasurySparklineProps {
   snapshots: YearSnapshot[];
   width?: number;
   height?: number;
 }
 
-export function ForceEvolutionChart({
+export function TreasurySparkline({
   snapshots,
   width = 360,
   height = 140,
-}: ForceEvolutionChartProps) {
+}: TreasurySparklineProps) {
   const padX = 36;
   const padY = 20;
   const plotW = width - padX * 2;

@@ -1,6 +1,6 @@
 import { useRef, useCallback } from "react";
 import type { CampaignSummary } from "../../lib/types";
-import { ForceEvolutionChart } from "./ForceEvolutionChart";
+import { TreasurySparkline } from "./TreasurySparkline";
 
 export interface CampaignCardGeneratorProps {
   summary: CampaignSummary;
@@ -66,7 +66,7 @@ export function CampaignCardGenerator({ summary }: CampaignCardGeneratorProps) {
             </div>
           ))}
         </div>
-        <ForceEvolutionChart snapshots={summary.year_snapshots} width={320} height={80} />
+        <TreasurySparkline snapshots={summary.year_snapshots} width={320} height={80} />
       </div>
       <div className="text-center">
         <button
