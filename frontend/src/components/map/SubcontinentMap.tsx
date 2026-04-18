@@ -21,11 +21,12 @@ export interface SubcontinentMapProps {
   markers: BaseMarker[];
   onMarkerClick?: (baseId: number) => void;
   onReady?: (map: MLMap) => void;
+  flashBaseId?: number | null;
   className?: string;
 }
 
 export function SubcontinentMap({
-  markers, onMarkerClick, onReady, className = "",
+  markers, onMarkerClick, onReady, flashBaseId, className = "",
 }: SubcontinentMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MLMap | null>(null);
@@ -58,16 +59,21 @@ export function SubcontinentMap({
       const el = document.createElement("button");
       el.type = "button";
       el.setAttribute("aria-label", `${b.name} airbase`);
-      el.className =
-        "w-3 h-3 rounded-full bg-amber-400 border border-amber-900 " +
-        "shadow hover:scale-125 transition-transform";
+      el.setAttribute("data-base-id", String(b.id));
+      const isFlash = flashBaseId === b.id;
+      el.className = [
+        "w-3 h-3 rounded-full border shadow hover:scale-125 transition-transform",
+        isFlash
+          ? "bg-emerald-400 border-emerald-900 ring-4 ring-emerald-300/60 animate-pulse scale-150"
+          : "bg-amber-400 border-amber-900",
+      ].join(" ");
       el.addEventListener("click", () => onMarkerClick?.(b.id));
       const mk = new maplibregl.Marker({ element: el })
         .setLngLat([b.lon, b.lat])
         .addTo(m);
       markerObjsRef.current.push(mk);
     }
-  }, [markers, onMarkerClick]);
+  }, [markers, onMarkerClick, flashBaseId]);
 
   return (
     <div

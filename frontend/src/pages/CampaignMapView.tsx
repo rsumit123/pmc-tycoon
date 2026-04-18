@@ -46,6 +46,7 @@ export function CampaignMapView() {
   const [audioOn, setAudioOn] = useState(getAudioEnabled);
   const [showGuide, setShowGuide] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [flashBaseId, setFlashBaseId] = useState<number | null>(null);
 
   const isCampaignComplete = campaign
     ? campaign.current_year > 2036 || (campaign.current_year === 2036 && campaign.current_quarter > 1)
@@ -99,6 +100,8 @@ export function CampaignMapView() {
     await rebaseSquadron(sqnId, targetBaseId);
     setRebaseTarget(null);
     setSelectedBase(null);
+    setFlashBaseId(targetBaseId);
+    setTimeout(() => setFlashBaseId(null), 2000);
   };
 
   const selectedBase = useMemo(
@@ -214,6 +217,7 @@ export function CampaignMapView() {
           markers={bases}
           onMarkerClick={(bid) => setSelectedBase(bid)}
           onReady={(m) => setMapInstance(m)}
+          flashBaseId={flashBaseId}
         />
         {activeLayers.ad_coverage && (
           <ADCoverageLayer
