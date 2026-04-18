@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.models.vignette import Vignette
 from app.models.campaign import Campaign
 from app.models.event import CampaignEvent
+from app.models.squadron import Squadron
 from app.content.registry import platforms as platforms_reg
 from app.engine.vignette.resolver import resolve
 
@@ -70,6 +71,25 @@ def commit_vignette(
         ps, committed_force, platforms_dict,
         seed=campaign.seed, year=vignette.year, quarter=vignette.quarter,
     )
+
+    # Apply readiness cost to committed squadrons.
+    # Base cost: 5% per committed squadron. Overcommit (>2x adversary) adds penalty.
+    # Penalty: int((ratio - 2.0) * 3) extra percentage points. Capped at 30%.
+    ind_total = sum(e.get("airframes", 0) for e in committed_force.get("squadrons", []))
+    adv_total = sum(
+        e.get("count", 0) for e in ps.get("adversary_force", [])
+    ) or 1
+    overcommit_ratio = ind_total / adv_total
+
+    base_readiness_cost = 5
+    penalty = max(0, int((overcommit_ratio - 2.0) * 3))
+    total_readiness_cost = min(30, base_readiness_cost + penalty)
+
+    for commit_sq in committed_force.get("squadrons", []):
+        sq = db.get(Squadron, commit_sq["squadron_id"])
+        if sq is None:
+            continue
+        sq.readiness_pct = max(0, (sq.readiness_pct or 0) - total_readiness_cost)
 
     vignette.status = "resolved"
     vignette.committed_force = committed_force
