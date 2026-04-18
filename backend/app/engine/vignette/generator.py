@@ -17,6 +17,20 @@ from typing import Any
 from app.content.loader import ScenarioTemplate
 from app.engine.vignette.bvr import PLATFORM_LOADOUTS
 
+ROLE_FITNESS: dict[str, dict[str, float]] = {
+    "CAP":    {"VLO": 4.0, "LO": 2.5, "reduced": 1.5, "conventional": 1.0, "large": 0.3},
+    "SEAD":   {"VLO": 2.0, "LO": 1.5, "reduced": 1.5, "conventional": 1.0, "large": 0.5},
+    "strike": {"VLO": 1.0, "LO": 1.0, "reduced": 1.0, "conventional": 1.0, "large": 6.0},
+    "escort": {"VLO": 3.0, "LO": 2.0, "reduced": 1.5, "conventional": 1.0, "large": 0.3},
+}
+
+
+def _platform_rcs(platform_id: str) -> str:
+    from app.content.registry import platforms as platforms_reg
+    plats = platforms_reg()
+    p = plats.get(platform_id)
+    return p.rcs_band if p else "conventional"
+
 
 def _q_index(year: int, quarter: int) -> int:
     return (year - 2026) * 4 + (quarter - 2)
@@ -82,8 +96,15 @@ def build_planning_state(
         pool = [p for p in entry["platform_pool"] if inv.get(p, 0) > 0]
         if not pool:
             continue
-        # Weighted pick by inventory count
-        weights = [inv[p] for p in pool]
+        # Weighted pick by inventory count × role fitness
+        role = entry["role"]
+        fitness_map = ROLE_FITNESS.get(role, {})
+        weights = []
+        for p in pool:
+            inv_w = inv[p]
+            rcs = _platform_rcs(p)
+            fitness = fitness_map.get(rcs, 1.0)
+            weights.append(inv_w * fitness)
         platform = rng.choices(pool, weights=weights, k=1)[0]
         lo, hi = entry["count_range"]
         count = rng.randint(lo, hi)
