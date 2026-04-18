@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { hapticBuzz } from "../../lib/audio";
 
 export interface CommitHoldButtonProps {
   onCommit: () => void;
@@ -33,6 +34,7 @@ export function CommitHoldButton({
     setProgress(frac);
     if (frac >= 1) {
       stop();
+      hapticBuzz();
       onCommit();
     } else {
       rafRef.current = requestAnimationFrame(tick);

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useCampaignStore } from "../../store/campaignStore";
+import { playYearEndDrum } from "../../lib/audio";
 
 export function YearEndRecapToast() {
   const toast = useCampaignStore((s) => s.yearRecapToast);
@@ -7,6 +8,7 @@ export function YearEndRecapToast() {
 
   useEffect(() => {
     if (!toast) return;
+    playYearEndDrum();
     const timer = setTimeout(dismiss, 8000);
     return () => clearTimeout(timer);
   }, [toast, dismiss]);

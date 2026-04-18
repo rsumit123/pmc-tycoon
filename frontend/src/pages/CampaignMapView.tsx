@@ -13,6 +13,7 @@ import { BaseSheet } from "../components/map/BaseSheet";
 import { RebaseOverlay } from "../components/map/RebaseOverlay";
 import { YearEndRecapToast } from "../components/endgame/YearEndRecapToast";
 import { synthesizeContacts } from "../lib/intelContacts";
+import { playRadarPing } from "../lib/audio";
 import type { BaseSquadronSummary } from "../lib/types";
 
 export function CampaignMapView() {
@@ -63,6 +64,10 @@ export function CampaignMapView() {
       loadPendingVignettes(campaign.id);
     }
   }, [campaign, loadPendingVignettes]);
+
+  useEffect(() => {
+    if (pendingVignettes.length > 0) playRadarPing();
+  }, [pendingVignettes.length]);
 
   useEffect(() => {
     if (!mapInstance) return;
