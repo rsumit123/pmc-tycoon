@@ -51,7 +51,7 @@ export function DefenseWhitePaper() {
       <main className="p-4 max-w-3xl mx-auto space-y-8 pb-12">
         <section>
           <h2 className="text-sm font-semibold mb-3 text-slate-300 uppercase tracking-wide">Campaign Summary</h2>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 text-center">
               <div className="text-2xl font-mono font-bold">{summary.vignettes_won}</div>
               <div className="text-xs text-slate-400">Won</div>

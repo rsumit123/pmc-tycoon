@@ -19,7 +19,7 @@ export function YearEndRecapToast() {
     <div
       role="status"
       onClick={dismiss}
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-lg px-5 py-3 bg-amber-600/90 text-slate-900 text-sm font-semibold rounded-xl shadow-lg cursor-pointer"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-[calc(100vw-2rem)] sm:max-w-lg px-4 py-3 bg-amber-600/90 text-slate-900 text-sm font-semibold rounded-xl shadow-lg cursor-pointer"
     >
       {toast}
     </div>
