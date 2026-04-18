@@ -7,6 +7,8 @@ import type {
   IntelCard,
   GenerateNarrativeResponse,
   CampaignSummary,
+  CampaignListItem,
+  ObjectiveSpec,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -24,6 +26,8 @@ interface CampaignState {
   narrativeCache: Record<string, GenerateNarrativeResponse>;
   campaignSummary: CampaignSummary | null;
   yearRecapToast: string | null;
+  campaignList: CampaignListItem[];
+  objectivesCatalog: ObjectiveSpec[];
   loading: boolean;
   error: string | null;
 
@@ -50,6 +54,8 @@ interface CampaignState {
   generateRetrospective: (campaignId: number) => Promise<GenerateNarrativeResponse>;
   dismissYearRecapToast: () => void;
   rebaseSquadron: (squadronId: number, targetBaseId: number) => Promise<void>;
+  loadCampaignList: () => Promise<void>;
+  loadObjectivesCatalog: () => Promise<void>;
   reset: () => void;
 }
 
@@ -67,6 +73,8 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   narrativeCache: {},
   campaignSummary: null,
   yearRecapToast: null,
+  campaignList: [],
+  objectivesCatalog: [],
   loading: false,
   error: null,
 
@@ -321,12 +329,31 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     return resp;
   },
 
+  loadCampaignList: async () => {
+    try {
+      const resp = await api.listCampaigns();
+      set({ campaignList: resp.campaigns });
+    } catch (e) {
+      set({ error: (e as Error).message });
+    }
+  },
+
+  loadObjectivesCatalog: async () => {
+    try {
+      const resp = await api.getObjectives();
+      set({ objectivesCatalog: resp.objectives });
+    } catch (e) {
+      set({ error: (e as Error).message });
+    }
+  },
+
   reset: () => set({
     campaign: null, bases: [], platformsById: {},
     rdCatalog: [], rdActive: [], acquisitions: [],
     pendingVignettes: [], vignetteById: {},
     intelCards: [], intelFilter: null, narrativeCache: {},
     campaignSummary: null, yearRecapToast: null,
+    campaignList: [], objectivesCatalog: [],
     loading: false, error: null,
   }),
 }));
