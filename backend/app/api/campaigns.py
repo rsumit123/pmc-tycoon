@@ -5,6 +5,10 @@ from app.api.deps import get_db
 from app.crud.campaign import create_campaign, get_campaign, advance_turn
 from app.models.campaign import Campaign
 from app.schemas.campaign import CampaignCreate, CampaignRead, CampaignListItem, CampaignListResponse
+from app.schemas.turn_report import (
+    TurnReportResponse, RawEvent, DeliverySummary, RDMilestoneSummary,
+    VignetteFiredSummary, IntelCardSummary,
+)
 
 router = APIRouter(prefix="/api/campaigns", tags=["campaigns"])
 
@@ -20,6 +24,101 @@ def list_campaigns_endpoint(db: Session = Depends(get_db)):
     campaigns = db.query(Campaign).order_by(Campaign.updated_at.desc()).all()
     return CampaignListResponse(
         campaigns=[CampaignListItem.model_validate(c) for c in campaigns]
+    )
+
+
+@router.get("/{campaign_id}/turn-report/{year}/{quarter}", response_model=TurnReportResponse)
+def get_turn_report(
+    campaign_id: int,
+    year: int,
+    quarter: int,
+    db: Session = Depends(get_db),
+):
+    """Aggregate events for a completed turn into typed groupings."""
+    from app.models.event import CampaignEvent
+    from app.models.intel import IntelCard
+
+    rows = (
+        db.query(CampaignEvent)
+        .filter(
+            CampaignEvent.campaign_id == campaign_id,
+            CampaignEvent.year == year,
+            CampaignEvent.quarter == quarter,
+        )
+        .all()
+    )
+    if not rows:
+        raise HTTPException(status_code=404, detail="no events for that turn")
+
+    deliveries: list[DeliverySummary] = []
+    milestones: list[RDMilestoneSummary] = []
+    shifts: list[dict] = []
+    vig_fired: VignetteFiredSummary | None = None
+    treasury_after_cr: int = 0
+    allocation: dict | None = None
+
+    for r in rows:
+        t = r.event_type
+        p = r.payload or {}
+        if t == "acquisition_delivery":
+            deliveries.append(DeliverySummary(
+                order_id=p.get("order_id", 0),
+                platform_id=p.get("platform_id", ""),
+                count=p.get("count", 0),
+                cost_cr=p.get("cost_cr", 0),
+                assigned_base_id=p.get("assigned_base_id"),
+                assigned_squadron_id=p.get("assigned_squadron_id"),
+            ))
+        elif t in ("rd_breakthrough", "rd_setback", "rd_milestone", "rd_completed", "rd_underfunded"):
+            milestones.append(RDMilestoneSummary(
+                program_id=p.get("program_id", ""),
+                kind=t.replace("rd_", ""),
+                progress_pct=p.get("progress_pct"),
+            ))
+        elif t.startswith("adversary_") or t.startswith("doctrine_"):
+            shifts.append({"event_type": t, "payload": p})
+        elif t == "vignette_fired":
+            vig_fired = VignetteFiredSummary(
+                scenario_id=p.get("scenario_id", ""),
+                scenario_name=p.get("scenario_name", ""),
+                ao=p.get("ao", {}),
+            )
+        elif t == "turn_advanced":
+            treasury_after_cr = p.get("treasury_after_cr", 0)
+            allocation = p.get("allocation")
+
+    # Intel cards are sourced from IntelCard rows (which have headline in payload)
+    # rather than the sparse intel_card_generated events.
+    intel_card_rows = (
+        db.query(IntelCard)
+        .filter(
+            IntelCard.campaign_id == campaign_id,
+            IntelCard.appeared_year == year,
+            IntelCard.appeared_quarter == quarter,
+        )
+        .all()
+    )
+    intel: list[IntelCardSummary] = [
+        IntelCardSummary(
+            source_type=ic.source_type,
+            confidence=ic.confidence,
+            headline=ic.payload.get("headline", "") if ic.payload else "",
+        )
+        for ic in intel_card_rows
+    ]
+
+    return TurnReportResponse(
+        campaign_id=campaign_id,
+        year=year,
+        quarter=quarter,
+        events=[RawEvent(event_type=r.event_type, payload=r.payload or {}) for r in rows],
+        deliveries=deliveries,
+        rd_milestones=milestones,
+        adversary_shifts=shifts,
+        intel_cards=intel,
+        vignette_fired=vig_fired,
+        treasury_after_cr=treasury_after_cr,
+        allocation=allocation,
     )
 
 
