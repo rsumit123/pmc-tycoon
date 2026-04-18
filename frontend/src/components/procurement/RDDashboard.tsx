@@ -3,6 +3,7 @@ import type {
   RDProgramSpec, RDProgramState, RDFundingLevel, RDUpdatePayload,
 } from "../../lib/types";
 import { CommitHoldButton } from "../primitives/CommitHoldButton";
+import { useCampaignStore } from "../../store/campaignStore";
 
 export interface RDDashboardProps {
   catalog: RDProgramSpec[];
@@ -51,26 +52,37 @@ function ActiveRow({
 
       {state.status === "active" && (
         <>
-          <div className="flex items-center gap-2">
-            <span className="text-xs opacity-60">Funding: {state.funding_level}</span>
-            <div className="flex gap-1">
-              {FUNDING_LEVELS.map((lvl) => (
-                <button
-                  key={lvl}
-                  type="button"
-                  title={lvl}
-                  aria-label={`Set funding ${lvl}`}
-                  onClick={() => onUpdate(state.program_id, { funding_level: lvl })}
-                  className={[
-                    "text-xs px-2 py-0.5 rounded",
-                    lvl === state.funding_level
-                      ? "bg-amber-600 text-slate-900 font-semibold"
-                      : "bg-slate-800 hover:bg-slate-700 text-slate-200",
-                  ].join(" ")}
-                >
-                  {lvl === "slow" ? "↓" : lvl === "standard" ? "●" : "↑"}
-                </button>
-              ))}
+          <div className="flex flex-col gap-1">
+            <span className="text-xs opacity-60">Funding</span>
+            <div className="grid grid-cols-3 gap-1">
+              {FUNDING_LEVELS.map((lvl) => {
+                const proj = state.projections?.[lvl];
+                const selected = lvl === state.funding_level;
+                return (
+                  <button
+                    key={lvl}
+                    type="button"
+                    aria-label={`Set funding ${lvl}`}
+                    onClick={() => onUpdate(state.program_id, { funding_level: lvl })}
+                    className={[
+                      "text-xs rounded p-1.5 border flex flex-col items-center gap-0.5",
+                      selected
+                        ? "bg-amber-600 border-amber-500 text-slate-900 font-semibold"
+                        : "bg-slate-800 border-slate-700 hover:border-slate-500 text-slate-200",
+                    ].join(" ")}
+                  >
+                    <span className="capitalize">{lvl}</span>
+                    {proj ? (
+                      <>
+                        <span className="text-[10px] opacity-80">{proj.completion_year} Q{proj.completion_quarter}</span>
+                        <span className="text-[10px] opacity-80">₹{proj.quarterly_cost_cr.toLocaleString("en-US")}/q</span>
+                      </>
+                    ) : (
+                      <span className="text-[10px] opacity-40">—</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -122,6 +134,28 @@ function CatalogRow({
   spec, onStart, disabled,
 }: { spec: RDProgramSpec; onStart: RDDashboardProps["onStart"]; disabled?: boolean }) {
   const [funding, setFunding] = useState<RDFundingLevel>("standard");
+  const campaign = useCampaignStore((s) => s.campaign);
+
+  function clientProjection(lvl: RDFundingLevel, progress: number) {
+    const FUNDING_FACTORS: Record<RDFundingLevel, [number, number]> = {
+      slow: [0.5, 0.5],
+      standard: [1.0, 1.0],
+      accelerated: [1.5, 1.4],
+    };
+    const [costFactor, progFactor] = FUNDING_FACTORS[lvl];
+    const basePerQtr = 100 / spec.base_duration_quarters;
+    const effPerQtr = basePerQtr * progFactor;
+    const remaining = Math.max(0, 100 - progress);
+    const quartersRemaining = effPerQtr <= 0 ? 0 : Math.ceil(remaining / effPerQtr);
+    const currentYear = campaign?.current_year ?? 2026;
+    const currentQuarter = campaign?.current_quarter ?? 2;
+    const totalQ = currentYear * 4 + (currentQuarter - 1) + quartersRemaining;
+    const completion_year = Math.floor(totalQ / 4);
+    const completion_quarter = (totalQ % 4) + 1;
+    const quarterly_cost_cr = Math.floor((spec.base_cost_cr / spec.base_duration_quarters) * costFactor);
+    return { completion_year, completion_quarter, quarterly_cost_cr };
+  }
+
   return (
     <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-3 space-y-2">
       <div className="text-sm font-semibold">{spec.name}</div>
@@ -133,26 +167,31 @@ function CatalogRow({
           <> • Depends on: {spec.dependencies.join(", ")}</>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-1">
         <span className="text-xs opacity-60">Speed</span>
-        <div className="flex gap-1">
-          {FUNDING_LEVELS.map((lvl) => (
-            <button
-              key={lvl}
-              type="button"
-              title={lvl}
-              aria-label={`Set funding ${lvl}`}
-              onClick={() => setFunding(lvl)}
-              className={[
-                "text-xs px-2 py-0.5 rounded",
-                lvl === funding
-                  ? "bg-amber-600 text-slate-900 font-semibold"
-                  : "bg-slate-800 hover:bg-slate-700",
-              ].join(" ")}
-            >
-              {lvl === "slow" ? "↓" : lvl === "standard" ? "●" : "↑"}
-            </button>
-          ))}
+        <div className="grid grid-cols-3 gap-1">
+          {FUNDING_LEVELS.map((lvl) => {
+            const proj = clientProjection(lvl, 0);
+            const selected = lvl === funding;
+            return (
+              <button
+                key={lvl}
+                type="button"
+                aria-label={`Set funding ${lvl}`}
+                onClick={() => setFunding(lvl)}
+                className={[
+                  "text-xs rounded p-1.5 border flex flex-col items-center gap-0.5",
+                  selected
+                    ? "bg-amber-600 border-amber-500 text-slate-900 font-semibold"
+                    : "bg-slate-800 border-slate-700 hover:border-slate-500 text-slate-200",
+                ].join(" ")}
+              >
+                <span className="capitalize">{lvl}</span>
+                <span className="text-[10px] opacity-80">{proj.completion_year} Q{proj.completion_quarter}</span>
+                <span className="text-[10px] opacity-80">₹{proj.quarterly_cost_cr.toLocaleString("en-US")}/q</span>
+              </button>
+            );
+          })}
         </div>
       </div>
       <CommitHoldButton

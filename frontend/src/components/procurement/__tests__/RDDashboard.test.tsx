@@ -19,18 +19,29 @@ describe("RDDashboard", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it("renders active programs with progress + funding level", () => {
+  it("renders active programs with progress + funding level projections", () => {
+    const activeWithProj: RDProgramState[] = [
+      {
+        ...active[0],
+        projections: {
+          slow: { completion_year: 2028, completion_quarter: 4, quarterly_cost_cr: 2000 },
+          standard: { completion_year: 2027, completion_quarter: 4, quarterly_cost_cr: 4000 },
+          accelerated: { completion_year: 2027, completion_quarter: 2, quarterly_cost_cr: 6000 },
+        },
+      },
+    ];
     render(
       <RDDashboard
         catalog={catalog}
-        active={active}
+        active={activeWithProj}
         onStart={() => {}}
         onUpdate={() => {}}
       />,
     );
     expect(screen.getByText("AMCA Mk1")).toBeInTheDocument();
     expect(screen.getByText(/25%/)).toBeInTheDocument();
-    expect(screen.getByText(/standard/i)).toBeInTheDocument();
+    expect(screen.getByText("2027 Q4")).toBeInTheDocument();
+    expect(screen.getByText("₹4,000/q")).toBeInTheDocument();
   });
 
   it("hides catalog entries for already-active programs", () => {
