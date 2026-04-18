@@ -62,10 +62,11 @@ def test_vignette_resolved_event_has_ao_and_scenario_name(client_and_db):
         pytest.skip("no eligible squadron for this seed")
 
     sq = eligible[0]
+    roe_options = v["planning_state"]["roe_options"]
     body = {
         "squadrons": [{"squadron_id": sq["squadron_id"], "airframes": min(4, sq["airframes_available"])}],
         "support": {"awacs": True, "tanker": False, "sead_package": False},
-        "roe": "weapons_free",
+        "roe": roe_options[0],
     }
     r = client.post(f"/api/campaigns/{c['id']}/vignettes/{v['id']}/commit", json=body)
     assert r.status_code == 200

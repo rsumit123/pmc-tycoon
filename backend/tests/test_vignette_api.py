@@ -85,12 +85,18 @@ def test_pending_404_for_unknown_campaign(client):
     assert r.status_code == 404
 
 
-def _valid_commit(eligible_squadrons):
+def _valid_commit(eligible_squadrons, roe_options=None, roe_override=None):
     sq = eligible_squadrons[0]
+    if roe_override:
+        roe = roe_override
+    elif roe_options:
+        roe = roe_options[0]
+    else:
+        roe = "weapons_free"
     return {
         "squadrons": [{"squadron_id": sq["squadron_id"], "airframes": min(4, sq["airframes_available"])}],
         "support": {"awacs": True, "tanker": False, "sead_package": False},
-        "roe": "weapons_free",
+        "roe": roe,
     }
 
 
@@ -101,7 +107,8 @@ def test_commit_resolves_vignette(client):
     eligible = v["planning_state"]["eligible_squadrons"]
     if not eligible:
         pytest.skip("no eligible squadron for this seed")
-    body = _valid_commit(eligible)
+    roe_options = v["planning_state"]["roe_options"]
+    body = _valid_commit(eligible, roe_options=roe_options)
     r = client.post(f"/api/campaigns/{c['id']}/vignettes/{v['id']}/commit", json=body)
     assert r.status_code == 200
     resolved = r.json()
@@ -170,7 +177,8 @@ def test_commit_already_resolved_409(client):
     eligible = v["planning_state"]["eligible_squadrons"]
     if not eligible:
         pytest.skip("no eligible squadron")
-    body = _valid_commit(eligible)
+    roe_options = v["planning_state"]["roe_options"]
+    body = _valid_commit(eligible, roe_options=roe_options)
     client.post(f"/api/campaigns/{c['id']}/vignettes/{v['id']}/commit", json=body)
     r2 = client.post(f"/api/campaigns/{c['id']}/vignettes/{v['id']}/commit", json=body)
     assert r2.status_code == 409
@@ -184,7 +192,8 @@ def test_commit_deterministic_with_same_seed(client):
     eligible1 = v1["planning_state"]["eligible_squadrons"]
     if not eligible1:
         pytest.skip("no eligible squadron")
-    body1 = _valid_commit(eligible1)
+    roe_options1 = v1["planning_state"]["roe_options"]
+    body1 = _valid_commit(eligible1, roe_options=roe_options1)
     r1 = client.post(f"/api/campaigns/{c1['id']}/vignettes/{v1['id']}/commit", json=body1)
     outcome1 = r1.json()["outcome"]
 
@@ -192,7 +201,8 @@ def test_commit_deterministic_with_same_seed(client):
     v2 = _advance_until_vignette(client, c2["id"])
     assert v2 is not None
     eligible2 = v2["planning_state"]["eligible_squadrons"]
-    body2 = _valid_commit(eligible2)
+    roe_options2 = v2["planning_state"]["roe_options"]
+    body2 = _valid_commit(eligible2, roe_options=roe_options2)
     r2 = client.post(f"/api/campaigns/{c2['id']}/vignettes/{v2['id']}/commit", json=body2)
     outcome2 = r2.json()["outcome"]
 

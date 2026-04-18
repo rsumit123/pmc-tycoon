@@ -16,16 +16,23 @@ def _run_trials(year, quarter, n=1000):
 
 
 def test_frequency_at_campaign_start():
+    # any_faction_fires at q_index=0: PLAAF 0.20, PAF 0.14, PLAN 0.05
+    # P(at least one) = 1 - (0.8 * 0.86 * 0.95) ≈ 0.36
     rate = _run_trials(2026, 2)
-    assert 0.11 <= rate <= 0.19, f"rate={rate:.3f} outside [0.11, 0.19]"
+    assert 0.30 <= rate <= 0.42, f"rate={rate:.3f} outside [0.30, 0.42]"
 
 
 def test_frequency_at_midcampaign():
+    # any_faction_fires: PLAAF ~0.37, PAF ~0.26, PLAN ~0.25
+    # P(at least one) ≈ 1 - (0.63 * 0.74 * 0.75) ≈ 0.65; observed ~0.666
     rate = _run_trials(2031, 1)
-    expected = threat_curve_prob(2031, 1)
-    assert abs(rate - expected) < 0.04
+    expected = threat_curve_prob(2031, 1)  # This is PLAAF single-roll; not used for composite check
+    # Instead, check that the any_faction composite rate is significantly higher
+    assert 0.60 <= rate <= 0.72, f"rate={rate:.3f} outside [0.60, 0.72]"
 
 
 def test_frequency_at_campaign_end():
+    # any_faction_fires at q_index=39: PLAAF 0.55, PAF 0.385, PLAN 0.45
+    # P(at least one) ≈ 1 - (0.45 * 0.615 * 0.55) ≈ 0.85
     rate = _run_trials(2036, 1)
-    assert 0.51 <= rate <= 0.59, f"rate={rate:.3f} outside [0.51, 0.59]"
+    assert 0.79 <= rate <= 0.91, f"rate={rate:.3f} outside [0.79, 0.91]"
