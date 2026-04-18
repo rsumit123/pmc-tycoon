@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { AARReader } from "../components/vignette/AARReader";
+import { TacticalReplay } from "../components/vignette/TacticalReplay";
 import type { Vignette } from "../lib/types";
 
 export function VignetteAAR() {
@@ -42,6 +43,18 @@ export function VignetteAAR() {
       </header>
       <main className="p-4 max-w-3xl mx-auto">
         <AARReader campaignId={campaignId} vignette={vignette} />
+        {vignette.event_trace && vignette.event_trace.length > 0 && (
+          <TacticalReplay
+            eventTrace={vignette.event_trace}
+            indPlatforms={
+              (vignette.committed_force?.squadrons ?? []).map((s) => {
+                const es = ps.eligible_squadrons.find((e) => e.squadron_id === s.squadron_id);
+                return { platform_id: es?.platform_id ?? "unknown", count: s.airframes };
+              })
+            }
+            advPlatforms={ps.adversary_force.map((f) => ({ platform_id: f.platform_id, count: f.count }))}
+          />
+        )}
       </main>
     </div>
   );
