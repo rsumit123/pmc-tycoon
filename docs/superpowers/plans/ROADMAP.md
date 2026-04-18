@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-04-18 (Plan 12 in progress)
+**Last updated:** 2026-04-18 (Plan 12 done)
 
 ---
 
@@ -23,7 +23,7 @@
 | 9 | Campaign End + Polish | 🟢 done | [2026-04-17-campaign-end-polish-plan.md](2026-04-17-campaign-end-polish-plan.md) |
 | 10 | V1 Content Expansion + Balancing | 🟢 done | [2026-04-18-content-expansion-balancing-plan.md](2026-04-18-content-expansion-balancing-plan.md) |
 | 11 | V1 Release Polish + E2E Testing | 🟢 done | [2026-04-18-v1-release-polish-e2e-plan.md](2026-04-18-v1-release-polish-e2e-plan.md) |
-| 12 | V1 Playtest Fixes | 🟡 in progress | [2026-04-18-v1-playtest-fixes-plan.md](2026-04-18-v1-playtest-fixes-plan.md) |
+| 12 | V1 Playtest Fixes | 🟢 done | [2026-04-18-v1-playtest-fixes-plan.md](2026-04-18-v1-playtest-fixes-plan.md) |
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 
