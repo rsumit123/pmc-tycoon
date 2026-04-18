@@ -72,13 +72,14 @@ GENERATION_SCORES: dict[str, float] = {
     "3": 0.2, "4": 0.4, "4.5": 0.6, "4.75": 0.7, "5": 0.9, "6": 1.0,
 }
 
-RCS_DETECTION_MULTIPLIER: dict[str, float] = {
+RCS_PK_MULTIPLIER: dict[str, float] = {
     "VLO":          0.25,
     "LO":           0.45,
     "reduced":      0.70,
     "conventional": 1.00,
     "large":        1.30,
 }
+RCS_DETECTION_MULTIPLIER = RCS_PK_MULTIPLIER  # backward compat alias
 
 PK_CAP = 0.70
 PK_FLOOR = 0.0
@@ -102,6 +103,6 @@ def engagement_pk(
         base = 0.15 - 0.10 * frac    # 0.15 at edge of NEZ, 0.05 at max range
     gen_gap = GENERATION_SCORES.get(attacker_gen, 0.4) - 0.4
     base += max(-0.10, gen_gap * 0.15) + w["gen_bonus"]
-    base *= RCS_DETECTION_MULTIPLIER[defender_rcs]
+    base *= RCS_PK_MULTIPLIER[defender_rcs]
     base -= ew_modifier
     return max(PK_FLOOR, min(PK_CAP, base))

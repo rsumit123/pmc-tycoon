@@ -7,14 +7,20 @@ returns 'ind' | 'adv' | 'tie' depending on who sees farther.
 
 from __future__ import annotations
 
-from app.engine.vignette.bvr import RCS_DETECTION_MULTIPLIER
-
 
 AWACS_MULTIPLIER = 1.5
 
+RCS_DETECTION_RANGE_MULTIPLIER: dict[str, float] = {
+    "VLO":          0.20,
+    "LO":           0.40,
+    "reduced":      0.65,
+    "conventional": 1.00,
+    "large":        1.40,
+}
+
 
 def detection_range_km(radar_range_km: int, target_rcs: str, awacs: bool) -> int:
-    raw = radar_range_km * RCS_DETECTION_MULTIPLIER[target_rcs]
+    raw = radar_range_km * RCS_DETECTION_RANGE_MULTIPLIER[target_rcs]
     if awacs:
         raw *= AWACS_MULTIPLIER
     return int(raw)

@@ -16,7 +16,7 @@ from app.schemas.summary import (
 router = APIRouter(prefix="/api/campaigns", tags=["summary"])
 
 
-def _year_snapshots(db: Session, campaign_id: int) -> list[YearSnapshot]:
+def _year_snapshots(db: Session, campaign_id: int, vigs: list) -> list[YearSnapshot]:
     rows = db.query(CampaignEvent).filter(
         CampaignEvent.campaign_id == campaign_id,
         CampaignEvent.event_type == "turn_advanced",
@@ -46,10 +46,6 @@ def _year_snapshots(db: Session, campaign_id: int) -> list[YearSnapshot]:
         if r.year in years:
             years[r.year]["rd_completions"] += 1
 
-    vigs = db.query(Vignette).filter(
-        Vignette.campaign_id == campaign_id,
-        Vignette.status == "resolved",
-    ).all()
     for v in vigs:
         if v.year in years:
             years[v.year]["vignettes_resolved"] += 1
@@ -210,14 +206,13 @@ def summary_endpoint(campaign_id: int, db: Session = Depends(get_db)):
     if c is None:
         raise HTTPException(404, "Campaign not found")
 
-    snapshots = _year_snapshots(db, campaign_id)
-    force = _force_structure(db, campaign_id)
-    aces = _aces(db, campaign_id)
-
     vigs = db.query(Vignette).filter(
         Vignette.campaign_id == campaign_id,
         Vignette.status == "resolved",
     ).all()
+    snapshots = _year_snapshots(db, campaign_id, vigs)
+    force = _force_structure(db, campaign_id)
+    aces = _aces(db, campaign_id)
     won = sum(1 for v in vigs if (v.outcome or {}).get("objective_met"))
     lost = len(vigs) - won
 

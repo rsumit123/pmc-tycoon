@@ -7,13 +7,13 @@ def test_detection_range_conventional_target():
 
 
 def test_detection_range_stealth_target():
-    # R=200, RCS=VLO → 50 km
-    assert detection_range_km(200, "VLO", awacs=False) == 50
+    # R=200, RCS=VLO → 40 km (VLO detection multiplier = 0.20)
+    assert detection_range_km(200, "VLO", awacs=False) == 40
 
 
 def test_detection_range_awacs_boosts_150_percent():
-    # R=200, RCS=VLO, AWACS → 50 * 1.5 = 75 km
-    assert detection_range_km(200, "VLO", awacs=True) == 75
+    # R=200, RCS=VLO, AWACS → 40 * 1.5 = 60 km
+    assert detection_range_km(200, "VLO", awacs=True) == 60
 
 
 def test_detection_advantage_side_with_longer_range_wins():
