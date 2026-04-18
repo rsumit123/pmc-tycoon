@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-04-18 (Plan 11 done)
+**Last updated:** 2026-04-18 (Plan 12 in progress)
 
 ---
 
@@ -23,6 +23,7 @@
 | 9 | Campaign End + Polish | 🟢 done | [2026-04-17-campaign-end-polish-plan.md](2026-04-17-campaign-end-polish-plan.md) |
 | 10 | V1 Content Expansion + Balancing | 🟢 done | [2026-04-18-content-expansion-balancing-plan.md](2026-04-18-content-expansion-balancing-plan.md) |
 | 11 | V1 Release Polish + E2E Testing | 🟢 done | [2026-04-18-v1-release-polish-e2e-plan.md](2026-04-18-v1-release-polish-e2e-plan.md) |
+| 12 | V1 Playtest Fixes | 🟡 in progress | [2026-04-18-v1-playtest-fixes-plan.md](2026-04-18-v1-playtest-fixes-plan.md) |
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 
@@ -378,6 +379,50 @@ Audiovisual flourishes that turn "functional" into "delightful":
 - Draw-strike-route gesture, Tinder-style platform comparison
 - Player-managed intel capability, deterrence feedback loop
 - Multiplayer, real-world news ingestion, tactical live-play, tri-service expansion
+
+---
+
+## Plan 12 — V1 Playtest Fixes
+
+**Goal:** Fix all issues found during the first real playtest: combat reasoning display explaining why the player won/lost, mobile/tablet responsive fixes across all screens, objective selection at campaign start, multi-campaign support with campaign list/resume, how-to-play guide, and OpenRouter API key operational fix.
+
+**Deliverable:** A mobile-playable V1 with all first-playtest issues resolved. Players can choose objectives, resume campaigns, understand combat outcomes, and read a how-to-play guide.
+
+**Depends on:** Plans 1–11 (complete V1).
+
+**Work — grouped by theme:**
+
+### A. Operational
+1. **OpenRouter API key** — document env var requirement in deploy.sh
+
+### B. Backend API Additions
+2. **GET /api/content/objectives** — serve the 12-objective catalog for frontend selector
+3. **GET /api/campaigns** — list all campaigns ordered by most recently updated
+
+### C. Frontend Types + Store
+4. **Frontend types + API methods** — ObjectiveSpec, CampaignListItem types + api methods
+
+### D. Landing Page Overhaul
+5. **Objective selector + campaign list/resume** — pick 3–5 objectives, difficulty, resume existing campaigns
+
+### E. Combat Understanding
+6. **CombatReasoning component** — pure frontend, parses event_trace to explain detection, stealth, numbers, ROE, AWACS, missile PK
+7. **How-to-play guide** — modal accessible from landing + map header
+
+### F. Mobile/Tablet Responsive Sweep
+8. **CampaignMapView header** — collapsible hamburger menu on mobile, shortened labels
+9. **TacticalReplay SVG** — viewBox scaling, wrapping phase buttons
+10. **DefenseWhitePaper + YearEndRecapToast** — responsive grid, toast viewport-constrained
+11. **OpsRoom, Procurement, Intel** — comprehensive sweep of remaining screens
+12. **AARReader, ForceCommitter, IntelCards** — component-level mobile fixes
+
+### G. Docs + Deploy
+13. **Update ROADMAP.md + CLAUDE.md** — Plan 12 status
+14. **Push + deploy** — full test suite, push, deploy both frontend + backend
+
+**Explicitly NOT in scope:** V1.5+ backlog items.
+
+**Detailed plan file:** [2026-04-18-v1-playtest-fixes-plan.md](2026-04-18-v1-playtest-fixes-plan.md)
 
 ---
 
