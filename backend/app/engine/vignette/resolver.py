@@ -37,6 +37,16 @@ WEAPONS_TIGHT_PK_PENALTY = 0.05
 EW_MODIFIER_4_5_GEN = 0.05
 EW_MODIFIER_5_GEN = 0.10
 
+# Target priority weights by RCS band: high-value/large-radar-cross-section
+# targets (bombers, AWACS) are preferentially targeted over stealthy fighters.
+TARGET_PRIORITY: dict[str, float] = {
+    "large": 3.0,
+    "conventional": 1.5,
+    "reduced": 1.0,
+    "LO": 0.8,
+    "VLO": 0.6,
+}
+
 
 def _ew_for_gen(gen: str) -> float:
     g = GENERATION_SCORES.get(gen, 0.4)
@@ -112,7 +122,8 @@ def _resolve_round(
         weapon = _best_weapon(a["loadout"], weapon_kind)
         if weapon is None:
             continue
-        target = rng.choice(survivors)
+        weights = [TARGET_PRIORITY.get(s["rcs_band"], 1.0) for s in survivors]
+        target = rng.choices(survivors, weights=weights, k=1)[0]
         defender_gen_ew = _ew_for_gen(target["generation"])
         pk = engagement_pk(
             weapon,
