@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-04-19 (Plan 13 done)
+**Last updated:** 2026-04-19 (Plan 14 in progress)
 
 ---
 
@@ -25,6 +25,7 @@
 | 11 | V1 Release Polish + E2E Testing | 🟢 done | [2026-04-18-v1-release-polish-e2e-plan.md](2026-04-18-v1-release-polish-e2e-plan.md) |
 | 12 | V1 Playtest Fixes | 🟢 done | [2026-04-18-v1-playtest-fixes-plan.md](2026-04-18-v1-playtest-fixes-plan.md) |
 | 13 | Combat Depth + Turn Report | 🟢 done | [2026-04-19-combat-depth-turn-report-plan.md](2026-04-19-combat-depth-turn-report-plan.md) |
+| 14 | Feedback + R&D Redesign + Combat Cadence | 🟡 in progress | [2026-04-19-feedback-rd-redesign-plan.md](2026-04-19-feedback-rd-redesign-plan.md) |
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 

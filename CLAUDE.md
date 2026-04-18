@@ -26,6 +26,7 @@ The repo was previously called **PMC Tycoon** (a mercenary-contractor game). All
 - `docs/superpowers/plans/2026-04-18-v1-release-polish-e2e-plan.md` — Plan 11 (V1 Release Polish + E2E Testing). **Done.**
 - `docs/superpowers/plans/2026-04-18-v1-playtest-fixes-plan.md` — Plan 12 (V1 Playtest Fixes). **Done.**
 - `docs/superpowers/plans/2026-04-19-combat-depth-turn-report-plan.md` — Plan 13 (Combat Depth + Turn Report). **Done.**
+- `docs/superpowers/plans/2026-04-19-feedback-rd-redesign-plan.md` — Plan 14 (Feedback + R&D Redesign + Combat Cadence). **In progress.**
 - `docs/DEPLOYMENT.md` — prod deploy runbook (Vercel frontend + GCP VM Docker backend).
 - `README.md` — dev workflow pointers.
 
