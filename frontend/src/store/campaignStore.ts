@@ -10,6 +10,8 @@ import type {
   CampaignListItem,
   ObjectiveSpec,
   TurnReportResponse,
+  Toast,
+  ToastVariant,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -30,6 +32,8 @@ interface CampaignState {
   campaignList: CampaignListItem[];
   objectivesCatalog: ObjectiveSpec[];
   turnReport: TurnReportResponse | null;
+  toasts: Toast[];
+  rdLoading: Record<string, boolean>;
   loading: boolean;
   error: string | null;
 
@@ -56,6 +60,8 @@ interface CampaignState {
   generateRetrospective: (campaignId: number) => Promise<GenerateNarrativeResponse>;
   dismissYearRecapToast: () => void;
   rebaseSquadron: (squadronId: number, targetBaseId: number) => Promise<void>;
+  pushToast: (variant: ToastVariant, message: string, duration?: number) => void;
+  dismissToast: (id: string) => void;
   loadCampaignList: () => Promise<void>;
   loadObjectivesCatalog: () => Promise<void>;
   loadTurnReport: (campaignId: number, year: number, quarter: number) => Promise<void>;
@@ -79,6 +85,8 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   campaignList: [],
   objectivesCatalog: [],
   turnReport: null,
+  toasts: [],
+  rdLoading: {},
   loading: false,
   error: null,
 
@@ -182,34 +190,57 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     try {
       const campaign = await api.setBudget(current.id, allocation);
       set({ campaign, loading: false });
+      get().pushToast("success", "Budget allocation updated");
     } catch (e) {
       set({ error: (e as Error).message, loading: false });
+      get().pushToast("error", "Budget update failed");
+      throw e;
     }
   },
 
   startRdProgram: async (programId, fundingLevel) => {
     const current = get().campaign;
     if (!current) return;
-    set({ loading: true, error: null });
+    set((s) => ({ rdLoading: { ...s.rdLoading, [programId]: true }, error: null }));
     try {
       await api.startRdProgram(current.id, programId, fundingLevel);
       await get().loadRdActive(current.id);
-      set({ loading: false });
+      get().pushToast("success", `R&D started: ${programId}`);
     } catch (e) {
-      set({ error: (e as Error).message, loading: false });
+      set({ error: (e as Error).message });
+      get().pushToast("error", "Failed to start R&D program");
+      throw e;
+    } finally {
+      set((s) => {
+        const next = { ...s.rdLoading };
+        delete next[programId];
+        return { rdLoading: next };
+      });
     }
   },
 
   updateRdProgram: async (programId, payload) => {
     const current = get().campaign;
     if (!current) return;
-    set({ loading: true, error: null });
+    set((s) => ({ rdLoading: { ...s.rdLoading, [programId]: true }, error: null }));
     try {
       await api.updateRdProgram(current.id, programId, payload);
       await get().loadRdActive(current.id);
-      set({ loading: false });
+      if (payload.funding_level) {
+        get().pushToast("success", `Funding changed to ${payload.funding_level}`);
+      } else if (payload.status === "cancelled") {
+        get().pushToast("info", "Program cancelled");
+      }
     } catch (e) {
-      set({ error: (e as Error).message, loading: false });
+      set({ error: (e as Error).message });
+      get().pushToast("error", "R&D update failed");
+      throw e;
+    } finally {
+      set((s) => {
+        const next = { ...s.rdLoading };
+        delete next[programId];
+        return { rdLoading: next };
+      });
     }
   },
 
@@ -221,8 +252,11 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       await api.createAcquisition(current.id, payload);
       await get().loadAcquisitions(current.id);
       set({ loading: false });
+      get().pushToast("success", `Order signed: ${payload.platform_id}`);
     } catch (e) {
       set({ error: (e as Error).message, loading: false });
+      get().pushToast("error", "Order failed");
+      throw e;
     }
   },
 
@@ -314,13 +348,26 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     if (!c) return;
     set({ loading: true, error: null });
     try {
-      await api.rebaseSquadron(c.id, squadronId, targetBaseId);
+      const updated = await api.rebaseSquadron(c.id, squadronId, targetBaseId);
       await get().loadBases(c.id);
+      const baseName = get().bases.find((b) => b.id === updated.base_id)?.name ?? "new base";
+      get().pushToast("success", `Squadron rebased to ${baseName}`);
     } catch (e: any) {
       set({ error: e.message ?? "Rebase failed" });
+      get().pushToast("error", "Rebase failed");
+      throw e;
     } finally {
       set({ loading: false });
     }
+  },
+
+  pushToast: (variant, message, duration) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    set((s) => ({ toasts: [...s.toasts, { id, variant, message, duration }] }));
+  },
+
+  dismissToast: (id) => {
+    set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
   },
 
   generateIntelBrief: async (campaignId) => {
@@ -364,6 +411,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     campaignSummary: null, yearRecapToast: null,
     campaignList: [], objectivesCatalog: [],
     turnReport: null,
+    toasts: [], rdLoading: {},
     loading: false, error: null,
   }),
 }));
