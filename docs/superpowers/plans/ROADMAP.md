@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-04-18 (Plan 10 done, Plan 11 scoped)
+**Last updated:** 2026-04-18 (Plan 11 done)
 
 ---
 
@@ -22,7 +22,7 @@
 | 8 | Frontend — Vignettes + Intel Screens | 🟢 done | [2026-04-17-frontend-vignettes-intel-plan.md](2026-04-17-frontend-vignettes-intel-plan.md) |
 | 9 | Campaign End + Polish | 🟢 done | [2026-04-17-campaign-end-polish-plan.md](2026-04-17-campaign-end-polish-plan.md) |
 | 10 | V1 Content Expansion + Balancing | 🟢 done | [2026-04-18-content-expansion-balancing-plan.md](2026-04-18-content-expansion-balancing-plan.md) |
-| 11 | V1 Release Polish + E2E Testing | 🔴 not started | [2026-04-18-v1-release-polish-e2e-plan.md](2026-04-18-v1-release-polish-e2e-plan.md) |
+| 11 | V1 Release Polish + E2E Testing | 🟢 done | [2026-04-18-v1-release-polish-e2e-plan.md](2026-04-18-v1-release-polish-e2e-plan.md) |
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 
