@@ -125,7 +125,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
         get().pushToast("info", msg, 8000);
         api.generateYearRecap(campaign.id, closedYear)
           .then((resp) => {
-            set((s) => ({ yearRecapToast: resp.text }));
+            set({ yearRecapToast: resp.text });
           })
           .catch(() => {});
       }
