@@ -3,7 +3,7 @@ hit each narrative endpoint → verify CampaignNarrative rows + Squadron
 ace fields are populated, and second calls are cached."""
 
 import pytest
-from datetime import datetime
+from datetime import datetime, UTC
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -73,7 +73,7 @@ def test_full_narrative_flow(client_and_session):
         event_trace=[],
         outcome={"adv_kia": 5, "ind_airframes_lost": 0, "ind_kia": 0,
                  "adv_airframes_lost": 5, "objective_met": True, "aar_stub": ""},
-        aar_text="", resolved_at=datetime.utcnow(),
+        aar_text="", resolved_at=datetime.now(UTC),
     )
     db.add(v); db.commit()
     vig_id = v.id

@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+from datetime import datetime, UTC
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -66,7 +66,7 @@ def _seed_campaign_with_resolved_vignette(client: TestClient, S) -> tuple[int, i
         aar_text="",
         outcome={"adv_kia": 5, "ind_airframes_lost": 0, "ind_kia": 0,
                  "adv_airframes_lost": 5, "objective_met": True, "aar_stub": "win"},
-        resolved_at=datetime.utcnow(),
+        resolved_at=datetime.now(UTC),
     )
     db.add(v); db.commit()
     vig_id = v.id

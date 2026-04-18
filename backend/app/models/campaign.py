@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from sqlalchemy import String, Integer, JSON, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,5 +21,5 @@ class Campaign(Base):
     quarterly_grant_cr: Mapped[int] = mapped_column(Integer, default=155000)
     current_allocation_json: Mapped[dict | None] = mapped_column(JSON, nullable=True, default=None)
     reputation: Mapped[int] = mapped_column(Integer, default=50)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))

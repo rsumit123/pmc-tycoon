@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from sqlalchemy import String, Integer, Text, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -17,7 +17,7 @@ class CampaignNarrative(Base):
     text: Mapped[str] = mapped_column(Text)
     prompt_version: Mapped[str] = mapped_column(String(16))
     input_hash: Mapped[str] = mapped_column(String(64))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
     __table_args__ = (
         UniqueConstraint("campaign_id", "kind", "subject_id", name="uq_narrative_identity"),

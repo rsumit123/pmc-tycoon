@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from sqlalchemy import String, Integer, JSON, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -14,4 +14,4 @@ class CampaignEvent(Base):
     quarter: Mapped[int] = mapped_column(Integer)
     event_type: Mapped[str] = mapped_column(String(64), index=True)
     payload: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))

@@ -1,5 +1,5 @@
 # backend/tests/test_llm_service.py
-from datetime import datetime
+from datetime import datetime, UTC
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -65,7 +65,7 @@ def test_generate_aar_idempotent(session, monkeypatch):
         aar_text="",
         outcome={"ind_kia": 0, "adv_kia": 4, "ind_airframes_lost": 0,
                  "adv_airframes_lost": 4, "objective_met": True, "aar_stub": "win"},
-        resolved_at=datetime.utcnow(),
+        resolved_at=datetime.now(UTC),
     )
     session.add(v); session.commit()
 

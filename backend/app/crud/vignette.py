@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 
 from sqlalchemy.orm import Session
 
@@ -81,7 +81,7 @@ def commit_vignette(
         f"ADV airframes lost {outcome['adv_kia']}, "
         f"objective_met={outcome['objective_met']}."
     )
-    vignette.resolved_at = datetime.utcnow()
+    vignette.resolved_at = datetime.now(UTC)
 
     db.add(CampaignEvent(
         campaign_id=campaign.id,
