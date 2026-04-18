@@ -62,6 +62,8 @@ export function VignetteAAR() {
               })
             }
             advPlatforms={ps.adversary_force.map((f) => ({ platform_id: f.platform_id, count: f.count }))}
+            ao={ps.ao}
+            faction={ps.adversary_force[0]?.faction}
           />
         )}
       </main>

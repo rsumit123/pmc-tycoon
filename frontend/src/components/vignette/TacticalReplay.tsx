@@ -1,11 +1,15 @@
 import { useState, useMemo } from "react";
 import type { EventTraceEntry } from "../../lib/types";
 import { NatoSymbol } from "./NatoSymbol";
+import { bearingFromFactionToAO } from "./attackAxis";
+import { EventTicker } from "./EventTicker";
 
 export interface TacticalReplayProps {
   eventTrace: EventTraceEntry[];
   indPlatforms: { platform_id: string; count: number }[];
   advPlatforms: { platform_id: string; count: number }[];
+  ao?: { lat: number; lon: number };
+  faction?: string;
 }
 
 interface Airframe {
@@ -19,13 +23,13 @@ interface Airframe {
 type Phase = "detection" | "bvr1" | "bvr2" | "wvr" | "egress";
 const PHASES: Phase[] = ["detection", "bvr1", "bvr2", "wvr", "egress"];
 const PHASE_LABELS: Record<Phase, string> = {
-  detection: "Detection Window (0-3 min)",
+  detection: "Detection Window (T+0)",
   bvr1: "BVR Round 1 — 120 km",
   bvr2: "BVR Round 2 — 50 km",
   wvr: "WVR Merge — 15 km",
   egress: "Egress + Outcome",
 };
-const PHASE_DISTANCES: Record<Phase, number> = { detection: 250, bvr1: 180, bvr2: 120, wvr: 40, egress: 250 };
+const PHASE_DISTANCES: Record<Phase, number> = { detection: 200, bvr1: 120, bvr2: 50, wvr: 15, egress: 200 };
 
 function buildAirframes(
   indPlatforms: { platform_id: string; count: number }[],
@@ -67,7 +71,7 @@ function killsUpToPhase(trace: EventTraceEntry[], phaseIdx: number): Set<string>
   return killed;
 }
 
-export function TacticalReplay({ eventTrace, indPlatforms, advPlatforms }: TacticalReplayProps) {
+export function TacticalReplay({ eventTrace, indPlatforms, advPlatforms, ao, faction }: TacticalReplayProps) {
   const [phaseIdx, setPhaseIdx] = useState(0);
   const phase = PHASES[phaseIdx];
 
@@ -81,22 +85,17 @@ export function TacticalReplay({ eventTrace, indPlatforms, advPlatforms }: Tacti
     [eventTrace, phaseIdx],
   );
 
-  const phaseEvents = useMemo(() => {
-    const [minT, maxT] = [
-      [0, 2], [3, 5], [6, 8], [9, 11], [12, 12],
-    ][phaseIdx];
-    return eventTrace.filter((e) => e.t_min >= minT && e.t_min <= maxT);
-  }, [eventTrace, phaseIdx]);
-
-  const launchCount = phaseEvents.filter((e) => e.kind === "bvr_launch" || e.kind === "wvr_launch").length;
-  const killCount = phaseEvents.filter((e) => e.kind === "kill").length;
-
   const W = 360;
   const H = 300;
   const centerX = W / 2;
   const dist = PHASE_DISTANCES[phase];
-  const indX = centerX - dist / 2;
-  const advX = centerX + dist / 2;
+
+  const bearing = ao && faction ? bearingFromFactionToAO(faction, ao) : 90;
+  // Attack comes from the faction's direction; if bearing > 180 the faction is to the west/south-west,
+  // so adversary should appear on the left side of the display.
+  const advOnLeft = bearing > 180;
+  const indX = advOnLeft ? centerX + dist / 2 : centerX - dist / 2;
+  const advX = advOnLeft ? centerX - dist / 2 : centerX + dist / 2;
   const indFrames = allFrames.filter((f) => f.side === "ind");
   const advFrames = allFrames.filter((f) => f.side === "adv");
 
@@ -122,6 +121,12 @@ export function TacticalReplay({ eventTrace, indPlatforms, advPlatforms }: Tacti
 
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[360px] mx-auto" role="img" aria-label={`tactical replay phase ${phase}`}>
         <rect width={W} height={H} fill="#0f172a" rx={4} />
+
+        {/* N-pointer */}
+        <g transform="translate(8, 20)">
+          <path d="M 0 10 L 5 0 L 10 10 L 5 7 Z" fill="#64748b" />
+          <text x={5} y={24} textAnchor="middle" fill="#64748b" fontSize={8}>N</text>
+        </g>
 
         {/* Distance line */}
         <line x1={indX} y1={H / 2} x2={advX} y2={H / 2} stroke="#334155" strokeWidth={1} strokeDasharray="4 4" />
@@ -172,9 +177,11 @@ export function TacticalReplay({ eventTrace, indPlatforms, advPlatforms }: Tacti
         <text x={advX} y={20} fill="#ef4444" fontSize={11} fontWeight="bold">ADV</text>
       </svg>
 
-      <div className="flex gap-4 mt-2 text-xs text-slate-400">
-        <span>Launches: {launchCount}</span>
-        <span>Kills: {killCount}</span>
+      <div className="mt-3">
+        <EventTicker
+          events={eventTrace}
+          phaseRange={([[0, 2], [3, 5], [6, 8], [9, 11], [12, 12]] as [number, number][])[phaseIdx]}
+        />
       </div>
     </div>
   );

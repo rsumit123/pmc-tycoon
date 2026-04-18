@@ -25,7 +25,7 @@ describe("TacticalReplay", () => {
     expect(screen.getByText("EGRESS")).toBeDefined();
   });
 
-  it("clicking BVR1 shows kill count", () => {
+  it("clicking BVR1 shows event ticker with kill entry", () => {
     render(
       <TacticalReplay
         eventTrace={TRACE}
@@ -34,7 +34,8 @@ describe("TacticalReplay", () => {
       />,
     );
     fireEvent.click(screen.getByText("BVR1"));
-    expect(screen.getByText("Kills: 1")).toBeDefined();
+    // EventTicker should show the kill event in BVR1 phase (t_min=3)
+    expect(screen.getByText(/KILL/)).toBeDefined();
   });
 
   it("renders SVG with tactical replay label", () => {
