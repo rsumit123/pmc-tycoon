@@ -13,6 +13,7 @@ import { BaseSheet } from "../components/map/BaseSheet";
 import { RebaseOverlay } from "../components/map/RebaseOverlay";
 import { YearEndRecapToast } from "../components/endgame/YearEndRecapToast";
 import { ThemeToggle } from "../components/settings/ThemeToggle";
+import { HowToPlayGuide } from "../components/guide/HowToPlayGuide";
 import { synthesizeContacts } from "../lib/intelContacts";
 import { playRadarPing, getAudioEnabled, setAudioEnabled } from "../lib/audio";
 import type { BaseSquadronSummary } from "../lib/types";
@@ -43,6 +44,7 @@ export function CampaignMapView() {
   const [projectionVersion, setProjectionVersion] = useState(0);
   const [rebaseTarget, setRebaseTarget] = useState<{ squadron: BaseSquadronSummary; baseId: number } | null>(null);
   const [audioOn, setAudioOn] = useState(getAudioEnabled);
+  const [showGuide, setShowGuide] = useState(false);
 
   const isCampaignComplete = campaign
     ? campaign.current_year > 2036 || (campaign.current_year === 2036 && campaign.current_quarter > 1)
@@ -146,6 +148,13 @@ export function CampaignMapView() {
           >
             {audioOn ? "♪" : "♪̶"}
           </button>
+          <button
+            onClick={() => setShowGuide(true)}
+            className="text-xs opacity-60 hover:opacity-100 px-2 py-1 rounded bg-slate-800"
+            title="How to play"
+          >
+            ?
+          </button>
           {isCampaignComplete && (
             <Link
               to={`/campaign/${campaign.id}/white-paper`}
@@ -209,6 +218,8 @@ export function CampaignMapView() {
       />
 
       <YearEndRecapToast />
+
+      <HowToPlayGuide open={showGuide} onClose={() => setShowGuide(false)} />
     </div>
   );
 }

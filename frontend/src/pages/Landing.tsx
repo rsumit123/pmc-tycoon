@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
+import { HowToPlayGuide } from "../components/guide/HowToPlayGuide";
 import type { Difficulty } from "../lib/types";
 
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
@@ -18,6 +19,7 @@ export function Landing() {
   const [difficulty, setDifficulty] = useState<Difficulty>("realistic");
   const [selectedObjectives, setSelectedObjectives] = useState<string[]>([]);
   const [showNewForm, setShowNewForm] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   const createCampaign = useCampaignStore((s) => s.createCampaign);
   const loading = useCampaignStore((s) => s.loading);
@@ -68,11 +70,19 @@ export function Landing() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Sovereign Shield</h1>
-          <p className="text-sm opacity-70 mt-1">
-            Head of Defense Integration — New Delhi, 2026
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-3xl font-bold">Sovereign Shield</h1>
+            <p className="text-sm opacity-70 mt-1">
+              Head of Defense Integration — New Delhi, 2026
+            </p>
+          </div>
+          <button
+            onClick={() => setShowGuide(true)}
+            className="text-xs text-amber-400 underline opacity-70 hover:opacity-100 transition-opacity mt-1"
+          >
+            How to play
+          </button>
         </div>
 
         {/* Existing Campaigns */}
@@ -211,6 +221,8 @@ export function Landing() {
           </div>
         )}
       </div>
+
+      <HowToPlayGuide open={showGuide} onClose={() => setShowGuide(false)} />
     </div>
   );
 }
