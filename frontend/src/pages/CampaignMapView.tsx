@@ -45,6 +45,7 @@ export function CampaignMapView() {
   const [rebaseTarget, setRebaseTarget] = useState<{ squadron: BaseSquadronSummary; baseId: number } | null>(null);
   const [audioOn, setAudioOn] = useState(getAudioEnabled);
   const [showGuide, setShowGuide] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   const isCampaignComplete = campaign
     ? campaign.current_year > 2036 || (campaign.current_year === 2036 && campaign.current_quarter > 1)
@@ -105,73 +106,102 @@ export function CampaignMapView() {
 
   return (
     <div className="fixed inset-0 flex flex-col">
-      <header className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800">
-        <div>
-          <h1 className="text-base font-bold">{campaign.name}</h1>
+      <header className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
+        <div className="min-w-0 flex-shrink">
+          <h1 className="text-sm font-bold truncate">{campaign.name}</h1>
           <p className="text-xs opacity-70">
-            {campaign.current_year} • Q{campaign.current_quarter} • ₹
-            {campaign.budget_cr.toLocaleString()} cr
+            {campaign.current_year} Q{campaign.current_quarter} • ₹{campaign.budget_cr.toLocaleString("en-US")} cr
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           {pendingVignettes.length > 0 && (
             <Link
               to={`/campaign/${campaign.id}/vignette/${pendingVignettes[0].id}`}
-              className="bg-red-600 hover:bg-red-500 text-slate-100 text-xs font-semibold rounded-lg px-3 py-1.5 animate-pulse"
+              className="bg-red-600 hover:bg-red-500 text-slate-100 text-xs font-semibold rounded px-2 py-1 animate-pulse"
             >
-              ⚠ Pending vignette
+              ⚠ Ops
             </Link>
           )}
           <Link
             to={`/campaign/${campaign.id}/intel`}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-semibold rounded-lg px-3 py-1.5"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs rounded px-2 py-1"
           >
             Intel
           </Link>
           <Link
             to={`/campaign/${campaign.id}/procurement`}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-semibold rounded-lg px-3 py-1.5"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs rounded px-2 py-1"
           >
-            Procurement
+            Proc
           </Link>
-          <Link
-            to={`/campaign/${campaign.id}/raw`}
-            className="text-xs opacity-60 hover:opacity-100 underline"
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 sm:hidden"
           >
-            raw
-          </Link>
+            ☰
+          </button>
+          <div className="hidden sm:flex items-center gap-1.5">
+            <Link to={`/campaign/${campaign.id}/raw`} className="text-xs opacity-60 hover:opacity-100 underline">raw</Link>
+            <ThemeToggle />
+            <button
+              onClick={() => { setAudioEnabled(!audioOn); setAudioOn(!audioOn); }}
+              className="text-xs opacity-60 hover:opacity-100 px-2 py-1 rounded bg-slate-800"
+              title={audioOn ? "Mute" : "Unmute"}
+            >
+              {audioOn ? "♪" : "♪̶"}
+            </button>
+            <button
+              onClick={() => setShowGuide(true)}
+              className="text-xs opacity-60 hover:opacity-100 px-2 py-1 rounded bg-slate-800"
+              title="How to play"
+            >
+              ?
+            </button>
+            {isCampaignComplete && (
+              <Link
+                to={`/campaign/${campaign.id}/white-paper`}
+                className="bg-amber-600 hover:bg-amber-500 text-slate-900 text-xs font-semibold rounded px-2 py-1"
+              >
+                White Paper
+              </Link>
+            )}
+          </div>
+          <button
+            onClick={handleAdvanceTurn}
+            disabled={loading || isCampaignComplete}
+            className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-slate-900 font-semibold rounded px-2 py-1.5 text-xs"
+          >
+            {loading ? "…" : "End Turn"}
+          </button>
+        </div>
+      </header>
+      {showMenu && (
+        <div className="flex flex-wrap gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800 sm:hidden">
+          <Link to={`/campaign/${campaign.id}/raw`} className="text-xs opacity-60 hover:opacity-100 underline">raw</Link>
           <ThemeToggle />
           <button
             onClick={() => { setAudioEnabled(!audioOn); setAudioOn(!audioOn); }}
             className="text-xs opacity-60 hover:opacity-100 px-2 py-1 rounded bg-slate-800"
-            title={audioOn ? "Mute audio" : "Enable audio"}
           >
             {audioOn ? "♪" : "♪̶"}
           </button>
           <button
-            onClick={() => setShowGuide(true)}
+            onClick={() => { setShowGuide(true); setShowMenu(false); }}
             className="text-xs opacity-60 hover:opacity-100 px-2 py-1 rounded bg-slate-800"
-            title="How to play"
           >
-            ?
+            ? Help
           </button>
           {isCampaignComplete && (
             <Link
               to={`/campaign/${campaign.id}/white-paper`}
-              className="bg-amber-600 hover:bg-amber-500 text-slate-900 text-xs font-semibold rounded-lg px-3 py-1.5"
+              className="bg-amber-600 text-slate-900 text-xs font-semibold rounded px-2 py-1"
             >
               White Paper
             </Link>
           )}
-          <button
-            onClick={handleAdvanceTurn}
-            disabled={loading || isCampaignComplete}
-            className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-slate-900 font-semibold rounded-lg px-3 py-1.5 text-sm"
-          >
-            {loading ? "Ending…" : "End Turn"}
-          </button>
+          <Link to="/" className="text-xs opacity-60 hover:opacity-100 underline">Home</Link>
         </div>
-      </header>
+      )}
 
       <div className="relative flex-1">
         <SubcontinentMap
