@@ -104,7 +104,7 @@ export function TacticalReplay({ eventTrace, indPlatforms, advPlatforms }: Tacti
     <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 mt-4">
       <h3 className="text-sm font-bold mb-2 text-slate-300">Tactical Replay</h3>
 
-      <div className="flex gap-1 mb-3">
+      <div className="flex flex-wrap gap-1 mb-3">
         {PHASES.map((p, i) => (
           <button
             key={p}
@@ -120,7 +120,7 @@ export function TacticalReplay({ eventTrace, indPlatforms, advPlatforms }: Tacti
 
       <p className="text-xs text-slate-400 mb-2">{PHASE_LABELS[phase]}</p>
 
-      <svg width={W} height={H} className="mx-auto" role="img" aria-label={`tactical replay phase ${phase}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[360px] mx-auto" role="img" aria-label={`tactical replay phase ${phase}`}>
         <rect width={W} height={H} fill="#0f172a" rx={4} />
 
         {/* Distance line */}
