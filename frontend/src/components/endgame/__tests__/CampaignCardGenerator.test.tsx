@@ -19,7 +19,9 @@ const summary: CampaignSummary = {
   ],
   force_structure: { squadrons_end: 38, total_airframes: 570, fifth_gen_squadrons: 2 },
   vignettes_won: 8, vignettes_lost: 3, vignettes_total: 11,
-  ace_count: 3, aces: [], is_complete: true,
+  ace_count: 3, aces: [],
+  objectives: [{ id: "obj1", name: "Test Objective", status: "pass" as const }],
+  is_complete: true,
 };
 
 describe("CampaignCardGenerator", () => {

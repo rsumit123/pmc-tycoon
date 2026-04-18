@@ -27,7 +27,9 @@ describe("api client — platforms + bases", () => {
     const body: BaseListResponse = {
       bases: [{
         id: 1, template_id: "ambala", name: "Ambala AFB",
-        lat: 30.37, lon: 76.78, squadrons: [],
+        lat: 30.37, lon: 76.78,
+        shelter_count: 18, fuel_depot_size: 2, ad_integration_level: 1, runway_class: "standard",
+        squadrons: [],
       }],
     };
     vi.spyOn(http, "get").mockResolvedValueOnce({ data: body } as any);
