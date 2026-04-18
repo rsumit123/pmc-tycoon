@@ -30,3 +30,15 @@ class RDProgramSpecOut(BaseModel):
 
 class RDProgramSpecListResponse(BaseModel):
     programs: list[RDProgramSpecOut]
+
+
+class ObjectiveOut(BaseModel):
+    id: str
+    title: str
+    description: str
+    weight: int
+    target_year: int | None
+
+
+class ObjectiveListResponse(BaseModel):
+    objectives: list[ObjectiveOut]

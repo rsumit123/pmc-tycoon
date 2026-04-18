@@ -2,8 +2,10 @@ from fastapi import APIRouter
 
 from app.content.registry import platforms as platforms_reg
 from app.content.registry import rd_programs as rd_programs_reg
+from app.content.registry import objectives as objectives_reg
 from app.schemas.content import PlatformOut, PlatformListResponse
 from app.schemas.content import RDProgramSpecOut, RDProgramSpecListResponse
+from app.schemas.content import ObjectiveOut, ObjectiveListResponse
 
 router = APIRouter(prefix="/api/content", tags=["content"])
 
@@ -45,3 +47,19 @@ def list_rd_programs_endpoint():
         ))
     out.sort(key=lambda p: p.id)
     return RDProgramSpecListResponse(programs=out)
+
+
+@router.get("/objectives", response_model=ObjectiveListResponse)
+def list_objectives_endpoint():
+    registry = objectives_reg()
+    out: list[ObjectiveOut] = []
+    for spec in registry.values():
+        out.append(ObjectiveOut(
+            id=spec.id,
+            title=spec.title,
+            description=spec.description,
+            weight=int(spec.weight),
+            target_year=spec.target_year,
+        ))
+    out.sort(key=lambda o: o.id)
+    return ObjectiveListResponse(objectives=out)
