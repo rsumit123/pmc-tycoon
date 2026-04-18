@@ -117,3 +117,60 @@ def test_build_planning_state_is_deterministic():
     s1 = build_planning_state(tpl, {"PLAAF": _plaaf_state()}, rng=random.Random(42))
     s2 = build_planning_state(tpl, {"PLAAF": _plaaf_state()}, rng=random.Random(42))
     assert s1 == s2
+
+
+def test_build_planning_state_includes_intel_quality_and_awacs_covering():
+    """New fields from Plan 13 Task 5."""
+    tpl = _tpl(roster=[{
+        "role": "CAP", "faction": "PLAAF",
+        "platform_pool": ["j20a"], "count_range": [4, 6],
+    }])
+    ps = build_planning_state(
+        tpl,
+        {"PLAAF": _plaaf_state()},
+        rng=random.Random(42),
+        player_squadrons=[],
+        bases_registry={},
+        recent_intel_confidences=[],
+    )
+
+    assert "intel_quality" in ps
+    assert "awacs_covering" in ps
+    assert "adversary_force_observed" in ps
+    assert ps["intel_quality"]["tier"] in ("low", "medium", "high", "perfect")
+    assert isinstance(ps["awacs_covering"], list)
+    assert isinstance(ps["adversary_force_observed"], list)
+    # Ground-truth force still present for resolver
+    assert "adversary_force" in ps
+
+
+def test_build_planning_state_observed_force_matches_tier():
+    """adversary_force_observed structure matches the intel quality tier."""
+    tpl = _tpl(roster=[{
+        "role": "CAP", "faction": "PLAAF",
+        "platform_pool": ["j20a"], "count_range": [4, 6],
+    }])
+    # With no AWACS and no recent intel the score will be low (baseline 0.15,
+    # j20a is VLO → stealth penalty → stays low).
+    ps = build_planning_state(
+        tpl,
+        {"PLAAF": _plaaf_state()},
+        rng=random.Random(42),
+        player_squadrons=[],
+        bases_registry={},
+        recent_intel_confidences=[],
+    )
+    tier = ps["intel_quality"]["tier"]
+    obs = ps["adversary_force_observed"]
+    if tier == "perfect":
+        # Each entry should be a plain copy with platform_id
+        assert all("platform_id" in e for e in obs)
+    elif tier == "high":
+        assert all("probable_platforms" in e and e["fidelity"] == "high" for e in obs)
+    elif tier == "medium":
+        assert all("count_range" in e and e["fidelity"] == "medium" for e in obs)
+    else:
+        # low — single entry with count_range
+        if obs:
+            assert obs[0]["fidelity"] == "low"
+            assert "count_range" in obs[0]

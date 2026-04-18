@@ -127,7 +127,15 @@ def advance(ctx: dict[str, Any]) -> EngineResult:
             scenario = pick_scenario(scenario_templates_list, next_adversary,
                                      year, quarter, vignette_rng)
             if scenario is not None:
-                planning_state = build_planning_state(scenario, next_adversary, vignette_rng)
+                # Recent intel confidences (use the new intel cards just generated)
+                recent_conf = [c["confidence"] for c in new_cards if c.get("confidence") is not None][:5]
+
+                planning_state = build_planning_state(
+                    scenario, next_adversary, vignette_rng,
+                    player_squadrons=next_squadrons,
+                    bases_registry=bases_reg,
+                    recent_intel_confidences=recent_conf,
+                )
                 planning_state["eligible_squadrons"] = compute_eligible_squadrons(
                     planning_state, next_squadrons, bases_reg, platforms_reg,
                 )
