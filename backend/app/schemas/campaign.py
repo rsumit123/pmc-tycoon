@@ -31,3 +31,21 @@ class CampaignRead(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class CampaignListItem(BaseModel):
+    id: int
+    name: str
+    current_year: int
+    current_quarter: int
+    difficulty: Difficulty
+    budget_cr: int
+    reputation: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class CampaignListResponse(BaseModel):
+    campaigns: list[CampaignListItem]

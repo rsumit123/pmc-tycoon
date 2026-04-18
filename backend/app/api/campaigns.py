@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.crud.campaign import create_campaign, get_campaign, advance_turn
-from app.schemas.campaign import CampaignCreate, CampaignRead
+from app.models.campaign import Campaign
+from app.schemas.campaign import CampaignCreate, CampaignRead, CampaignListItem, CampaignListResponse
 
 router = APIRouter(prefix="/api/campaigns", tags=["campaigns"])
 
@@ -11,6 +12,15 @@ router = APIRouter(prefix="/api/campaigns", tags=["campaigns"])
 @router.post("", response_model=CampaignRead, status_code=status.HTTP_201_CREATED)
 def create_campaign_endpoint(payload: CampaignCreate, db: Session = Depends(get_db)):
     return create_campaign(db, payload)
+
+
+@router.get("", response_model=CampaignListResponse)
+def list_campaigns_endpoint(db: Session = Depends(get_db)):
+    """List all campaigns ordered by most recently updated."""
+    campaigns = db.query(Campaign).order_by(Campaign.updated_at.desc()).all()
+    return CampaignListResponse(
+        campaigns=[CampaignListItem.model_validate(c) for c in campaigns]
+    )
 
 
 @router.get("/{campaign_id}", response_model=CampaignRead)
