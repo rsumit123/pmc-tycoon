@@ -35,6 +35,7 @@ from app.engine.adversary.doctrine import progress_doctrine
 from app.engine.intel.generator import generate_intel
 from app.engine.vignette.threat import should_fire_vignette
 from app.engine.vignette.generator import pick_scenario, build_planning_state
+from app.content.registry import ad_systems as _ad_systems_reg
 from app.engine.vignette.planning import compute_eligible_squadrons
 from app.engine.loadout_upgrade import tick_loadout_upgrades
 
@@ -132,11 +133,19 @@ def advance(ctx: dict[str, Any]) -> EngineResult:
                 # Recent intel confidences (use the new intel cards just generated)
                 recent_conf = [c["confidence"] for c in new_cards if c.get("confidence") is not None][:5]
 
+                ad_spec_dicts: dict = {}
+                try:
+                    ad_spec_dicts = {k: v.model_dump() for k, v in _ad_systems_reg().items()}
+                except Exception:
+                    ad_spec_dicts = {}
+
                 planning_state = build_planning_state(
                     scenario, next_adversary, vignette_rng,
                     player_squadrons=next_squadrons,
                     bases_registry=bases_reg,
                     recent_intel_confidences=recent_conf,
+                    ad_batteries=ctx.get("ad_batteries", []),
+                    ad_specs=ad_spec_dicts,
                 )
                 planning_state["eligible_squadrons"] = compute_eligible_squadrons(
                     planning_state, next_squadrons, bases_reg, platforms_reg,

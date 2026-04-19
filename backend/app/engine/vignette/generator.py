@@ -92,6 +92,8 @@ def build_planning_state(
     player_squadrons: list[dict] | None = None,
     bases_registry: dict[int, dict] | None = None,
     recent_intel_confidences: list[float] | None = None,
+    ad_batteries: list[dict] | None = None,
+    ad_specs: dict[str, dict] | None = None,
 ) -> dict[str, Any]:
     adv_force: list[dict] = []
     for entry in template.adversary_roster:
@@ -161,6 +163,9 @@ def build_planning_state(
         "allowed_ind_roles": list(template.allowed_ind_roles),
         "roe_options": list(template.roe_options),
         "objective": dict(template.objective),
+        "ad_batteries": ad_batteries or [],
+        "ad_specs": ad_specs or {},
+        "bases_registry": bases_registry or {},
     }
 
 

@@ -28,6 +28,7 @@ from app.engine.vignette.bvr import (
     WEAPONS, PLATFORM_LOADOUTS, GENERATION_SCORES, engagement_pk,
 )
 from app.engine.vignette.detection import detection_advantage
+from app.engine.vignette.ad_engagement import resolve_ad_engagement
 
 
 WVR_PK_NON_STEALTH = 0.35
@@ -195,6 +196,20 @@ def resolve(
     ind_force = _make_airframes("ind", ind_units, platforms_registry)
     adv_force = _make_airframes("adv", planning_state.get("adversary_force", []),
                                 platforms_registry)
+
+    # AD pre-round — friendly SAMs engage adversary airframes if AO is in coverage.
+    ad_batteries = planning_state.get("ad_batteries", [])
+    ad_specs = planning_state.get("ad_specs", {})
+    bases_reg_ps = planning_state.get("bases_registry", {})
+    if ad_batteries:
+        new_adv_entries, ad_trace = resolve_ad_engagement(
+            ao=planning_state["ao"], batteries=ad_batteries,
+            bases_registry=bases_reg_ps, ad_specs=ad_specs,
+            adv_force=planning_state.get("adversary_force", []),
+            rng=rng,
+        )
+        trace.extend(ad_trace)
+        adv_force = _make_airframes("adv", new_adv_entries, platforms_registry)
 
     # Detection phase
     ind_radar = max((a["radar_range_km"] for a in ind_force), default=100)

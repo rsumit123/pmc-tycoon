@@ -10,6 +10,7 @@ from app.models.event import CampaignEvent
 from app.models.llm_cache import LLMCache  # noqa: F401
 from app.models.campaign_narrative import CampaignNarrative  # noqa: F401
 from app.models.loadout_upgrade import LoadoutUpgrade  # noqa: F401
+from app.models.ad_battery import ADBattery  # noqa: F401
 
 __all__ = [
     "Campaign",
@@ -24,4 +25,5 @@ __all__ = [
     "LLMCache",
     "CampaignNarrative",
     "LoadoutUpgrade",
+    "ADBattery",
 ]

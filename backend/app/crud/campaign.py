@@ -11,6 +11,7 @@ from app.models.intel import IntelCard
 from app.models.vignette import Vignette
 from app.models.campaign_base import CampaignBase
 from app.models.loadout_upgrade import LoadoutUpgrade
+from app.models.ad_battery import ADBattery
 from app.schemas.campaign import CampaignCreate
 from app.engine.turn import advance as engine_advance
 from app.engine.delivery_assignment import pick_base_for_delivery
@@ -143,6 +144,8 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         Vignette.status == "pending",
     ).first() is not None
 
+    ad_battery_rows = db.query(ADBattery).filter_by(campaign_id=campaign.id).all()
+
     upgrade_rows = db.query(LoadoutUpgrade).filter_by(
         campaign_id=campaign.id, status="pending"
     ).all()
@@ -178,6 +181,11 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         "bases_registry": bases_dict,
         "platforms_registry": platforms_dict,
         "pending_vignette_exists": pending_exists,
+        "ad_batteries": [
+            {"id": b.id, "base_id": b.base_id, "system_id": b.system_id,
+             "coverage_km": b.coverage_km}
+            for b in ad_battery_rows
+        ],
         "loadout_upgrades": [
             {"id": u.id, "squadron_id": u.squadron_id, "weapon_id": u.weapon_id,
              "base_loadout": u.base_loadout,

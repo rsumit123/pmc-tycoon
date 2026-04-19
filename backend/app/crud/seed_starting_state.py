@@ -19,6 +19,7 @@ from app.models.acquisition import AcquisitionOrder
 from app.models.rd_program import RDProgramState
 from app.models.adversary import AdversaryState
 from app.models.intel import IntelCard
+from app.models.ad_battery import ADBattery
 from app.engine.adversary.state import OOB_2026_Q2
 
 
@@ -127,6 +128,11 @@ SEED_ACQUISITIONS = [
     },
 ]
 
+SEED_AD_BATTERIES = [
+    # (system_id, base_template_id, coverage_km, installed_year, installed_quarter)
+    ("s400", "pathankot", 150, 2026, 2),
+]
+
 SEED_RD_PROGRAMS = [
     {"program_id": "amca_mk1", "progress_pct": 0, "funding_level": "standard"},
     {"program_id": "amca_mk1_engine", "progress_pct": 0, "funding_level": "standard"},
@@ -142,6 +148,19 @@ def seed_starting_state(db: Session, campaign: Campaign) -> None:
         db.add(row)
         bases_by_template[b["template_id"]] = row
     db.flush()  # populate row.id
+
+    for sys_id, base_tpl, cov, inst_year, inst_qtr in SEED_AD_BATTERIES:
+        base_row = bases_by_template.get(base_tpl)
+        if base_row is None:
+            continue
+        db.add(ADBattery(
+            campaign_id=campaign.id,
+            base_id=base_row.id,
+            system_id=sys_id,
+            coverage_km=cov,
+            installed_year=inst_year,
+            installed_quarter=inst_qtr,
+        ))
 
     for name, call_sign, platform_id, base_tpl, strength, readiness in SEED_SQUADRONS:
         db.add(Squadron(
