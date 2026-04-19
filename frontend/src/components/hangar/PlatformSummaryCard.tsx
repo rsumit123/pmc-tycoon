@@ -1,8 +1,14 @@
 import type { HangarPlatformSummary } from "../../lib/types";
 
-export function PlatformSummaryCard({ s }: { s: HangarPlatformSummary }) {
+export function PlatformSummaryCard({
+  s, onClick,
+}: { s: HangarPlatformSummary; onClick?: () => void }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-lg p-3">
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full text-left bg-slate-900 border border-slate-800 hover:border-amber-600/60 rounded-lg p-3 transition-colors"
+    >
       <div className="text-sm font-semibold">{s.platform_name}</div>
       <div className="text-[10px] opacity-60 mt-0.5">
         {s.squadron_count} sqn{s.squadron_count === 1 ? "" : "s"} &bull; {s.total_airframes} airframes
@@ -16,6 +22,9 @@ export function PlatformSummaryCard({ s }: { s: HangarPlatformSummary }) {
         </div>
         <span className="text-[10px] opacity-80 w-8 text-right">{s.avg_readiness_pct}%</span>
       </div>
-    </div>
+      {onClick && (
+        <div className="mt-1 text-[10px] text-amber-400/70">Tap to view squadrons &rarr;</div>
+      )}
+    </button>
   );
 }

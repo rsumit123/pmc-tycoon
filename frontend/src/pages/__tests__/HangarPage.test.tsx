@@ -39,6 +39,9 @@ const defaultStore = {
     ],
   },
   loadHangar: vi.fn(),
+  bases: [],
+  loadBases: vi.fn(),
+  rebaseSquadron: vi.fn(),
 };
 
 function setup(overrides: Record<string, unknown> = {}) {

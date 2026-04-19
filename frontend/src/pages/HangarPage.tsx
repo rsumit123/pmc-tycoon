@@ -4,6 +4,8 @@ import { useCampaignStore } from "../store/campaignStore";
 import { FleetFilters, type HangarSortMode } from "../components/hangar/FleetFilters";
 import { PlatformSummaryCard } from "../components/hangar/PlatformSummaryCard";
 import { SquadronRow } from "../components/hangar/SquadronRow";
+import { SquadronDetailSheet } from "../components/hangar/SquadronDetailSheet";
+import { RebaseOverlay } from "../components/map/RebaseOverlay";
 import type { HangarSquadron } from "../lib/types";
 
 const ROLE_MAP: Record<string, (sq: HangarSquadron) => boolean> = {
@@ -22,31 +24,48 @@ export function HangarPage() {
   const loadCampaign = useCampaignStore((s) => s.loadCampaign);
   const hangar = useCampaignStore((s) => s.hangar);
   const loadHangar = useCampaignStore((s) => s.loadHangar);
+  const bases = useCampaignStore((s) => s.bases);
+  const loadBases = useCampaignStore((s) => s.loadBases);
+  const rebaseSquadron = useCampaignStore((s) => s.rebaseSquadron);
 
   const [tab, setTab] = useState<"summary" | "list">("summary");
   const [role, setRole] = useState<string>("All");
+  const [platformFilter, setPlatformFilter] = useState<string | null>(null);
   const [sort, setSort] = useState<HangarSortMode>("readiness_asc");
+  const [selected, setSelected] = useState<HangarSquadron | null>(null);
+  const [rebaseTarget, setRebaseTarget] = useState<HangarSquadron | null>(null);
 
   useEffect(() => {
     if (!campaign || campaign.id !== cid) loadCampaign(cid);
     loadHangar(cid);
-  }, [cid, campaign, loadCampaign, loadHangar]);
+    loadBases(cid);
+  }, [cid, campaign, loadCampaign, loadHangar, loadBases]);
 
   const filteredSorted = useMemo(() => {
     if (!hangar) return [] as HangarSquadron[];
-    const filter = ROLE_MAP[role] ?? (() => true);
-    const filtered = hangar.squadrons.filter(filter);
+    const roleFilter = ROLE_MAP[role] ?? (() => true);
+    const filtered = hangar.squadrons.filter((sq) => {
+      if (!roleFilter(sq)) return false;
+      if (platformFilter && sq.platform_id !== platformFilter) return false;
+      return true;
+    });
     return [...filtered].sort((a, b) => {
       if (sort === "readiness_asc") return a.readiness_pct - b.readiness_pct;
       if (sort === "readiness_desc") return b.readiness_pct - a.readiness_pct;
       if (sort === "xp_desc") return b.xp - a.xp;
       return a.name.localeCompare(b.name);
     });
-  }, [hangar, role, sort]);
+  }, [hangar, role, platformFilter, sort]);
 
   if (!hangar) return <div className="p-6 text-sm">Loading hangar&hellip;</div>;
 
   const totalAirframes = hangar.squadrons.reduce((a, b) => a + b.strength, 0);
+
+  const handleRebase = async (sqnId: number, targetBaseId: number) => {
+    await rebaseSquadron(sqnId, targetBaseId);
+    setRebaseTarget(null);
+    await loadHangar(cid);
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -64,7 +83,7 @@ export function HangarPage() {
         <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
           <button
             type="button"
-            onClick={() => setTab("summary")}
+            onClick={() => { setTab("summary"); setPlatformFilter(null); }}
             className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded ${tab === "summary" ? "bg-amber-600 text-slate-900" : "text-slate-300"}`}
           >By Platform</button>
           <button
@@ -77,25 +96,81 @@ export function HangarPage() {
         {tab === "summary" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {hangar.summary_by_platform.map((s) => (
-              <PlatformSummaryCard key={s.platform_id} s={s} />
+              <PlatformSummaryCard
+                key={s.platform_id}
+                s={s}
+                onClick={() => {
+                  setPlatformFilter(s.platform_id);
+                  setRole("All");
+                  setTab("list");
+                }}
+              />
             ))}
           </div>
         ) : (
           <>
+            {platformFilter && (
+              <div className="flex items-center justify-between bg-amber-950/30 border border-amber-800 rounded-lg px-3 py-2 text-xs">
+                <span className="text-amber-200 truncate">
+                  Filtered: {hangar.summary_by_platform.find((s) => s.platform_id === platformFilter)?.platform_name ?? platformFilter}
+                </span>
+                <button
+                  onClick={() => setPlatformFilter(null)}
+                  className="text-amber-300 hover:text-amber-200 underline ml-2 flex-shrink-0"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
             <FleetFilters
               roleFilter={role}
-              onRoleChange={setRole}
+              onRoleChange={(r) => { setRole(r); setPlatformFilter(null); }}
               sortMode={sort}
               onSortChange={setSort}
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {filteredSorted.map((sq) => (
-                <SquadronRow key={sq.id} sq={sq} />
-              ))}
-            </div>
+            {filteredSorted.length === 0 ? (
+              <p className="text-xs opacity-60 py-4 text-center">No squadrons match the current filter.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {filteredSorted.map((sq) => (
+                  <SquadronRow
+                    key={sq.id}
+                    sq={sq}
+                    onClick={() => setSelected(sq)}
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
       </main>
+
+      <SquadronDetailSheet
+        squadron={selected}
+        onClose={() => setSelected(null)}
+        onRebaseStart={() => {
+          if (selected) setRebaseTarget(selected);
+        }}
+      />
+
+      <RebaseOverlay
+        squadron={rebaseTarget
+          ? {
+              id: rebaseTarget.id,
+              name: rebaseTarget.name,
+              call_sign: rebaseTarget.call_sign,
+              platform_id: rebaseTarget.platform_id,
+              strength: rebaseTarget.strength,
+              readiness_pct: rebaseTarget.readiness_pct,
+              xp: rebaseTarget.xp,
+              ace_name: rebaseTarget.ace_name,
+            }
+          : null}
+        bases={bases}
+        currentBaseId={rebaseTarget?.base_id ?? 0}
+        onRebase={handleRebase}
+        onCancel={() => setRebaseTarget(null)}
+      />
     </div>
   );
 }

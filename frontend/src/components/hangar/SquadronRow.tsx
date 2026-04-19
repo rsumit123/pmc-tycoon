@@ -6,9 +6,13 @@ function readinessColor(pct: number): string {
   return "bg-emerald-500";
 }
 
-export function SquadronRow({ sq }: { sq: HangarSquadron }) {
+export function SquadronRow({ sq, onClick }: { sq: HangarSquadron; onClick?: () => void }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-lg p-3">
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full text-left bg-slate-900 border border-slate-800 hover:border-amber-600/60 rounded-lg p-3 transition-colors"
+    >
       <div className="flex items-baseline justify-between gap-2 mb-1">
         <div className="min-w-0">
           <div className="text-sm font-semibold truncate">{sq.name}</div>
@@ -34,6 +38,9 @@ export function SquadronRow({ sq }: { sq: HangarSquadron }) {
       <div className="mt-1.5 text-[10px] opacity-70 break-words">
         Loadout: {sq.loadout.join(" \u00b7 ") || "\u2014"}
       </div>
-    </div>
+      {onClick && (
+        <div className="mt-1 text-[10px] text-amber-400/70">Tap for options \u2192</div>
+      )}
+    </button>
   );
 }
