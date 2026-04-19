@@ -105,6 +105,22 @@ export function TurnReport() {
             <p className="text-xs opacity-70">{report.vignette_fired.ao?.name ?? ""}</p>
           </section>
         )}
+        {(() => {
+          const mc = report.events.find((e) => e.event_type === "munitions_cost");
+          if (!mc) return null;
+          const total = Number(mc.payload?.total_cost_cr ?? 0);
+          const items = (mc.payload?.munitions as Array<{ weapon: string; fired: number }> | undefined) ?? [];
+          const top = items.slice(0, 2).map((i) => `${i.fired}× ${i.weapon}`).join(", ");
+          return (
+            <section className="border border-amber-900/60 rounded-lg p-3 bg-amber-950/20">
+              <p className="text-sm">
+                💸 <span className="font-semibold">Munitions expended:</span>{" "}
+                <span className="font-mono text-amber-300">₹{total.toLocaleString("en-US")} cr</span>
+                {top && <span className="opacity-70"> ({top}{items.length > 2 ? ` +${items.length - 2} more` : ""})</span>}
+              </p>
+            </section>
+          );
+        })()}
         {sections.map((s) => (
           <section key={s.title}>
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{s.title}</h2>

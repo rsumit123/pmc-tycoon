@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { ForceCommitter } from "../components/vignette/ForceCommitter";
+import { MunitionsEstimate } from "../components/vignette/MunitionsEstimate";
 import { CommitHoldButton } from "../components/primitives/CommitHoldButton";
 import { AOMiniMap } from "../components/vignette/AOMiniMap";
 import { AdversaryForceFogged } from "../components/vignette/AdversaryForceFogged";
@@ -23,6 +24,7 @@ export function OpsRoom() {
   const loadBases = useCampaignStore((s) => s.loadBases);
   const loadPlatforms = useCampaignStore((s) => s.loadPlatforms);
   const loadWeapons = useCampaignStore((s) => s.loadWeapons);
+  const weaponsById = useCampaignStore((s) => s.weaponsById);
 
   const [vignette, setVignette] = useState<Vignette | null>(null);
   const [payload, setPayload] = useState<VignetteCommitPayload>({
@@ -122,6 +124,16 @@ export function OpsRoom() {
         </section>
 
         <ForceCommitter planning={ps} value={payload} onChange={setPayload} />
+
+        {campaign && (
+          <MunitionsEstimate
+            payload={payload}
+            eligibleSquadrons={ps.eligible_squadrons}
+            weaponsById={weaponsById}
+            quarterlyGrantCr={campaign.quarterly_grant_cr}
+            treasuryCr={campaign.budget_cr}
+          />
+        )}
 
         {commitError && (
           <p className="text-sm text-red-300">{commitError}</p>
