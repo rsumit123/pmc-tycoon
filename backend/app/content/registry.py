@@ -3,8 +3,8 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.content.loader import (
-    PlatformSpec, BaseSpec, ObjectiveSpec, RDProgramSpec,
-    load_platforms, load_bases, load_objectives, load_rd_programs,
+    PlatformSpec, BaseSpec, ObjectiveSpec, RDProgramSpec, ADSystemSpec,
+    load_platforms, load_bases, load_objectives, load_rd_programs, load_ad_systems,
     load_adversary_roadmap, load_intel_templates, load_scenario_templates,
 )
 
@@ -30,6 +30,11 @@ def rd_programs() -> dict[str, RDProgramSpec]:
 
 
 @lru_cache(maxsize=1)
+def ad_systems() -> dict[str, ADSystemSpec]:
+    return load_ad_systems(Path(settings.content_dir) / "ad_systems.yaml")
+
+
+@lru_cache(maxsize=1)
 def adversary_roadmap() -> list:
     return load_adversary_roadmap(Path(settings.content_dir) / "adversary_roadmap.yaml")
 
@@ -45,6 +50,6 @@ def scenario_templates() -> list:
 
 
 def reload_all() -> None:
-    for fn in (platforms, bases, objectives, rd_programs,
+    for fn in (platforms, bases, objectives, rd_programs, ad_systems,
                adversary_roadmap, intel_templates, scenario_templates):
         fn.cache_clear()

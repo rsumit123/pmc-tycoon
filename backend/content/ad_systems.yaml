@@ -1,0 +1,56 @@
+ad_systems:
+  - id: s400
+    name: S-400 Triumf
+    description: "Long-range multi-layer SAM system. 150 km effective envelope. Russian origin, already in IAF service."
+    coverage_km: 150
+    install_cost_cr: 8000
+    max_pk: 0.45
+    tier: "long_range"
+
+  - id: long_range_sam
+    name: Indigenous Long-Range SAM
+    description: "DRDO S-400-class long-range SAM. 400 km envelope — strategic area defense."
+    coverage_km: 400
+    install_cost_cr: 12000
+    max_pk: 0.50
+    tier: "long_range"
+
+  - id: project_kusha
+    name: Project Kusha BMD
+    description: "Ballistic missile defense layer — intercept ballistic threats at extended range."
+    coverage_km: 500
+    install_cost_cr: 15000
+    max_pk: 0.40
+    tier: "bmd"
+
+  - id: mrsam_air
+    name: MR-SAM (Barak-8)
+    description: "Medium-range airbase SAM — 150 km envelope, IAF/Indian Army deployment."
+    coverage_km: 150
+    install_cost_cr: 5000
+    max_pk: 0.45
+    tier: "medium_range"
+
+  - id: akash_ng
+    name: Akash-NG
+    description: "Indigenous medium-range SAM, 70 km reach."
+    coverage_km: 70
+    install_cost_cr: 2500
+    max_pk: 0.35
+    tier: "medium_range"
+
+  - id: qrsam
+    name: QRSAM
+    description: "Quick-reaction SAM for point defense of critical bases."
+    coverage_km: 30
+    install_cost_cr: 1200
+    max_pk: 0.30
+    tier: "short_range"
+
+  - id: vshorads
+    name: VSHORADS
+    description: "Very short-range IR-seeking SAM — last-ditch."
+    coverage_km: 8
+    install_cost_cr: 400
+    max_pk: 0.20
+    tier: "very_short_range"

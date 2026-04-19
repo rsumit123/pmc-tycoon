@@ -96,6 +96,21 @@ def load_rd_programs(path: Path) -> dict[str, RDProgramSpec]:
     return {row["id"]: RDProgramSpec(**row) for row in data.get("programs", [])}
 
 
+class ADSystemSpec(BaseModel):
+    id: str
+    name: str
+    description: str
+    coverage_km: int
+    install_cost_cr: int
+    max_pk: float
+    tier: str
+
+
+def load_ad_systems(path: Path) -> dict[str, ADSystemSpec]:
+    data = _load_yaml(path)
+    return {row["id"]: ADSystemSpec(**row) for row in data.get("ad_systems", [])}
+
+
 @dataclass(frozen=True)
 class RoadmapEffect:
     kind: str
