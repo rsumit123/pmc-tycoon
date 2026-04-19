@@ -124,6 +124,7 @@ export function CampaignMapView() {
   );
 
   const intelContacts = useMemo(() => synthesizeContacts(intelCards), [intelCards]);
+  const adBaseIdSet = useMemo(() => new Set(adBatteries.map((b) => b.base_id)), [adBatteries]);
 
   // Top-bar commitment summary: sum per-quarter burn from active orders + active R&D programs.
   const { topBarCommitQ, topBarOutstanding } = useMemo(() => {
@@ -245,6 +246,11 @@ export function CampaignMapView() {
                 to={`/campaign/${campaign.id}/intel`}
                 className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
               >🛰 Intel</Link>
+              <Link
+                onClick={() => setShowMenu(false)}
+                to={`/campaign/${campaign.id}/combat-history`}
+                className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
+              >⚔ Combat History</Link>
               {isCampaignComplete && (
                 <Link
                   onClick={() => setShowMenu(false)}
@@ -289,6 +295,7 @@ export function CampaignMapView() {
           onMarkerClick={(bid) => setSelectedBase(bid)}
           onReady={(m) => setMapInstance(m)}
           flashBaseId={flashBaseId}
+          adBaseIds={adBaseIdSet}
         />
         {activeLayers.ad_coverage && (
           <ADCoverageLayer

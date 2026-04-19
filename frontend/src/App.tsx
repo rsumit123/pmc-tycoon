@@ -10,6 +10,7 @@ import { DefenseWhitePaper } from "./pages/DefenseWhitePaper";
 import { TurnReport } from "./pages/TurnReport";
 import { HangarPage } from "./pages/HangarPage";
 import { ArmoryPage } from "./pages/ArmoryPage";
+import { CombatHistoryPage } from "./pages/CombatHistoryPage";
 import { ToastStack } from "./components/primitives/ToastStack";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/campaign/:id/turn-report/:year/:quarter" element={<TurnReport />} />
         <Route path="/campaign/:id/hangar" element={<HangarPage />} />
         <Route path="/campaign/:id/armory" element={<ArmoryPage />} />
+        <Route path="/campaign/:id/combat-history" element={<CombatHistoryPage />} />
         <Route path="/campaign/:id/raw" element={<CampaignConsoleRaw />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

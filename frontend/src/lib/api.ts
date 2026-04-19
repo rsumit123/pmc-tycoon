@@ -28,6 +28,7 @@ import type {
   UnlocksResponse,
   LoadoutUpgrade,
   ADBattery,
+  CombatHistoryResponse,
   HangarResponse,
 } from "./types";
 
@@ -246,6 +247,13 @@ export const api = {
   async getADBatteries(campaignId: number): Promise<ADBattery[]> {
     const { data } = await http.get<ADBattery[]>(
       `/api/campaigns/${campaignId}/armory/ad-batteries`,
+    );
+    return data;
+  },
+
+  async getCombatHistory(campaignId: number): Promise<CombatHistoryResponse> {
+    const { data } = await http.get<CombatHistoryResponse>(
+      `/api/campaigns/${campaignId}/combat-history`,
     );
     return data;
   },

@@ -571,6 +571,30 @@ export interface ADBattery {
   installed_quarter: number;
 }
 
+export interface CombatHistoryEntry {
+  id: number;
+  year: number;
+  quarter: number;
+  scenario_id: string;
+  scenario_name: string;
+  ao_name: string;
+  ao_region: string;
+  faction: string;
+  ind_airframes_lost: number;
+  adv_airframes_lost: number;
+  ind_kia: number;
+  adv_kia: number;
+  objective_met: boolean;
+  resolved_at: string | null;
+}
+
+export interface CombatHistoryResponse {
+  total: number;
+  wins: number;
+  losses: number;
+  vignettes: CombatHistoryEntry[];
+}
+
 export interface PendingLoadoutUpgrade {
   weapon_id: string;
   completion_year: number;
