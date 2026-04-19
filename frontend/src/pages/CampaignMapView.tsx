@@ -121,18 +121,23 @@ export function CampaignMapView() {
   const intelContacts = useMemo(() => synthesizeContacts(intelCards), [intelCards]);
 
   // Top-bar commitment summary: sum per-quarter burn from active orders + active R&D programs.
-  const topBarCommitQ = useMemo(() => {
-    if (!campaign) return 0;
+  const { topBarCommitQ, topBarOutstanding } = useMemo(() => {
+    if (!campaign) return { topBarCommitQ: 0, topBarOutstanding: 0 };
     const nowIdx = campaign.current_year * 4 + (campaign.current_quarter - 1);
     let acq = 0;
+    let outstandingTotal = 0;
     for (const o of acquisitions) {
       if (o.cancelled) continue;
       if (o.delivered >= o.quantity) continue;
+      const totalQ = (o.foc_year - o.first_delivery_year) * 4 + (o.foc_quarter - o.first_delivery_quarter) + 1;
+      const perQ = totalQ > 0 ? Math.floor(o.total_cost_cr / totalQ) : 0;
+      // Quarters already paid = delivered/quantity × totalQ (approx).
+      const qPaid = totalQ > 0 ? Math.floor((o.delivered / o.quantity) * totalQ) : 0;
+      const remainingCost = Math.max(0, o.total_cost_cr - qPaid * perQ);
+      outstandingTotal += remainingCost;
       const firstIdx = o.first_delivery_year * 4 + (o.first_delivery_quarter - 1);
       const focIdx = o.foc_year * 4 + (o.foc_quarter - 1);
-      if (nowIdx < firstIdx || nowIdx > focIdx) continue;
-      const totalQ = (o.foc_year - o.first_delivery_year) * 4 + (o.foc_quarter - o.first_delivery_quarter) + 1;
-      if (totalQ > 0) acq += Math.floor(o.total_cost_cr / totalQ);
+      if (nowIdx >= firstIdx && nowIdx <= focIdx) acq += perQ;
     }
     const factors: Record<string, number> = { slow: 0.5, standard: 1.0, accelerated: 1.5 };
     const catById = Object.fromEntries(rdCatalog.map((c) => [c.id, c]));
@@ -143,9 +148,10 @@ export function CampaignMapView() {
       if (!spec) continue;
       rd += Math.floor((spec.base_cost_cr / spec.base_duration_quarters) * (factors[a.funding_level] ?? 1));
     }
-    return acq + rd;
+    return { topBarCommitQ: acq + rd, topBarOutstanding: outstandingTotal };
   }, [campaign, acquisitions, rdActive, rdCatalog]);
   const topBarNetQ = (campaign?.quarterly_grant_cr ?? 0) - topBarCommitQ;
+  const outstandingOrderCount = acquisitions.filter((o) => !o.cancelled && o.delivered < o.quantity).length;
 
   if (!campaign) return <div className="p-6">Loading…</div>;
 
@@ -169,9 +175,11 @@ export function CampaignMapView() {
             <span className={`${topBarNetQ >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
               {topBarNetQ >= 0 ? "+" : ""}₹{topBarNetQ.toLocaleString("en-US")}/q
             </span>
-            <span className="opacity-50 text-[10px]">
-              (grant ₹{(campaign.quarterly_grant_cr ?? 0).toLocaleString("en-US")} − commit ₹{topBarCommitQ.toLocaleString("en-US")})
-            </span>
+            {outstandingOrderCount > 0 && (
+              <span className="opacity-70 text-[10px]" title={`${outstandingOrderCount} active orders`}>
+                📜 ₹{topBarOutstanding.toLocaleString("en-US")} outstanding
+              </span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">

@@ -173,8 +173,26 @@ export function BudgetAllocator({
 
   const reset = () => setAlloc(defaultFromGrant(grantCr));
 
+  // Auto-match: set RD + Acquisition to exactly committed. Leave other buckets alone.
+  const autoMatch = () => {
+    setAlloc((a) => ({
+      ...a,
+      rd: rdCommit.perQ,
+      acquisition: acqCommit.perQ,
+    }));
+  };
+
   return (
     <div className="space-y-4">
+      <details className="bg-slate-900/60 border border-slate-800 rounded-lg px-3 py-2 text-xs">
+        <summary className="cursor-pointer font-semibold">How budget works ▾</summary>
+        <div className="mt-2 space-y-1.5 opacity-80 leading-relaxed">
+          <p><span className="font-semibold">Grant</span> arrives every turn. Any unused grant rolls into <span className="font-semibold">reserves</span> (💰 treasury).</p>
+          <p><span className="font-semibold">R&D / Acquisition</span> buckets should match their committed spend. Over-allocating is wasted — excess does <em>not</em> roll to reserves. Use <span className="font-semibold">Auto-match commitments</span> to set them correctly.</p>
+          <p><span className="font-semibold">O&M / Spares / Infrastructure</span> are consumptive — whatever you allocate is spent this turn.</p>
+          <p>Set program speed on the <span className="font-semibold">R&D</span> tab (slow / standard / accelerated). The Budget R&D bucket only caps total spend — it doesn't change program speed.</p>
+        </div>
+      </details>
       <div className="flex items-baseline justify-between text-sm">
         <div>
           <span className="opacity-60">Quarterly grant</span>{" "}
@@ -187,13 +205,25 @@ export function BudgetAllocator({
             </>
           )}
         </div>
-        <button
-          type="button"
-          onClick={reset}
-          className="text-xs opacity-60 hover:opacity-100 underline"
-        >
-          Reset
-        </button>
+        <div className="flex items-center gap-3">
+          {(rdCommit.perQ > 0 || acqCommit.perQ > 0) && (
+            <button
+              type="button"
+              onClick={autoMatch}
+              className="text-xs text-amber-400 hover:text-amber-300 underline"
+              title="Set R&D and Acquisition buckets to exactly match committed spend"
+            >
+              Auto-match commitments
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={reset}
+            className="text-xs opacity-60 hover:opacity-100 underline"
+          >
+            Reset
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -222,7 +252,12 @@ export function BudgetAllocator({
               <BucketCommitment committed={commit.perQ} lines={commit.lines} />
               {underAllocated && (
                 <p className="text-[10px] text-rose-300">
-                  ⚠ Under-allocated by ₹{(commit.perQ - alloc[key]).toLocaleString("en-US")} cr — {key === "rd" ? "R&D programs will slip" : "deliveries will slip"} this quarter.
+                  ⚠ Under-allocated by ₹{(commit.perQ - alloc[key]).toLocaleString("en-US")} cr — {key === "rd" ? "R&D programs will slip pro-rata" : "deliveries will slip"} this quarter.
+                </p>
+              )}
+              {(key === "rd" || key === "acquisition") && commit.perQ > 0 && alloc[key] > commit.perQ && (
+                <p className="text-[10px] text-amber-400">
+                  ⚠ Over-allocated by ₹{(alloc[key] - commit.perQ).toLocaleString("en-US")} cr — excess is wasted (this bucket doesn't roll to reserves). Lower it or move to O&M/Spares/Infra.
                 </p>
               )}
             </div>

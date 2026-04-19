@@ -17,11 +17,11 @@ describe("BudgetAllocator", () => {
         onCommit={() => {}}
       />,
     );
-    expect(screen.getByText(/R&D/)).toBeInTheDocument();
-    expect(screen.getByText(/Acquisition/)).toBeInTheDocument();
-    expect(screen.getByText(/O&M/)).toBeInTheDocument();
-    expect(screen.getByText(/Spares/)).toBeInTheDocument();
-    expect(screen.getByText(/Infrastructure/)).toBeInTheDocument();
+    expect(screen.getAllByText(/R&D/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Acquisition/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/O&M/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Spares/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Infrastructure/).length).toBeGreaterThan(0);
     expect(screen.getByText(/Total/)).toBeInTheDocument();
     expect(screen.getByText(/Remaining/)).toBeInTheDocument();
   });
