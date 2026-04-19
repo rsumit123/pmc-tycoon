@@ -35,6 +35,7 @@ export function ProcurementHub() {
   const startRd = useCampaignStore((s) => s.startRdProgram);
   const updateRd = useCampaignStore((s) => s.updateRdProgram);
   const createAcquisition = useCampaignStore((s) => s.createAcquisition);
+  const cancelAcquisition = useCampaignStore((s) => s.cancelAcquisition);
   const loading = useCampaignStore((s) => s.loading);
   const error = useCampaignStore((s) => s.error);
 
@@ -120,6 +121,12 @@ export function ProcurementHub() {
             initialAllocation={defaultAllocation}
             onCommit={(alloc) => setBudget(alloc)}
             disabled={loading}
+            activeOrders={acquisitions}
+            platformsById={platformsById}
+            rdActive={rdActive}
+            rdCatalog={rdCatalog}
+            currentYear={campaign.current_year}
+            currentQuarter={campaign.current_quarter}
           />
         )}
         {activeTab === "rd" && (
@@ -140,6 +147,7 @@ export function ProcurementHub() {
               currentYear={campaign.current_year}
               currentQuarter={campaign.current_quarter}
               onSign={(payload) => createAcquisition(payload)}
+              onCancel={(orderId) => cancelAcquisition(orderId)}
               disabled={loading}
               rdCatalog={rdCatalog}
               rdActive={rdActive}

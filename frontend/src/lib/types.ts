@@ -360,6 +360,7 @@ export interface AcquisitionOrder {
   foc_quarter: number;
   delivered: number;
   total_cost_cr: number;
+  cancelled?: boolean;
 }
 
 export interface AcquisitionListResponse {

@@ -47,3 +47,26 @@ def create_acquisition_endpoint(
         raise HTTPException(status_code=404, detail=f"Platform {payload.platform_id} not in registry")
     except InvalidDeliveryWindow as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{campaign_id}/acquisitions/{order_id}/cancel", response_model=AcquisitionRead)
+def cancel_acquisition_endpoint(
+    campaign_id: int,
+    order_id: int,
+    db: Session = Depends(get_db),
+):
+    from app.models.acquisition import AcquisitionOrder
+    campaign = get_campaign(db, campaign_id)
+    if campaign is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    row = db.query(AcquisitionOrder).filter_by(id=order_id, campaign_id=campaign_id).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if row.cancelled:
+        raise HTTPException(status_code=409, detail="Order already cancelled")
+    if row.delivered >= row.quantity:
+        raise HTTPException(status_code=409, detail="Order already completed")
+    row.cancelled = True
+    db.commit()
+    db.refresh(row)
+    return row

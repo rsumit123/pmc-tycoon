@@ -11,6 +11,7 @@ export interface AcquisitionPipelineProps {
   currentYear: number;
   currentQuarter: number;
   onSign: (payload: AcquisitionCreatePayload) => void;
+  onCancel?: (orderId: number) => void;
   disabled?: boolean;
   /** Full R&D catalog — used to detect which platforms are R&D-gated. */
   rdCatalog?: RDProgramSpec[];
@@ -105,29 +106,61 @@ function OfferCard({
 }
 
 function TimelineBar({
-  order, platformName, currentYear, currentQuarter,
+  order, platformName, currentYear, currentQuarter, onCancel,
 }: {
   order: AcquisitionOrder;
   platformName: string;
   currentYear: number;
   currentQuarter: number;
+  onCancel?: (orderId: number) => void;
 }) {
+  const [confirming, setConfirming] = useState(false);
+
   const startFrac = qFraction(order.first_delivery_year, order.first_delivery_quarter);
   const endFrac = qFraction(order.foc_year, order.foc_quarter);
   const widthFrac = Math.max(0.02, endFrac - startFrac);
   const nowFrac = qFraction(currentYear, currentQuarter);
 
+  const totalQ =
+    (order.foc_year - order.first_delivery_year) * 4 +
+    (order.foc_quarter - order.first_delivery_quarter) + 1;
+  const perQ = totalQ > 0 ? Math.floor(order.total_cost_cr / totalQ) : order.total_cost_cr;
+
+  // "Paid so far" = cost associated with already-delivered quarters.
+  // Per-quarter unit-cost × quarters already delivered (approx).
+  const quartersDone = totalQ > 0
+    ? Math.max(0, Math.min(totalQ, Math.floor((order.delivered / order.quantity) * totalQ)))
+    : 0;
+  const paidSoFar = quartersDone * perQ;
+  const remainingCost = Math.max(0, order.total_cost_cr - paidSoFar);
+  const remainingQ = Math.max(0, totalQ - quartersDone);
+
+  const isCompleted = order.delivered >= order.quantity;
+  const cancellable = !order.cancelled && !isCompleted && !!onCancel;
+
   return (
-    <div className="space-y-1">
-      <div className="flex items-baseline justify-between text-xs">
-        <span className="font-semibold">{platformName}</span>
-        <span className="opacity-60">
+    <div className="space-y-1.5 bg-slate-900/40 border border-slate-800 rounded-lg p-3">
+      <div className="flex items-baseline justify-between gap-2 text-xs">
+        <div className="min-w-0 flex-1">
+          <span className="font-semibold">{platformName}</span>
+          {order.cancelled && (
+            <span className="ml-2 text-[10px] bg-rose-900/50 text-rose-200 px-1.5 py-0.5 rounded">CANCELLED</span>
+          )}
+          {!order.cancelled && isCompleted && (
+            <span className="ml-2 text-[10px] bg-emerald-900/50 text-emerald-200 px-1.5 py-0.5 rounded">COMPLETE</span>
+          )}
+        </div>
+        <span className="opacity-70 flex-shrink-0">
           {order.delivered}/{order.quantity}
         </span>
       </div>
       <div className="relative h-3 bg-slate-800 rounded">
         <div
-          className="absolute inset-y-0 bg-amber-700/60 border border-amber-500 rounded"
+          className={`absolute inset-y-0 border rounded ${
+            order.cancelled ? "bg-slate-700/40 border-slate-600"
+              : isCompleted ? "bg-emerald-700/60 border-emerald-500"
+              : "bg-amber-700/60 border-amber-500"
+          }`}
           style={{ left: `${startFrac * 100}%`, width: `${widthFrac * 100}%` }}
         />
         <div
@@ -136,20 +169,57 @@ function TimelineBar({
           aria-label="current quarter"
         />
       </div>
-      <div className="flex justify-between text-[10px] opacity-50">
-        <span>
-          {order.first_delivery_year}-Q{order.first_delivery_quarter}
-        </span>
-        <span>
-          {order.foc_year}-Q{order.foc_quarter}
-        </span>
+      <div className="flex justify-between text-[10px] opacity-60">
+        <span>{order.first_delivery_year}-Q{order.first_delivery_quarter}</span>
+        <span>{order.foc_year}-Q{order.foc_quarter}</span>
       </div>
+      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px] opacity-80 pt-1">
+        <span>Total: <span className="font-mono">₹{order.total_cost_cr.toLocaleString("en-US")}</span> cr</span>
+        <span>Per-quarter: <span className="font-mono">₹{perQ.toLocaleString("en-US")}</span></span>
+        <span>Paid: <span className="font-mono">₹{paidSoFar.toLocaleString("en-US")}</span></span>
+        <span>Remaining: <span className="font-mono">₹{remainingCost.toLocaleString("en-US")}</span></span>
+      </div>
+
+      {cancellable && !confirming && (
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="text-[11px] text-rose-300 hover:text-rose-200 underline mt-1"
+        >Cancel order</button>
+      )}
+
+      {cancellable && confirming && (
+        <div className="border border-rose-800 rounded p-2 bg-rose-900/20 text-[11px] space-y-2 mt-1">
+          <div className="text-rose-200">
+            Cancelling stops all future deliveries.
+            <strong className="block mt-1">
+              You keep {order.delivered} delivered airframe{order.delivered === 1 ? "" : "s"}.
+              Remaining {order.quantity - order.delivered} airframes are forfeited.
+            </strong>
+            <span className="block mt-1">
+              Saves ~₹{remainingCost.toLocaleString("en-US")} cr over {remainingQ} quarter{remainingQ === 1 ? "" : "s"} on the Acquisitions bucket.
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { onCancel?.(order.id); setConfirming(false); }}
+              className="text-xs px-2 py-1 rounded bg-rose-700 hover:bg-rose-600 text-white"
+            >Confirm cancel</button>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              className="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700"
+            >Keep order</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export function AcquisitionPipeline({
-  platforms, orders, currentYear, currentQuarter, onSign, disabled,
+  platforms, orders, currentYear, currentQuarter, onSign, onCancel, disabled,
   rdCatalog = [], rdActive = [],
 }: AcquisitionPipelineProps) {
   const byId = Object.fromEntries(platforms.map((p) => [p.id, p]));
@@ -216,6 +286,7 @@ export function AcquisitionPipeline({
                     platformName={byId[o.platform_id]?.name ?? o.platform_id}
                     currentYear={currentYear}
                     currentQuarter={currentQuarter}
+                    onCancel={onCancel}
                   />
                 ))}
               </div>

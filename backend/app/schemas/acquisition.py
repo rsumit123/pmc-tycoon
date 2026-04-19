@@ -23,6 +23,7 @@ class AcquisitionRead(BaseModel):
     foc_quarter: int
     delivered: int
     total_cost_cr: int
+    cancelled: bool = False
 
     model_config = {"from_attributes": True}
 

@@ -236,6 +236,13 @@ export const api = {
     await http.delete(`/api/campaigns/${campaignId}`);
   },
 
+  async cancelAcquisition(campaignId: number, orderId: number): Promise<AcquisitionOrder> {
+    const { data } = await http.post<AcquisitionOrder>(
+      `/api/campaigns/${campaignId}/acquisitions/${orderId}/cancel`,
+    );
+    return data;
+  },
+
   importCampaign: (data: Record<string, unknown>) =>
     http.post<{ id: number }>("/api/campaigns/import", data).then((r) => r.data),
 

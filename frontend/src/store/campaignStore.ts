@@ -53,6 +53,7 @@ interface CampaignState {
   startRdProgram: (programId: string, fundingLevel: RDFundingLevel) => Promise<void>;
   updateRdProgram: (programId: string, payload: RDUpdatePayload) => Promise<void>;
   createAcquisition: (payload: AcquisitionCreatePayload) => Promise<void>;
+  cancelAcquisition: (orderId: number) => Promise<void>;
   loadPendingVignettes: (campaignId: number) => Promise<void>;
   loadVignette: (campaignId: number, vignetteId: number) => Promise<Vignette | null>;
   commitVignette: (campaignId: number, vignetteId: number, payload: VignetteCommitPayload) => Promise<Vignette>;
@@ -294,6 +295,31 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     } catch (e) {
       set({ error: (e as Error).message, loading: false });
       get().pushToast("error", "Order failed");
+      throw e;
+    }
+  },
+
+  cancelAcquisition: async (orderId: number) => {
+    const current = get().campaign;
+    if (!current) return;
+    const order = get().acquisitions.find((o) => o.id === orderId);
+    try {
+      await api.cancelAcquisition(current.id, orderId);
+      await get().loadAcquisitions(current.id);
+      if (order) {
+        const plat = get().platformsById[order.platform_id];
+        const name = plat?.name ?? order.platform_id;
+        const remaining = Math.max(0, order.quantity - order.delivered);
+        get().pushToast(
+          "info",
+          `Order cancelled: ${name} — ${order.delivered} delivered kept, ${remaining} undelivered airframes cancelled. No further bucket drain.`,
+          5000,
+        );
+      } else {
+        get().pushToast("info", "Order cancelled");
+      }
+    } catch (e) {
+      get().pushToast("error", "Cancel failed");
       throw e;
     }
   },

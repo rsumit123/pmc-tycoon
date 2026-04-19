@@ -35,6 +35,8 @@ def tick_acquisitions(
     now = _quarter_index(year, quarter)
 
     for order in out:
+        if order.get("cancelled"):
+            continue
         first_idx = _quarter_index(order["first_delivery_year"], order["first_delivery_quarter"])
         foc_idx = _quarter_index(order["foc_year"], order["foc_quarter"])
         if now < first_idx or now > foc_idx:

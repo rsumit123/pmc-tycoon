@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, ForeignKey
+from sqlalchemy import String, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -19,3 +19,4 @@ class AcquisitionOrder(Base):
     foc_quarter: Mapped[int] = mapped_column(Integer)
     delivered: Mapped[int] = mapped_column(Integer, default=0)
     total_cost_cr: Mapped[int] = mapped_column(Integer, default=0)
+    cancelled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

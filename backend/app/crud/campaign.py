@@ -93,6 +93,7 @@ def _serialize_order(order: AcquisitionOrder) -> dict:
         "foc_quarter": order.foc_quarter,
         "delivered": order.delivered,
         "total_cost_cr": order.total_cost_cr,
+        "cancelled": bool(getattr(order, "cancelled", False)),
     }
 
 

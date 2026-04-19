@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import type { BudgetAllocation } from "../../lib/types";
+import type {
+  BudgetAllocation, AcquisitionOrder, Platform, RDProgramSpec, RDProgramState, RDFundingLevel,
+} from "../../lib/types";
 import { Stepper } from "../primitives/Stepper";
 import { CommitHoldButton } from "../primitives/CommitHoldButton";
 
@@ -9,6 +11,14 @@ export interface BudgetAllocatorProps {
   initialAllocation: BudgetAllocation;
   onCommit: (allocation: BudgetAllocation) => void;
   disabled?: boolean;
+  /** Active acquisitions drive the 'committed' floor on the acquisition bucket. */
+  activeOrders?: AcquisitionOrder[];
+  platformsById?: Record<string, Platform>;
+  /** Active R&D programs + catalog drive the 'committed' floor on the rd bucket. */
+  rdActive?: RDProgramState[];
+  rdCatalog?: RDProgramSpec[];
+  currentYear?: number;
+  currentQuarter?: number;
 }
 
 const BUCKET_LABELS: Record<keyof BudgetAllocation, string> = {
@@ -43,8 +53,92 @@ function defaultFromGrant(grantCr: number): BudgetAllocation {
   };
 }
 
+const RD_FACTORS: Record<RDFundingLevel, number> = {
+  slow: 0.5, standard: 1.0, accelerated: 1.5,
+};
+
+function acquisitionCommitments(
+  orders: AcquisitionOrder[],
+  platformsById: Record<string, Platform>,
+  currentYear: number,
+  currentQuarter: number,
+): { perQ: number; lines: { label: string; perQ: number }[] } {
+  const nowIdx = currentYear * 4 + (currentQuarter - 1);
+  const lines: { label: string; perQ: number }[] = [];
+  let total = 0;
+  for (const o of orders) {
+    if (o.cancelled) continue;
+    if (o.delivered >= o.quantity) continue;
+    const firstIdx = o.first_delivery_year * 4 + (o.first_delivery_quarter - 1);
+    const focIdx = o.foc_year * 4 + (o.foc_quarter - 1);
+    // Only counts this quarter if we're within the delivery window
+    if (nowIdx < firstIdx || nowIdx > focIdx) continue;
+    const totalQ = (o.foc_year - o.first_delivery_year) * 4 + (o.foc_quarter - o.first_delivery_quarter) + 1;
+    const perQ = totalQ > 0 ? Math.floor(o.total_cost_cr / totalQ) : 0;
+    total += perQ;
+    const name = platformsById[o.platform_id]?.name ?? o.platform_id;
+    lines.push({ label: `${o.quantity}× ${name}`, perQ });
+  }
+  return { perQ: total, lines };
+}
+
+function rdCommitments(
+  active: RDProgramState[],
+  catalog: RDProgramSpec[],
+): { perQ: number; lines: { label: string; perQ: number }[] } {
+  const catalogById = Object.fromEntries(catalog.map((c) => [c.id, c]));
+  const lines: { label: string; perQ: number }[] = [];
+  let total = 0;
+  for (const a of active) {
+    if (a.status !== "active") continue;
+    const spec = catalogById[a.program_id];
+    if (!spec) continue;
+    const factor = RD_FACTORS[a.funding_level] ?? 1.0;
+    const perQ = Math.floor((spec.base_cost_cr / spec.base_duration_quarters) * factor);
+    total += perQ;
+    lines.push({ label: `${spec.name} (${a.funding_level})`, perQ });
+  }
+  return { perQ: total, lines };
+}
+
+function BucketCommitment({
+  committed, lines,
+}: { committed: number; lines: { label: string; perQ: number }[] }) {
+  const [expanded, setExpanded] = useState(false);
+  if (committed === 0 || lines.length === 0) {
+    return (
+      <p className="text-[10px] opacity-50 italic">
+        No committed spend this quarter.
+      </p>
+    );
+  }
+  return (
+    <div className="text-[10px] space-y-1">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="text-left opacity-70 hover:opacity-100 underline"
+      >
+        Committed: ₹{committed.toLocaleString("en-US")}/q ({lines.length} item{lines.length === 1 ? "" : "s"}) {expanded ? "▲" : "▼"}
+      </button>
+      {expanded && (
+        <ul className="pl-2 space-y-0.5 opacity-70">
+          {lines.map((l, i) => (
+            <li key={i} className="flex justify-between gap-2">
+              <span className="truncate">{l.label}</span>
+              <span className="font-mono flex-shrink-0">₹{l.perQ.toLocaleString("en-US")}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export function BudgetAllocator({
   grantCr, treasuryCr, initialAllocation, onCommit, disabled = false,
+  activeOrders = [], platformsById = {}, rdActive = [], rdCatalog = [],
+  currentYear = 2026, currentQuarter = 2,
 }: BudgetAllocatorProps) {
   const [alloc, setAlloc] = useState<BudgetAllocation>(initialAllocation);
 
@@ -55,6 +149,23 @@ export function BudgetAllocator({
   );
   const remaining = available - total;
   const overspent = remaining < 0;
+
+  const acqCommit = useMemo(
+    () => acquisitionCommitments(activeOrders, platformsById, currentYear, currentQuarter),
+    [activeOrders, platformsById, currentYear, currentQuarter],
+  );
+  const rdCommit = useMemo(
+    () => rdCommitments(rdActive, rdCatalog),
+    [rdActive, rdCatalog],
+  );
+
+  const commitmentByBucket: Record<keyof BudgetAllocation, { perQ: number; lines: { label: string; perQ: number }[] }> = {
+    rd: rdCommit,
+    acquisition: acqCommit,
+    om: { perQ: 0, lines: [] },
+    spares: { perQ: 0, lines: [] },
+    infrastructure: { perQ: 0, lines: [] },
+  };
 
   const setBucket = (key: keyof BudgetAllocation, next: number) => {
     setAlloc((a) => ({ ...a, [key]: Math.max(0, next) }));
@@ -86,24 +197,37 @@ export function BudgetAllocator({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {(Object.keys(BUCKET_LABELS) as Array<keyof BudgetAllocation>).map((key) => (
-          <div key={key} className="space-y-2">
-            <div>
-              <div className="text-sm font-semibold">{BUCKET_LABELS[key]}</div>
-              <div className="text-xs opacity-60">{BUCKET_HELP[key]}</div>
+        {(Object.keys(BUCKET_LABELS) as Array<keyof BudgetAllocation>).map((key) => {
+          const commit = commitmentByBucket[key];
+          const underAllocated = commit.perQ > 0 && alloc[key] < commit.perQ;
+          return (
+            <div key={key} className={[
+              "space-y-2 rounded-lg p-3 border",
+              underAllocated ? "border-rose-800 bg-rose-950/20" : "border-slate-800 bg-slate-900/30",
+            ].join(" ")}>
+              <div>
+                <div className="text-sm font-semibold">{BUCKET_LABELS[key]}</div>
+                <div className="text-xs opacity-60">{BUCKET_HELP[key]}</div>
+              </div>
+              <Stepper
+                value={alloc[key]}
+                onChange={(v) => setBucket(key, v)}
+                step={STEP_CR}
+                min={0}
+                max={available}
+                formatValue={(v) => v.toLocaleString("en-US")}
+                disabled={disabled}
+                ariaLabel={`${BUCKET_LABELS[key]} allocation`}
+              />
+              <BucketCommitment committed={commit.perQ} lines={commit.lines} />
+              {underAllocated && (
+                <p className="text-[10px] text-rose-300">
+                  ⚠ Under-allocated by ₹{(commit.perQ - alloc[key]).toLocaleString("en-US")} cr — {key === "rd" ? "R&D programs will slip" : "deliveries will slip"} this quarter.
+                </p>
+              )}
             </div>
-            <Stepper
-              value={alloc[key]}
-              onChange={(v) => setBucket(key, v)}
-              step={STEP_CR}
-              min={0}
-              max={available}
-              formatValue={(v) => v.toLocaleString("en-US")}
-              disabled={disabled}
-              ariaLabel={`${BUCKET_LABELS[key]} allocation`}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="border-t border-slate-800 pt-3 flex items-center justify-between text-sm">
