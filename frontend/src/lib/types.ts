@@ -179,6 +179,8 @@ export interface VignetteOutcome {
   objective_met: boolean;
   roe: ROE;
   support: { awacs: boolean; tanker: boolean; sead_package: boolean };
+  munitions_expended?: MunitionsExpendedEntry[];
+  munitions_cost_total_cr?: number;
 }
 
 export interface VignetteCommitSquadron {
@@ -577,6 +579,25 @@ export interface ADBattery {
   installed_quarter: number;
 }
 
+export interface WeaponMeta {
+  id: string;
+  nez_km: number;
+  max_range_km: number;
+  unit_cost_cr: number;
+}
+
+export interface WeaponCatalogResponse {
+  weapons: Record<string, WeaponMeta>;
+}
+
+export interface MunitionsExpendedEntry {
+  weapon: string;
+  fired: number;
+  hits: number;
+  unit_cost_cr: number;
+  total_cost_cr: number;
+}
+
 export interface CombatHistoryEntry {
   id: number;
   year: number;
@@ -592,6 +613,7 @@ export interface CombatHistoryEntry {
   adv_kia: number;
   objective_met: boolean;
   resolved_at: string | null;
+  munitions_cost_cr?: number;
 }
 
 export interface CombatHistoryResponse {

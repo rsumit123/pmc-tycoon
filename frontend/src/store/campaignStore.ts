@@ -22,6 +22,7 @@ interface CampaignState {
   campaign: Campaign | null;
   bases: BaseMarker[];
   platformsById: Record<string, Platform>;
+  weaponsById: Record<string, import("../lib/types").WeaponMeta>;
   rdCatalog: RDProgramSpec[];
   rdActive: RDProgramState[];
   acquisitions: AcquisitionOrder[];
@@ -49,6 +50,7 @@ interface CampaignState {
   advanceTurn: () => Promise<void>;
   loadBases: (id: number) => Promise<void>;
   loadPlatforms: () => Promise<void>;
+  loadWeapons: () => Promise<void>;
   loadRdCatalog: () => Promise<void>;
   loadRdActive: (id: number) => Promise<void>;
   loadAcquisitions: (id: number) => Promise<void>;
@@ -87,6 +89,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   campaign: null,
   bases: [],
   platformsById: {},
+  weaponsById: {},
   rdCatalog: [],
   rdActive: [],
   acquisitions: [],
@@ -181,6 +184,16 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       const { platforms } = await api.getPlatforms();
       const byId = Object.fromEntries(platforms.map((p) => [p.id, p]));
       set({ platformsById: byId });
+    } catch (e) {
+      set({ error: (e as Error).message });
+    }
+  },
+
+  loadWeapons: async () => {
+    if (Object.keys(get().weaponsById).length > 0) return;
+    try {
+      const { weapons } = await api.getWeapons();
+      set({ weaponsById: weapons });
     } catch (e) {
       set({ error: (e as Error).message });
     }
@@ -575,7 +588,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   },
 
   reset: () => set({
-    campaign: null, bases: [], platformsById: {},
+    campaign: null, bases: [], platformsById: {}, weaponsById: {},
     rdCatalog: [], rdActive: [], acquisitions: [],
     pendingVignettes: [], vignetteById: {},
     intelCards: [], intelFilter: null, narrativeCache: {},

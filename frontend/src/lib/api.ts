@@ -30,6 +30,7 @@ import type {
   ADBattery,
   CombatHistoryResponse,
   HangarResponse,
+  WeaponCatalogResponse,
 } from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
@@ -54,6 +55,11 @@ export const api = {
 
   async getPlatforms(): Promise<PlatformListResponse> {
     const { data } = await http.get<PlatformListResponse>("/api/content/platforms");
+    return data;
+  },
+
+  async getWeapons(): Promise<WeaponCatalogResponse> {
+    const { data } = await http.get<WeaponCatalogResponse>("/api/content/weapons");
     return data;
   },
 

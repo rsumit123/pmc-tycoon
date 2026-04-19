@@ -29,6 +29,7 @@ class CombatHistoryEntry(BaseModel):
     adv_kia: int
     objective_met: bool
     resolved_at: str | None
+    munitions_cost_cr: int = 0
 
 
 class CombatHistoryResponse(BaseModel):
@@ -78,6 +79,7 @@ def combat_history_endpoint(campaign_id: int, db: Session = Depends(get_db)):
             adv_kia=int(oc.get("adv_kia", 0)),
             objective_met=met,
             resolved_at=v.resolved_at.isoformat() if v.resolved_at else None,
+            munitions_cost_cr=int(oc.get("munitions_cost_total_cr", 0) or 0),
         ))
     return CombatHistoryResponse(
         total=len(entries), wins=wins, losses=losses, vignettes=entries,

@@ -21,6 +21,8 @@ export function OpsRoom() {
   const loading = useCampaignStore((s) => s.loading);
   const bases = useCampaignStore((s) => s.bases);
   const loadBases = useCampaignStore((s) => s.loadBases);
+  const loadPlatforms = useCampaignStore((s) => s.loadPlatforms);
+  const loadWeapons = useCampaignStore((s) => s.loadWeapons);
 
   const [vignette, setVignette] = useState<Vignette | null>(null);
   const [payload, setPayload] = useState<VignetteCommitPayload>({
@@ -38,6 +40,11 @@ export function OpsRoom() {
   useEffect(() => {
     if (campaign) loadBases(campaign.id);
   }, [campaign, loadBases]);
+
+  useEffect(() => {
+    loadPlatforms();
+    loadWeapons();
+  }, [loadPlatforms, loadWeapons]);
 
   useEffect(() => {
     if (!Number.isFinite(vignetteId)) return;

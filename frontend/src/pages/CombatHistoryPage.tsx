@@ -164,6 +164,9 @@ export function CombatHistoryPage() {
                               {v.objective_met ? "✓ Objective met" : "✗ Objective failed"}
                             </span>
                             <span className="opacity-70"> · IAF {v.ind_airframes_lost} / ADV {v.adv_airframes_lost}</span>
+                            {!!v.munitions_cost_cr && (
+                              <span className="opacity-70"> · 💸 ₹{v.munitions_cost_cr.toLocaleString("en-US")} cr</span>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -35,6 +35,8 @@ WVR_PK_NON_STEALTH = 0.35
 WVR_PK_STEALTH = 0.50
 AWACS_IND_PK_BONUS = 0.05
 WEAPONS_TIGHT_PK_PENALTY = 0.05
+WEAPONS_TIGHT_FIRE_RATE = 0.6   # weapons_tight: attackers hold fire ~40% of the time
+WEAPONS_TIGHT_PK_BONUS = 0.03   # pickier shots → slightly higher hit rate when they do fire
 EW_MODIFIER_4_5_GEN = 0.05
 EW_MODIFIER_5_GEN = 0.10
 
@@ -109,9 +111,13 @@ def _resolve_round(
     pk_bonus: float,
     trace: list[dict],
     t_min: int,
+    fire_rate: float = 1.0,
 ) -> tuple[list[dict], list[dict]]:
     """Each attacker fires one weapon-of-kind at a random surviving defender.
     Returns (attackers_unchanged, new_defenders) — defenders with hits removed.
+
+    fire_rate: probability that a given attacker actually fires this round.
+    Used by weapons_tight ROE to throttle launches (realism + munitions cost).
     """
     if not attackers or not defenders:
         return attackers, defenders
@@ -123,6 +129,8 @@ def _resolve_round(
         weapon = _best_weapon(a["loadout"], weapon_kind)
         if weapon is None:
             continue
+        if fire_rate < 1.0 and rng.random() >= fire_rate:
+            continue  # ROE: holding fire this pass
         weights = [TARGET_PRIORITY.get(s["rcs_band"], 1.0) for s in survivors]
         target = rng.choices(survivors, weights=weights, k=1)[0]
         defender_gen_ew = _ew_for_gen(target["generation"])
@@ -244,8 +252,12 @@ def resolve(
     # Support modifiers
     ind_pk_bonus = (AWACS_IND_PK_BONUS if awacs else 0.0)
     adv_pk_bonus = 0.0
+    # ROE — weapons_tight throttles launches (saves munitions) and slightly
+    # raises PK on the shots that do fire (pickier targeting).
+    ind_fire_rate = 1.0
     if roe == "weapons_tight":
-        ind_pk_bonus -= WEAPONS_TIGHT_PK_PENALTY
+        ind_fire_rate = WEAPONS_TIGHT_FIRE_RATE
+        ind_pk_bonus += WEAPONS_TIGHT_PK_BONUS
 
     if roe == "visual_id_required":
         trace.append({"t_min": 3, "kind": "vid_skip_bvr",
@@ -264,17 +276,19 @@ def resolve(
         first_bonus, second_bonus = (
             (ind_pk_bonus, adv_pk_bonus) if det == "ind" else (adv_pk_bonus, ind_pk_bonus)
         )
+        first_rate = ind_fire_rate if first_label == "ind" else 1.0
+        second_rate = ind_fire_rate if second_label == "ind" else 1.0
         # First mover attacks second
         _, second = _resolve_round(
             first, second, distance_km=120, weapon_kind="bvr",
             side_label=first_label, rng=rng, pk_bonus=first_bonus,
-            trace=trace, t_min=3,
+            trace=trace, t_min=3, fire_rate=first_rate,
         )
         # Second mover returns fire if still alive
         _, first = _resolve_round(
             second, first, distance_km=120, weapon_kind="bvr",
             side_label=second_label, rng=rng, pk_bonus=second_bonus,
-            trace=trace, t_min=4,
+            trace=trace, t_min=4, fire_rate=second_rate,
         )
         if det == "ind":
             ind_force, adv_force = first, second
@@ -285,7 +299,7 @@ def resolve(
         _, adv_force = _resolve_round(
             ind_force, adv_force, distance_km=50, weapon_kind="bvr",
             side_label="ind", rng=rng, pk_bonus=ind_pk_bonus,
-            trace=trace, t_min=6,
+            trace=trace, t_min=6, fire_rate=ind_fire_rate,
         )
         _, ind_force = _resolve_round(
             adv_force, ind_force, distance_km=50, weapon_kind="bvr",
@@ -298,7 +312,7 @@ def resolve(
         _, adv_force = _resolve_round(
             ind_force, adv_force, distance_km=15, weapon_kind="wvr",
             side_label="ind", rng=rng, pk_bonus=ind_pk_bonus,
-            trace=trace, t_min=9,
+            trace=trace, t_min=9, fire_rate=ind_fire_rate,
         )
         _, ind_force = _resolve_round(
             adv_force, ind_force, distance_km=15, weapon_kind="wvr",
@@ -316,6 +330,34 @@ def resolve(
         adv_kia >= threshold.get("adv_kills_min", 0)
         and ind_kia <= threshold.get("ind_losses_max", initial_ind + 1)
     )
+    # Munitions expended — tally IND launches + hits per weapon, price from
+    # WEAPONS table. Adversary is abstracted, we only bill the player.
+    ind_launches: dict[str, int] = {}
+    ind_hits: dict[str, int] = {}
+    for ev in trace:
+        k = ev.get("kind")
+        if ev.get("side") != "ind":
+            continue
+        if k in ("bvr_launch", "wvr_launch"):
+            ind_launches[ev["weapon"]] = ind_launches.get(ev["weapon"], 0) + 1
+        elif k == "kill":
+            w = ev.get("weapon")
+            if w:
+                ind_hits[w] = ind_hits.get(w, 0) + 1
+    munitions_expended: list[dict] = []
+    total_cost = 0
+    for weapon, count in sorted(ind_launches.items(), key=lambda kv: -kv[1]):
+        unit_cost = WEAPONS.get(weapon, {}).get("unit_cost_cr", 0)
+        line_total = count * unit_cost
+        total_cost += line_total
+        munitions_expended.append({
+            "weapon": weapon,
+            "fired": count,
+            "hits": ind_hits.get(weapon, 0),
+            "unit_cost_cr": unit_cost,
+            "total_cost_cr": line_total,
+        })
+
     outcome = {
         "ind_kia": ind_kia,
         "adv_kia": adv_kia,
@@ -324,6 +366,8 @@ def resolve(
         "objective_met": objective_met,
         "roe": roe,
         "support": {"awacs": awacs, "tanker": tanker, "sead_package": sead},
+        "munitions_expended": munitions_expended,
+        "munitions_cost_total_cr": total_cost,
     }
     trace.append({"t_min": 12, "kind": "egress",
                   "ind_survivors": len(ind_force), "adv_survivors": len(adv_force)})

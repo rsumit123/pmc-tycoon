@@ -7,6 +7,7 @@ import { CombatStats } from "../components/vignette/CombatStats";
 import { TacticalReplay } from "../components/vignette/TacticalReplay";
 import { HeroOutcomeBanner } from "../components/vignette/HeroOutcomeBanner";
 import { ForceExchangeViz } from "../components/vignette/ForceExchangeViz";
+import { MunitionsExpended } from "../components/vignette/MunitionsExpended";
 import type { Vignette, VignetteOutcome } from "../lib/types";
 
 export function VignetteAAR() {
@@ -56,6 +57,7 @@ export function VignetteAAR() {
         {outcome && vignette.committed_force && (
           <ForceExchangeViz outcome={outcome} indCommitted={indCommitted} advCommitted={advCommitted} />
         )}
+        {outcome && <MunitionsExpended outcome={outcome} />}
         {vignette.event_trace && vignette.event_trace.length > 0 && (
           <CombatStats eventTrace={vignette.event_trace} />
         )}

@@ -144,6 +144,22 @@ def commit_vignette(
     )
     vignette.resolved_at = datetime.now(UTC)
 
+    # Deduct munitions expenditure from treasury.
+    munitions_cost = int(outcome.get("munitions_cost_total_cr", 0) or 0)
+    if munitions_cost > 0:
+        campaign.budget_cr = (campaign.budget_cr or 0) - munitions_cost
+        db.add(CampaignEvent(
+            campaign_id=campaign.id,
+            year=vignette.year,
+            quarter=vignette.quarter,
+            event_type="munitions_cost",
+            payload={
+                "vignette_id": vignette.id,
+                "total_cost_cr": munitions_cost,
+                "munitions": outcome.get("munitions_expended", []),
+            },
+        ))
+
     db.add(CampaignEvent(
         campaign_id=campaign.id,
         year=vignette.year,

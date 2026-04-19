@@ -56,6 +56,8 @@ CANONICAL_EVENT_TYPES = {
     "ace_awarded",
     # loadout upgrade queue (Plan 15)
     "loadout_upgrade_complete",
+    # per-vignette munitions expenditure
+    "munitions_cost",
 }
 
 

@@ -62,6 +62,20 @@ def list_rd_programs_endpoint():
     return RDProgramSpecListResponse(programs=out)
 
 
+@router.get("/weapons")
+def list_weapons_endpoint():
+    from app.engine.vignette.bvr import WEAPONS
+    out: dict[str, dict] = {}
+    for wid, spec in WEAPONS.items():
+        out[wid] = {
+            "id": wid,
+            "nez_km": spec.get("nez_km"),
+            "max_range_km": spec.get("max_range_km"),
+            "unit_cost_cr": spec.get("unit_cost_cr", 0),
+        }
+    return {"weapons": out}
+
+
 @router.get("/objectives", response_model=ObjectiveListResponse)
 def list_objectives_endpoint():
     registry = objectives_reg()

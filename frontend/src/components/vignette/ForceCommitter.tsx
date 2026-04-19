@@ -57,6 +57,7 @@ function estimateAdvTotal(planning: PlanningState): number {
 
 export function ForceCommitter({ planning, value, onChange }: ForceCommitterProps) {
   const platformsById = useCampaignStore((s) => s.platformsById);
+  const weaponsById = useCampaignStore((s) => s.weaponsById);
   const [showOutOfReach, setShowOutOfReach] = useState(false);
   const stealthAdversary = useMemo(
     () => adversaryHasStealth(planning, platformsById),
@@ -201,10 +202,24 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
                       {badge.label}
                     </span>
                   </div>
-                  <div className="text-[11px] opacity-80 truncate mt-0.5">
+                  <div className="text-[11px] opacity-80 mt-0.5">
                     ✈ <span className="font-semibold">{sq.platform_id.replace(/_/g, " ").toUpperCase()}</span>
                     {sq.loadout.length > 0 && (
-                      <span className="opacity-70"> · {sq.loadout.join(" · ")}</span>
+                      <span className="opacity-70">
+                        {" · "}
+                        {sq.loadout.map((w, i) => {
+                          const cost = weaponsById[w]?.unit_cost_cr;
+                          return (
+                            <span key={`${w}-${i}`}>
+                              {i > 0 && " · "}
+                              {w}
+                              {cost != null && (
+                                <span className="opacity-60"> ₹{cost}</span>
+                              )}
+                            </span>
+                          );
+                        })}
+                      </span>
                     )}
                   </div>
                   <div className="text-[10px] opacity-60 truncate mt-0.5">
