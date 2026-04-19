@@ -143,6 +143,10 @@ export function CampaignMapView() {
           >
             Proc
           </Link>
+          <Link
+            to={`/campaign/${campaign.id}/hangar`}
+            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs rounded px-2 py-1"
+          >Hangar</Link>
           <button
             onClick={() => setShowMenu(!showMenu)}
             className="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 sm:hidden"
@@ -186,6 +190,10 @@ export function CampaignMapView() {
       </header>
       {showMenu && (
         <div className="flex flex-wrap gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800 sm:hidden">
+          <Link
+            to={`/campaign/${campaign.id}/hangar`}
+            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs rounded px-2 py-1"
+          >Hangar</Link>
           <Link to={`/campaign/${campaign.id}/raw`} className="text-xs opacity-60 hover:opacity-100 underline">raw</Link>
           <ThemeToggle />
           <button

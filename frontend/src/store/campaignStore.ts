@@ -12,6 +12,7 @@ import type {
   TurnReportResponse,
   Toast,
   ToastVariant,
+  HangarResponse,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -32,6 +33,7 @@ interface CampaignState {
   campaignList: CampaignListItem[];
   objectivesCatalog: ObjectiveSpec[];
   turnReport: TurnReportResponse | null;
+  hangar: HangarResponse | null;
   toasts: Toast[];
   rdLoading: Record<string, boolean>;
   loading: boolean;
@@ -65,6 +67,7 @@ interface CampaignState {
   loadCampaignList: () => Promise<void>;
   loadObjectivesCatalog: () => Promise<void>;
   loadTurnReport: (campaignId: number, year: number, quarter: number) => Promise<void>;
+  loadHangar: (campaignId: number) => Promise<void>;
   reset: () => void;
 }
 
@@ -85,6 +88,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   campaignList: [],
   objectivesCatalog: [],
   turnReport: null,
+  hangar: null,
   toasts: [],
   rdLoading: {},
   loading: false,
@@ -408,6 +412,15 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     set({ turnReport: r });
   },
 
+  loadHangar: async (campaignId: number) => {
+    try {
+      const r = await api.getHangar(campaignId);
+      set({ hangar: r });
+    } catch {
+      get().pushToast("error", "Failed to load hangar");
+    }
+  },
+
   reset: () => set({
     campaign: null, bases: [], platformsById: {},
     rdCatalog: [], rdActive: [], acquisitions: [],
@@ -416,6 +429,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     campaignSummary: null, yearRecapToast: null,
     campaignList: [], objectivesCatalog: [],
     turnReport: null,
+    hangar: null,
     toasts: [], rdLoading: {},
     loading: false, error: null,
   }),

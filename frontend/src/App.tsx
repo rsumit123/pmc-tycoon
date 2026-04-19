@@ -8,6 +8,7 @@ import { OpsRoom } from "./pages/OpsRoom";
 import { VignetteAAR } from "./pages/VignetteAAR";
 import { DefenseWhitePaper } from "./pages/DefenseWhitePaper";
 import { TurnReport } from "./pages/TurnReport";
+import { HangarPage } from "./pages/HangarPage";
 import { ToastStack } from "./components/primitives/ToastStack";
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/campaign/:id/vignette/:vid/aar" element={<VignetteAAR />} />
         <Route path="/campaign/:id/white-paper" element={<DefenseWhitePaper />} />
         <Route path="/campaign/:id/turn-report/:year/:quarter" element={<TurnReport />} />
+        <Route path="/campaign/:id/hangar" element={<HangarPage />} />
         <Route path="/campaign/:id/raw" element={<CampaignConsoleRaw />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
