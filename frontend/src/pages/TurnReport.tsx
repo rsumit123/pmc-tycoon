@@ -5,6 +5,7 @@ import { RDProgressCard } from "../components/turnreport/RDProgressCard";
 import { AdversaryShiftCard } from "../components/turnreport/AdversaryShiftCard";
 import { IntelCardPreview } from "../components/turnreport/IntelCardPreview";
 import { DeliveryAssignmentStep } from "../components/turnreport/DeliveryAssignmentStep";
+import { UnlockBanner } from "../components/turnreport/UnlockBanner";
 
 export function TurnReport() {
   const { id, year, quarter } = useParams<{ id: string; year: string; quarter: string }>();
@@ -48,7 +49,7 @@ export function TurnReport() {
       content: report.rd_milestones.length > 0 ? (
         <div className="space-y-2">
           {report.rd_milestones.map((m, i) => (
-            <RDProgressCard key={i} milestone={m} />
+            <RDProgressCard key={i} milestone={m} campaignId={campaignId} />
           ))}
         </div>
       ) : null,
@@ -96,6 +97,7 @@ export function TurnReport() {
       </header>
 
       <main className="p-4 max-w-2xl mx-auto space-y-5 pb-20">
+        <UnlockBanner campaignId={campaignId} completions={report.rd_milestones} />
         {report.vignette_fired && (
           <section className="border border-red-800 rounded-lg p-4 bg-red-950/30">
             <h2 className="text-sm font-bold text-red-300 mb-1">⚠ Vignette Fired</h2>
