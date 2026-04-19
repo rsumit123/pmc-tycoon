@@ -29,6 +29,7 @@ from __future__ import annotations
 AWACS_WEIGHT = 0.25
 INTEL_WEIGHT = 0.50
 STEALTH_PENALTY = 0.35
+ISR_WEIGHT = 0.15
 
 
 def _clamp(x: float, lo: float = 0.0, hi: float = 1.0) -> float:
@@ -39,6 +40,7 @@ def score_intel_quality(
     awacs_covering_count: int,
     recent_intel_confidences: list[float],
     adversary_stealth_fraction: float,
+    isr_drones_covering_count: int = 0,
 ) -> dict:
     awacs_mod = min(1.0, awacs_covering_count * 0.5) * AWACS_WEIGHT
     intel_mod = (
@@ -46,9 +48,10 @@ def score_intel_quality(
         if recent_intel_confidences else 0.0
     ) * INTEL_WEIGHT
     stealth_mod = -adversary_stealth_fraction * STEALTH_PENALTY
+    isr_mod = min(1.0, isr_drones_covering_count * 0.5) * ISR_WEIGHT
 
     base = 0.15  # baseline ambient SIGINT/OSINT
-    raw = base + awacs_mod + intel_mod + stealth_mod
+    raw = base + awacs_mod + intel_mod + stealth_mod + isr_mod
     score = _clamp(raw)
 
     if score < 0.30:
@@ -67,5 +70,6 @@ def score_intel_quality(
             "awacs": round(awacs_mod, 3),
             "intel": round(intel_mod, 3),
             "stealth_penalty": round(stealth_mod, 3),
+            "isr": round(isr_mod, 3),
         },
     }

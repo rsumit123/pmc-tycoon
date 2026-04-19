@@ -18,6 +18,10 @@ EARTH_RADIUS_KM = 6371.0
 # Known IAF AWACS platform ids. Keep in sync with platforms.yaml.
 AWACS_PLATFORM_IDS: set[str] = {"netra_aewc", "phalcon_a50"}
 
+# Known IAF ISR/drone platform ids. Keep in sync with platforms.yaml.
+ISR_DRONE_PLATFORM_IDS: set[str] = {"tapas_uav", "ghatak_ucav"}
+ISR_ORBIT_RADIUS_KM = 700
+
 
 def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     lat1r, lon1r, lat2r, lon2r = map(math.radians, (lat1, lon1, lat2, lon2))
@@ -52,5 +56,35 @@ def awacs_covering(
             "distance_km": round(dist, 1),
             "strength": sq["strength"],
             "readiness_pct": sq["readiness_pct"],
+        })
+    return out
+
+
+def isr_drone_covering(
+    ao: dict,
+    squadrons: list[dict],
+    bases_registry: dict[int, dict],
+    orbit_radius_km: int = ISR_ORBIT_RADIUS_KM,
+) -> list[dict]:
+    out: list[dict] = []
+    for sq in squadrons:
+        if sq.get("platform_id") not in ISR_DRONE_PLATFORM_IDS:
+            continue
+        if sq.get("readiness_pct", 0) <= 0 or sq.get("strength", 0) <= 0:
+            continue
+        base = bases_registry.get(sq["base_id"])
+        if base is None:
+            continue
+        dist = _haversine_km(base["lat"], base["lon"], ao["lat"], ao["lon"])
+        if dist > orbit_radius_km:
+            continue
+        out.append({
+            "squadron_id": sq["id"],
+            "base_id": sq["base_id"],
+            "base_name": base.get("name", ""),
+            "distance_km": round(dist, 1),
+            "strength": sq["strength"],
+            "readiness_pct": sq["readiness_pct"],
+            "platform_id": sq["platform_id"],
         })
     return out
