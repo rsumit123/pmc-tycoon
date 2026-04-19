@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, ForeignKey
+from sqlalchemy import String, Integer, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -19,3 +19,4 @@ class Squadron(Base):
     ace_name: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
     ace_awarded_year: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     ace_awarded_quarter: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    loadout_override_json: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)

@@ -45,8 +45,12 @@ def compute_eligible_squadrons(
             continue
         distance = haversine_km(base["lat"], base["lon"], ao_lat, ao_lon)
         in_range = distance <= plat["combat_radius_km"]
-        loadout = list(PLATFORM_LOADOUTS.get(sq["platform_id"], {}).get("bvr", [])) + \
-                  list(PLATFORM_LOADOUTS.get(sq["platform_id"], {}).get("wvr", []))
+        override = sq.get("loadout_override_json")
+        if override:
+            loadout = list(override)
+        else:
+            loadout = list(PLATFORM_LOADOUTS.get(sq["platform_id"], {}).get("bvr", [])) + \
+                      list(PLATFORM_LOADOUTS.get(sq["platform_id"], {}).get("wvr", []))
         out.append({
             "squadron_id": sq["id"],
             "name": sq.get("name", ""),
