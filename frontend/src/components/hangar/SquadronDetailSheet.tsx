@@ -83,6 +83,23 @@ export function SquadronDetailSheet({ squadron, onClose, onRebaseStart }: Squadr
             </div>
           </div>
 
+          {squadron.pending_upgrades && squadron.pending_upgrades.length > 0 && (
+            <div>
+              <div className="text-xs opacity-60 mb-1">Pending upgrades</div>
+              <ul className="space-y-1">
+                {squadron.pending_upgrades.map((u, i) => (
+                  <li key={i} className="text-xs bg-amber-950/30 border border-amber-800 rounded px-2 py-1">
+                    🔧 <span className="font-semibold">{u.weapon_id}</span>
+                    <span className="opacity-70"> — rolls out {u.completion_year} Q{u.completion_quarter}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[10px] opacity-50 italic mt-1">
+                Same-class weapons replace on completion (astra_mk2 → astra_mk3). Different classes stack (one BVR + one WVR + strike missile).
+              </p>
+            </div>
+          )}
+
           <div className="pt-2 border-t border-slate-800">
             <button
               type="button"

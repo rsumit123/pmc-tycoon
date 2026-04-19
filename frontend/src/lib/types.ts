@@ -571,6 +571,12 @@ export interface ADBattery {
   installed_quarter: number;
 }
 
+export interface PendingLoadoutUpgrade {
+  weapon_id: string;
+  completion_year: number;
+  completion_quarter: number;
+}
+
 export interface HangarSquadron {
   id: number;
   name: string;
@@ -584,6 +590,7 @@ export interface HangarSquadron {
   xp: number;
   ace_name: string | null;
   loadout: string[];
+  pending_upgrades?: PendingLoadoutUpgrade[];
 }
 
 export interface HangarPlatformSummary {

@@ -6,7 +6,7 @@ from app.schemas.armory import (
     UnlocksResponse, MissileUnlock, ADSystemUnlock, ISRDroneUnlock, StrikePlatformUnlock,
     EquipMissileRequest, LoadoutUpgradeRead,
     InstallADRequest, ADBatteryRead,
-    HangarResponse, HangarSquadron, HangarPlatformSummary,
+    HangarResponse, HangarSquadron, HangarPlatformSummary, PendingLoadoutUpgrade,
 )
 
 router = APIRouter(prefix="/api/campaigns/{campaign_id}/armory", tags=["armory"])
@@ -221,11 +221,26 @@ def get_hangar(campaign_id: int, db: Session = Depends(get_db)):
     from app.content.registry import platforms, bases as base_specs
     from app.engine.vignette.bvr import PLATFORM_LOADOUTS
 
+    from app.models.loadout_upgrade import LoadoutUpgrade
     plat_specs = platforms()
     base_specs_dict = base_specs()
     base_rows = db.query(CampaignBase).filter_by(campaign_id=campaign_id).all()
     bases = {b.id: b for b in base_rows}
     sqns = db.query(Squadron).filter_by(campaign_id=campaign_id).all()
+
+    # Pending upgrades grouped by squadron_id
+    pending_rows = db.query(LoadoutUpgrade).filter_by(
+        campaign_id=campaign_id, status="pending",
+    ).all()
+    pending_by_sqid: dict[int, list] = {}
+    for p in pending_rows:
+        pending_by_sqid.setdefault(p.squadron_id, []).append(
+            PendingLoadoutUpgrade(
+                weapon_id=p.weapon_id,
+                completion_year=p.completion_year,
+                completion_quarter=p.completion_quarter,
+            )
+        )
 
     squadron_dtos: list[HangarSquadron] = []
     by_plat: dict[str, list] = {}
@@ -247,6 +262,7 @@ def get_hangar(campaign_id: int, db: Session = Depends(get_db)):
             base_id=s.base_id, base_name=base_name,
             strength=s.strength, readiness_pct=s.readiness_pct,
             xp=s.xp, ace_name=s.ace_name, loadout=list(loadout),
+            pending_upgrades=pending_by_sqid.get(s.id, []),
         ))
         by_plat.setdefault(s.platform_id, []).append(s)
 

@@ -33,6 +33,12 @@ export function CampaignMapView() {
   const pendingVignettes = useCampaignStore((s) => s.pendingVignettes);
   const loadPendingVignettes = useCampaignStore((s) => s.loadPendingVignettes);
   const intelCards = useCampaignStore((s) => s.intelCards);
+  const acquisitions = useCampaignStore((s) => s.acquisitions);
+  const rdActive = useCampaignStore((s) => s.rdActive);
+  const rdCatalog = useCampaignStore((s) => s.rdCatalog);
+  const loadAcquisitions = useCampaignStore((s) => s.loadAcquisitions);
+  const loadRdActive = useCampaignStore((s) => s.loadRdActive);
+  const loadRdCatalog = useCampaignStore((s) => s.loadRdCatalog);
 
   const selectedBaseId = useMapStore((s) => s.selectedBaseId);
   const setSelectedBase = useMapStore((s) => s.setSelectedBase);
@@ -62,8 +68,11 @@ export function CampaignMapView() {
     if (campaign) {
       loadBases(campaign.id);
       loadPlatforms();
+      loadAcquisitions(campaign.id);
+      loadRdActive(campaign.id);
+      loadRdCatalog();
     }
-  }, [campaign, loadBases, loadPlatforms]);
+  }, [campaign, loadBases, loadPlatforms, loadAcquisitions, loadRdActive, loadRdCatalog]);
 
   useEffect(() => {
     if (campaign) {
@@ -111,6 +120,33 @@ export function CampaignMapView() {
 
   const intelContacts = useMemo(() => synthesizeContacts(intelCards), [intelCards]);
 
+  // Top-bar commitment summary: sum per-quarter burn from active orders + active R&D programs.
+  const topBarCommitQ = useMemo(() => {
+    if (!campaign) return 0;
+    const nowIdx = campaign.current_year * 4 + (campaign.current_quarter - 1);
+    let acq = 0;
+    for (const o of acquisitions) {
+      if (o.cancelled) continue;
+      if (o.delivered >= o.quantity) continue;
+      const firstIdx = o.first_delivery_year * 4 + (o.first_delivery_quarter - 1);
+      const focIdx = o.foc_year * 4 + (o.foc_quarter - 1);
+      if (nowIdx < firstIdx || nowIdx > focIdx) continue;
+      const totalQ = (o.foc_year - o.first_delivery_year) * 4 + (o.foc_quarter - o.first_delivery_quarter) + 1;
+      if (totalQ > 0) acq += Math.floor(o.total_cost_cr / totalQ);
+    }
+    const factors: Record<string, number> = { slow: 0.5, standard: 1.0, accelerated: 1.5 };
+    const catById = Object.fromEntries(rdCatalog.map((c) => [c.id, c]));
+    let rd = 0;
+    for (const a of rdActive) {
+      if (a.status !== "active") continue;
+      const spec = catById[a.program_id];
+      if (!spec) continue;
+      rd += Math.floor((spec.base_cost_cr / spec.base_duration_quarters) * (factors[a.funding_level] ?? 1));
+    }
+    return acq + rd;
+  }, [campaign, acquisitions, rdActive, rdCatalog]);
+  const topBarNetQ = (campaign?.quarterly_grant_cr ?? 0) - topBarCommitQ;
+
   if (!campaign) return <div className="p-6">Loading…</div>;
 
   return (
@@ -128,10 +164,13 @@ export function CampaignMapView() {
           <p className="text-[11px] leading-tight flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <span className="opacity-80">{campaign.current_year} Q{campaign.current_quarter}</span>
             <span className="opacity-80">
-              💰 <span className="font-semibold">₹{campaign.budget_cr.toLocaleString("en-US")}</span> cr
+              💰 <span className="font-semibold">₹{campaign.budget_cr.toLocaleString("en-US")}</span>
             </span>
-            <span className="opacity-60">
-              +₹{(campaign.quarterly_grant_cr ?? 0).toLocaleString("en-US")}/q
+            <span className={`${topBarNetQ >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+              {topBarNetQ >= 0 ? "+" : ""}₹{topBarNetQ.toLocaleString("en-US")}/q
+            </span>
+            <span className="opacity-50 text-[10px]">
+              (grant ₹{(campaign.quarterly_grant_cr ?? 0).toLocaleString("en-US")} − commit ₹{topBarCommitQ.toLocaleString("en-US")})
             </span>
           </p>
         </div>

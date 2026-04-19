@@ -115,8 +115,14 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold truncate">{sq.name}</div>
-                  <div className="text-xs opacity-70 truncate">
-                    {sq.base_name} • {sq.distance_km} km • {sq.readiness_pct}% ready • {sq.airframes_available} airframes
+                  <div className="text-[11px] opacity-80 truncate mt-0.5">
+                    ✈ <span className="font-semibold">{sq.platform_id.replace(/_/g, " ").toUpperCase()}</span>
+                    {sq.loadout.length > 0 && (
+                      <span className="opacity-70"> · {sq.loadout.join(" · ")}</span>
+                    )}
+                  </div>
+                  <div className="text-[10px] opacity-60 truncate mt-0.5">
+                    📍 {sq.base_name} • {sq.distance_km} km • {sq.readiness_pct}% ready • {sq.airframes_available} airframes
                     {!sq.in_range && <span className="ml-2 text-red-400">out of range</span>}
                   </div>
                 </div>

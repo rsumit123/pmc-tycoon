@@ -69,6 +69,12 @@ class ADBatteryRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class PendingLoadoutUpgrade(BaseModel):
+    weapon_id: str
+    completion_year: int
+    completion_quarter: int
+
+
 class HangarSquadron(BaseModel):
     id: int
     name: str
@@ -82,6 +88,7 @@ class HangarSquadron(BaseModel):
     xp: int
     ace_name: str | None
     loadout: list[str]
+    pending_upgrades: list[PendingLoadoutUpgrade] = []
 
 
 class HangarPlatformSummary(BaseModel):

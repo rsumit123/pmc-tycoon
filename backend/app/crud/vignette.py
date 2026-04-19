@@ -96,6 +96,26 @@ def commit_vignette(
             continue
         sq.readiness_pct = max(0, (sq.readiness_pct or 0) - total_readiness_cost)
 
+    # Deduct airframes lost in combat from each victim squadron.
+    # kill events shape (from resolver): side=attacker_side, victim_squadron_id=<sqid>.
+    # When ADV is the attacker, the victim is an IND squadron.
+    losses_by_sqid: dict[int, int] = {}
+    for ev in event_trace:
+        if ev.get("kind") != "kill":
+            continue
+        if ev.get("side") != "adv":
+            continue
+        vsid = ev.get("victim_squadron_id")
+        if vsid is None:
+            continue
+        losses_by_sqid[int(vsid)] = losses_by_sqid.get(int(vsid), 0) + 1
+
+    for sqid, lost in losses_by_sqid.items():
+        sq = db.get(Squadron, sqid)
+        if sq is None:
+            continue
+        sq.strength = max(0, (sq.strength or 0) - lost)
+
     vignette.status = "resolved"
     vignette.committed_force = committed_force
     vignette.event_trace = event_trace

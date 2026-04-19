@@ -52,6 +52,13 @@ export function SquadronRow({ sq, onClick }: { sq: HangarSquadron; onClick?: () 
       <div className="mt-1.5 text-[10px] opacity-70 break-words">
         Loadout: {sq.loadout.join(" \u00b7 ") || "\u2014"}
       </div>
+      {sq.pending_upgrades && sq.pending_upgrades.length > 0 && (
+        <div className="mt-1 text-[10px] text-amber-300 bg-amber-950/30 border border-amber-800 rounded px-1.5 py-0.5">
+          🔧 Equipping: {sq.pending_upgrades.map((u) =>
+            `${u.weapon_id} (${u.completion_year} Q${u.completion_quarter})`
+          ).join(", ")}
+        </div>
+      )}
       {onClick && (
         <div className="mt-1 text-[10px] text-amber-400/70">Tap for options →</div>
       )}
