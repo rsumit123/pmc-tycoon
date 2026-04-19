@@ -502,3 +502,89 @@ export interface Toast {
   /** ms until auto-dismiss. 0 = never. Default 3000. */
   duration?: number;
 }
+
+// ---------- Plan 15: armory + hangar types ----------
+
+export interface MissileUnlock {
+  target_id: string;
+  name: string;
+  description: string;
+  eligible_platforms: string[];
+  nez_km: number;
+  max_range_km: number;
+}
+
+export interface ADSystemUnlock {
+  target_id: string;
+  name: string;
+  description: string;
+  coverage_km: number;
+  install_cost_cr: number;
+  max_pk: number;
+}
+
+export interface ISRDroneUnlock {
+  target_id: string;
+  name: string;
+  description: string;
+  coverage_km: number;
+}
+
+export interface StrikePlatformUnlock {
+  target_id: string;
+  name: string;
+  description: string;
+}
+
+export interface UnlocksResponse {
+  missiles: MissileUnlock[];
+  ad_systems: ADSystemUnlock[];
+  isr_drones: ISRDroneUnlock[];
+  strike_platforms: StrikePlatformUnlock[];
+}
+
+export interface LoadoutUpgrade {
+  id: number;
+  squadron_id: number;
+  weapon_id: string;
+  completion_year: number;
+  completion_quarter: number;
+  status: "pending" | "completed" | "cancelled";
+}
+
+export interface ADBattery {
+  id: number;
+  base_id: number;
+  system_id: string;
+  coverage_km: number;
+  installed_year: number;
+  installed_quarter: number;
+}
+
+export interface HangarSquadron {
+  id: number;
+  name: string;
+  call_sign: string;
+  platform_id: string;
+  platform_name: string;
+  base_id: number;
+  base_name: string;
+  strength: number;
+  readiness_pct: number;
+  xp: number;
+  ace_name: string | null;
+  loadout: string[];
+}
+
+export interface HangarPlatformSummary {
+  platform_id: string;
+  platform_name: string;
+  squadron_count: number;
+  total_airframes: number;
+  avg_readiness_pct: number;
+}
+
+export interface HangarResponse {
+  squadrons: HangarSquadron[];
+  summary_by_platform: HangarPlatformSummary[];
+}

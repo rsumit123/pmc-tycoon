@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { api, http } from "../api";
-import type { PlatformListResponse, BaseListResponse, ObjectiveListResponse, CampaignListResponse, TurnReportResponse } from "../types";
+import type { PlatformListResponse, BaseListResponse, ObjectiveListResponse, CampaignListResponse, TurnReportResponse, UnlocksResponse, LoadoutUpgrade, ADBattery, HangarResponse } from "../types";
 
 describe("api client — platforms + bases", () => {
   beforeEach(() => {
@@ -76,5 +76,43 @@ describe("api client — platforms + bases", () => {
     const out = await api.getTurnReport(1, 2026, 2);
     expect(out.year).toBe(2026);
     expect(http.get).toHaveBeenCalledWith("/api/campaigns/1/turn-report/2026/2");
+  });
+
+  it("getArmoryUnlocks returns unlocks", async () => {
+    const body: UnlocksResponse = { missiles: [], ad_systems: [], isr_drones: [], strike_platforms: [] };
+    vi.spyOn(http, "get").mockResolvedValueOnce({ data: body } as any);
+    const out = await api.getArmoryUnlocks(1);
+    expect(out.missiles).toEqual([]);
+    expect(http.get).toHaveBeenCalledWith("/api/campaigns/1/armory/unlocks");
+  });
+
+  it("equipMissile posts the payload", async () => {
+    const body: LoadoutUpgrade = { id: 1, squadron_id: 10, weapon_id: "astra_mk3", completion_year: 2027, completion_quarter: 2, status: "pending" };
+    vi.spyOn(http, "post").mockResolvedValueOnce({ data: body } as any);
+    const out = await api.equipMissile(1, "astra_mk3", 10);
+    expect(out.weapon_id).toBe("astra_mk3");
+    expect(http.post).toHaveBeenCalledWith(
+      "/api/campaigns/1/armory/missiles/astra_mk3/equip",
+      { squadron_id: 10 },
+    );
+  });
+
+  it("installADSystem posts the payload", async () => {
+    const body: ADBattery = { id: 1, base_id: 5, system_id: "akash_ng", coverage_km: 70, installed_year: 2027, installed_quarter: 1 };
+    vi.spyOn(http, "post").mockResolvedValueOnce({ data: body } as any);
+    const out = await api.installADSystem(1, "akash_ng", 5);
+    expect(out.system_id).toBe("akash_ng");
+    expect(http.post).toHaveBeenCalledWith(
+      "/api/campaigns/1/armory/ad-systems/akash_ng/install",
+      { base_id: 5 },
+    );
+  });
+
+  it("getHangar returns the fleet", async () => {
+    const body: HangarResponse = { squadrons: [], summary_by_platform: [] };
+    vi.spyOn(http, "get").mockResolvedValueOnce({ data: body } as any);
+    const out = await api.getHangar(1);
+    expect(out.squadrons).toEqual([]);
+    expect(http.get).toHaveBeenCalledWith("/api/campaigns/1/hangar");
   });
 });

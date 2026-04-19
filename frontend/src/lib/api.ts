@@ -25,6 +25,10 @@ import type {
   ObjectiveListResponse,
   CampaignListResponse,
   TurnReportResponse,
+  UnlocksResponse,
+  LoadoutUpgrade,
+  ADBattery,
+  HangarResponse,
 } from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
@@ -256,6 +260,44 @@ export const api = {
   async getTurnReport(campaignId: number, year: number, quarter: number): Promise<TurnReportResponse> {
     const { data } = await http.get<TurnReportResponse>(
       `/api/campaigns/${campaignId}/turn-report/${year}/${quarter}`
+    );
+    return data;
+  },
+
+  async getArmoryUnlocks(campaignId: number): Promise<UnlocksResponse> {
+    const { data } = await http.get<UnlocksResponse>(
+      `/api/campaigns/${campaignId}/armory/unlocks`
+    );
+    return data;
+  },
+
+  async equipMissile(
+    campaignId: number,
+    missileId: string,
+    squadronId: number,
+  ): Promise<LoadoutUpgrade> {
+    const { data } = await http.post<LoadoutUpgrade>(
+      `/api/campaigns/${campaignId}/armory/missiles/${missileId}/equip`,
+      { squadron_id: squadronId },
+    );
+    return data;
+  },
+
+  async installADSystem(
+    campaignId: number,
+    systemId: string,
+    baseId: number,
+  ): Promise<ADBattery> {
+    const { data } = await http.post<ADBattery>(
+      `/api/campaigns/${campaignId}/armory/ad-systems/${systemId}/install`,
+      { base_id: baseId },
+    );
+    return data;
+  },
+
+  async getHangar(campaignId: number): Promise<HangarResponse> {
+    const { data } = await http.get<HangarResponse>(
+      `/api/campaigns/${campaignId}/hangar`
     );
     return data;
   },
