@@ -11,8 +11,8 @@ const planning: PlanningState = {
   response_clock_minutes: 15,
   adversary_force: [],
   eligible_squadrons: [
-    { squadron_id: 1, name: "17 Sqn", platform_id: "rafale_f4", base_id: 10, base_name: "Ambala", distance_km: 320, in_range: true, airframes_available: 12, readiness_pct: 85, xp: 2, loadout: ["meteor"] },
-    { squadron_id: 2, name: "45 Sqn", platform_id: "tejas_mk1a", base_id: 11, base_name: "Sulur", distance_km: 1800, in_range: false, airframes_available: 8, readiness_pct: 70, xp: 1, loadout: [] },
+    { squadron_id: 1, name: "17 Sqn", platform_id: "rafale_f4", base_id: 10, base_name: "Ambala", distance_km: 320, in_range: true, range_tier: "A", airframes_available: 12, readiness_pct: 85, xp: 2, loadout: ["meteor"] },
+    { squadron_id: 2, name: "45 Sqn", platform_id: "tejas_mk1a", base_id: 11, base_name: "Sulur", distance_km: 1800, in_range: false, range_tier: "C", airframes_available: 8, readiness_pct: 70, xp: 1, loadout: [] },
   ],
   allowed_ind_roles: ["interceptor"],
   roe_options: ["weapons_free", "weapons_tight"],
@@ -20,9 +20,13 @@ const planning: PlanningState = {
 };
 
 describe("ForceCommitter", () => {
-  it("disables out-of-range squadron", () => {
+  it("hides tier-C squadrons by default, disables them when shown", () => {
     const onChange = vi.fn();
     render(<ForceCommitter planning={planning} value={{ squadrons: [], support: { awacs: false, tanker: false, sead_package: false }, roe: "weapons_free" }} onChange={onChange} />);
+    // Only the in-range squadron is visible by default.
+    expect(screen.queryByRole("checkbox", { name: /45 Sqn/i })).toBeNull();
+    // Reveal the out-of-reach squadron.
+    fireEvent.click(screen.getByText(/Show 1 out-of-reach/i));
     const checkboxes = screen.getAllByRole("checkbox", { name: /sqn/i });
     expect(checkboxes[0]).not.toBeDisabled();
     expect(checkboxes[1]).toBeDisabled();

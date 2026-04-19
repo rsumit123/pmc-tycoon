@@ -40,13 +40,17 @@ def test_40_turn_simulation_sanity(db):
             ps = v.planning_state or {}
             eligible = ps.get("eligible_squadrons", [])
             roe_options = ps.get("roe_options", [])
+            # Pick the first in-range (tier A) squadron — tier B/C now require
+            # tanker support / are hard-blocked, so an unconditional eligible[0]
+            # would fail commit validation on far-AO scenarios.
+            pick = next((s for s in eligible if s.get("range_tier") == "A"), None)
             committed_force = {
                 "squadrons": [
                     {
-                        "squadron_id": eligible[0]["squadron_id"],
+                        "squadron_id": pick["squadron_id"],
                         "airframes": 1,
                     }
-                ] if eligible else [],
+                ] if pick else [],
                 "roe": roe_options[0] if roe_options else "defensive",
                 "support_awacs": False,
                 "support_tanker": False,

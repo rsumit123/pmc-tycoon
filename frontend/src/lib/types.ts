@@ -106,6 +106,9 @@ export interface EligibleSquadron {
   base_name: string;
   distance_km: number;
   in_range: boolean;
+  range_tier?: "A" | "B" | "C";
+  requires_tanker?: boolean;
+  loadout_stealth_effective?: boolean;
   airframes_available: number;
   readiness_pct: number;
   xp: number;

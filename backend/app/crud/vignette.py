@@ -45,14 +45,30 @@ def commit_vignette(
     # Validate against planning_state
     ps = vignette.planning_state or {}
     eligible_by_id = {s["squadron_id"]: s for s in ps.get("eligible_squadrons", [])}
+    tanker_selected = bool(
+        (committed_force.get("support") or {}).get("tanker", False)
+    )
     for entry in committed_force.get("squadrons", []):
         sid = entry["squadron_id"]
         if sid not in eligible_by_id:
             raise CommitValidationError(f"squadron {sid} not in eligible list")
-        max_airframes = eligible_by_id[sid]["airframes_available"]
+        sq_info = eligible_by_id[sid]
+        max_airframes = sq_info["airframes_available"]
         if entry["airframes"] > max_airframes:
             raise CommitValidationError(
                 f"squadron {sid}: airframes {entry['airframes']} > available {max_airframes}"
+            )
+        # Range-tier gating: C is hard-blocked, B requires tanker.
+        tier = sq_info.get("range_tier", "A" if sq_info.get("in_range") else "C")
+        if tier == "C":
+            raise CommitValidationError(
+                f"squadron {sid} ({sq_info.get('base_name', '')}) is {sq_info.get('distance_km', 0)} km "
+                f"from the AO — beyond tanker reach"
+            )
+        if tier == "B" and not tanker_selected:
+            raise CommitValidationError(
+                f"squadron {sid} ({sq_info.get('base_name', '')}) is out of unrefuelled range — "
+                f"tanker support is required to commit this squadron"
             )
     if committed_force.get("roe") not in ps.get("roe_options", []):
         raise CommitValidationError(f"roe {committed_force.get('roe')!r} not allowed")
