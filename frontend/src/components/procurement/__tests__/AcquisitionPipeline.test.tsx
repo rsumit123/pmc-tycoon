@@ -10,7 +10,7 @@ const platforms: Platform[] = [
     procurable_by: ["IND"], default_first_delivery_quarters: 8, default_foc_quarters: 16 },
   { id: "rafale_f5", name: "Rafale F5", origin: "FR", role: "multirole",
     generation: "4.75", combat_radius_km: 1900, payload_kg: 9500,
-    rcs_band: "reduced", radar_range_km: 220, cost_cr: 5000, intro_year: 2030,
+    rcs_band: "reduced", radar_range_km: 220, cost_cr: 5000, intro_year: 2024,
     procurable_by: ["IND"], default_first_delivery_quarters: 8, default_foc_quarters: 16 },
 ];
 

@@ -141,6 +141,8 @@ export function ProcurementHub() {
               currentQuarter={campaign.current_quarter}
               onSign={(payload) => createAcquisition(payload)}
               disabled={loading}
+              rdCatalog={rdCatalog}
+              rdActive={rdActive}
             />
           </>
         )}

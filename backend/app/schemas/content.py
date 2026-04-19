@@ -22,6 +22,14 @@ class PlatformListResponse(BaseModel):
     platforms: list[PlatformOut]
 
 
+class UnlockSpecOut(BaseModel):
+    kind: str = "none"
+    target_id: str | None = None
+    eligible_platforms: list[str] = []
+    coverage_km: int | None = None
+    description: str = ""
+
+
 class RDProgramSpecOut(BaseModel):
     id: str
     name: str
@@ -29,6 +37,7 @@ class RDProgramSpecOut(BaseModel):
     base_duration_quarters: int
     base_cost_cr: int
     dependencies: list[str]
+    unlocks: UnlockSpecOut = UnlockSpecOut()
 
 
 class RDProgramSpecListResponse(BaseModel):

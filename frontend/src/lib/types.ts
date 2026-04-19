@@ -298,6 +298,14 @@ export interface BaseListResponse {
 
 // ---------- Plan 7: procurement types ----------
 
+export interface UnlockSpecSummary {
+  kind: "missile" | "ad_system" | "isr_drone" | "strike_platform" | "platform" | "none";
+  target_id: string | null;
+  eligible_platforms: string[];
+  coverage_km: number | null;
+  description: string;
+}
+
 export interface RDProgramSpec {
   id: string;
   name: string;
@@ -305,6 +313,7 @@ export interface RDProgramSpec {
   base_duration_quarters: number;
   base_cost_cr: number;
   dependencies: string[];
+  unlocks?: UnlockSpecSummary;
 }
 
 export interface RDProgramSpecListResponse {

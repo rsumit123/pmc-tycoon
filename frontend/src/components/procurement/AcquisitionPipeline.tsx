@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type {
-  Platform, AcquisitionOrder, AcquisitionCreatePayload,
+  Platform, AcquisitionOrder, AcquisitionCreatePayload, RDProgramSpec, RDProgramState,
 } from "../../lib/types";
 import { Stepper } from "../primitives/Stepper";
 import { CommitHoldButton } from "../primitives/CommitHoldButton";
@@ -12,6 +12,10 @@ export interface AcquisitionPipelineProps {
   currentQuarter: number;
   onSign: (payload: AcquisitionCreatePayload) => void;
   disabled?: boolean;
+  /** Full R&D catalog — used to detect which platforms are R&D-gated. */
+  rdCatalog?: RDProgramSpec[];
+  /** Active R&D program states — used to know which gated platforms remain locked. */
+  rdActive?: RDProgramState[];
 }
 
 const DEFAULT_QTY = 16;
@@ -146,51 +150,105 @@ function TimelineBar({
 
 export function AcquisitionPipeline({
   platforms, orders, currentYear, currentQuarter, onSign, disabled,
+  rdCatalog = [], rdActive = [],
 }: AcquisitionPipelineProps) {
   const byId = Object.fromEntries(platforms.map((p) => [p.id, p]));
-  const availablePlatforms = platforms;
-  return (
-    <div className="space-y-6">
-      <section className="space-y-3">
-        <h3 className="text-sm font-bold uppercase tracking-wider opacity-80">
-          Offers
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {availablePlatforms.map((p) => (
-            <OfferCard
-              key={p.id}
-              platform={p}
-              currentYear={currentYear}
-              currentQuarter={currentQuarter}
-              onSign={onSign}
-              disabled={disabled}
-            />
-          ))}
-        </div>
-      </section>
+  const [tab, setTab] = useState<"orders" | "offers">(orders.length > 0 ? "orders" : "offers");
 
-      <section className="space-y-3">
-        <h3 className="text-sm font-bold uppercase tracking-wider opacity-80">
-          Active orders
-        </h3>
-        {orders.length === 0 ? (
-          <p className="text-xs opacity-60">No active orders.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <div className="space-y-3 min-w-min">
-              {orders.map((o) => (
-                <TimelineBar
-                  key={o.id}
-                  order={o}
-                  platformName={byId[o.platform_id]?.name ?? o.platform_id}
+  // Platforms gated by an incomplete R&D program.
+  const lockedPlatformIds = useMemo(() => {
+    const completedProgramIds = new Set(
+      rdActive.filter((a) => a.status === "completed").map((a) => a.program_id),
+    );
+    const locked = new Set<string>();
+    for (const prog of rdCatalog) {
+      const u = prog.unlocks;
+      if (!u || !u.target_id) continue;
+      if (u.kind !== "platform" && u.kind !== "strike_platform") continue;
+      if (completedProgramIds.has(prog.id)) continue;
+      locked.add(u.target_id);
+    }
+    return locked;
+  }, [rdCatalog, rdActive]);
+
+  const availablePlatforms = useMemo(() => {
+    return platforms.filter((p) => {
+      if (lockedPlatformIds.has(p.id)) return false;
+      if (p.intro_year && p.intro_year > currentYear) return false;
+      return true;
+    });
+  }, [platforms, lockedPlatformIds, currentYear]);
+
+  const lockedCount = platforms.length - availablePlatforms.length;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
+        <button
+          type="button"
+          onClick={() => setTab("orders")}
+          className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded ${tab === "orders" ? "bg-amber-600 text-slate-900" : "text-slate-300"}`}
+        >
+          Active Orders ({orders.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("offers")}
+          className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded ${tab === "offers" ? "bg-amber-600 text-slate-900" : "text-slate-300"}`}
+        >
+          Offers ({availablePlatforms.length})
+        </button>
+      </div>
+
+      {tab === "orders" ? (
+        <section>
+          {orders.length === 0 ? (
+            <p className="text-xs opacity-60 py-6 text-center">
+              No active orders. Open <span className="font-semibold">Offers</span> to sign a new procurement.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="space-y-3 min-w-min">
+                {orders.map((o) => (
+                  <TimelineBar
+                    key={o.id}
+                    order={o}
+                    platformName={byId[o.platform_id]?.name ?? o.platform_id}
+                    currentYear={currentYear}
+                    currentQuarter={currentQuarter}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      ) : (
+        <section className="space-y-3">
+          {lockedCount > 0 && (
+            <p className="text-[11px] opacity-60">
+              {lockedCount} platform{lockedCount === 1 ? "" : "s"} hidden — {lockedCount === 1 ? "it's" : "they're"} gated by in-progress R&D or not yet introduced.
+            </p>
+          )}
+          {availablePlatforms.length === 0 ? (
+            <p className="text-xs opacity-60 py-6 text-center">
+              No platforms available to procure right now.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {availablePlatforms.map((p) => (
+                <OfferCard
+                  key={p.id}
+                  platform={p}
                   currentYear={currentYear}
                   currentQuarter={currentQuarter}
+                  onSign={onSign}
+                  disabled={disabled}
                 />
               ))}
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      )}
     </div>
   );
 }

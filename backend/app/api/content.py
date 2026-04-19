@@ -4,7 +4,7 @@ from app.content.registry import platforms as platforms_reg
 from app.content.registry import rd_programs as rd_programs_reg
 from app.content.registry import objectives as objectives_reg
 from app.schemas.content import PlatformOut, PlatformListResponse
-from app.schemas.content import RDProgramSpecOut, RDProgramSpecListResponse
+from app.schemas.content import RDProgramSpecOut, RDProgramSpecListResponse, UnlockSpecOut
 from app.schemas.content import ObjectiveOut, ObjectiveListResponse
 
 router = APIRouter(prefix="/api/content", tags=["content"])
@@ -40,6 +40,14 @@ def list_rd_programs_endpoint():
     registry = rd_programs_reg()
     out: list[RDProgramSpecOut] = []
     for spec in registry.values():
+        u = getattr(spec, "unlocks", None)
+        unlocks_out = UnlockSpecOut(
+            kind=getattr(u, "kind", "none") if u else "none",
+            target_id=getattr(u, "target_id", None) if u else None,
+            eligible_platforms=list(getattr(u, "eligible_platforms", []) or []) if u else [],
+            coverage_km=getattr(u, "coverage_km", None) if u else None,
+            description=getattr(u, "description", "") if u else "",
+        )
         out.append(RDProgramSpecOut(
             id=spec.id,
             name=spec.name,
@@ -47,6 +55,7 @@ def list_rd_programs_endpoint():
             base_duration_quarters=int(spec.base_duration_quarters),
             base_cost_cr=int(spec.base_cost_cr),
             dependencies=list(spec.dependencies),
+            unlocks=unlocks_out,
         ))
     out.sort(key=lambda p: p.id)
     return RDProgramSpecListResponse(programs=out)
