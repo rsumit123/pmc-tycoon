@@ -13,6 +13,7 @@ import type {
   Toast,
   ToastVariant,
   HangarResponse,
+  UnlocksResponse,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -34,6 +35,7 @@ interface CampaignState {
   objectivesCatalog: ObjectiveSpec[];
   turnReport: TurnReportResponse | null;
   hangar: HangarResponse | null;
+  armoryUnlocks: UnlocksResponse | null;
   toasts: Toast[];
   rdLoading: Record<string, boolean>;
   loading: boolean;
@@ -68,6 +70,9 @@ interface CampaignState {
   loadObjectivesCatalog: () => Promise<void>;
   loadTurnReport: (campaignId: number, year: number, quarter: number) => Promise<void>;
   loadHangar: (campaignId: number) => Promise<void>;
+  loadArmoryUnlocks: (campaignId: number) => Promise<void>;
+  equipMissile: (missileId: string, squadronId: number) => Promise<void>;
+  installADSystem: (systemId: string, baseId: number) => Promise<void>;
   reset: () => void;
 }
 
@@ -89,6 +94,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   objectivesCatalog: [],
   turnReport: null,
   hangar: null,
+  armoryUnlocks: null,
   toasts: [],
   rdLoading: {},
   loading: false,
@@ -421,6 +427,45 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     }
   },
 
+  loadArmoryUnlocks: async (campaignId: number) => {
+    try {
+      const r = await api.getArmoryUnlocks(campaignId);
+      set({ armoryUnlocks: r });
+    } catch {
+      get().pushToast("error", "Failed to load armory");
+    }
+  },
+
+  equipMissile: async (missileId: string, squadronId: number) => {
+    const cid = get().campaign?.id;
+    if (!cid) return;
+    try {
+      const r = await api.equipMissile(cid, missileId, squadronId);
+      get().pushToast(
+        "success",
+        `${missileId} rollout queued — ready ${r.completion_year} Q${r.completion_quarter}`,
+      );
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { detail?: string } } };
+      const msg = err?.response?.data?.detail ?? "Equip failed";
+      get().pushToast("error", msg);
+    }
+  },
+
+  installADSystem: async (systemId: string, baseId: number) => {
+    const cid = get().campaign?.id;
+    if (!cid) return;
+    try {
+      await api.installADSystem(cid, systemId, baseId);
+      get().pushToast("success", `${systemId} installed`);
+      await get().loadCampaign(cid);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { detail?: string } } };
+      const msg = err?.response?.data?.detail ?? "Install failed";
+      get().pushToast("error", msg);
+    }
+  },
+
   reset: () => set({
     campaign: null, bases: [], platformsById: {},
     rdCatalog: [], rdActive: [], acquisitions: [],
@@ -430,6 +475,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     campaignList: [], objectivesCatalog: [],
     turnReport: null,
     hangar: null,
+    armoryUnlocks: null,
     toasts: [], rdLoading: {},
     loading: false, error: null,
   }),
