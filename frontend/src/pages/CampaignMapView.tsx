@@ -41,6 +41,7 @@ export function CampaignMapView() {
   const loadRdCatalog = useCampaignStore((s) => s.loadRdCatalog);
   const adBatteries = useCampaignStore((s) => s.adBatteries);
   const loadADBatteries = useCampaignStore((s) => s.loadADBatteries);
+  const loadIntel = useCampaignStore((s) => s.loadIntel);
 
   const selectedBaseId = useMapStore((s) => s.selectedBaseId);
   const setSelectedBase = useMapStore((s) => s.setSelectedBase);
@@ -74,8 +75,9 @@ export function CampaignMapView() {
       loadRdActive(campaign.id);
       loadRdCatalog();
       loadADBatteries(campaign.id);
+      loadIntel(campaign.id);
     }
-  }, [campaign, loadBases, loadPlatforms, loadAcquisitions, loadRdActive, loadRdCatalog, loadADBatteries]);
+  }, [campaign, loadBases, loadPlatforms, loadAcquisitions, loadRdActive, loadRdCatalog, loadADBatteries, loadIntel]);
 
   useEffect(() => {
     if (campaign) {

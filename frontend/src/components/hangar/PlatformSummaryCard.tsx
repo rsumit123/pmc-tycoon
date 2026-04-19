@@ -1,15 +1,22 @@
 import type { HangarPlatformSummary } from "../../lib/types";
 
 export function PlatformSummaryCard({
-  s, onClick,
-}: { s: HangarPlatformSummary; onClick?: () => void }) {
+  s, onClick, pendingCount = 0,
+}: { s: HangarPlatformSummary; onClick?: () => void; pendingCount?: number }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className="w-full text-left bg-slate-900 border border-slate-800 hover:border-amber-600/60 rounded-lg p-3 transition-colors"
     >
-      <div className="text-sm font-semibold">{s.platform_name}</div>
+      <div className="flex items-baseline justify-between gap-2">
+        <div className="text-sm font-semibold truncate">{s.platform_name}</div>
+        {pendingCount > 0 && (
+          <span className="text-[10px] bg-amber-900/50 text-amber-200 px-1.5 py-0.5 rounded whitespace-nowrap flex-shrink-0">
+            🔧 {pendingCount}
+          </span>
+        )}
+      </div>
       <div className="text-[10px] opacity-60 mt-0.5">
         {s.squadron_count} sqn{s.squadron_count === 1 ? "" : "s"} &bull; {s.total_airframes} airframes
       </div>

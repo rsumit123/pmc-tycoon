@@ -38,11 +38,20 @@ export function IntelContactsLayer({ map, contacts, projectionVersion }: IntelCo
           const p = map.project([c.lng, c.lat]);
           const color = SOURCE_COLOR[c.source_type] ?? "#94a3b8";
           return (
-            <g key={c.id} opacity={0.5 + c.confidence * 0.5}>
-              <circle cx={p.x} cy={p.y} r={4} fill={color} className="pointer-events-auto cursor-pointer"
-                      onClick={() => setSelected(c)} />
-              <circle cx={p.x} cy={p.y} r={10 + (1 - c.confidence) * 6}
-                      fill="none" stroke={color} strokeWidth={0.8} />
+            <g key={c.id}>
+              {/* Visible dot + confidence ring */}
+              <g opacity={0.5 + c.confidence * 0.5} style={{ pointerEvents: "none" }}>
+                <circle cx={p.x} cy={p.y} r={5} fill={color} />
+                <circle cx={p.x} cy={p.y} r={10 + (1 - c.confidence) * 6}
+                        fill="none" stroke={color} strokeWidth={0.8} />
+              </g>
+              {/* Invisible large hit target — comfortable 22px finger touch */}
+              <circle
+                cx={p.x} cy={p.y} r={22}
+                fill="transparent"
+                className="pointer-events-auto cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); setSelected(c); }}
+              />
             </g>
           );
         })}

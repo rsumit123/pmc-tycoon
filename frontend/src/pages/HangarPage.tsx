@@ -61,6 +61,17 @@ export function HangarPage() {
 
   const totalAirframes = hangar.squadrons.reduce((a, b) => a + b.strength, 0);
 
+  // Aggregate pending-upgrade counts per-platform (for PlatformSummaryCard badge).
+  const pendingByPlatform: Record<string, number> = {};
+  let totalPending = 0;
+  for (const s of hangar.squadrons) {
+    const n = s.pending_upgrades?.length ?? 0;
+    if (n > 0) {
+      pendingByPlatform[s.platform_id] = (pendingByPlatform[s.platform_id] ?? 0) + n;
+      totalPending += n;
+    }
+  }
+
   const handleRebase = async (sqnId: number, targetBaseId: number) => {
     await rebaseSquadron(sqnId, targetBaseId);
     setRebaseTarget(null);
@@ -80,6 +91,23 @@ export function HangarPage() {
       </header>
 
       <main className="p-4 max-w-3xl mx-auto space-y-4 pb-20">
+        {totalPending > 0 && (
+          <div className="bg-amber-950/40 border border-amber-700 rounded-lg p-3 flex items-center justify-between gap-2">
+            <div className="text-xs">
+              <span className="font-semibold text-amber-200">🔧 {totalPending} missile upgrade{totalPending === 1 ? "" : "s"} in progress</span>
+              <span className="block text-[10px] opacity-80 mt-0.5">
+                Squadrons keep their current loadout during rollout. Tap a squadron to see its completion quarter.
+              </span>
+            </div>
+            {tab !== "list" && (
+              <button
+                type="button"
+                onClick={() => { setTab("list"); setPlatformFilter(null); setRole("All"); }}
+                className="text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 rounded px-3 py-1.5 flex-shrink-0"
+              >View →</button>
+            )}
+          </div>
+        )}
         <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
           <button
             type="button"
@@ -99,6 +127,7 @@ export function HangarPage() {
               <PlatformSummaryCard
                 key={s.platform_id}
                 s={s}
+                pendingCount={pendingByPlatform[s.platform_id] ?? 0}
                 onClick={() => {
                   setPlatformFilter(s.platform_id);
                   setRole("All");
