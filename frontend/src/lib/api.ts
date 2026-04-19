@@ -243,6 +243,13 @@ export const api = {
     return data;
   },
 
+  async getADBatteries(campaignId: number): Promise<ADBattery[]> {
+    const { data } = await http.get<ADBattery[]>(
+      `/api/campaigns/${campaignId}/armory/ad-batteries`,
+    );
+    return data;
+  },
+
   importCampaign: (data: Record<string, unknown>) =>
     http.post<{ id: number }>("/api/campaigns/import", data).then((r) => r.data),
 

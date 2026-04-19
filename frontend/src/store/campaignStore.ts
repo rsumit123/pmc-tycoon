@@ -14,6 +14,7 @@ import type {
   ToastVariant,
   HangarResponse,
   UnlocksResponse,
+  ADBattery,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -36,6 +37,8 @@ interface CampaignState {
   turnReport: TurnReportResponse | null;
   hangar: HangarResponse | null;
   armoryUnlocks: UnlocksResponse | null;
+  adBatteries: ADBattery[];
+  loadADBatteries: (campaignId: number) => Promise<void>;
   toasts: Toast[];
   rdLoading: Record<string, boolean>;
   loading: boolean;
@@ -97,6 +100,15 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   turnReport: null,
   hangar: null,
   armoryUnlocks: null,
+  adBatteries: [],
+  loadADBatteries: async (campaignId: number) => {
+    try {
+      const rows = await api.getADBatteries(campaignId);
+      set({ adBatteries: rows });
+    } catch {
+      // silent
+    }
+  },
   toasts: [],
   rdLoading: {},
   loading: false,
@@ -536,6 +548,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     turnReport: null,
     hangar: null,
     armoryUnlocks: null,
+    adBatteries: [],
     toasts: [], rdLoading: {},
     loading: false, error: null,
   }),

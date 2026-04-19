@@ -297,6 +297,43 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         for s in sq_rows
     ]
 
+    MAX_SQUADRON_STRENGTH = 20
+    from app.content.registry import platforms as _platforms_reg
+    _plat_spec_by_id = _platforms_reg()
+
+    def _next_sqn_seq(platform_id: str) -> int:
+        """Count existing squadrons for this platform + 1."""
+        return sum(1 for s in sq_rows if s.platform_id == platform_id) + 1
+
+    def _make_name(platform_id: str) -> tuple[str, str]:
+        seq = _next_sqn_seq(platform_id)
+        spec = _plat_spec_by_id.get(platform_id)
+        plat_name = spec.name if spec else platform_id
+        name = f"{plat_name} Sqn {seq}"
+        call_sign = f"{platform_id[:6].upper()}-{seq}"
+        return name, call_sign
+
+    def _create_squadron(base_id: int, platform_id: str, count: int) -> "Squadron":
+        name, call_sign = _make_name(platform_id)
+        new_sqn = Squadron(
+            campaign_id=campaign.id,
+            base_id=base_id,
+            platform_id=platform_id,
+            strength=count,
+            readiness_pct=75,
+            xp=0,
+            name=name,
+            call_sign=call_sign,
+        )
+        db.add(new_sqn)
+        db.flush()
+        sq_rows.append(new_sqn)
+        _sq_dicts.append({
+            "id": new_sqn.id, "base_id": base_id,
+            "platform_id": platform_id, "strength": count,
+        })
+        return new_sqn
+
     for ev in result.events:
         if ev["event_type"] != "acquisition_delivery":
             continue
@@ -305,40 +342,46 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         if not pid or count <= 0:
             continue
         plat = _platform_dicts.get(pid, {"id": pid, "runway_class": "short"})
-        existing = next((s for s in sq_rows if s.platform_id == pid), None)
-        if existing is not None:
-            existing.strength = (existing.strength or 0) + count
-            for sd in _sq_dicts:
-                if sd["id"] == existing.id:
-                    sd["strength"] = existing.strength
-                    break
-            ev["payload"]["assigned_base_id"] = existing.base_id
-            ev["payload"]["assigned_squadron_id"] = existing.id
-        else:
-            target_base_id = pick_base_for_delivery(plat, _base_dicts, _sq_dicts)
-            if target_base_id is None:
-                continue
-            new_sqn = Squadron(
-                campaign_id=campaign.id,
-                base_id=target_base_id,
-                platform_id=pid,
-                strength=count,
-                readiness_pct=75,
-                xp=0,
-                name=f"{pid} delivery squadron",
-                call_sign=f"{pid[:6].upper()}-{len(sq_rows) + 1}",
+
+        # Find an under-cap existing squadron for this platform. Prefer ones
+        # with the lowest strength so we fill them up first before creating new.
+        remaining = count
+        assigned_base_id: int | None = None
+        assigned_squadron_id: int | None = None
+
+        while remaining > 0:
+            candidate = min(
+                (s for s in sq_rows if s.platform_id == pid and (s.strength or 0) < MAX_SQUADRON_STRENGTH),
+                key=lambda s: s.strength or 0,
+                default=None,
             )
-            db.add(new_sqn)
-            db.flush()
-            sq_rows.append(new_sqn)
-            _sq_dicts.append({
-                "id": new_sqn.id,
-                "base_id": target_base_id,
-                "platform_id": pid,
-                "strength": count,
-            })
-            ev["payload"]["assigned_base_id"] = target_base_id
-            ev["payload"]["assigned_squadron_id"] = new_sqn.id
+            if candidate is not None:
+                room = MAX_SQUADRON_STRENGTH - (candidate.strength or 0)
+                take = min(room, remaining)
+                candidate.strength = (candidate.strength or 0) + take
+                for sd in _sq_dicts:
+                    if sd["id"] == candidate.id:
+                        sd["strength"] = candidate.strength
+                        break
+                if assigned_base_id is None:
+                    assigned_base_id = candidate.base_id
+                    assigned_squadron_id = candidate.id
+                remaining -= take
+            else:
+                # No room anywhere — create a new squadron at the best base.
+                target_base_id = pick_base_for_delivery(plat, _base_dicts, _sq_dicts)
+                if target_base_id is None:
+                    break
+                batch = min(MAX_SQUADRON_STRENGTH, remaining)
+                new_sqn = _create_squadron(target_base_id, pid, batch)
+                if assigned_base_id is None:
+                    assigned_base_id = target_base_id
+                    assigned_squadron_id = new_sqn.id
+                remaining -= batch
+
+        if assigned_base_id is not None:
+            ev["payload"]["assigned_base_id"] = assigned_base_id
+            ev["payload"]["assigned_squadron_id"] = assigned_squadron_id
 
     for e in result.events:
         db.add(CampaignEvent(

@@ -160,6 +160,13 @@ def equip_missile(
     return row
 
 
+@router.get("/ad-batteries", response_model=list[ADBatteryRead])
+def list_ad_batteries(campaign_id: int, db: Session = Depends(get_db)):
+    from app.models.ad_battery import ADBattery
+    rows = db.query(ADBattery).filter_by(campaign_id=campaign_id).all()
+    return [ADBatteryRead.model_validate(r) for r in rows]
+
+
 @router.post("/ad-systems/{system_id}/install", response_model=ADBatteryRead,
              status_code=status.HTTP_200_OK)
 def install_ad_system(

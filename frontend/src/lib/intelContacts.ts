@@ -20,15 +20,21 @@ function jitter(base: number, seed: string): number {
 export function synthesizeContacts(cards: IntelCard[]): IntelContact[] {
   const contacts: IntelContact[] = [];
   for (const card of cards) {
-    const faction = card.payload?.subject_faction;
+    const faction = card.payload?.subject_faction as string | undefined;
     if (!faction || !FACTION_CENTERS[faction]) continue;
     const center = FACTION_CENTERS[faction];
+    const payload = (card.payload ?? {}) as unknown as Record<string, unknown>;
+    const headline = (payload.headline as string | undefined)
+      ?? (payload.summary as string | undefined)
+      ?? undefined;
     contacts.push({
       id: `intel-${card.id}`,
       lat: jitter(center.lat, `${card.id}-lat`),
       lng: jitter(center.lng, `${card.id}-lng`),
       confidence: card.confidence,
       source_type: card.source_type,
+      faction,
+      headline,
     });
   }
   return contacts;
