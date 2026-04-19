@@ -179,12 +179,21 @@ def resolve(
     sead = bool(support.get("sead_package", False))
 
     # Enrich committed squadron dicts with platform_id + xp from the eligible list.
+    # Support platforms (AWACS/tanker/ISR) are activated via support toggles, not combat commit.
+    # If a legacy client commits one, skip it — they don't belong in BVR combat.
+    _SUPPORT_PLATFORMS = {
+        "netra_aewc", "phalcon_a50", "netra_aewc_mk2",
+        "il78_tanker", "il78mki",
+        "tapas_uav", "ghatak_ucav",
+    }
     eligible_by_id = {s["squadron_id"]: s for s in planning_state.get("eligible_squadrons", [])}
     ind_units = []
     for s in committed_force.get("squadrons", []):
         sid = s["squadron_id"]
         eligible = eligible_by_id.get(sid)
         if eligible is None:
+            continue
+        if eligible.get("platform_id") in _SUPPORT_PLATFORMS:
             continue
         ind_units.append({
             "platform_id": eligible["platform_id"],

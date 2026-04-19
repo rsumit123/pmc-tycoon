@@ -2,6 +2,13 @@
 import type { PlanningState, VignetteCommitPayload, ROE } from "../../lib/types";
 import { Stepper } from "../primitives/Stepper";
 
+// Platforms that are NOT combat aircraft — they're activated via Support toggles, not committed as squadrons.
+const SUPPORT_PLATFORM_IDS = new Set<string>([
+  "netra_aewc", "phalcon_a50", "netra_aewc_mk2",
+  "il78_tanker", "il78mki",
+  "tapas_uav", "ghatak_ucav",
+]);
+
 export interface ForceCommitterProps {
   planning: PlanningState;
   value: VignetteCommitPayload;
@@ -94,8 +101,13 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
 
       <section>
         <h3 className="text-sm font-semibold mb-2 text-slate-300">Squadrons</h3>
+        <p className="text-[10px] opacity-60 mb-2">
+          Only combat squadrons are committable here. AWACS, tankers, and ISR drones are activated via the <span className="font-semibold">Support Assets</span> section above.
+        </p>
         <ul className="flex flex-col gap-2">
-          {planning.eligible_squadrons.map((sq) => {
+          {planning.eligible_squadrons
+            .filter((sq) => !SUPPORT_PLATFORM_IDS.has(sq.platform_id))
+            .map((sq) => {
             const checked = value.squadrons.some((s) => s.squadron_id === sq.squadron_id);
             const picked = value.squadrons.find((s) => s.squadron_id === sq.squadron_id);
             return (

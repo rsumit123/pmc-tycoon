@@ -40,8 +40,17 @@ def _render_user_prompt(inputs: dict) -> str:
 
     lines.append("")
     lines.append("## Indian force commitment")
+    # committed['squadrons'] only carries {squadron_id, airframes}. Join
+    # with planning_state.eligible_squadrons to get name + platform_id.
+    eligible_by_id = {
+        e.get("squadron_id"): e
+        for e in inputs.get("planning_state", {}).get("eligible_squadrons", [])
+    }
     for sq in committed["squadrons"]:
-        lines.append(f"- {sq['name']} ({sq['platform_id']}): "
+        meta = eligible_by_id.get(sq.get("squadron_id"), {})
+        name = sq.get("name") or meta.get("name") or f"Sqn#{sq.get('squadron_id')}"
+        platform_id = sq.get("platform_id") or meta.get("platform_id") or "unknown"
+        lines.append(f"- {name} ({platform_id}): "
                      f"{sq['airframes']} airframes")
     supp = committed.get("support", {})
     lines.append(f"- Support: AWACS={supp.get('awacs')}, "
