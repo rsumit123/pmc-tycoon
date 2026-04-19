@@ -26,6 +26,13 @@ def _wrap(call, *, kind: str, subject_id: str | None):
         raise HTTPException(status_code=502, detail=str(e))
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Narrative already being generated (concurrent request)")
+    except Exception as e:
+        # Defensive: prompt/serialization bug → surface as 502 (narrative
+        # unavailable) so the frontend falls back instead of showing a
+        # blank screen. Log the stacktrace for us to fix later.
+        import logging, traceback
+        logging.error("LLM narrative generation failed: %s\n%s", e, traceback.format_exc())
+        raise HTTPException(status_code=502, detail=f"Narrative service error: {type(e).__name__}")
     return GenerateResponse(text=text, cached=cached, kind=kind, subject_id=subject_id)
 
 

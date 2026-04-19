@@ -121,9 +121,9 @@ export function ArmoryPage() {
             missile={missileModal}
             squadrons={hangar.squadrons}
             onClose={() => setMissileModal(null)}
-            onPick={(sqid) => {
-              void equipMissile(missileModal.target_id, sqid);
-              void loadUnlocks(cid);
+            onPick={async (sqid) => {
+              await equipMissile(missileModal.target_id, sqid);
+              await loadUnlocks(cid);
             }}
           />
         )}

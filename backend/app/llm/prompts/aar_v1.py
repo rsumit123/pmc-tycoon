@@ -60,7 +60,22 @@ def _render_user_prompt(inputs: dict) -> str:
     lines.append("")
     lines.append("## Event trace (chronological)")
     for e in trace:
-        lines.append(f"- t+{e['t_min']}m [{e['side']}] {e['kind']}: {e['detail']}")
+        t_min = e.get("t_min", "?")
+        kind = e.get("kind", "event")
+        side = e.get("side") or e.get("faction") or "—"
+        # Build a compact detail line from the most useful fields. Different
+        # event kinds have different shapes — we defensively render what's there.
+        bits: list[str] = []
+        for key in ("attacker_platform", "victim_platform", "target_platform", "weapon",
+                    "distance_km", "pk", "advantage", "ind_radar_km", "adv_radar_km",
+                    "ind_survivors", "adv_survivors", "battery_system", "base_name",
+                    "attackers", "defenders", "reason"):
+            if key in e and e[key] is not None:
+                bits.append(f"{key}={e[key]}")
+        detail = e.get("detail")
+        if detail:
+            bits.insert(0, str(detail))
+        lines.append(f"- t+{t_min}m [{side}] {kind}: {', '.join(bits) if bits else ''}")
 
     lines.append("")
     lines.append("## Outcome")

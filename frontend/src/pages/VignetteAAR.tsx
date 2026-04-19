@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { AARReader } from "../components/vignette/AARReader";
 import { CombatReasoning } from "../components/vignette/CombatReasoning";
+import { CombatStats } from "../components/vignette/CombatStats";
 import { TacticalReplay } from "../components/vignette/TacticalReplay";
 import { HeroOutcomeBanner } from "../components/vignette/HeroOutcomeBanner";
 import { ForceExchangeViz } from "../components/vignette/ForceExchangeViz";
@@ -54,6 +55,9 @@ export function VignetteAAR() {
         {outcome && <HeroOutcomeBanner outcome={outcome} scenarioName={ps.scenario_name} />}
         {outcome && vignette.committed_force && (
           <ForceExchangeViz outcome={outcome} indCommitted={indCommitted} advCommitted={advCommitted} />
+        )}
+        {vignette.event_trace && vignette.event_trace.length > 0 && (
+          <CombatStats eventTrace={vignette.event_trace} />
         )}
         {vignette.event_trace && vignette.event_trace.length > 0 && (
           <TacticalReplay

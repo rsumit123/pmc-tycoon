@@ -1,14 +1,16 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { MissileUnlock, HangarSquadron } from "../../lib/types";
 
 export interface MissileEquipModalProps {
   missile: MissileUnlock;
   squadrons: HangarSquadron[];
   onClose: () => void;
-  onPick: (squadronId: number) => void;
+  onPick: (squadronId: number) => Promise<void> | void;
 }
 
 export function MissileEquipModal({ missile, squadrons, onClose, onPick }: MissileEquipModalProps) {
+  const [pendingId, setPendingId] = useState<number | null>(null);
+
   const eligible = useMemo(
     () => squadrons.filter((s) => missile.eligible_platforms.includes(s.platform_id)),
     [squadrons, missile],
@@ -29,25 +31,41 @@ export function MissileEquipModal({ missile, squadrons, onClose, onPick }: Missi
             <p className="text-xs opacity-70">No eligible squadrons — this missile is compatible with platforms you don't currently operate.</p>
           ) : eligible.map((sq) => {
             const alreadyPending = (sq.pending_upgrades ?? []).some((u) => u.weapon_id === missile.target_id);
+            const isSaving = pendingId === sq.id;
+            const disabled = alreadyPending || isSaving;
             return (
               <button
                 key={sq.id}
-                onClick={() => { if (!alreadyPending) { onPick(sq.id); onClose(); } }}
-                disabled={alreadyPending}
+                onClick={async () => {
+                  if (disabled) return;
+                  setPendingId(sq.id);
+                  try {
+                    await onPick(sq.id);
+                  } finally {
+                    setPendingId(null);
+                  }
+                }}
+                disabled={disabled}
                 className={[
                   "w-full text-left border rounded-lg p-3 transition-colors",
                   alreadyPending
-                    ? "bg-slate-950 border-slate-800 opacity-50 cursor-not-allowed"
-                    : "bg-slate-800 hover:bg-slate-700 border-slate-700",
+                    ? "bg-slate-950 border-amber-800/50 opacity-70 cursor-not-allowed"
+                    : isSaving
+                      ? "bg-slate-800 border-amber-600 cursor-wait"
+                      : "bg-slate-800 hover:bg-slate-700 border-slate-700",
                 ].join(" ")}
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <div className="text-sm font-semibold truncate">{sq.name}</div>
-                  {alreadyPending && (
+                  {alreadyPending ? (
                     <span className="text-[10px] bg-amber-900/50 text-amber-200 px-1.5 py-0.5 rounded whitespace-nowrap">
                       🔧 queued
                     </span>
-                  )}
+                  ) : isSaving ? (
+                    <span className="text-[10px] bg-amber-700 text-white px-1.5 py-0.5 rounded whitespace-nowrap animate-pulse">
+                      queuing…
+                    </span>
+                  ) : null}
                 </div>
                 <div className="text-[10px] opacity-60">
                   {sq.platform_name} · {sq.base_name} · {sq.strength} airframes
@@ -58,6 +76,11 @@ export function MissileEquipModal({ missile, squadrons, onClose, onPick }: Missi
               </button>
             );
           })}
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full mt-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-sm py-2"
+          >Done</button>
           <div className="text-[10px] opacity-70 space-y-1 pt-2 border-t border-slate-800">
             <p className="italic opacity-80">How equip works:</p>
             <p>• Rollout takes 3 quarters. Squadron keeps its current loadout during rollout.</p>

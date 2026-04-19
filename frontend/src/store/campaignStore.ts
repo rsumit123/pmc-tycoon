@@ -546,6 +546,9 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     if (!cid) return;
     try {
       const r = await api.equipMissile(cid, missileId, squadronId);
+      // Refresh hangar so pending_upgrades reflects the new queued upgrade
+      // — MissileEquipModal uses sq.pending_upgrades to disable already-queued squadrons.
+      await get().loadHangar(cid);
       get().pushToast(
         "success",
         `${missileId} rollout queued — ready ${r.completion_year} Q${r.completion_quarter}`,
