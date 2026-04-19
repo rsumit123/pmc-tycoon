@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type {
   Platform, AcquisitionOrder, AcquisitionCreatePayload, RDProgramSpec, RDProgramState,
+  BaseMarker,
 } from "../../lib/types";
 import { Stepper } from "../primitives/Stepper";
 import { CommitHoldButton } from "../primitives/CommitHoldButton";
@@ -17,7 +18,16 @@ export interface AcquisitionPipelineProps {
   rdCatalog?: RDProgramSpec[];
   /** Active R&D program states — used to know which gated platforms remain locked. */
   rdActive?: RDProgramState[];
+  /** Available bases, for per-order delivery routing. */
+  bases?: BaseMarker[];
 }
+
+const RUNWAY_COMPATIBILITY: Record<string, Set<string>> = {
+  short: new Set(["short", "standard", "long", "medium"]),
+  standard: new Set(["standard", "long", "medium"]),
+  medium: new Set(["standard", "long", "medium"]),
+  long: new Set(["long"]),
+};
 
 const DEFAULT_QTY = 16;
 const MIN_QTY = 4;
@@ -38,15 +48,22 @@ function qFraction(year: number, quarter: number): number {
 }
 
 function OfferCard({
-  platform, currentYear, currentQuarter, onSign, disabled,
+  platform, currentYear, currentQuarter, onSign, disabled, bases = [],
 }: {
   platform: Platform;
   currentYear: number;
   currentQuarter: number;
   onSign: AcquisitionPipelineProps["onSign"];
   disabled?: boolean;
+  bases?: BaseMarker[];
 }) {
   const [qty, setQty] = useState<number>(DEFAULT_QTY);
+  const [preferredBaseId, setPreferredBaseId] = useState<number | "auto">("auto");
+
+  const runwayReq = platform.runway_class ?? "standard";
+  const acceptable = RUNWAY_COMPATIBILITY[runwayReq] ?? new Set(["standard", "long", "medium"]);
+  const compatibleBases = bases.filter((b) => acceptable.has(b.runway_class));
+
   const totalCost = qty * platform.cost_cr;
   const firstDeliveryQ = platform.default_first_delivery_quarters ?? 8;
   const focQ = platform.default_foc_quarters ?? 16;
@@ -64,6 +81,7 @@ function OfferCard({
       foc_year: focYear,
       foc_quarter: focQuarter,
       total_cost_cr: totalCost,
+      preferred_base_id: preferredBaseId === "auto" ? null : preferredBaseId,
     });
   };
 
@@ -94,6 +112,25 @@ function OfferCard({
         {" • First delivery "}{firstDeliveryYear}-Q{firstDeliveryQuarter}
         {" • FOC "}{focYear}-Q{focQuarter}
       </div>
+      {compatibleBases.length > 0 && (
+        <label className="flex items-center gap-2 text-xs">
+          <span className="opacity-60 flex-shrink-0">Deliver to</span>
+          <select
+            value={preferredBaseId === "auto" ? "auto" : String(preferredBaseId)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setPreferredBaseId(v === "auto" ? "auto" : Number(v));
+            }}
+            className="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
+            aria-label={`${platform.name} delivery base`}
+          >
+            <option value="auto">Auto (best fit)</option>
+            {compatibleBases.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+        </label>
+      )}
       <CommitHoldButton
         label={`Hold to sign ₹${totalCost.toLocaleString("en-US")}`}
         holdMs={1800}
@@ -253,10 +290,27 @@ function TimelineBar({
 
 export function AcquisitionPipeline({
   platforms, orders, currentYear, currentQuarter, onSign, onCancel, disabled,
-  rdCatalog = [], rdActive = [],
+  rdCatalog = [], rdActive = [], bases = [],
 }: AcquisitionPipelineProps) {
   const byId = Object.fromEntries(platforms.map((p) => [p.id, p]));
   const [tab, setTab] = useState<"orders" | "offers">(orders.length > 0 ? "orders" : "offers");
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  // R&D-unlocked platforms: their R&D completion is the real "intro", so
+  // we bypass the intro_year gate for them.
+  const rdUnlockedPlatformIds = useMemo(() => {
+    const completedProgramIds = new Set(
+      rdActive.filter((a) => a.status === "completed").map((a) => a.program_id),
+    );
+    const unlocked = new Set<string>();
+    for (const prog of rdCatalog) {
+      const u = prog.unlocks;
+      if (!u || !u.target_id) continue;
+      if (u.kind !== "platform" && u.kind !== "strike_platform") continue;
+      if (completedProgramIds.has(prog.id)) unlocked.add(u.target_id);
+    }
+    return unlocked;
+  }, [rdCatalog, rdActive]);
 
   // Platforms gated by an incomplete R&D program.
   const lockedPlatformIds = useMemo(() => {
@@ -277,12 +331,19 @@ export function AcquisitionPipeline({
   const availablePlatforms = useMemo(() => {
     return platforms.filter((p) => {
       if (lockedPlatformIds.has(p.id)) return false;
+      if (rdUnlockedPlatformIds.has(p.id)) return true;
       if (p.intro_year && p.intro_year > currentYear) return false;
       return true;
     });
-  }, [platforms, lockedPlatformIds, currentYear]);
+  }, [platforms, lockedPlatformIds, rdUnlockedPlatformIds, currentYear]);
 
   const lockedCount = platforms.length - availablePlatforms.length;
+
+  const completedOrderCount = orders.filter((o) => !o.cancelled && o.delivered >= o.quantity).length;
+  const visibleOrders = useMemo(() => {
+    if (showCompleted) return orders;
+    return orders.filter((o) => o.cancelled || o.delivered < o.quantity);
+  }, [orders, showCompleted]);
 
   return (
     <div className="space-y-4">
@@ -292,7 +353,7 @@ export function AcquisitionPipeline({
           onClick={() => setTab("orders")}
           className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded ${tab === "orders" ? "bg-amber-600 text-slate-900" : "text-slate-300"}`}
         >
-          Active Orders ({orders.length})
+          Active Orders ({orders.length - (showCompleted ? 0 : completedOrderCount)})
         </button>
         <button
           type="button"
@@ -305,14 +366,26 @@ export function AcquisitionPipeline({
 
       {tab === "orders" ? (
         <section>
-          {orders.length === 0 ? (
+          {completedOrderCount > 0 && (
+            <label className="flex items-center gap-2 text-[11px] opacity-70 mb-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showCompleted}
+                onChange={(e) => setShowCompleted(e.target.checked)}
+              />
+              Show {completedOrderCount} completed
+            </label>
+          )}
+          {visibleOrders.length === 0 ? (
             <p className="text-xs opacity-60 py-6 text-center">
-              No active orders. Open <span className="font-semibold">Offers</span> to sign a new procurement.
+              {orders.length === 0
+                ? <>No active orders. Open <span className="font-semibold">Offers</span> to sign a new procurement.</>
+                : <>All orders delivered. Tick <span className="font-semibold">Show {completedOrderCount} completed</span> to review.</>}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <div className="space-y-3 min-w-min">
-                {orders.map((o) => (
+                {visibleOrders.map((o) => (
                   <TimelineBar
                     key={o.id}
                     order={o}
@@ -347,6 +420,7 @@ export function AcquisitionPipeline({
                   currentQuarter={currentQuarter}
                   onSign={onSign}
                   disabled={disabled}
+                  bases={bases}
                 />
               ))}
             </div>

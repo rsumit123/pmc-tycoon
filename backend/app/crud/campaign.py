@@ -358,6 +358,20 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         })
         return new_sqn
 
+    # Preload preferred_base_id per order id, so delivery routing respects
+    # the player's choice when they signed the contract.
+    _order_prefs: dict[int, int | None] = {}
+    _order_ids_in_events = {
+        ev["payload"].get("order_id")
+        for ev in result.events
+        if ev.get("event_type") == "acquisition_delivery"
+    }
+    _order_ids_in_events.discard(None)
+    if _order_ids_in_events:
+        from app.models.acquisition import AcquisitionOrder as _AO
+        for row in db.query(_AO).filter(_AO.id.in_(_order_ids_in_events)).all():
+            _order_prefs[row.id] = row.preferred_base_id
+
     for ev in result.events:
         if ev["event_type"] != "acquisition_delivery":
             continue
@@ -366,20 +380,24 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         if not pid or count <= 0:
             continue
         plat = _platform_dicts.get(pid, {"id": pid, "runway_class": "short"})
+        order_id = ev["payload"].get("order_id")
+        pref_base_id = _order_prefs.get(order_id) if order_id is not None else None
 
         # Find an under-cap existing squadron for this platform. Prefer ones
         # with the lowest strength so we fill them up first before creating new.
+        # If the player set preferred_base_id, bias toward squadrons at that base.
         remaining = count
         assigned_base_id: int | None = None
         assigned_squadron_id: int | None = None
 
         cap = _cap_for_platform(pid)
         while remaining > 0:
-            candidate = min(
-                (s for s in sq_rows if s.platform_id == pid and (s.strength or 0) < cap),
-                key=lambda s: s.strength or 0,
-                default=None,
-            )
+            existing = [s for s in sq_rows if s.platform_id == pid and (s.strength or 0) < cap]
+            if pref_base_id is not None:
+                at_pref = [s for s in existing if s.base_id == pref_base_id]
+                if at_pref:
+                    existing = at_pref
+            candidate = min(existing, key=lambda s: s.strength or 0, default=None)
             if candidate is not None:
                 room = cap - (candidate.strength or 0)
                 take = min(room, remaining)
@@ -393,8 +411,19 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
                     assigned_squadron_id = candidate.id
                 remaining -= take
             else:
-                # No room anywhere — create a new squadron at the best base.
-                target_base_id = pick_base_for_delivery(plat, _base_dicts, _sq_dicts)
+                # No room anywhere — create a new squadron at preferred base
+                # if runway-compatible, else fall back to heuristic.
+                target_base_id: int | None = None
+                if pref_base_id is not None:
+                    pref = next((b for b in _base_dicts if b["id"] == pref_base_id), None)
+                    if pref is not None:
+                        from app.engine.delivery_assignment import RUNWAY_COMPATIBILITY
+                        req = plat.get("runway_class", "standard")
+                        acceptable = RUNWAY_COMPATIBILITY.get(req, {"standard", "long", "medium"})
+                        if pref.get("runway_class") in acceptable:
+                            target_base_id = pref_base_id
+                if target_base_id is None:
+                    target_base_id = pick_base_for_delivery(plat, _base_dicts, _sq_dicts)
                 if target_base_id is None:
                     break
                 batch = min(cap, remaining)

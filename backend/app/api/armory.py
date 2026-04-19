@@ -65,10 +65,14 @@ def _completed_unlocks(db: Session, campaign_id: int) -> dict[str, list]:
                 description=u.description,
                 coverage_km=u.coverage_km or 0,
             ))
-        elif u.kind == "strike_platform":
+        elif u.kind in ("strike_platform", "platform"):
+            from app.content.registry import platforms as _platforms
+            plat_specs = _platforms()
+            plat = plat_specs.get(u.target_id)
+            display_name = plat.name if plat is not None else u.target_id
             strikes.append(StrikePlatformUnlock(
                 target_id=u.target_id,
-                name=u.target_id,
+                name=display_name,
                 description=u.description,
             ))
 

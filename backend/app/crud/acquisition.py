@@ -27,6 +27,7 @@ def create_order(
     foc_year: int,
     foc_quarter: int,
     total_cost_cr: int,
+    preferred_base_id: int | None = None,
 ) -> AcquisitionOrder:
     if platform_id not in platforms():
         raise PlatformNotFound(platform_id)
@@ -44,6 +45,7 @@ def create_order(
         foc_quarter=foc_quarter,
         delivered=0,
         total_cost_cr=total_cost_cr,
+        preferred_base_id=preferred_base_id,
     )
     db.add(order)
     db.commit()

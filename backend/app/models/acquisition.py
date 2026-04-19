@@ -20,3 +20,4 @@ class AcquisitionOrder(Base):
     delivered: Mapped[int] = mapped_column(Integer, default=0)
     total_cost_cr: Mapped[int] = mapped_column(Integer, default=0)
     cancelled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    preferred_base_id: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)

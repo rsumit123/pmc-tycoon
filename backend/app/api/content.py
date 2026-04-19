@@ -30,6 +30,7 @@ def list_platforms_endpoint():
             procurable_by=list(getattr(spec, "procurable_by", []) or []),
             default_first_delivery_quarters=int(getattr(spec, "default_first_delivery_quarters", 8) or 8),
             default_foc_quarters=int(getattr(spec, "default_foc_quarters", 20) or 20),
+            runway_class=getattr(spec, "runway_class", "standard") or "standard",
         ))
     out.sort(key=lambda p: p.id)
     return PlatformListResponse(platforms=out)

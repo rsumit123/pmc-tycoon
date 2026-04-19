@@ -16,6 +16,7 @@ class PlatformOut(BaseModel):
     procurable_by: list[str] = []
     default_first_delivery_quarters: int = 8
     default_foc_quarters: int = 20
+    runway_class: str = "standard"
 
 
 class PlatformListResponse(BaseModel):

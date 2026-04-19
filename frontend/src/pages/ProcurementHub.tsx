@@ -31,6 +31,8 @@ export function ProcurementHub() {
   const loadRdCatalog = useCampaignStore((s) => s.loadRdCatalog);
   const loadRdActive = useCampaignStore((s) => s.loadRdActive);
   const loadAcquisitions = useCampaignStore((s) => s.loadAcquisitions);
+  const bases = useCampaignStore((s) => s.bases);
+  const loadBases = useCampaignStore((s) => s.loadBases);
   const setBudget = useCampaignStore((s) => s.setBudget);
   const startRd = useCampaignStore((s) => s.startRdProgram);
   const updateRd = useCampaignStore((s) => s.updateRdProgram);
@@ -51,8 +53,9 @@ export function ProcurementHub() {
       loadRdCatalog();
       loadRdActive(campaign.id);
       loadAcquisitions(campaign.id);
+      loadBases(campaign.id);
     }
-  }, [campaign, loadPlatforms, loadRdCatalog, loadRdActive, loadAcquisitions]);
+  }, [campaign, loadPlatforms, loadRdCatalog, loadRdActive, loadAcquisitions, loadBases]);
 
   if (!campaign) return <div className="p-6">Loading…</div>;
 
@@ -151,6 +154,7 @@ export function ProcurementHub() {
               disabled={loading}
               rdCatalog={rdCatalog}
               rdActive={rdActive}
+              bases={bases}
             />
           </>
         )}

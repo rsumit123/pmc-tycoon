@@ -42,6 +42,7 @@ def create_acquisition_endpoint(
             foc_year=payload.foc_year,
             foc_quarter=payload.foc_quarter,
             total_cost_cr=payload.total_cost_cr,
+            preferred_base_id=payload.preferred_base_id,
         )
     except PlatformNotFound:
         raise HTTPException(status_code=404, detail=f"Platform {payload.platform_id} not in registry")

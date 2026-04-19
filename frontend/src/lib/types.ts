@@ -251,6 +251,7 @@ export interface Platform {
   procurable_by: string[];
   default_first_delivery_quarters: number;
   default_foc_quarters: number;
+  runway_class?: string;
 }
 
 export interface PlatformListResponse {
@@ -361,6 +362,7 @@ export interface AcquisitionOrder {
   delivered: number;
   total_cost_cr: number;
   cancelled?: boolean;
+  preferred_base_id?: number | null;
 }
 
 export interface AcquisitionListResponse {
@@ -375,6 +377,7 @@ export interface AcquisitionCreatePayload {
   foc_year: number;
   foc_quarter: number;
   total_cost_cr: number;
+  preferred_base_id?: number | null;
 }
 
 export interface RDUpdatePayload {
