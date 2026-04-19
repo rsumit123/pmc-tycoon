@@ -27,6 +27,9 @@ def list_platforms_endpoint():
             radar_range_km=int(spec.radar_range_km),
             cost_cr=int(spec.cost_cr),
             intro_year=int(spec.intro_year),
+            procurable_by=list(getattr(spec, "procurable_by", []) or []),
+            default_first_delivery_quarters=int(getattr(spec, "default_first_delivery_quarters", 8) or 8),
+            default_foc_quarters=int(getattr(spec, "default_foc_quarters", 20) or 20),
         ))
     out.sort(key=lambda p: p.id)
     return PlatformListResponse(platforms=out)

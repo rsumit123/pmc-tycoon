@@ -115,8 +115,15 @@ export function CampaignMapView() {
 
   return (
     <div className="fixed inset-0 flex flex-col">
-      <header className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
-        <div className="min-w-0 flex-shrink">
+      <header className="flex items-center gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
+        <button
+          onClick={() => setShowMenu(true)}
+          aria-label="open menu"
+          className="text-base px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 flex-shrink-0"
+        >
+          ☰
+        </button>
+        <div className="min-w-0 flex-1">
           <h1 className="text-sm font-bold truncate">{campaign.name}</h1>
           <p className="text-xs opacity-70">
             {campaign.current_year} Q{campaign.current_quarter} • ₹{campaign.budget_cr.toLocaleString("en-US")} cr
@@ -137,13 +144,6 @@ export function CampaignMapView() {
             className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-slate-900 font-semibold rounded px-3 py-1.5 text-xs"
           >
             {loading ? "…" : "End Turn"}
-          </button>
-          <button
-            onClick={() => setShowMenu(true)}
-            aria-label="open menu"
-            className="text-sm px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700"
-          >
-            ☰
           </button>
         </div>
       </header>

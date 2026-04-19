@@ -273,24 +273,38 @@ export function RDDashboard({
     }, 0);
   }, [active]);
 
+  const allocationSet = !!campaign?.current_allocation_json;
   const rdBucket = campaign?.current_allocation_json?.rd ?? 0;
-  const overBudget = totalQuarterlyCost > rdBucket;
+  const overBudget = allocationSet && totalQuarterlyCost > rdBucket;
 
   return (
     <div className="space-y-4">
       <div className={[
         "sticky top-0 z-20 -mx-4 sm:mx-0 px-4 py-2 border-b",
-        overBudget ? "bg-rose-950/80 border-rose-800" : "bg-slate-900 border-slate-700",
+        overBudget ? "bg-rose-950/80 border-rose-800"
+          : !allocationSet ? "bg-amber-950/40 border-amber-800"
+          : "bg-slate-900 border-slate-700",
       ].join(" ")}>
-        <div className="flex items-baseline justify-between text-xs">
+        <div className="flex items-baseline justify-between text-xs gap-2">
           <span className="opacity-70">Quarterly R&D spend</span>
-          <span className={overBudget ? "text-rose-300 font-semibold" : "text-slate-200 font-semibold"}>
-            ₹{totalQuarterlyCost.toLocaleString("en-US")} / ₹{rdBucket.toLocaleString("en-US")} cr
-          </span>
+          {allocationSet ? (
+            <span className={overBudget ? "text-rose-300 font-semibold" : "text-slate-200 font-semibold"}>
+              ₹{totalQuarterlyCost.toLocaleString("en-US")} / ₹{rdBucket.toLocaleString("en-US")} cr
+            </span>
+          ) : (
+            <span className="text-amber-300 font-semibold">
+              ₹{totalQuarterlyCost.toLocaleString("en-US")} committed
+            </span>
+          )}
         </div>
         {overBudget && (
           <p className="text-[10px] text-rose-300 mt-1">
             Projected spend exceeds R&D budget bucket — programs will get underfunded pro-rata.
+          </p>
+        )}
+        {!allocationSet && (
+          <p className="text-[10px] text-amber-300 mt-1">
+            Budget allocation not set. Visit <span className="font-semibold">Budget</span> tab to allocate your ₹{(campaign?.quarterly_grant_cr ?? 0).toLocaleString("en-US")} cr quarterly grant.
           </p>
         )}
       </div>

@@ -13,6 +13,9 @@ class PlatformOut(BaseModel):
     radar_range_km: int
     cost_cr: int
     intro_year: int
+    procurable_by: list[str] = []
+    default_first_delivery_quarters: int = 8
+    default_foc_quarters: int = 20
 
 
 class PlatformListResponse(BaseModel):
