@@ -85,11 +85,27 @@ def _make_airframes(side: str, unit_list: list[dict], platforms: dict[str, dict]
     return out
 
 
+# Ground/ship-strike + anti-radiation munitions — NOT air-to-air,
+# can't be picked for BVR or WVR aerial engagements even though they're
+# in the WEAPONS table (they live there for pricing + planning display).
+A2A_EXCLUDED: frozenset[str] = frozenset({
+    "yj21", "cj20",                          # anti-ship / LACM (PLA/PLAN)
+    "brahmos_ng", "air_brahmos2",            # supersonic anti-ship / strike
+    "rudram_2", "rudram_3", "ngarm", "saaw", # anti-radiation / standoff
+})
+
+
 def _best_weapon(loadout: list[str], kind: str) -> str | None:
-    """Pick the longest-NEZ weapon of kind 'bvr' or 'wvr' from the loadout."""
+    """Pick the longest-NEZ weapon of kind 'bvr' or 'wvr' from the loadout.
+    Strike-class weapons (BrahMos / YJ-21 / Rudram / SAAW) are filtered out
+    — they can be in a squadron's loadout (for non-combat strikes or
+    display cost) but are not air-to-air shots.
+    """
     candidates = []
     for w in loadout:
         if w not in WEAPONS:
+            continue
+        if w in A2A_EXCLUDED:
             continue
         is_wvr = WEAPONS[w]["max_range_km"] <= 30
         if kind == "bvr" and not is_wvr:

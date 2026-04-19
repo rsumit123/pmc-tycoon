@@ -106,6 +106,7 @@ def _serialize_squadron(sq: Squadron) -> dict:
         "strength": sq.strength,
         "readiness_pct": sq.readiness_pct,
         "xp": sq.xp,
+        "loadout_override_json": sq.loadout_override_json,
     }
 
 
