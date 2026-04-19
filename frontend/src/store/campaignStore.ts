@@ -67,6 +67,7 @@ interface CampaignState {
   pushToast: (variant: ToastVariant, message: string, duration?: number) => void;
   dismissToast: (id: string) => void;
   loadCampaignList: () => Promise<void>;
+  deleteCampaign: (campaignId: number) => Promise<void>;
   loadObjectivesCatalog: () => Promise<void>;
   loadTurnReport: (campaignId: number, year: number, quarter: number) => Promise<void>;
   loadHangar: (campaignId: number) => Promise<void>;
@@ -401,6 +402,17 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       set({ campaignList: resp.campaigns });
     } catch (e) {
       set({ error: (e as Error).message });
+    }
+  },
+
+  deleteCampaign: async (campaignId: number) => {
+    try {
+      await api.deleteCampaign(campaignId);
+      set((s) => ({ campaignList: s.campaignList.filter((c) => c.id !== campaignId) }));
+      get().pushToast("success", "Campaign deleted");
+    } catch (e) {
+      get().pushToast("error", "Failed to delete campaign");
+      throw e;
     }
   },
 

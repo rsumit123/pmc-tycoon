@@ -1,4 +1,5 @@
 import type { HangarSquadron } from "../../lib/types";
+import { shortBaseName } from "./SquadronRow";
 
 export interface SquadronDetailSheetProps {
   squadron: HangarSquadron | null;
@@ -43,8 +44,8 @@ export function SquadronDetailSheet({ squadron, onClose, onRebaseStart }: Squadr
         <div className="p-4 space-y-3">
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="bg-slate-950 border border-slate-800 rounded p-2">
-              <div className="opacity-60">Base</div>
-              <div className="font-semibold truncate">{squadron.base_name}</div>
+              <div className="opacity-60">Location</div>
+              <div className="font-semibold truncate">📍 {shortBaseName(squadron.base_name)}</div>
             </div>
             <div className="bg-slate-950 border border-slate-800 rounded p-2">
               <div className="opacity-60">Airframes</div>

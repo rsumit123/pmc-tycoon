@@ -27,6 +27,38 @@ def list_campaigns_endpoint(db: Session = Depends(get_db)):
     )
 
 
+@router.delete("/{campaign_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_campaign_endpoint(campaign_id: int, db: Session = Depends(get_db)):
+    """Delete a campaign and all its dependent rows."""
+    from app.models.squadron import Squadron
+    from app.models.campaign_base import CampaignBase
+    from app.models.event import CampaignEvent
+    from app.models.intel import IntelCard
+    from app.models.vignette import Vignette
+    from app.models.acquisition import AcquisitionOrder
+    from app.models.rd_program import RDProgramState
+    from app.models.adversary import AdversaryState
+    from app.models.campaign_narrative import CampaignNarrative
+    from app.models.ad_battery import ADBattery
+    from app.models.loadout_upgrade import LoadoutUpgrade
+
+    camp = db.query(Campaign).get(campaign_id)
+    if camp is None:
+        raise HTTPException(status_code=404, detail="campaign not found")
+
+    # Delete all dependent rows (no cascade defined in ORM).
+    for model in (
+        LoadoutUpgrade, ADBattery, CampaignNarrative, AdversaryState,
+        RDProgramState, AcquisitionOrder, Vignette, IntelCard,
+        CampaignEvent, Squadron, CampaignBase,
+    ):
+        db.query(model).filter_by(campaign_id=campaign_id).delete(synchronize_session=False)
+
+    db.delete(camp)
+    db.commit()
+    return None
+
+
 @router.get("/{campaign_id}/turn-report/{year}/{quarter}", response_model=TurnReportResponse)
 def get_turn_report(
     campaign_id: int,

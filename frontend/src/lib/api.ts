@@ -232,6 +232,10 @@ export const api = {
   exportCampaign: (campaignId: number) =>
     http.get(`/api/campaigns/${campaignId}/export`).then((r) => r.data),
 
+  async deleteCampaign(campaignId: number): Promise<void> {
+    await http.delete(`/api/campaigns/${campaignId}`);
+  },
+
   importCampaign: (data: Record<string, unknown>) =>
     http.post<{ id: number }>("/api/campaigns/import", data).then((r) => r.data),
 

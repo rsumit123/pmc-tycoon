@@ -131,101 +131,98 @@ export function CampaignMapView() {
               ⚠ Ops
             </Link>
           )}
-          <Link
-            to={`/campaign/${campaign.id}/intel`}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs rounded px-2 py-1"
-          >
-            Intel
-          </Link>
-          <Link
-            to={`/campaign/${campaign.id}/procurement`}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs rounded px-2 py-1"
-          >
-            Proc
-          </Link>
-          <Link
-            to={`/campaign/${campaign.id}/hangar`}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs rounded px-2 py-1"
-          >Hangar</Link>
-          <Link
-            to={`/campaign/${campaign.id}/armory`}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs rounded px-2 py-1"
-          >Armory</Link>
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 sm:hidden"
-          >
-            ☰
-          </button>
-          <div className="hidden sm:flex items-center gap-1.5">
-            <Link to={`/campaign/${campaign.id}/raw`} className="text-xs opacity-60 hover:opacity-100 underline">raw</Link>
-            <ThemeToggle />
-            <button
-              onClick={() => { setAudioEnabled(!audioOn); setAudioOn(!audioOn); }}
-              className="text-xs opacity-60 hover:opacity-100 px-2 py-1 rounded bg-slate-800"
-              title={audioOn ? "Mute" : "Unmute"}
-            >
-              {audioOn ? "♪" : "♪̶"}
-            </button>
-            <button
-              onClick={() => setShowGuide(true)}
-              className="text-xs opacity-60 hover:opacity-100 px-2 py-1 rounded bg-slate-800"
-              title="How to play"
-            >
-              ?
-            </button>
-            {isCampaignComplete && (
-              <Link
-                to={`/campaign/${campaign.id}/white-paper`}
-                className="bg-amber-600 hover:bg-amber-500 text-slate-900 text-xs font-semibold rounded px-2 py-1"
-              >
-                White Paper
-              </Link>
-            )}
-          </div>
           <button
             onClick={handleAdvanceTurn}
             disabled={loading || isCampaignComplete}
-            className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-slate-900 font-semibold rounded px-2 py-1.5 text-xs"
+            className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-slate-900 font-semibold rounded px-3 py-1.5 text-xs"
           >
             {loading ? "…" : "End Turn"}
+          </button>
+          <button
+            onClick={() => setShowMenu(true)}
+            aria-label="open menu"
+            className="text-sm px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700"
+          >
+            ☰
           </button>
         </div>
       </header>
       {showMenu && (
-        <div className="flex flex-wrap gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800 sm:hidden">
-          <Link
-            to={`/campaign/${campaign.id}/hangar`}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs rounded px-2 py-1"
-          >Hangar</Link>
-          <Link
-            to={`/campaign/${campaign.id}/armory`}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs rounded px-2 py-1"
-          >Armory</Link>
-          <Link to={`/campaign/${campaign.id}/raw`} className="text-xs opacity-60 hover:opacity-100 underline">raw</Link>
-          <ThemeToggle />
-          <button
-            onClick={() => { setAudioEnabled(!audioOn); setAudioOn(!audioOn); }}
-            className="text-xs opacity-60 hover:opacity-100 px-2 py-1 rounded bg-slate-800"
-          >
-            {audioOn ? "♪" : "♪̶"}
-          </button>
-          <button
-            onClick={() => { setShowGuide(true); setShowMenu(false); }}
-            className="text-xs opacity-60 hover:opacity-100 px-2 py-1 rounded bg-slate-800"
-          >
-            ? Help
-          </button>
-          {isCampaignComplete && (
-            <Link
-              to={`/campaign/${campaign.id}/white-paper`}
-              className="bg-amber-600 text-slate-900 text-xs font-semibold rounded px-2 py-1"
-            >
-              White Paper
-            </Link>
-          )}
-          <Link to="/" className="text-xs opacity-60 hover:opacity-100 underline">Home</Link>
-        </div>
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/60"
+            onClick={() => setShowMenu(false)}
+            aria-label="close menu backdrop"
+          />
+          <aside className="fixed top-0 right-0 bottom-0 z-50 w-72 max-w-[85vw] bg-slate-900 border-l border-slate-800 flex flex-col shadow-xl">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+              <div className="text-sm font-bold">Menu</div>
+              <button
+                onClick={() => setShowMenu(false)}
+                aria-label="close menu"
+                className="text-slate-400 hover:text-slate-200"
+              >✕</button>
+            </div>
+            <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+              <div className="text-[10px] uppercase tracking-wide opacity-60 px-2 pt-1 pb-1">Force</div>
+              <Link
+                onClick={() => setShowMenu(false)}
+                to={`/campaign/${campaign.id}/hangar`}
+                className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
+              >🛩 Hangar</Link>
+              <Link
+                onClick={() => setShowMenu(false)}
+                to={`/campaign/${campaign.id}/armory`}
+                className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
+              >🚀 Armory</Link>
+
+              <div className="text-[10px] uppercase tracking-wide opacity-60 px-2 pt-3 pb-1">Operations</div>
+              <Link
+                onClick={() => setShowMenu(false)}
+                to={`/campaign/${campaign.id}/procurement`}
+                className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
+              >💰 Procurement</Link>
+              <Link
+                onClick={() => setShowMenu(false)}
+                to={`/campaign/${campaign.id}/intel`}
+                className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
+              >🛰 Intel</Link>
+              {isCampaignComplete && (
+                <Link
+                  onClick={() => setShowMenu(false)}
+                  to={`/campaign/${campaign.id}/white-paper`}
+                  className="flex items-center gap-2 text-sm rounded px-3 py-2 bg-amber-600 text-slate-900 font-semibold"
+                >📰 White Paper</Link>
+              )}
+
+              <div className="text-[10px] uppercase tracking-wide opacity-60 px-2 pt-3 pb-1">Settings</div>
+              <button
+                type="button"
+                onClick={() => { setAudioEnabled(!audioOn); setAudioOn(!audioOn); }}
+                className="w-full text-left flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
+              >{audioOn ? "🔊 Audio on" : "🔇 Audio off"}</button>
+              <div className="px-3 py-2 flex items-center gap-2 text-sm">
+                <span>🎨 Theme</span>
+                <ThemeToggle />
+              </div>
+              <button
+                type="button"
+                onClick={() => { setShowGuide(true); setShowMenu(false); }}
+                className="w-full text-left flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
+              >❓ How to play</button>
+              <Link
+                onClick={() => setShowMenu(false)}
+                to={`/campaign/${campaign.id}/raw`}
+                className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800 opacity-60"
+              >🛠 Raw state</Link>
+              <Link
+                onClick={() => setShowMenu(false)}
+                to="/"
+                className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800 opacity-60"
+              >🏠 Home / Campaigns</Link>
+            </nav>
+          </aside>
+        </>
       )}
 
       <div className="relative flex-1">

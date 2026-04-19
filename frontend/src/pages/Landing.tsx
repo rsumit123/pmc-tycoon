@@ -28,6 +28,8 @@ export function Landing() {
   const objectivesCatalog = useCampaignStore((s) => s.objectivesCatalog);
   const loadCampaignList = useCampaignStore((s) => s.loadCampaignList);
   const loadObjectivesCatalog = useCampaignStore((s) => s.loadObjectivesCatalog);
+  const deleteCampaign = useCampaignStore((s) => s.deleteCampaign);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -92,24 +94,49 @@ export function Landing() {
               Resume Campaign
             </h2>
             {campaignList.map((c) => (
-              <button
+              <div
                 key={c.id}
-                onClick={() => navigate(`/campaign/${c.id}`)}
-                className="w-full text-left bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-4 py-3 space-y-1 transition-colors"
+                className="flex items-stretch bg-slate-800 border border-slate-700 rounded-lg overflow-hidden hover:border-slate-500 transition-colors"
               >
-                <div className="font-semibold text-sm">{c.name}</div>
-                <div className="text-xs opacity-60 flex gap-3">
-                  <span>
-                    {c.current_year} Q{c.current_quarter}
-                  </span>
-                  <span>
-                    ₹{c.budget_cr.toLocaleString("en-US")} cr
-                  </span>
-                  <span className="capitalize">
-                    {c.difficulty.replace(/_/g, " ")}
-                  </span>
-                </div>
-              </button>
+                <button
+                  onClick={() => navigate(`/campaign/${c.id}`)}
+                  className="flex-1 min-w-0 text-left hover:bg-slate-700 px-4 py-3 space-y-1"
+                >
+                  <div className="font-semibold text-sm truncate">{c.name}</div>
+                  <div className="text-xs opacity-60 flex gap-3 flex-wrap">
+                    <span>{c.current_year} Q{c.current_quarter}</span>
+                    <span>₹{c.budget_cr.toLocaleString("en-US")} cr</span>
+                    <span className="capitalize">{c.difficulty.replace(/_/g, " ")}</span>
+                  </div>
+                </button>
+                {confirmDelete === c.id ? (
+                  <div className="flex items-center gap-1 px-2 bg-rose-950/60 border-l border-rose-800">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await deleteCampaign(c.id);
+                        setConfirmDelete(null);
+                      }}
+                      className="text-xs font-semibold text-rose-200 hover:text-white bg-rose-700 hover:bg-rose-600 rounded px-2 py-1"
+                      aria-label="confirm delete"
+                    >Delete</button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDelete(null)}
+                      className="text-xs text-slate-300 hover:text-white px-2 py-1"
+                      aria-label="cancel delete"
+                    >✕</button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(c.id)}
+                    className="px-3 text-slate-500 hover:text-rose-400 hover:bg-rose-950/30 border-l border-slate-700 transition-colors"
+                    aria-label={`Delete campaign ${c.name}`}
+                    title="Delete campaign"
+                  >🗑</button>
+                )}
+              </div>
             ))}
           </div>
         )}

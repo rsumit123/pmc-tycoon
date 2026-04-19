@@ -23,7 +23,7 @@ export function PlatformSummaryCard({
         <span className="text-[10px] opacity-80 w-8 text-right">{s.avg_readiness_pct}%</span>
       </div>
       {onClick && (
-        <div className="mt-1 text-[10px] text-amber-400/70">Tap to view squadrons &rarr;</div>
+        <div className="mt-1 text-[10px] text-amber-400/70">Tap to view squadrons →</div>
       )}
     </button>
   );
