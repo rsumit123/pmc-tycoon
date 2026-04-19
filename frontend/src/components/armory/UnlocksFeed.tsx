@@ -50,7 +50,7 @@ export function UnlocksFeed({ unlocks }: { unlocks: UnlocksResponse }) {
           <div className="text-sm font-semibold">{p.name}</div>
           <div className="text-[10px] opacity-70 mb-2">{p.description}</div>
           <Link
-            to={`/campaign/${cid}/procurement?tab=acquisitions`}
+            to={`/campaign/${cid}/procurement?tab=acquisitions&view=offers&focus=${p.target_id}`}
             className="inline-block text-xs rounded bg-amber-600 text-slate-900 px-2 py-1 font-semibold hover:bg-amber-500"
           >Procure via Acquisitions →</Link>
         </div>

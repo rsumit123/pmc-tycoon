@@ -155,6 +155,8 @@ export function ProcurementHub() {
               rdCatalog={rdCatalog}
               rdActive={rdActive}
               bases={bases}
+              initialView={searchParams.get("view") === "offers" ? "offers" : undefined}
+              focusPlatformId={searchParams.get("focus") ?? undefined}
             />
           </>
         )}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   Platform, AcquisitionOrder, AcquisitionCreatePayload, RDProgramSpec, RDProgramState,
   BaseMarker,
@@ -20,6 +20,10 @@ export interface AcquisitionPipelineProps {
   rdActive?: RDProgramState[];
   /** Available bases, for per-order delivery routing. */
   bases?: BaseMarker[];
+  /** Initial inner tab — lets deep-links land on Offers. */
+  initialView?: "orders" | "offers";
+  /** When set, scrolls to + highlights the matching OfferCard on mount. */
+  focusPlatformId?: string;
 }
 
 const RUNWAY_COMPATIBILITY: Record<string, Set<string>> = {
@@ -48,7 +52,7 @@ function qFraction(year: number, quarter: number): number {
 }
 
 function OfferCard({
-  platform, currentYear, currentQuarter, onSign, disabled, bases = [],
+  platform, currentYear, currentQuarter, onSign, disabled, bases = [], highlighted,
 }: {
   platform: Platform;
   currentYear: number;
@@ -56,7 +60,14 @@ function OfferCard({
   onSign: AcquisitionPipelineProps["onSign"];
   disabled?: boolean;
   bases?: BaseMarker[];
+  highlighted?: boolean;
 }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (highlighted && ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlighted]);
   const [qty, setQty] = useState<number>(DEFAULT_QTY);
   const [preferredBaseId, setPreferredBaseId] = useState<number | "auto">("auto");
 
@@ -86,7 +97,15 @@ function OfferCard({
   };
 
   return (
-    <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-3 space-y-2">
+    <div
+      ref={ref}
+      className={[
+        "rounded-lg p-3 space-y-2 border",
+        highlighted
+          ? "bg-amber-900/30 border-amber-500 ring-2 ring-amber-400/70 animate-pulse"
+          : "bg-slate-900/50 border-slate-800",
+      ].join(" ")}
+    >
       <p className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-semibold">{platform.name}</span>
         <span className="text-[10px] opacity-60">{platform.origin}</span>
@@ -290,11 +309,21 @@ function TimelineBar({
 
 export function AcquisitionPipeline({
   platforms, orders, currentYear, currentQuarter, onSign, onCancel, disabled,
-  rdCatalog = [], rdActive = [], bases = [],
+  rdCatalog = [], rdActive = [], bases = [], initialView, focusPlatformId,
 }: AcquisitionPipelineProps) {
   const byId = Object.fromEntries(platforms.map((p) => [p.id, p]));
-  const [tab, setTab] = useState<"orders" | "offers">(orders.length > 0 ? "orders" : "offers");
+  const [tab, setTab] = useState<"orders" | "offers">(
+    initialView ?? (orders.length > 0 ? "orders" : "offers"),
+  );
   const [showCompleted, setShowCompleted] = useState(false);
+  // Clear the highlight after a few seconds so it doesn't pulse forever.
+  const [focusId, setFocusId] = useState<string | undefined>(focusPlatformId);
+  useEffect(() => {
+    if (!focusPlatformId) return;
+    setFocusId(focusPlatformId);
+    const t = setTimeout(() => setFocusId(undefined), 4000);
+    return () => clearTimeout(t);
+  }, [focusPlatformId]);
 
   // R&D-unlocked platforms: their R&D completion is the real "intro", so
   // we bypass the intro_year gate for them.
@@ -421,6 +450,7 @@ export function AcquisitionPipeline({
                   onSign={onSign}
                   disabled={disabled}
                   bases={bases}
+                  highlighted={focusId === p.id}
                 />
               ))}
             </div>
