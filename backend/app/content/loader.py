@@ -40,6 +40,24 @@ class ObjectiveSpec(BaseModel):
     target_year: int | None = None
 
 
+class UnlockSpec(BaseModel):
+    """Declares what completing an R&D program unlocks.
+
+    kind:
+      - 'missile'          → target_id is a weapon id in WEAPONS; eligible_platforms is a list of platform ids that can carry it.
+      - 'ad_system'        → target_id is an AD system id; coverage_km is SAM bubble.
+      - 'isr_drone'        → target_id is a platform_id that becomes available as an ISR drone.
+      - 'strike_platform'  → target_id is a platform_id that becomes procurable (unmanned strike role).
+      - 'platform'         → target_id is a fighter platform_id that becomes procurable.
+      - 'none'             → cosmetic completion (some R&D is doctrinal).
+    """
+    kind: str = "none"
+    target_id: str | None = None
+    eligible_platforms: list[str] = Field(default_factory=list)
+    coverage_km: int | None = None
+    description: str = ""
+
+
 class RDProgramSpec(BaseModel):
     id: str
     name: str
@@ -47,6 +65,7 @@ class RDProgramSpec(BaseModel):
     base_duration_quarters: int
     base_cost_cr: int
     dependencies: list[str] = Field(default_factory=list)
+    unlocks: UnlockSpec = Field(default_factory=UnlockSpec)
 
 
 def _load_yaml(path: Path) -> dict:

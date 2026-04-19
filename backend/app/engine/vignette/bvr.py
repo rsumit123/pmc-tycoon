@@ -22,6 +22,9 @@ WEAPONS: dict[str, dict] = {
     "aim9x":     {"nez_km":  15, "max_range_km":  35, "gen_bonus":  0.10},
     "yj21":      {"nez_km": 200, "max_range_km": 1500, "gen_bonus":  0.10},
     "cj20":      {"nez_km": 150, "max_range_km": 2000, "gen_bonus":  0.05},
+    "rudram_2":  {"nez_km":  80, "max_range_km": 300,  "gen_bonus":  0.05},
+    "rudram_3":  {"nez_km": 150, "max_range_km": 550,  "gen_bonus":  0.05},
+    "brahmos_ng": {"nez_km": 120, "max_range_km": 500, "gen_bonus":  0.05},
 }
 
 PLATFORM_LOADOUTS: dict[str, dict[str, list[str]]] = {
