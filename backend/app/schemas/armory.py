@@ -8,6 +8,7 @@ class MissileUnlock(BaseModel):
     eligible_platforms: list[str]
     nez_km: int
     max_range_km: int
+    weapon_class: str = "a2a_bvr"
 
 
 class ADSystemUnlock(BaseModel):

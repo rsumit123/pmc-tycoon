@@ -45,6 +45,7 @@ def _completed_unlocks(db: Session, campaign_id: int) -> dict[str, list]:
                 eligible_platforms=u.eligible_platforms,
                 nez_km=w["nez_km"],
                 max_range_km=w["max_range_km"],
+                weapon_class=w.get("class", "a2a_bvr"),
             ))
         elif u.kind == "ad_system":
             adspec = ad_specs.get(u.target_id)

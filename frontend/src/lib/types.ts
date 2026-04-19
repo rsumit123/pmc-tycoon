@@ -530,6 +530,7 @@ export interface MissileUnlock {
   eligible_platforms: string[];
   nez_km: number;
   max_range_km: number;
+  weapon_class?: WeaponClass;
 }
 
 export interface ADSystemUnlock {
@@ -579,11 +580,20 @@ export interface ADBattery {
   installed_quarter: number;
 }
 
+export type WeaponClass =
+  | "a2a_bvr"
+  | "a2a_wvr"
+  | "anti_ship"
+  | "land_attack"
+  | "anti_radiation"
+  | "glide_bomb";
+
 export interface WeaponMeta {
   id: string;
   nez_km: number;
   max_range_km: number;
   unit_cost_cr: number;
+  class: WeaponClass;
 }
 
 export interface WeaponCatalogResponse {

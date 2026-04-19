@@ -205,12 +205,18 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
                   <div className="text-[11px] opacity-80 mt-0.5">
                     ✈ <span className="font-semibold">{sq.platform_id.replace(/_/g, " ").toUpperCase()}</span>
                     {sq.loadout.length > 0 && (
-                      <span className="opacity-70">
+                      <span>
                         {" · "}
                         {sq.loadout.map((w, i) => {
-                          const cost = weaponsById[w]?.unit_cost_cr;
+                          const meta = weaponsById[w];
+                          const cost = meta?.unit_cost_cr;
+                          const isStrike = meta && !meta.class.startsWith("a2a");
                           return (
-                            <span key={`${w}-${i}`}>
+                            <span
+                              key={`${w}-${i}`}
+                              className={isStrike ? "opacity-40" : "opacity-70"}
+                              title={isStrike ? "Strike munition — not used in air-to-air combat" : undefined}
+                            >
                               {i > 0 && " · "}
                               {w}
                               {cost != null && (

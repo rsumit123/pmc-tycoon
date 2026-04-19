@@ -16,9 +16,13 @@ function shotsPerAirframe(roe: string): number {
 
 function avgLoadoutCost(loadout: string[], weaponsById: Record<string, WeaponMeta>): number {
   if (loadout.length === 0) return 0;
+  // Only A2A weapons actually fire in vignette combat — strike munitions are
+  // carried (armory-equipped) but excluded from air-to-air engagement, so
+  // they shouldn't inflate the pre-commit munitions estimate.
   const prices = loadout
-    .map((w) => weaponsById[w]?.unit_cost_cr)
-    .filter((c): c is number => typeof c === "number");
+    .map((w) => weaponsById[w])
+    .filter((m): m is WeaponMeta => m != null && m.class.startsWith("a2a"))
+    .map((m) => m.unit_cost_cr);
   if (prices.length === 0) return 0;
   return prices.reduce((a, b) => a + b, 0) / prices.length;
 }

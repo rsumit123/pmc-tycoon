@@ -87,13 +87,45 @@ export function ArmoryPage() {
         {tab === "missiles" && (
           unlocks.missiles.length === 0 ? (
             <p className="text-xs opacity-60 py-4 text-center">No missiles unlocked yet.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {unlocks.missiles.map((m) => (
-                <MissileCard key={m.target_id} m={m} onEquip={() => setMissileModal(m)} />
-              ))}
-            </div>
-          )
+          ) : (() => {
+            const a2a = unlocks.missiles.filter(
+              (m) => (m.weapon_class ?? "a2a_bvr").startsWith("a2a"),
+            );
+            const strike = unlocks.missiles.filter(
+              (m) => !(m.weapon_class ?? "a2a_bvr").startsWith("a2a"),
+            );
+            return (
+              <div className="space-y-4">
+                {a2a.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-emerald-300 mb-2">
+                      Air-to-Air ({a2a.length})
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {a2a.map((m) => (
+                        <MissileCard key={m.target_id} m={m} onEquip={() => setMissileModal(m)} />
+                      ))}
+                    </div>
+                  </section>
+                )}
+                {strike.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300 mb-2">
+                      Strike Munitions ({strike.length})
+                    </h3>
+                    <p className="text-[10px] opacity-60 mb-2 italic">
+                      Anti-ship, land-attack, and anti-radiation missiles. These equip onto eligible squadrons for realism + cost tracking but do not fire in air-to-air vignettes — they wait for ground-strike scenarios (future).
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {strike.map((m) => (
+                        <MissileCard key={m.target_id} m={m} onEquip={() => setMissileModal(m)} />
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
+            );
+          })()
         )}
 
         {tab === "ad" && (

@@ -72,6 +72,7 @@ def list_weapons_endpoint():
             "nez_km": spec.get("nez_km"),
             "max_range_km": spec.get("max_range_km"),
             "unit_cost_cr": spec.get("unit_cost_cr", 0),
+            "class": spec.get("class", "a2a_bvr"),
         }
     return {"weapons": out}
 
