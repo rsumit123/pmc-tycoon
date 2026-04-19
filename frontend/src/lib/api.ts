@@ -265,6 +265,19 @@ export const api = {
     return data;
   },
 
+  async splitSquadron(
+    campaignId: number,
+    squadronId: number,
+    airframes: number,
+    targetBaseId: number,
+  ): Promise<{ id: number; base_id: number; strength: number }> {
+    const { data } = await http.post(
+      `/api/campaigns/${campaignId}/squadrons/${squadronId}/split`,
+      { airframes, target_base_id: targetBaseId },
+    );
+    return data;
+  },
+
   async getObjectives(): Promise<ObjectiveListResponse> {
     const { data } = await http.get<ObjectiveListResponse>("/api/content/objectives");
     return data;

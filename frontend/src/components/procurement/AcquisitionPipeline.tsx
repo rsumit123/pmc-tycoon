@@ -126,8 +126,9 @@ function TimelineBar({
     (order.foc_quarter - order.first_delivery_quarter) + 1;
   const perQ = totalQ > 0 ? Math.floor(order.total_cost_cr / totalQ) : order.total_cost_cr;
 
-  // "Paid so far" = cost associated with already-delivered quarters.
-  // Per-quarter unit-cost × quarters already delivered (approx).
+  const nowIdx = currentYear * 4 + (currentQuarter - 1);
+  const firstIdx = order.first_delivery_year * 4 + (order.first_delivery_quarter - 1);
+
   const quartersDone = totalQ > 0
     ? Math.max(0, Math.min(totalQ, Math.floor((order.delivered / order.quantity) * totalQ)))
     : 0;
@@ -136,7 +137,9 @@ function TimelineBar({
   const remainingQ = Math.max(0, totalQ - quartersDone);
 
   const isCompleted = order.delivered >= order.quantity;
+  const isPreDelivery = !order.cancelled && !isCompleted && nowIdx < firstIdx;
   const cancellable = !order.cancelled && !isCompleted && !!onCancel;
+  const quartersUntilStart = Math.max(0, firstIdx - nowIdx);
 
   return (
     <div className="space-y-1.5 bg-slate-900/40 border border-slate-800 rounded-lg p-3">
@@ -148,6 +151,12 @@ function TimelineBar({
           )}
           {!order.cancelled && isCompleted && (
             <span className="ml-2 text-[10px] bg-emerald-900/50 text-emerald-200 px-1.5 py-0.5 rounded">COMPLETE</span>
+          )}
+          {isPreDelivery && (
+            <span className="ml-2 text-[10px] bg-sky-900/50 text-sky-200 px-1.5 py-0.5 rounded">SIGNED</span>
+          )}
+          {!order.cancelled && !isCompleted && !isPreDelivery && (
+            <span className="ml-2 text-[10px] bg-amber-900/50 text-amber-200 px-1.5 py-0.5 rounded">DELIVERING</span>
           )}
         </div>
         <span className="opacity-70 flex-shrink-0">
@@ -173,12 +182,36 @@ function TimelineBar({
         <span>{order.first_delivery_year}-Q{order.first_delivery_quarter}</span>
         <span>{order.foc_year}-Q{order.foc_quarter}</span>
       </div>
-      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px] opacity-80 pt-1">
-        <span>Total: <span className="font-mono">₹{order.total_cost_cr.toLocaleString("en-US")}</span> cr</span>
-        <span>Per-quarter: <span className="font-mono">₹{perQ.toLocaleString("en-US")}</span></span>
-        <span>Paid: <span className="font-mono">₹{paidSoFar.toLocaleString("en-US")}</span></span>
-        <span>Remaining: <span className="font-mono">₹{remainingCost.toLocaleString("en-US")}</span></span>
-      </div>
+      {isPreDelivery ? (
+        <div className="text-[11px] opacity-80 pt-1 space-y-0.5">
+          <p>
+            💰 Delivery starts <span className="font-semibold">{order.first_delivery_year} Q{order.first_delivery_quarter}</span>
+            {quartersUntilStart > 0 && <> (in {quartersUntilStart} quarter{quartersUntilStart === 1 ? "" : "s"})</>}
+          </p>
+          <p>
+            Will cost <span className="font-mono">₹{perQ.toLocaleString("en-US")}</span>/q for {totalQ}q · total <span className="font-mono">₹{order.total_cost_cr.toLocaleString("en-US")}</span>
+          </p>
+          <p className="opacity-60 italic">
+            No money leaves treasury until delivery begins.
+          </p>
+        </div>
+      ) : order.cancelled ? (
+        <div className="text-[11px] opacity-80 pt-1 space-y-0.5">
+          <p>Delivered before cancel: <span className="font-semibold">{order.delivered}</span> airframe{order.delivered === 1 ? "" : "s"}</p>
+          <p>Total paid: <span className="font-mono">₹{paidSoFar.toLocaleString("en-US")}</span></p>
+        </div>
+      ) : isCompleted ? (
+        <div className="text-[11px] opacity-80 pt-1">
+          ✓ Fully delivered · total paid <span className="font-mono">₹{order.total_cost_cr.toLocaleString("en-US")}</span>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px] opacity-80 pt-1">
+          <span>Per-Q: <span className="font-mono">₹{perQ.toLocaleString("en-US")}</span></span>
+          <span>Total: <span className="font-mono">₹{order.total_cost_cr.toLocaleString("en-US")}</span></span>
+          <span>Paid: <span className="font-mono">₹{paidSoFar.toLocaleString("en-US")}</span></span>
+          <span>Remaining: <span className="font-mono">₹{remainingCost.toLocaleString("en-US")}</span></span>
+        </div>
+      )}
 
       {cancellable && !confirming && (
         <button

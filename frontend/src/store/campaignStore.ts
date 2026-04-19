@@ -68,6 +68,7 @@ interface CampaignState {
   generateRetrospective: (campaignId: number) => Promise<GenerateNarrativeResponse>;
   dismissYearRecapToast: () => void;
   rebaseSquadron: (squadronId: number, targetBaseId: number) => Promise<void>;
+  splitSquadron: (squadronId: number, airframes: number, targetBaseId: number) => Promise<void>;
   pushToast: (variant: ToastVariant, message: string, duration?: number) => void;
   dismissToast: (id: string) => void;
   loadCampaignList: () => Promise<void>;
@@ -434,6 +435,22 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       throw e;
     } finally {
       set({ loading: false });
+    }
+  },
+
+  splitSquadron: async (squadronId, airframes, targetBaseId) => {
+    const c = get().campaign;
+    if (!c) return;
+    try {
+      const newSqn = await api.splitSquadron(c.id, squadronId, airframes, targetBaseId);
+      await get().loadBases(c.id);
+      const baseName = get().bases.find((b) => b.id === newSqn.base_id)?.name ?? "new base";
+      get().pushToast("success", `Split ${airframes} airframe${airframes === 1 ? "" : "s"} to ${baseName}`);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { detail?: string } } };
+      const msg = err?.response?.data?.detail ?? "Split failed";
+      get().pushToast("error", msg);
+      throw e;
     }
   },
 

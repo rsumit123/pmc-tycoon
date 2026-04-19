@@ -5,6 +5,7 @@ export interface SquadronDetailSheetProps {
   squadron: HangarSquadron | null;
   onClose: () => void;
   onRebaseStart: () => void;
+  onSplitStart?: () => void;
 }
 
 function readinessColor(pct: number): string {
@@ -13,8 +14,9 @@ function readinessColor(pct: number): string {
   return "bg-emerald-500";
 }
 
-export function SquadronDetailSheet({ squadron, onClose, onRebaseStart }: SquadronDetailSheetProps) {
+export function SquadronDetailSheet({ squadron, onClose, onRebaseStart, onSplitStart }: SquadronDetailSheetProps) {
   if (!squadron) return null;
+  const canSplit = squadron.strength >= 2;
 
   return (
     <div
@@ -100,7 +102,7 @@ export function SquadronDetailSheet({ squadron, onClose, onRebaseStart }: Squadr
             </div>
           )}
 
-          <div className="pt-2 border-t border-slate-800">
+          <div className="pt-2 border-t border-slate-800 space-y-2">
             <button
               type="button"
               onClick={() => { onRebaseStart(); onClose(); }}
@@ -108,8 +110,17 @@ export function SquadronDetailSheet({ squadron, onClose, onRebaseStart }: Squadr
             >
               Rebase squadron →
             </button>
-            <p className="text-[10px] opacity-60 italic mt-2 text-center">
-              To equip a new missile, open Armory.
+            {onSplitStart && canSplit && (
+              <button
+                type="button"
+                onClick={() => { onSplitStart(); onClose(); }}
+                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-100 font-semibold text-sm rounded py-2"
+              >
+                Split squadron ✂
+              </button>
+            )}
+            <p className="text-[10px] opacity-60 italic text-center">
+              {canSplit ? "Rebase moves the whole squadron. Split sends some airframes to another base as a new squadron." : "To equip a new missile, open Armory."}
             </p>
           </div>
         </div>

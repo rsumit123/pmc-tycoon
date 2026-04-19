@@ -5,6 +5,7 @@ import { FleetFilters, type HangarSortMode } from "../components/hangar/FleetFil
 import { PlatformSummaryCard } from "../components/hangar/PlatformSummaryCard";
 import { SquadronRow } from "../components/hangar/SquadronRow";
 import { SquadronDetailSheet } from "../components/hangar/SquadronDetailSheet";
+import { SquadronSplitModal } from "../components/hangar/SquadronSplitModal";
 import { RebaseOverlay } from "../components/map/RebaseOverlay";
 import type { HangarSquadron } from "../lib/types";
 
@@ -27,6 +28,7 @@ export function HangarPage() {
   const bases = useCampaignStore((s) => s.bases);
   const loadBases = useCampaignStore((s) => s.loadBases);
   const rebaseSquadron = useCampaignStore((s) => s.rebaseSquadron);
+  const splitSquadron = useCampaignStore((s) => s.splitSquadron);
 
   const [tab, setTab] = useState<"summary" | "list">("summary");
   const [role, setRole] = useState<string>("All");
@@ -34,6 +36,7 @@ export function HangarPage() {
   const [sort, setSort] = useState<HangarSortMode>("readiness_asc");
   const [selected, setSelected] = useState<HangarSquadron | null>(null);
   const [rebaseTarget, setRebaseTarget] = useState<HangarSquadron | null>(null);
+  const [splitTarget, setSplitTarget] = useState<HangarSquadron | null>(null);
 
   useEffect(() => {
     if (!campaign || campaign.id !== cid) loadCampaign(cid);
@@ -180,7 +183,22 @@ export function HangarPage() {
         onRebaseStart={() => {
           if (selected) setRebaseTarget(selected);
         }}
+        onSplitStart={() => {
+          if (selected) setSplitTarget(selected);
+        }}
       />
+
+      {splitTarget && (
+        <SquadronSplitModal
+          squadron={splitTarget}
+          bases={bases}
+          onClose={() => setSplitTarget(null)}
+          onSplit={async (sqid, airframes, targetBaseId) => {
+            await splitSquadron(sqid, airframes, targetBaseId);
+            await loadHangar(cid);
+          }}
+        />
+      )}
 
       <RebaseOverlay
         squadron={rebaseTarget

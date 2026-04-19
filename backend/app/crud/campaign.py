@@ -297,9 +297,33 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         for s in sq_rows
     ]
 
-    MAX_SQUADRON_STRENGTH = 20
+    # Squadron strength caps by platform role (real-world TO&E):
+    # - AWACS: 3 airframes/squadron (small specialized unit)
+    # - Tanker: 6 airframes/squadron (e.g. IL-78 78 Sqn Tuskers)
+    # - ISR drone: 4 airframes/squadron
+    # - Combat fighters (default): 20 airframes/squadron
+    ROLE_CAPS: dict[str, int] = {
+        "awacs": 3,
+        "tanker": 6,
+        "isr": 4,
+        "uav": 4,
+        "drone": 4,
+    }
+    DEFAULT_CAP = 20
+
     from app.content.registry import platforms as _platforms_reg
     _plat_spec_by_id = _platforms_reg()
+
+    def _cap_for_platform(platform_id: str) -> int:
+        spec = _plat_spec_by_id.get(platform_id)
+        if spec is None:
+            return DEFAULT_CAP
+        role = getattr(spec, "role", "") or ""
+        role_lc = role.lower()
+        for key, cap in ROLE_CAPS.items():
+            if key in role_lc:
+                return cap
+        return DEFAULT_CAP
 
     def _next_sqn_seq(platform_id: str) -> int:
         """Count existing squadrons for this platform + 1."""
@@ -349,14 +373,15 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         assigned_base_id: int | None = None
         assigned_squadron_id: int | None = None
 
+        cap = _cap_for_platform(pid)
         while remaining > 0:
             candidate = min(
-                (s for s in sq_rows if s.platform_id == pid and (s.strength or 0) < MAX_SQUADRON_STRENGTH),
+                (s for s in sq_rows if s.platform_id == pid and (s.strength or 0) < cap),
                 key=lambda s: s.strength or 0,
                 default=None,
             )
             if candidate is not None:
-                room = MAX_SQUADRON_STRENGTH - (candidate.strength or 0)
+                room = cap - (candidate.strength or 0)
                 take = min(room, remaining)
                 candidate.strength = (candidate.strength or 0) + take
                 for sd in _sq_dicts:
@@ -372,7 +397,7 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
                 target_base_id = pick_base_for_delivery(plat, _base_dicts, _sq_dicts)
                 if target_base_id is None:
                     break
-                batch = min(MAX_SQUADRON_STRENGTH, remaining)
+                batch = min(cap, remaining)
                 new_sqn = _create_squadron(target_base_id, pid, batch)
                 if assigned_base_id is None:
                     assigned_base_id = target_base_id
