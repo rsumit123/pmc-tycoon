@@ -6,6 +6,7 @@ from app.schemas.armory import (
     UnlocksResponse, MissileUnlock, ADSystemUnlock, ISRDroneUnlock, StrikePlatformUnlock,
     EquipMissileRequest, LoadoutUpgradeRead,
     InstallADRequest, ADBatteryRead,
+    HangarResponse, HangarSquadron, HangarPlatformSummary,
 )
 
 router = APIRouter(prefix="/api/campaigns/{campaign_id}/armory", tags=["armory"])
@@ -208,3 +209,57 @@ def install_ad_system(
     db.commit()
     db.refresh(row)
     return row
+
+
+hangar_router = APIRouter(prefix="/api/campaigns/{campaign_id}", tags=["hangar"])
+
+
+@hangar_router.get("/hangar", response_model=HangarResponse)
+def get_hangar(campaign_id: int, db: Session = Depends(get_db)):
+    from app.models.squadron import Squadron
+    from app.models.campaign_base import CampaignBase
+    from app.content.registry import platforms, bases as base_specs
+    from app.engine.vignette.bvr import PLATFORM_LOADOUTS
+
+    plat_specs = platforms()
+    base_specs_dict = base_specs()
+    base_rows = db.query(CampaignBase).filter_by(campaign_id=campaign_id).all()
+    bases = {b.id: b for b in base_rows}
+    sqns = db.query(Squadron).filter_by(campaign_id=campaign_id).all()
+
+    squadron_dtos: list[HangarSquadron] = []
+    by_plat: dict[str, list] = {}
+    for s in sqns:
+        plat = plat_specs.get(s.platform_id)
+        plat_name = plat.name if plat else s.platform_id
+        base = bases.get(s.base_id)
+        base_name = "unknown"
+        if base:
+            base_spec = base_specs_dict.get(base.template_id)
+            base_name = base_spec.name if base_spec else base.template_id
+        loadout = s.loadout_override_json or (
+            list(PLATFORM_LOADOUTS.get(s.platform_id, {}).get("bvr", []))
+            + list(PLATFORM_LOADOUTS.get(s.platform_id, {}).get("wvr", []))
+        )
+        squadron_dtos.append(HangarSquadron(
+            id=s.id, name=s.name, call_sign=s.call_sign,
+            platform_id=s.platform_id, platform_name=plat_name,
+            base_id=s.base_id, base_name=base_name,
+            strength=s.strength, readiness_pct=s.readiness_pct,
+            xp=s.xp, ace_name=s.ace_name, loadout=list(loadout),
+        ))
+        by_plat.setdefault(s.platform_id, []).append(s)
+
+    summary: list[HangarPlatformSummary] = []
+    for pid, group in by_plat.items():
+        plat = plat_specs.get(pid)
+        summary.append(HangarPlatformSummary(
+            platform_id=pid,
+            platform_name=plat.name if plat else pid,
+            squadron_count=len(group),
+            total_airframes=sum(g.strength for g in group),
+            avg_readiness_pct=int(sum(g.readiness_pct for g in group) / len(group)),
+        ))
+    summary.sort(key=lambda x: -x.total_airframes)
+
+    return HangarResponse(squadrons=squadron_dtos, summary_by_platform=summary)

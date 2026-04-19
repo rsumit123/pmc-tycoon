@@ -67,3 +67,31 @@ class ADBatteryRead(BaseModel):
     installed_quarter: int
 
     model_config = {"from_attributes": True}
+
+
+class HangarSquadron(BaseModel):
+    id: int
+    name: str
+    call_sign: str
+    platform_id: str
+    platform_name: str
+    base_id: int
+    base_name: str
+    strength: int
+    readiness_pct: int
+    xp: int
+    ace_name: str | None
+    loadout: list[str]
+
+
+class HangarPlatformSummary(BaseModel):
+    platform_id: str
+    platform_name: str
+    squadron_count: int
+    total_airframes: int
+    avg_readiness_pct: int
+
+
+class HangarResponse(BaseModel):
+    squadrons: list[HangarSquadron]
+    summary_by_platform: list[HangarPlatformSummary]
