@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-04-19 (Plan 15 in progress)
+**Last updated:** 2026-04-19 (Plan 15 done)
 
 ---
 
@@ -26,7 +26,7 @@
 | 12 | V1 Playtest Fixes | 🟢 done | [2026-04-18-v1-playtest-fixes-plan.md](2026-04-18-v1-playtest-fixes-plan.md) |
 | 13 | Combat Depth + Turn Report | 🟢 done | [2026-04-19-combat-depth-turn-report-plan.md](2026-04-19-combat-depth-turn-report-plan.md) |
 | 14 | Feedback + R&D Redesign + Combat Cadence | 🟢 done | [2026-04-19-feedback-rd-redesign-plan.md](2026-04-19-feedback-rd-redesign-plan.md) |
-| 15 | Armory + Hangar + R&D Unlocks | 🟡 in progress | [2026-04-19-armory-hangar-unlocks-plan.md](2026-04-19-armory-hangar-unlocks-plan.md) |
+| 15 | Armory + Hangar + R&D Unlocks | 🟢 done | [2026-04-19-armory-hangar-unlocks-plan.md](2026-04-19-armory-hangar-unlocks-plan.md) |
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 
