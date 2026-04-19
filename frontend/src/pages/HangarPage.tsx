@@ -29,6 +29,7 @@ export function HangarPage() {
   const loadBases = useCampaignStore((s) => s.loadBases);
   const rebaseSquadron = useCampaignStore((s) => s.rebaseSquadron);
   const splitSquadron = useCampaignStore((s) => s.splitSquadron);
+  const renameSquadron = useCampaignStore((s) => s.renameSquadron);
 
   const [tab, setTab] = useState<"summary" | "list">("summary");
   const [role, setRole] = useState<string>("All");
@@ -185,6 +186,13 @@ export function HangarPage() {
         }}
         onSplitStart={() => {
           if (selected) setSplitTarget(selected);
+        }}
+        onRename={async (name, callSign) => {
+          if (!selected) return;
+          await renameSquadron(selected.id, name, callSign);
+          await loadHangar(cid);
+          // Update the selected state with the new name so the sheet stays in sync
+          setSelected({ ...selected, name, call_sign: callSign ?? selected.call_sign });
         }}
       />
 

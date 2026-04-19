@@ -58,6 +58,42 @@ def rebase_squadron(
     return sqn
 
 
+class RenameRequest(BaseModel):
+    name: str
+    call_sign: str | None = None
+
+
+@router.post("/{campaign_id}/squadrons/{squadron_id}/rename", response_model=SquadronResponse)
+def rename_squadron(
+    campaign_id: int,
+    squadron_id: int,
+    body: RenameRequest,
+    db: Session = Depends(get_db),
+):
+    campaign = get_campaign(db, campaign_id)
+    if campaign is None:
+        raise HTTPException(404, "Campaign not found")
+    sqn = db.query(Squadron).filter(
+        Squadron.campaign_id == campaign_id,
+        Squadron.id == squadron_id,
+    ).first()
+    if sqn is None:
+        raise HTTPException(404, "Squadron not found")
+    name = (body.name or "").strip()
+    if not name:
+        raise HTTPException(400, "name must not be empty")
+    if len(name) > 80:
+        raise HTTPException(400, "name too long (max 80 chars)")
+    sqn.name = name
+    if body.call_sign is not None:
+        cs = body.call_sign.strip()
+        if cs and len(cs) <= 16:
+            sqn.call_sign = cs
+    db.commit()
+    db.refresh(sqn)
+    return sqn
+
+
 class SplitRequest(BaseModel):
     airframes: int
     target_base_id: int

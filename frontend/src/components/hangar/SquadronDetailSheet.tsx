@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { HangarSquadron } from "../../lib/types";
 import { shortBaseName } from "./SquadronRow";
 
@@ -6,6 +7,7 @@ export interface SquadronDetailSheetProps {
   onClose: () => void;
   onRebaseStart: () => void;
   onSplitStart?: () => void;
+  onRename?: (name: string, callSign?: string) => Promise<void>;
 }
 
 function readinessColor(pct: number): string {
@@ -14,9 +16,35 @@ function readinessColor(pct: number): string {
   return "bg-emerald-500";
 }
 
-export function SquadronDetailSheet({ squadron, onClose, onRebaseStart, onSplitStart }: SquadronDetailSheetProps) {
+export function SquadronDetailSheet({ squadron, onClose, onRebaseStart, onSplitStart, onRename }: SquadronDetailSheetProps) {
+  const [editing, setEditing] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [callSignDraft, setCallSignDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (squadron) {
+      setNameDraft(squadron.name);
+      setCallSignDraft(squadron.call_sign);
+      setEditing(false);
+    }
+  }, [squadron?.id]);
+
   if (!squadron) return null;
   const canSplit = squadron.strength >= 2;
+
+  const handleSaveName = async () => {
+    if (!onRename) return;
+    const name = nameDraft.trim();
+    if (!name) return;
+    setSaving(true);
+    try {
+      await onRename(name, callSignDraft.trim() || undefined);
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div
@@ -27,20 +55,72 @@ export function SquadronDetailSheet({ squadron, onClose, onRebaseStart, onSplitS
         className="bg-slate-900 border border-slate-700 rounded-xl max-w-md w-full max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-slate-900 border-b border-slate-800 p-4 flex items-baseline justify-between">
-          <div className="min-w-0">
-            <h2 className="text-base font-bold truncate">{squadron.name}</h2>
-            <p className="text-xs opacity-70 truncate">
-              {squadron.call_sign} &bull; {squadron.platform_name}
-            </p>
+        <div className="sticky top-0 bg-slate-900 border-b border-slate-800 p-4">
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              {editing ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={nameDraft}
+                    onChange={(e) => setNameDraft(e.target.value)}
+                    maxLength={80}
+                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-500 rounded px-2 py-1 text-sm font-bold outline-none"
+                    placeholder="Squadron name"
+                    aria-label="Squadron name"
+                  />
+                  <input
+                    type="text"
+                    value={callSignDraft}
+                    onChange={(e) => setCallSignDraft(e.target.value)}
+                    maxLength={16}
+                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-500 rounded px-2 py-1 text-xs outline-none"
+                    placeholder="Call sign (optional)"
+                    aria-label="Call sign"
+                  />
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-base font-bold truncate">{squadron.name}</h2>
+                  <p className="text-xs opacity-70 truncate">
+                    {squadron.call_sign} &bull; {squadron.platform_name}
+                  </p>
+                </>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              aria-label="close"
+              className="text-slate-400 hover:text-slate-200 ml-2 flex-shrink-0"
+            >
+              ✕
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            aria-label="close"
-            className="text-slate-400 hover:text-slate-200 ml-2 flex-shrink-0"
-          >
-            ✕
-          </button>
+          {onRename && (
+            <div className="mt-2 flex gap-2">
+              {editing ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleSaveName}
+                    disabled={saving || !nameDraft.trim()}
+                    className="text-xs bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-slate-900 font-semibold rounded px-3 py-1"
+                  >{saving ? "Saving…" : "Save"}</button>
+                  <button
+                    type="button"
+                    onClick={() => { setEditing(false); setNameDraft(squadron.name); setCallSignDraft(squadron.call_sign); }}
+                    className="text-xs text-slate-300 hover:text-slate-100 px-2 py-1"
+                  >Cancel</button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  className="text-[11px] text-amber-400 hover:text-amber-300 underline"
+                >✏ Rename</button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="p-4 space-y-3">

@@ -25,6 +25,9 @@ WEAPONS: dict[str, dict] = {
     "rudram_2":  {"nez_km":  80, "max_range_km": 300,  "gen_bonus":  0.05},
     "rudram_3":  {"nez_km": 150, "max_range_km": 550,  "gen_bonus":  0.05},
     "brahmos_ng": {"nez_km": 120, "max_range_km": 500, "gen_bonus":  0.05},
+    "air_brahmos2": {"nez_km": 250, "max_range_km": 1000, "gen_bonus": 0.10},
+    "ngarm":     {"nez_km": 180, "max_range_km": 600,  "gen_bonus":  0.05},
+    "saaw":      {"nez_km":  50, "max_range_km": 100,  "gen_bonus":  0.00},
 }
 
 PLATFORM_LOADOUTS: dict[str, dict[str, list[str]]] = {

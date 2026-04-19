@@ -278,6 +278,19 @@ export const api = {
     return data;
   },
 
+  async renameSquadron(
+    campaignId: number,
+    squadronId: number,
+    name: string,
+    callSign?: string,
+  ): Promise<{ id: number; name: string; call_sign: string }> {
+    const { data } = await http.post(
+      `/api/campaigns/${campaignId}/squadrons/${squadronId}/rename`,
+      { name, call_sign: callSign ?? null },
+    );
+    return data;
+  },
+
   async getObjectives(): Promise<ObjectiveListResponse> {
     const { data } = await http.get<ObjectiveListResponse>("/api/content/objectives");
     return data;

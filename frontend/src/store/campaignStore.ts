@@ -69,6 +69,7 @@ interface CampaignState {
   dismissYearRecapToast: () => void;
   rebaseSquadron: (squadronId: number, targetBaseId: number) => Promise<void>;
   splitSquadron: (squadronId: number, airframes: number, targetBaseId: number) => Promise<void>;
+  renameSquadron: (squadronId: number, name: string, callSign?: string) => Promise<void>;
   pushToast: (variant: ToastVariant, message: string, duration?: number) => void;
   dismissToast: (id: string) => void;
   loadCampaignList: () => Promise<void>;
@@ -449,6 +450,21 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } };
       const msg = err?.response?.data?.detail ?? "Split failed";
+      get().pushToast("error", msg);
+      throw e;
+    }
+  },
+
+  renameSquadron: async (squadronId, name, callSign) => {
+    const c = get().campaign;
+    if (!c) return;
+    try {
+      await api.renameSquadron(c.id, squadronId, name, callSign);
+      await get().loadBases(c.id);
+      get().pushToast("success", `Renamed to "${name}"`);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { detail?: string } } };
+      const msg = err?.response?.data?.detail ?? "Rename failed";
       get().pushToast("error", msg);
       throw e;
     }

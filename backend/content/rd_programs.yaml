@@ -196,8 +196,10 @@ programs:
     base_cost_cr: 5000
     dependencies: []
     unlocks:
-      kind: none
-      description: "Doctrinal improvement — gates production or capability."
+      kind: missile
+      target_id: saaw
+      eligible_platforms: [su30_mki, jaguar_darin3, rafale_f4, tejas_mk2]
+      description: "Precision anti-airfield munition — strike loadout."
   - id: long_range_sam
     name: Indigenous Long-Range SAM
     description: S-400 class indigenous surface-to-air missile. 400+ km intercept range.
@@ -227,8 +229,10 @@ programs:
     base_cost_cr: 20000
     dependencies: [brahmos_ng]
     unlocks:
-      kind: none
-      description: "Doctrinal improvement — gates production or capability."
+      kind: missile
+      target_id: air_brahmos2
+      eligible_platforms: [su30_mki, rafale_f4, tejas_mk2, amca_mk1]
+      description: "Mach 7+ hypersonic air-launched cruise missile — strike loadout."
   - id: mrsam_air
     name: MR-SAM Air Defense
     description: Medium-range SAM integration with IAF airbase defense network.
@@ -247,5 +251,7 @@ programs:
     base_cost_cr: 9000
     dependencies: [rudram_3]
     unlocks:
-      kind: none
-      description: "Doctrinal improvement — gates production or capability."
+      kind: missile
+      target_id: ngarm
+      eligible_platforms: [su30_mki, rafale_f4, tejas_mk2]
+      description: "Dual-mode seeker ARM with 600+ km standoff — SEAD loadout upgrade."
