@@ -36,6 +36,7 @@ from app.engine.intel.generator import generate_intel
 from app.engine.vignette.threat import should_fire_vignette
 from app.engine.vignette.generator import pick_scenario, build_planning_state
 from app.engine.vignette.planning import compute_eligible_squadrons
+from app.engine.loadout_upgrade import tick_loadout_upgrades
 
 
 @dataclass
@@ -50,6 +51,7 @@ class EngineResult:
     new_intel_cards: list[dict] = field(default_factory=list)
     new_vignettes: list[dict] = field(default_factory=list)
     events: list[dict] = field(default_factory=list)
+    completed_loadout_upgrades: list[dict] = field(default_factory=list)
 
 
 def _next_clock(year: int, quarter: int) -> tuple[int, int]:
@@ -154,6 +156,20 @@ def advance(ctx: dict[str, Any]) -> EngineResult:
                     },
                 })
 
+    # Loadout upgrade queue tick
+    pending_upgrades = ctx.get("loadout_upgrades", [])
+    completed_upgrades, _remaining = tick_loadout_upgrades(pending_upgrades, year, quarter)
+    for c in completed_upgrades:
+        events.append({
+            "event_type": "loadout_upgrade_complete",
+            "payload": {
+                "upgrade_id": c["id"],
+                "squadron_id": c["squadron_id"],
+                "weapon_id": c["weapon_id"],
+                "final_loadout": c["final_loadout"],
+            },
+        })
+
     next_treasury = available_cr - sum(allocation.values())
     next_year, next_quarter = _next_clock(year, quarter)
 
@@ -179,4 +195,5 @@ def advance(ctx: dict[str, Any]) -> EngineResult:
         new_intel_cards=new_cards,
         new_vignettes=new_vignettes,
         events=events,
+        completed_loadout_upgrades=completed_upgrades,
     )

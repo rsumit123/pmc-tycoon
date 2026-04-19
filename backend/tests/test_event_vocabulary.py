@@ -54,6 +54,8 @@ CANONICAL_EVENT_TYPES = {
     # LLM / narrative layer (Plan 5 — reserved, not auto-emitted in MVP)
     "narrative_generated",
     "ace_awarded",
+    # loadout upgrade queue (Plan 15)
+    "loadout_upgrade_complete",
 }
 
 

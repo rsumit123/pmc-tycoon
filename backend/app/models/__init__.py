@@ -9,6 +9,7 @@ from app.models.vignette import Vignette
 from app.models.event import CampaignEvent
 from app.models.llm_cache import LLMCache  # noqa: F401
 from app.models.campaign_narrative import CampaignNarrative  # noqa: F401
+from app.models.loadout_upgrade import LoadoutUpgrade  # noqa: F401
 
 __all__ = [
     "Campaign",
@@ -22,4 +23,5 @@ __all__ = [
     "CampaignEvent",
     "LLMCache",
     "CampaignNarrative",
+    "LoadoutUpgrade",
 ]

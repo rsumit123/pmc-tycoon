@@ -10,6 +10,7 @@ from app.models.adversary import AdversaryState
 from app.models.intel import IntelCard
 from app.models.vignette import Vignette
 from app.models.campaign_base import CampaignBase
+from app.models.loadout_upgrade import LoadoutUpgrade
 from app.schemas.campaign import CampaignCreate
 from app.engine.turn import advance as engine_advance
 from app.engine.delivery_assignment import pick_base_for_delivery
@@ -142,6 +143,10 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         Vignette.status == "pending",
     ).first() is not None
 
+    upgrade_rows = db.query(LoadoutUpgrade).filter_by(
+        campaign_id=campaign.id, status="pending"
+    ).all()
+
     # Convert content RDProgramSpec -> dict the engine expects
     specs = {
         spec_id: {
@@ -173,6 +178,14 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         "bases_registry": bases_dict,
         "platforms_registry": platforms_dict,
         "pending_vignette_exists": pending_exists,
+        "loadout_upgrades": [
+            {"id": u.id, "squadron_id": u.squadron_id, "weapon_id": u.weapon_id,
+             "base_loadout": u.base_loadout,
+             "completion_year": u.completion_year,
+             "completion_quarter": u.completion_quarter,
+             "status": u.status}
+            for u in upgrade_rows
+        ],
     }
 
     # Capture the FROM clock so events that describe this turn are tagged
@@ -239,6 +252,17 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
             aar_text="",
             outcome={},
         ))
+
+    # ── Persist completed loadout upgrades ──────────────────────────────────
+    upgrade_by_id = {u.id: u for u in upgrade_rows}
+    for c in result.completed_loadout_upgrades:
+        row = upgrade_by_id.get(c["id"])
+        if row is None:
+            continue
+        row.status = "completed"
+        sq = sq_by_id.get(c["squadron_id"])
+        if sq is not None:
+            sq.loadout_override_json = c["final_loadout"]
 
     # ── Delivery → Squadron wiring ──────────────────────────────────────────
     # For every acquisition_delivery event, create or augment the Squadron row
