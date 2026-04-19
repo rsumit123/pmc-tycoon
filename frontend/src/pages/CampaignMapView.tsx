@@ -125,8 +125,14 @@ export function CampaignMapView() {
         </button>
         <div className="min-w-0 flex-1">
           <h1 className="text-sm font-bold truncate">{campaign.name}</h1>
-          <p className="text-xs opacity-70">
-            {campaign.current_year} Q{campaign.current_quarter} • ₹{campaign.budget_cr.toLocaleString("en-US")} cr
+          <p className="text-[11px] leading-tight flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <span className="opacity-80">{campaign.current_year} Q{campaign.current_quarter}</span>
+            <span className="opacity-80">
+              💰 <span className="font-semibold">₹{campaign.budget_cr.toLocaleString("en-US")}</span> cr
+            </span>
+            <span className="opacity-60">
+              +₹{(campaign.quarterly_grant_cr ?? 0).toLocaleString("en-US")}/q
+            </span>
           </p>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">

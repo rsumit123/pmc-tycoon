@@ -221,7 +221,19 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     try {
       await api.startRdProgram(current.id, programId, fundingLevel);
       await get().loadRdActive(current.id);
-      get().pushToast("success", `R&D started: ${programId}`);
+      const spec = get().rdCatalog.find((s) => s.id === programId);
+      const factors: Record<string, number> = { slow: 0.5, standard: 1.0, accelerated: 1.5 };
+      const perQ = spec
+        ? Math.floor((spec.base_cost_cr / spec.base_duration_quarters) * (factors[fundingLevel] ?? 1))
+        : 0;
+      const name = spec?.name ?? programId;
+      get().pushToast(
+        "success",
+        perQ
+          ? `R&D started: ${name} — ₹${perQ.toLocaleString("en-US")} cr/quarter from R&D bucket`
+          : `R&D started: ${name}`,
+        5000,
+      );
     } catch (e) {
       set({ error: (e as Error).message });
       get().pushToast("error", "Failed to start R&D program");
@@ -268,7 +280,17 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       await api.createAcquisition(current.id, payload);
       await get().loadAcquisitions(current.id);
       set({ loading: false });
-      get().pushToast("success", `Order signed: ${payload.platform_id}`);
+      const plat = get().platformsById[payload.platform_id];
+      const name = plat?.name ?? payload.platform_id;
+      const spanQ =
+        (payload.foc_year - payload.first_delivery_year) * 4 +
+        (payload.foc_quarter - payload.first_delivery_quarter) + 1;
+      const perQ = spanQ > 0 ? Math.floor(payload.total_cost_cr / spanQ) : payload.total_cost_cr;
+      get().pushToast(
+        "success",
+        `Order signed: ${payload.quantity}× ${name} — ₹${payload.total_cost_cr.toLocaleString("en-US")} cr over ${spanQ}q (~₹${perQ.toLocaleString("en-US")}/q from Acquisitions bucket)`,
+        6000,
+      );
     } catch (e) {
       set({ error: (e as Error).message, loading: false });
       get().pushToast("error", "Order failed");
