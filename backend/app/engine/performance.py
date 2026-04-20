@@ -231,6 +231,52 @@ def _aggregate_weapons(resolved_vignettes: list[dict], weapons_by_id: dict[str, 
     return out
 
 
+# Map of support asset id → the key it lives under in committed_force.support
+# ("sead" is stored as "sead_package" historically — preserve compatibility).
+_SUPPORT_PAYLOAD_KEY = {"awacs": "awacs", "tanker": "tanker", "sead": "sead_package"}
+
+
+def _aggregate_support(resolved_vignettes: list[dict]) -> list[dict]:
+    tallies = {
+        asset: {"with_sorties": 0, "with_wins": 0, "without_sorties": 0, "without_wins": 0}
+        for asset in SUPPORT_KEYS
+    }
+    for v in resolved_vignettes:
+        outcome = v.get("outcome") or {}
+        support = outcome.get("support") or v.get("committed_force", {}).get("support") or {}
+        won = bool(outcome.get("objective_met"))
+        for asset in SUPPORT_KEYS:
+            key = _SUPPORT_PAYLOAD_KEY[asset]
+            if bool(support.get(key, False)):
+                tallies[asset]["with_sorties"] += 1
+                if won:
+                    tallies[asset]["with_wins"] += 1
+            else:
+                tallies[asset]["without_sorties"] += 1
+                if won:
+                    tallies[asset]["without_wins"] += 1
+
+    out = []
+    for asset in SUPPORT_KEYS:
+        t = tallies[asset]
+        with_rate = round((t["with_wins"] / t["with_sorties"]) * 100) if t["with_sorties"] > 0 else 0
+        without_rate = round((t["without_wins"] / t["without_sorties"]) * 100) if t["without_sorties"] > 0 else 0
+        # Delta is only meaningful if both sides have sorties; otherwise zero it.
+        if t["with_sorties"] == 0 or t["without_sorties"] == 0:
+            delta = 0
+        else:
+            delta = with_rate - without_rate
+        out.append({
+            "asset": asset,
+            "with_sorties": t["with_sorties"],
+            "without_sorties": t["without_sorties"],
+            "with_win_rate_pct": with_rate,
+            "without_win_rate_pct": without_rate,
+            "delta_win_rate_pp": delta,
+        })
+    return out
+
+
 def compute_performance(
     resolved_vignettes: list[dict],
     platforms_by_id: dict[str, dict],
@@ -266,15 +312,5 @@ def compute_performance(
         "factions": _aggregate_factions(resolved_vignettes),
         "platforms": _aggregate_platforms(resolved_vignettes, platforms_by_id),
         "weapons": _aggregate_weapons(resolved_vignettes, weapons_by_id),
-        "support": [
-            {
-                "asset": a,
-                "with_sorties": 0,
-                "without_sorties": 0,
-                "with_win_rate_pct": 0,
-                "without_win_rate_pct": 0,
-                "delta_win_rate_pp": 0,
-            }
-            for a in SUPPORT_KEYS
-        ],
+        "support": _aggregate_support(resolved_vignettes),
     }

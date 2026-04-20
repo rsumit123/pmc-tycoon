@@ -236,3 +236,38 @@ def test_weapon_with_fired_but_no_hits_has_null_cost_per_kill():
     assert meteor["hit_rate_pct"] == 0
     assert meteor["cost_per_kill_cr"] is None
     assert meteor["top_target_platform"] is None
+
+
+def test_support_deltas_awacs_tanker_sead():
+    vs = [
+        _mkv(objective_met=True,  support={"awacs": True,  "tanker": True,  "sead_package": False}),
+        _mkv(objective_met=True,  support={"awacs": True,  "tanker": False, "sead_package": False}),
+        _mkv(objective_met=False, support={"awacs": False, "tanker": True,  "sead_package": False}),
+        _mkv(objective_met=False, support={"awacs": False, "tanker": False, "sead_package": False}),
+    ]
+    result = compute_performance(vs, platforms_by_id={}, weapons_by_id={})
+    by_asset = {s["asset"]: s for s in result["support"]}
+    # Stable order
+    assert [s["asset"] for s in result["support"]] == ["awacs", "tanker", "sead"]
+
+    # AWACS: 2 with (both wins), 2 without (both losses)
+    assert by_asset["awacs"]["with_sorties"] == 2
+    assert by_asset["awacs"]["without_sorties"] == 2
+    assert by_asset["awacs"]["with_win_rate_pct"] == 100
+    assert by_asset["awacs"]["without_win_rate_pct"] == 0
+    assert by_asset["awacs"]["delta_win_rate_pp"] == 100
+
+    # Tanker: 2 with (1 win), 2 without (1 win)
+    assert by_asset["tanker"]["with_sorties"] == 2
+    assert by_asset["tanker"]["with_win_rate_pct"] == 50
+    assert by_asset["tanker"]["without_win_rate_pct"] == 50
+    assert by_asset["tanker"]["delta_win_rate_pp"] == 0
+
+    # SEAD: 0 with, 4 without (2 wins)
+    assert by_asset["sead"]["with_sorties"] == 0
+    assert by_asset["sead"]["without_sorties"] == 4
+    assert by_asset["sead"]["with_win_rate_pct"] == 0
+    assert by_asset["sead"]["without_win_rate_pct"] == 50
+    # Delta: with=0 means 0 - 50 = -50, but only meaningful when both sides have >= 1 sortie.
+    # Spec: if with_sorties == 0 OR without_sorties == 0, delta_win_rate_pp == 0 (N/A).
+    assert by_asset["sead"]["delta_win_rate_pp"] == 0
