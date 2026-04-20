@@ -33,13 +33,32 @@ def compute_performance(
     platforms_by_id: dict[str, dict],
     weapons_by_id: dict[str, dict],
 ) -> dict:
+    total_sorties = len(resolved_vignettes)
+    total_kills = 0
+    total_losses = 0
+    total_munitions_cost = 0
+
+    for v in resolved_vignettes:
+        trace = v.get("event_trace") or []
+        outcome = v.get("outcome") or {}
+        for ev in trace:
+            if ev.get("kind") != "kill":
+                continue
+            if ev.get("side") == "ind":
+                total_kills += 1
+            elif ev.get("side") == "adv":
+                total_losses += 1
+        total_munitions_cost += int(outcome.get("munitions_cost_total_cr", 0) or 0)
+
+    avg_cost_per_kill = (total_munitions_cost // total_kills) if total_kills > 0 else None
+
     return {
         "totals": {
-            "total_sorties": 0,
-            "total_kills": 0,
-            "total_losses": 0,
-            "total_munitions_cost_cr": 0,
-            "avg_cost_per_kill_cr": None,
+            "total_sorties": total_sorties,
+            "total_kills": total_kills,
+            "total_losses": total_losses,
+            "total_munitions_cost_cr": total_munitions_cost,
+            "avg_cost_per_kill_cr": avg_cost_per_kill,
         },
         "factions": [
             {
