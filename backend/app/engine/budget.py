@@ -9,6 +9,30 @@ from __future__ import annotations
 
 BUCKETS: list[str] = ["rd", "acquisition", "om", "spares", "infrastructure"]
 
+BASE_QUARTERLY_GRANT_CR = 45000
+
+DIFFICULTY_GRANT_MULTIPLIER: dict[str, float] = {
+    "relaxed":    1.5,
+    "realistic":  1.0,
+    "hard_peer":  0.7,
+    "worst_case": 0.5,
+}
+
+# Defense-spending compounds ~3%/yr in line with India's long-run capex growth.
+YOY_GRANT_GROWTH = 0.03
+
+
+def compute_quarterly_grant(
+    difficulty: str,
+    current_year: int,
+    base: int = BASE_QUARTERLY_GRANT_CR,
+) -> int:
+    mult = DIFFICULTY_GRANT_MULTIPLIER.get(difficulty, 1.0)
+    years_past_start = max(0, current_year - 2026)
+    raw = base * mult * (1 + YOY_GRANT_GROWTH) ** years_past_start
+    # Round to nearest 500 so grants read cleanly in the UI.
+    return int(round(raw / 500) * 500)
+
 DEFAULT_PCT: dict[str, int] = {
     "rd": 25,
     "acquisition": 35,

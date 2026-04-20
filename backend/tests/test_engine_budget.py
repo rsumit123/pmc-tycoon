@@ -2,6 +2,7 @@ import pytest
 
 from app.engine.budget import (
     BUCKETS,
+    compute_quarterly_grant,
     default_allocation,
     normalize_allocation,
     validate_allocation,
@@ -59,3 +60,27 @@ def test_validate_rejects_overspend():
 def test_validate_accepts_underspend():
     under = {"rd": 10000, "acquisition": 10000, "om": 10000, "spares": 10000, "infrastructure": 10000}
     validate_allocation(under, available_cr=100000)  # no raise
+
+
+def test_compute_grant_realistic_2026():
+    assert compute_quarterly_grant("realistic", 2026) == 45000
+
+
+def test_compute_grant_difficulty_multipliers_2026():
+    assert compute_quarterly_grant("relaxed",   2026) == 67500
+    assert compute_quarterly_grant("realistic", 2026) == 45000
+    assert compute_quarterly_grant("hard_peer", 2026) == 31500
+    assert compute_quarterly_grant("worst_case", 2026) == 22500
+
+
+def test_compute_grant_year_over_year_growth():
+    # 3% compounded per year past 2026, rounded to nearest 500
+    assert compute_quarterly_grant("realistic", 2026) == 45000
+    # 45000 * 1.03 = 46350 → rounded to nearest 500 → 46500
+    assert compute_quarterly_grant("realistic", 2027) == 46500
+    # 45000 * 1.03^4 ≈ 50648 → rounded to nearest 500 → 50500
+    assert compute_quarterly_grant("realistic", 2030) == 50500
+
+
+def test_compute_grant_unknown_difficulty_defaults_realistic():
+    assert compute_quarterly_grant("whatever", 2026) == 45000
