@@ -13,6 +13,7 @@ from app.models.campaign_base import CampaignBase
 from app.models.loadout_upgrade import LoadoutUpgrade
 from app.models.ad_battery import ADBattery
 from app.schemas.campaign import CampaignCreate
+from app.engine.budget import compute_quarterly_grant
 from app.engine.turn import advance as engine_advance
 from app.engine.delivery_assignment import pick_base_for_delivery
 from app.content.registry import rd_programs as rd_program_specs
@@ -25,11 +26,11 @@ from app.content.registry import (
 )
 
 
-STARTING_BUDGET_CR = 620000  # ~₹6.2L cr — 1 year cushion of pre-existing reserves
-
-
 def create_campaign(db: Session, payload: CampaignCreate) -> Campaign:
     seed = payload.seed if payload.seed is not None else random.randint(1, 2**31 - 1)
+    # Starting treasury = 1 quarter of the difficulty-adjusted grant, not 4.
+    # Campaigns begin cash-strapped, forcing early trade-offs.
+    grant = compute_quarterly_grant(payload.difficulty, 2026)
     campaign = Campaign(
         name=payload.name,
         seed=seed,
@@ -39,8 +40,8 @@ def create_campaign(db: Session, payload: CampaignCreate) -> Campaign:
         current_quarter=2,
         difficulty=payload.difficulty,
         objectives_json=payload.objectives,
-        budget_cr=STARTING_BUDGET_CR,
-        quarterly_grant_cr=155000,
+        budget_cr=grant,
+        quarterly_grant_cr=grant,
         current_allocation_json=None,
         reputation=50,
     )
@@ -211,6 +212,10 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
     campaign.current_year = result.next_year
     campaign.current_quarter = result.next_quarter
     campaign.budget_cr = result.next_treasury_cr
+    # Recompute grant each turn so YoY growth + difficulty multiplier apply.
+    campaign.quarterly_grant_cr = compute_quarterly_grant(
+        campaign.difficulty, campaign.current_year,
+    )
 
     rd_by_id = {r.id: r for r in rd_rows}
     for s in result.next_rd_states:

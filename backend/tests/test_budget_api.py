@@ -39,7 +39,8 @@ def _create_campaign(client):
 
 def test_set_budget_persists_allocation(client):
     c = _create_campaign(client)
-    payload = {"rd": 60000, "acquisition": 50000, "om": 25000, "spares": 15000, "infrastructure": 5000}
+    # Realistic difficulty 2026: treasury 45000 + grant 45000 = 90000 available
+    payload = {"rd": 30000, "acquisition": 25000, "om": 15000, "spares": 10000, "infrastructure": 5000}
     r = client.post(f"/api/campaigns/{c['id']}/budget", json={"allocation": payload})
     assert r.status_code == 200
     body = r.json()
@@ -48,7 +49,7 @@ def test_set_budget_persists_allocation(client):
 
 def test_set_budget_rejects_overspend(client):
     c = _create_campaign(client)
-    # Treasury 620000 + grant 155000 = 775000; this overshoots by a lot
+    # Realistic: treasury 45000 + grant 45000 = 90000; this overshoots by a lot
     payload = {"rd": 9_000_000, "acquisition": 0, "om": 0, "spares": 0, "infrastructure": 0}
     r = client.post(f"/api/campaigns/{c['id']}/budget", json={"allocation": payload})
     assert r.status_code == 400
@@ -77,9 +78,9 @@ def test_set_budget_404_for_unknown_campaign(client):
 
 def test_advance_after_set_budget_uses_new_allocation(client):
     c = _create_campaign(client)
-    # Allocate everything to R&D (775k) so AMCA gets richly funded
-    payload = {"rd": 775000, "acquisition": 0, "om": 0, "spares": 0, "infrastructure": 0}
+    # Realistic 2026: treasury 45000 + grant 45000 = 90000. Allocate all to R&D.
+    payload = {"rd": 90000, "acquisition": 0, "om": 0, "spares": 0, "infrastructure": 0}
     client.post(f"/api/campaigns/{c['id']}/budget", json={"allocation": payload})
     advanced = client.post(f"/api/campaigns/{c['id']}/advance").json()
-    # Treasury after = 620000 + 155000 - 775000 = 0
+    # Treasury after = 45000 + 45000 - 90000 = 0
     assert advanced["budget_cr"] == 0
