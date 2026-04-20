@@ -22,6 +22,11 @@ def _quarter_index(year: int, quarter: int) -> int:
     return year * 4 + (quarter - 1)
 
 
+def _add_quarters(year: int, quarter: int, n: int) -> tuple[int, int]:
+    total = (year * 4 + (quarter - 1)) + n
+    return total // 4, (total % 4) + 1
+
+
 def tick_acquisitions(
     orders: list[dict],
     year: int,
@@ -63,6 +68,28 @@ def tick_acquisitions(
             continue
 
         if cost > bucket_remaining:
+            # Too underfunded (<50% of per-quarter cost) — skip this quarter,
+            # slip FOC out by 1, and do not deliver airframes for free.
+            if bucket_remaining < per_qtr_cost // 2:
+                new_foc_year, new_foc_quarter = _add_quarters(
+                    order["foc_year"], order["foc_quarter"], 1,
+                )
+                order["foc_year"] = new_foc_year
+                order["foc_quarter"] = new_foc_quarter
+                events.append({
+                    "event_type": "acquisition_slipped",
+                    "payload": {
+                        "order_id": order["id"],
+                        "platform_id": order["platform_id"],
+                        "new_foc_year": new_foc_year,
+                        "new_foc_quarter": new_foc_quarter,
+                        "reason": "bucket_insufficient",
+                        "needed_cr": cost,
+                        "available_cr": bucket_remaining,
+                    },
+                })
+                continue
+            # Partial funding (>=50% but <100%) — log warning, proceed.
             events.append({
                 "event_type": "acquisition_underfunded",
                 "payload": {

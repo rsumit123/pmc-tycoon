@@ -81,11 +81,23 @@ def test_completion_event_on_final_delivery():
     assert out[0]["delivered"] == 12
 
 
-def test_underfunded_bucket_logs_warning_but_still_delivers():
-    # Needs 10000 cr; bucket has 0
+def test_severely_underfunded_bucket_slips_delivery():
+    # Needs 10000 cr/q; bucket has 0 (<50% of per-qtr cost) → slip, no delivery.
     out, events = tick_acquisitions(
         [_order(quantity=12, first=(2027, 4), foc=(2030, 3), total_cost=120000)],
         year=2027, quarter=4, acq_bucket_cr=0,
+    )
+    assert out[0]["delivered"] == 0  # no free delivery
+    assert any(e["event_type"] == "acquisition_slipped" for e in events)
+    # FOC pushed from 2030-Q3 to 2030-Q4.
+    assert (out[0]["foc_year"], out[0]["foc_quarter"]) == (2030, 4)
+
+
+def test_partially_underfunded_bucket_logs_warning_but_delivers():
+    # Needs 10000 cr/q; bucket has 6000 (>=50% but <100%) → proceed + log.
+    out, events = tick_acquisitions(
+        [_order(quantity=12, first=(2027, 4), foc=(2030, 3), total_cost=120000)],
+        year=2027, quarter=4, acq_bucket_cr=6000,
     )
     assert out[0]["delivered"] == 1  # delivery proceeds
     assert any(e["event_type"] == "acquisition_underfunded" for e in events)

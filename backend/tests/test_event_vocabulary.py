@@ -40,6 +40,8 @@ CANONICAL_EVENT_TYPES = {
     "acquisition_delivery",
     "acquisition_completed",
     "acquisition_underfunded",
+    # Plan 17: underfunded acquisitions slip delivery instead of silent free
+    "acquisition_slipped",
     # readiness engine
     "readiness_changed",
     # adversary engine (Plan 3)
