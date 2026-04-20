@@ -3,7 +3,7 @@ programs:
     name: AMCA Mk1
     description: Indigenous 5th-generation stealth multirole fighter. First flight 2028-29, serial production 2035.
     base_duration_quarters: 36
-    base_cost_cr: 150000
+    base_cost_cr: 225000
     dependencies: [amca_mk1_engine]
     unlocks:
       kind: platform
@@ -13,7 +13,7 @@ programs:
     name: AMCA Mk1 Engine (Safran-GTRE)
     description: 120-140 kN class engine, co-developed with Safran. Critical-path for AMCA serial production.
     base_duration_quarters: 36
-    base_cost_cr: 60000
+    base_cost_cr: 90000
     dependencies: []
     unlocks:
       kind: none
@@ -22,7 +22,7 @@ programs:
     name: Tejas Mk2
     description: Indigenous 4.75-gen multirole. LRIP ~2033, FRP 2034 at 24/yr.
     base_duration_quarters: 28
-    base_cost_cr: 50000
+    base_cost_cr: 75000
     dependencies: []
     unlocks:
       kind: platform
@@ -32,7 +32,7 @@ programs:
     name: TEDBF (Twin Engine Deck-Based Fighter)
     description: Carrier-based naval fighter. First flight late-decade.
     base_duration_quarters: 24
-    base_cost_cr: 40000
+    base_cost_cr: 60000
     dependencies: []
     unlocks:
       kind: platform
@@ -42,7 +42,7 @@ programs:
     name: Ghatak UCAV
     description: Stealth flying-wing UCAV. Operational prototype ~2028, induction ~2031.
     base_duration_quarters: 20
-    base_cost_cr: 25000
+    base_cost_cr: 37500
     dependencies: []
     unlocks:
       kind: strike_platform
@@ -52,7 +52,7 @@ programs:
     name: Astra Mk2
     description: 240km BVR air-to-air missile. Series production July 2026.
     base_duration_quarters: 4
-    base_cost_cr: 8000
+    base_cost_cr: 12000
     dependencies: []
     unlocks:
       kind: missile
@@ -63,7 +63,7 @@ programs:
     name: Astra Mk3 (Gandiva)
     description: 350km dual-pulse ramjet BVR AAM. Combat-ready ~2029.
     base_duration_quarters: 12
-    base_cost_cr: 15000
+    base_cost_cr: 22500
     dependencies: [astra_mk2]
     unlocks:
       kind: missile
@@ -74,7 +74,7 @@ programs:
     name: Rudram-2
     description: Multi-target anti-radiation missile, 300km range. Production ~2027.
     base_duration_quarters: 6
-    base_cost_cr: 6000
+    base_cost_cr: 9000
     dependencies: []
     unlocks:
       kind: missile
@@ -85,7 +85,7 @@ programs:
     name: Rudram-3
     description: Long-range ARM, 550+ km. Production nod 2026, IOC ~2028.
     base_duration_quarters: 8
-    base_cost_cr: 8000
+    base_cost_cr: 12000
     dependencies: [rudram_2]
     unlocks:
       kind: missile
@@ -96,7 +96,7 @@ programs:
     name: BrahMos-NG
     description: Next-gen smaller supersonic cruise missile. First flight ~2027, IOC ~2028-29.
     base_duration_quarters: 10
-    base_cost_cr: 12000
+    base_cost_cr: 18000
     dependencies: []
     unlocks:
       kind: missile
@@ -107,7 +107,7 @@ programs:
     name: Netra AEW&C Mk2
     description: Next-gen airborne early warning on Airbus A321neo platform. 6 units planned.
     base_duration_quarters: 16
-    base_cost_cr: 20000
+    base_cost_cr: 30000
     dependencies: []
     unlocks:
       kind: isr_drone
@@ -118,7 +118,7 @@ programs:
     name: Pralay SRBM
     description: Short-range ballistic missile system. 150-500 km range, tri-service.
     base_duration_quarters: 8
-    base_cost_cr: 10000
+    base_cost_cr: 15000
     dependencies: []
     unlocks:
       kind: none
@@ -127,7 +127,7 @@ programs:
     name: DRDO Tapas MALE UAV
     description: Indigenous medium-altitude long-endurance UAV for ISR.
     base_duration_quarters: 12
-    base_cost_cr: 8000
+    base_cost_cr: 12000
     dependencies: []
     unlocks:
       kind: isr_drone
@@ -138,7 +138,7 @@ programs:
     name: AMCA Mk2
     description: 6th-gen evolution with loyal wingman integration and optional manning.
     base_duration_quarters: 40
-    base_cost_cr: 200000
+    base_cost_cr: 300000
     dependencies: [amca_mk1]
     unlocks:
       kind: platform
@@ -148,7 +148,7 @@ programs:
     name: Su-30 MKI Super Upgrade
     description: Deep upgrade package — Uttam AESA radar, new EW suite, structural life extension.
     base_duration_quarters: 16
-    base_cost_cr: 30000
+    base_cost_cr: 45000
     dependencies: [uttam_aesa]
     unlocks:
       kind: none
@@ -157,7 +157,7 @@ programs:
     name: Uttam AESA Radar
     description: Indigenous AESA radar for Tejas Mk2 and AMCA integration.
     base_duration_quarters: 12
-    base_cost_cr: 12000
+    base_cost_cr: 18000
     dependencies: []
     unlocks:
       kind: none
@@ -166,7 +166,7 @@ programs:
     name: Kaveri Turbojet
     description: Backup dry turbojet development. 80-90 kN class for Tejas derivatives.
     base_duration_quarters: 20
-    base_cost_cr: 25000
+    base_cost_cr: 37500
     dependencies: []
     unlocks:
       kind: none
@@ -175,7 +175,7 @@ programs:
     name: DRDO Maya EW Suite
     description: Next-gen electronic warfare and ECM pod system for IAF platforms.
     base_duration_quarters: 10
-    base_cost_cr: 8000
+    base_cost_cr: 12000
     dependencies: []
     unlocks:
       kind: none
@@ -184,7 +184,7 @@ programs:
     name: Abhyas Loyal Wingman
     description: High-speed loyal wingman drone. AI-assisted formation flying with manned aircraft.
     base_duration_quarters: 14
-    base_cost_cr: 10000
+    base_cost_cr: 15000
     dependencies: []
     unlocks:
       kind: none
@@ -193,7 +193,7 @@ programs:
     name: DRDO SAAW
     description: Smart Anti-Airfield Weapon — precision-guided anti-runway/shelter munition.
     base_duration_quarters: 6
-    base_cost_cr: 5000
+    base_cost_cr: 7500
     dependencies: []
     unlocks:
       kind: missile
@@ -204,7 +204,7 @@ programs:
     name: Indigenous Long-Range SAM
     description: S-400 class indigenous surface-to-air missile. 400+ km intercept range.
     base_duration_quarters: 20
-    base_cost_cr: 35000
+    base_cost_cr: 52500
     dependencies: []
     unlocks:
       kind: ad_system
@@ -215,7 +215,7 @@ programs:
     name: Project Kusha BMD
     description: Ballistic missile defense system with layered interception.
     base_duration_quarters: 24
-    base_cost_cr: 45000
+    base_cost_cr: 67500
     dependencies: [long_range_sam]
     unlocks:
       kind: ad_system
@@ -226,7 +226,7 @@ programs:
     name: Air-Launched BrahMos-II
     description: Hypersonic air-launched cruise missile. Mach 7+ with scramjet propulsion.
     base_duration_quarters: 16
-    base_cost_cr: 20000
+    base_cost_cr: 30000
     dependencies: [brahmos_ng]
     unlocks:
       kind: missile
@@ -237,7 +237,7 @@ programs:
     name: MR-SAM Air Defense
     description: Medium-range SAM integration with IAF airbase defense network.
     base_duration_quarters: 8
-    base_cost_cr: 12000
+    base_cost_cr: 18000
     dependencies: []
     unlocks:
       kind: ad_system
@@ -248,7 +248,7 @@ programs:
     name: Next-Gen Anti-Radiation Missile
     description: Follow-on to Rudram series. Dual-mode seeker, 600+ km standoff.
     base_duration_quarters: 10
-    base_cost_cr: 9000
+    base_cost_cr: 13500
     dependencies: [rudram_3]
     unlocks:
       kind: missile
