@@ -62,7 +62,9 @@ The repo was previously called **PMC Tycoon** (a mercenary-contractor game). All
 - **Backend:** FastAPI + SQLAlchemy 2.x (`Mapped[T]` / `mapped_column` — no legacy `Column(...)` patterns) + SQLite + Pydantic 2.x + pydantic-settings. YAML content in `backend/content/`.
 - **Frontend:** React 19 + Vite 8 + TypeScript + Tailwind v4 (`@import "tailwindcss";`) + Zustand + axios + react-router-dom 7. No Redux.
 - **LLM:** OpenRouter via env var `OPENROUTER_API_KEY` (BYOK). Model swappable via `OPENROUTER_MODEL`. Default `anthropic/claude-haiku-4.5`. Shipped in Plan 5; v2 prompts with enriched CampaignEvent data landed in Plan 9.
-- **Hosting:** Vercel frontend at `pmc-tycoon.skdev.one`, GCP VM Docker backend at `pmc-tycoon-api.skdev.one`. Deploy via `./deploy.sh [frontend|backend|both]`.
+- **Hosting:** Vercel frontend at `pmc-tycoon.skdev.one`, GCP VM Docker backend at `pmc-tycoon-api.skdev.one`.
+  - **Frontend deploys automatically** via Vercel's GitHub integration on any push to `main` that touches `frontend/` (Vercel project has `rootDirectory: frontend`). Do NOT re-add `npx vercel --prod` to `deploy.sh` — CLI uploads can't invalidate the edge CDN cleanly, which caused a multi-hour stale-bundle incident on 2026-04-20.
+  - **Backend deploys manually** via `./deploy.sh` (runs `git pull && docker build && docker run` on the GCP VM). The script now only handles backend.
 
 ## How to pick up work (fresh session kickoff)
 

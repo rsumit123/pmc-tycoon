@@ -1,43 +1,40 @@
 #!/bin/bash
-# Sovereign Shield — One-command deploy script
-# Usage: ./deploy.sh [frontend|backend|both]
+# Sovereign Shield — Backend deploy script
 #
-# Create /home/rsumit123/pmc-tycoon/.env on the VM with:
+# Frontend auto-deploys via Vercel's GitHub integration on push to main
+# (project: pmc-tycoon, rootDirectory: frontend). Do not re-add CLI-based
+# frontend deploys here — they bypass the edge-cache invalidation that
+# git-driven deploys handle cleanly.
+#
+# This script only ships the backend container to the GCP VM.
+#
+# Prerequisite on the VM: /home/rsumit123/pmc-tycoon/.env must contain
 #   OPENROUTER_API_KEY=sk-or-...
-# Docker reads it via --env-file. If missing, LLM narratives fall back to placeholder text.
+# Docker reads it via --env-file. If missing, LLM narratives fall back
+# to placeholder text.
 
 set -e
 
-TARGET=${1:-both}
-REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
-
-deploy_frontend() {
-    echo "═══ Deploying Frontend to Vercel ═══"
-    cd "$REPO_ROOT/frontend"
-    # Use ~/.vercel-token if present (bypasses sandboxed keychain issues);
-    # fall back to stored CLI auth otherwise.
-    if [ -f "$HOME/.vercel-token" ]; then
-        npx vercel --prod --yes --token="$(cat "$HOME/.vercel-token")"
-    else
-        npx vercel --prod --yes
-    fi
-    echo "✓ Frontend deployed"
-}
-
-deploy_backend() {
-    echo "═══ Deploying Backend to GCP ═══"
-    gcloud compute ssh socialflow \
-        --project=polar-pillar-450607-b7 \
-        --zone=us-east1-d \
-        --command="cd /home/rsumit123/pmc-tycoon && git pull && docker build -t defense-game-backend ./backend && docker rm -f defense-game-backend 2>/dev/null; docker run -d --name defense-game-backend -p 8010:8010 -v /home/rsumit123/pmc-tycoon/backend/data:/app/data --env-file .env defense-game-backend"
-    echo "✓ Backend deployed"
-}
-
-case "$TARGET" in
-    frontend|fe|f) deploy_frontend ;;
-    backend|be|b) deploy_backend ;;
-    both|all) deploy_frontend; deploy_backend ;;
-    *) echo "Usage: ./deploy.sh [frontend|backend|both]"; exit 1 ;;
+case "${1:-}" in
+    frontend|fe|f)
+        echo "Frontend now auto-deploys via Vercel GitHub integration — just 'git push' to main."
+        exit 0
+        ;;
+    both|all)
+        echo "Frontend now auto-deploys on git push. Running backend only."
+        ;;
+    backend|be|b|"")
+        ;;
+    *)
+        echo "Usage: ./deploy.sh [backend]  (frontend auto-deploys on git push)"
+        exit 1
+        ;;
 esac
 
+echo "═══ Deploying Backend to GCP ═══"
+gcloud compute ssh socialflow \
+    --project=polar-pillar-450607-b7 \
+    --zone=us-east1-d \
+    --command="cd /home/rsumit123/pmc-tycoon && git pull && docker build -t defense-game-backend ./backend && docker rm -f defense-game-backend 2>/dev/null; docker run -d --name defense-game-backend -p 8010:8010 -v /home/rsumit123/pmc-tycoon/backend/data:/app/data --env-file .env defense-game-backend"
+echo "✓ Backend deployed"
 echo "═══ Deploy complete ═══"
