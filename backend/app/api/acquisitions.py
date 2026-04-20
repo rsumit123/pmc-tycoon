@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.api.campaign_lifecycle import require_active_campaign
 from app.crud.campaign import get_campaign
 from app.crud.acquisition import create_order, list_orders, PlatformNotFound, InvalidDeliveryWindow
 from app.schemas.acquisition import AcquisitionCreatePayload, AcquisitionRead, AcquisitionListResponse
@@ -32,6 +33,7 @@ def create_acquisition_endpoint(
     campaign = get_campaign(db, campaign_id)
     if campaign is None:
         raise HTTPException(status_code=404, detail="Campaign not found")
+    require_active_campaign(campaign)
     try:
         return create_order(
             db, campaign,
@@ -60,6 +62,7 @@ def cancel_acquisition_endpoint(
     campaign = get_campaign(db, campaign_id)
     if campaign is None:
         raise HTTPException(status_code=404, detail="Campaign not found")
+    require_active_campaign(campaign)
     row = db.query(AcquisitionOrder).filter_by(id=order_id, campaign_id=campaign_id).first()
     if row is None:
         raise HTTPException(status_code=404, detail="Order not found")

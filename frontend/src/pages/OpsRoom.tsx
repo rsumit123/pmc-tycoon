@@ -7,6 +7,8 @@ import { CommitHoldButton } from "../components/primitives/CommitHoldButton";
 import { AOMiniMap } from "../components/vignette/AOMiniMap";
 import { AdversaryForceFogged } from "../components/vignette/AdversaryForceFogged";
 import type { Vignette, VignetteCommitPayload } from "../lib/types";
+import { isCampaignComplete } from "../lib/campaignLifecycle";
+import { Navigate } from "react-router-dom";
 
 export function OpsRoom() {
   const { id, vid } = useParams<{ id: string; vid: string }>();
@@ -74,6 +76,9 @@ export function OpsRoom() {
     }
   };
 
+  if (isCampaignComplete(campaign)) {
+    return <Navigate to={`/campaign/${campaignId}/performance`} replace />;
+  }
   if (!vignette) return <div className="p-6">Loading vignette…</div>;
   if (vignette.status === "resolved") {
     return (

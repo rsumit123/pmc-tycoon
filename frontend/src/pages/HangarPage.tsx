@@ -8,6 +8,8 @@ import { SquadronDetailSheet } from "../components/hangar/SquadronDetailSheet";
 import { SquadronSplitModal } from "../components/hangar/SquadronSplitModal";
 import { RebaseOverlay } from "../components/map/RebaseOverlay";
 import type { HangarSquadron } from "../lib/types";
+import { isCampaignComplete } from "../lib/campaignLifecycle";
+import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
 
 const ROLE_MAP: Record<string, (sq: HangarSquadron) => boolean> = {
   All:      () => true,
@@ -82,8 +84,11 @@ export function HangarPage() {
     await loadHangar(cid);
   };
 
+  const complete = isCampaignComplete(campaign);
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
+      {complete && campaign && <ReadOnlyBanner campaignId={campaign.id} />}
       <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
         <div className="min-w-0">
           <h1 className="text-sm font-bold truncate">Hangar</h1>

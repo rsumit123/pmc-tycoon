@@ -8,6 +8,8 @@ import { ADSystemCard } from "../components/armory/ADSystemCard";
 import { ADInstallModal } from "../components/armory/ADInstallModal";
 import { DroneRoster } from "../components/armory/DroneRoster";
 import type { MissileUnlock, ADSystemUnlock } from "../lib/types";
+import { isCampaignComplete } from "../lib/campaignLifecycle";
+import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
 
 type Tab = "unlocks" | "missiles" | "ad" | "drones";
 
@@ -65,8 +67,11 @@ export function ArmoryPage() {
     },
   ];
 
+  const complete = isCampaignComplete(campaign);
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
+      {complete && campaign && <ReadOnlyBanner campaignId={campaign.id} />}
       <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
         <div className="min-w-0">
           <h1 className="text-sm font-bold truncate">Armory</h1>

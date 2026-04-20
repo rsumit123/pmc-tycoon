@@ -16,6 +16,8 @@ import { ThemeToggle } from "../components/settings/ThemeToggle";
 import { HowToPlayGuide } from "../components/guide/HowToPlayGuide";
 import { synthesizeContacts } from "../lib/intelContacts";
 import { playRadarPing, getAudioEnabled, setAudioEnabled } from "../lib/audio";
+import { isCampaignComplete as isCampComplete } from "../lib/campaignLifecycle";
+import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
 import type { BaseSquadronSummary } from "../lib/types";
 
 export function CampaignMapView() {
@@ -57,9 +59,7 @@ export function CampaignMapView() {
   const [showMenu, setShowMenu] = useState(false);
   const [flashBaseId, setFlashBaseId] = useState<number | null>(null);
 
-  const isCampaignComplete = campaign
-    ? campaign.current_year > 2036 || (campaign.current_year === 2036 && campaign.current_quarter > 1)
-    : false;
+  const isCampaignComplete = isCampComplete(campaign);
 
   useEffect(() => {
     if (id && (!campaign || campaign.id !== Number(id))) {
@@ -163,6 +163,7 @@ export function CampaignMapView() {
 
   return (
     <div className="fixed inset-0 flex flex-col">
+      {isCampaignComplete && <ReadOnlyBanner campaignId={campaign.id} />}
       <header className="flex items-center gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
         <button
           onClick={() => setShowMenu(true)}

@@ -116,9 +116,11 @@ def commit_vignette_endpoint(
     payload: VignetteCommitPayload,
     db: Session = Depends(get_db),
 ):
+    from app.api.campaign_lifecycle import require_active_campaign
     campaign = get_campaign(db, campaign_id)
     if campaign is None:
         raise HTTPException(status_code=404, detail="Campaign not found")
+    require_active_campaign(campaign)
     v = get_vignette(db, campaign_id, vignette_id)
     if v is None:
         raise HTTPException(status_code=404, detail="Vignette not found")

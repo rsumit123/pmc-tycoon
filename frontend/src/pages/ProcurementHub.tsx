@@ -6,6 +6,8 @@ import { RDDashboard } from "../components/procurement/RDDashboard";
 import { AcquisitionPipeline } from "../components/procurement/AcquisitionPipeline";
 import { DiplomacyStrip } from "../components/procurement/DiplomacyStrip";
 import type { BudgetAllocation } from "../lib/types";
+import { isCampaignComplete } from "../lib/campaignLifecycle";
+import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
 
 type Tab = "budget" | "rd" | "acquisitions";
 const TABS: Array<{ key: Tab; label: string }> = [
@@ -72,8 +74,11 @@ export function ProcurementHub() {
     .filter((p) => p.procurable_by && p.procurable_by.includes("IND"))
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  const complete = isCampaignComplete(campaign);
+
   return (
     <div className="min-h-screen flex flex-col">
+      {complete && <ReadOnlyBanner campaignId={campaign.id} />}
       <header className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800">
         <div>
           <h1 className="text-base font-bold">{campaign.name}</h1>

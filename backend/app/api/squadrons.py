@@ -3,6 +3,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.api.campaign_lifecycle import require_active_campaign
 from app.crud.campaign import get_campaign
 from app.models.squadron import Squadron
 from app.models.campaign_base import CampaignBase
@@ -37,6 +38,7 @@ def rebase_squadron(
     campaign = get_campaign(db, campaign_id)
     if campaign is None:
         raise HTTPException(404, "Campaign not found")
+    require_active_campaign(campaign)
 
     sqn = db.query(Squadron).filter(
         Squadron.campaign_id == campaign_id,
@@ -73,6 +75,7 @@ def rename_squadron(
     campaign = get_campaign(db, campaign_id)
     if campaign is None:
         raise HTTPException(404, "Campaign not found")
+    require_active_campaign(campaign)
     sqn = db.query(Squadron).filter(
         Squadron.campaign_id == campaign_id,
         Squadron.id == squadron_id,
@@ -115,6 +118,7 @@ def split_squadron(
     campaign = get_campaign(db, campaign_id)
     if campaign is None:
         raise HTTPException(404, "Campaign not found")
+    require_active_campaign(campaign)
 
     parent = db.query(Squadron).filter(
         Squadron.campaign_id == campaign_id,

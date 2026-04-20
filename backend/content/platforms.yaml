@@ -105,6 +105,21 @@ platforms:
     default_first_delivery_quarters: 6
     default_foc_quarters: 20
 
+  - id: amca_mk2
+    name: HAL AMCA Mk2
+    origin: IND
+    role: stealth_multirole
+    generation: "6"
+    combat_radius_km: 1800
+    payload_kg: 7500
+    rcs_band: VLO
+    radar_range_km: 240
+    cost_cr: 2000
+    intro_year: 2038
+    procurable_by: [IND]
+    default_first_delivery_quarters: 8
+    default_foc_quarters: 24
+
   - id: tejas_mk1
     name: HAL Tejas Mk1
     origin: IND

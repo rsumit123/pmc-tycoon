@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.api.campaign_lifecycle import require_active_campaign
 from app.crud.budget import set_allocation
 from app.crud.campaign import get_campaign
 from app.engine.budget import AllocationError
@@ -16,6 +17,7 @@ def set_budget_endpoint(campaign_id: int, payload: BudgetAllocationPayload, db: 
     campaign = get_campaign(db, campaign_id)
     if campaign is None:
         raise HTTPException(status_code=404, detail="Campaign not found")
+    require_active_campaign(campaign)
     try:
         return set_allocation(db, campaign, payload.allocation)
     except AllocationError as e:

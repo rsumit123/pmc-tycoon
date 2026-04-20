@@ -159,8 +159,13 @@ function ActiveRow({
 }
 
 function CatalogRow({
-  spec, onStart, disabled,
-}: { spec: RDProgramSpec; onStart: RDDashboardProps["onStart"]; disabled?: boolean }) {
+  spec, onStart, disabled, dependentNames,
+}: {
+  spec: RDProgramSpec;
+  onStart: RDDashboardProps["onStart"];
+  disabled?: boolean;
+  dependentNames: string[];
+}) {
   const [funding, setFunding] = useState<RDFundingLevel>("standard");
   const campaign = useCampaignStore((s) => s.campaign);
 
@@ -184,10 +189,43 @@ function CatalogRow({
     return { completion_year, completion_quarter, quarterly_cost_cr };
   }
 
+  const unlockKind = spec.unlocks?.kind ?? "none";
+  const unlocksSomething = unlockKind !== "none";
+  const isDoctrinalFlavor = !unlocksSomething && dependentNames.length === 0;
+
+  let outcomeChip: { label: string; cls: string } | null = null;
+  if (unlocksSomething) {
+    const target = spec.unlocks?.target_id ?? "";
+    outcomeChip = {
+      label: `Unlocks ${unlockKind.replace(/_/g, " ")}: ${target}`,
+      cls: "bg-emerald-900/40 text-emerald-200 border-emerald-700",
+    };
+  } else if (dependentNames.length > 0) {
+    outcomeChip = {
+      label: `Prereq for: ${dependentNames.join(", ")}`,
+      cls: "bg-sky-900/40 text-sky-200 border-sky-700",
+    };
+  } else {
+    outcomeChip = {
+      label: "Doctrinal flavor — no direct unlock",
+      cls: "bg-slate-800 text-slate-400 border-slate-700",
+    };
+  }
+
   return (
-    <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-3 space-y-2">
-      <div className="text-sm font-semibold">{spec.name}</div>
+    <div className={[
+      "border rounded-lg p-3 space-y-2",
+      isDoctrinalFlavor ? "bg-slate-900/30 border-slate-800 opacity-70" : "bg-slate-900/50 border-slate-800",
+    ].join(" ")}>
+      <div className="flex items-baseline justify-between gap-2">
+        <div className="text-sm font-semibold">{spec.name}</div>
+      </div>
       <div className="text-xs opacity-70">{spec.description}</div>
+      {outcomeChip && (
+        <div className={`text-[10px] inline-block border rounded px-1.5 py-0.5 ${outcomeChip.cls}`}>
+          {outcomeChip.label}
+        </div>
+      )}
       <div className="text-xs opacity-60">
         Duration ~{spec.base_duration_quarters}q • Base cost ₹
         {spec.base_cost_cr.toLocaleString("en-US")} cr
@@ -246,6 +284,17 @@ export function RDDashboard({
     () => [...active].sort((a, b) => b.progress_pct - a.progress_pct),
     [active],
   );
+
+  // Reverse dependency index: programId → list of program ids that list it as a dependency
+  const dependentsByProgram = useMemo(() => {
+    const out: Record<string, string[]> = {};
+    for (const prog of catalog) {
+      for (const dep of prog.dependencies) {
+        (out[dep] ??= []).push(prog.id);
+      }
+    }
+    return out;
+  }, [catalog]);
 
   const activeIds = useMemo(
     () => new Set(
@@ -380,6 +429,9 @@ export function RDDashboard({
                   spec={spec}
                   onStart={onStart}
                   disabled={disabled}
+                  dependentNames={(dependentsByProgram[spec.id] ?? []).map(
+                    (pid) => catalog.find((c) => c.id === pid)?.name ?? pid,
+                  )}
                 />
               ))}
             </div>

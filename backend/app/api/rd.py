@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.api.campaign_lifecycle import require_active_campaign
 from app.crud.campaign import get_campaign
 from app.crud.rd import start_program, update_program, list_active_programs, ProgramNotFound, ProgramAlreadyActive
 from app.engine.rd import project_completion
@@ -48,8 +49,10 @@ def list_rd_programs_endpoint(campaign_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{campaign_id}/rd", response_model=RDProgramRead, status_code=status.HTTP_201_CREATED)
 def start_program_endpoint(campaign_id: int, payload: RDStartPayload, db: Session = Depends(get_db)):
-    if get_campaign(db, campaign_id) is None:
+    camp = get_campaign(db, campaign_id)
+    if camp is None:
         raise HTTPException(status_code=404, detail="Campaign not found")
+    require_active_campaign(camp)
     try:
         return start_program(db, campaign_id, payload.program_id, payload.funding_level)
     except ProgramNotFound:
@@ -65,8 +68,10 @@ def update_program_endpoint(
     payload: RDUpdatePayload,
     db: Session = Depends(get_db),
 ):
-    if get_campaign(db, campaign_id) is None:
+    camp = get_campaign(db, campaign_id)
+    if camp is None:
         raise HTTPException(status_code=404, detail="Campaign not found")
+    require_active_campaign(camp)
     try:
         return update_program(
             db, campaign_id, program_id,

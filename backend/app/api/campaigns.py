@@ -164,7 +164,9 @@ def get_campaign_endpoint(campaign_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{campaign_id}/advance", response_model=CampaignRead)
 def advance_turn_endpoint(campaign_id: int, db: Session = Depends(get_db)):
+    from app.api.campaign_lifecycle import require_active_campaign
     campaign = get_campaign(db, campaign_id)
     if campaign is None:
         raise HTTPException(status_code=404, detail="Campaign not found")
+    require_active_campaign(campaign)
     return advance_turn(db, campaign)

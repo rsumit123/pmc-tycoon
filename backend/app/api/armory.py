@@ -139,6 +139,8 @@ def equip_missile(
     camp = db.get(Campaign, campaign_id)
     if camp is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "campaign not found")
+    from app.api.campaign_lifecycle import require_active_campaign
+    require_active_campaign(camp)
 
     # Rollout: 3 quarters from current turn
     total_q = camp.current_year * 4 + (camp.current_quarter - 1) + 3
@@ -212,6 +214,8 @@ def install_ad_system(
     camp = db.get(Campaign, campaign_id)
     if camp is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "campaign not found")
+    from app.api.campaign_lifecycle import require_active_campaign
+    require_active_campaign(camp)
 
     if camp.budget_cr < adspec.install_cost_cr:
         raise HTTPException(

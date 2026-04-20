@@ -17,9 +17,11 @@ def upgrade_base(
     req: BaseUpgradeRequest,
     db: Session = Depends(get_db),
 ):
+    from app.api.campaign_lifecycle import require_active_campaign
     campaign = db.query(Campaign).filter_by(id=campaign_id).first()
     if not campaign:
         raise HTTPException(404, "Campaign not found")
+    require_active_campaign(campaign)
 
     base = db.query(CampaignBase).filter_by(
         campaign_id=campaign_id, template_id=base_template_id
