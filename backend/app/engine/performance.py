@@ -160,6 +160,77 @@ def _aggregate_platforms(resolved_vignettes: list[dict], platforms_by_id: dict[s
     return out
 
 
+def _aggregate_weapons(resolved_vignettes: list[dict], weapons_by_id: dict[str, dict]) -> list[dict]:
+    # weapon_id -> {fired, hits, total_cost, pk_sum, pk_count, target_counts: {platform: int}}
+    agg: dict[str, dict] = {}
+
+    for v in resolved_vignettes:
+        outcome = v.get("outcome") or {}
+
+        # fired/hits/cost come from munitions_expended rows (authoritative — resolver writes these)
+        for me in outcome.get("munitions_expended") or []:
+            wid = me.get("weapon")
+            if not wid:
+                continue
+            a = agg.setdefault(wid, {
+                "fired": 0, "hits": 0, "total_cost": 0,
+                "pk_sum": 0.0, "pk_count": 0,
+                "target_counts": {},
+            })
+            a["fired"] += int(me.get("fired", 0) or 0)
+            a["hits"] += int(me.get("hits", 0) or 0)
+            a["total_cost"] += int(me.get("total_cost_cr", 0) or 0)
+
+        # avg PK + top-target derived from event_trace (PK field lives there, not in munitions row)
+        for ev in v.get("event_trace") or []:
+            kind = ev.get("kind")
+            if kind in ("bvr_launch", "wvr_launch") and ev.get("side") == "ind":
+                wid = ev.get("weapon")
+                if not wid:
+                    continue
+                a = agg.setdefault(wid, {
+                    "fired": 0, "hits": 0, "total_cost": 0,
+                    "pk_sum": 0.0, "pk_count": 0,
+                    "target_counts": {},
+                })
+                pk = ev.get("pk")
+                if isinstance(pk, (int, float)):
+                    a["pk_sum"] += float(pk)
+                    a["pk_count"] += 1
+            elif kind == "kill" and ev.get("side") == "ind":
+                wid = ev.get("weapon")
+                victim = ev.get("victim_platform")
+                if wid and victim and wid in agg:
+                    agg[wid]["target_counts"][victim] = agg[wid]["target_counts"].get(victim, 0) + 1
+
+    out = []
+    for wid, a in agg.items():
+        spec = weapons_by_id.get(wid) or {}
+        fired = a["fired"]
+        hits = a["hits"]
+        hit_rate = round((hits / fired) * 100) if fired > 0 else 0
+        avg_pk = round(a["pk_sum"] / a["pk_count"], 2) if a["pk_count"] > 0 else 0
+        cost_per_kill = (a["total_cost"] // hits) if hits > 0 else None
+        top_target = max(a["target_counts"].items(), key=lambda kv: kv[1])[0] if a["target_counts"] else None
+        out.append({
+            "weapon_id": wid,
+            "fired": fired,
+            "hits": hits,
+            "hit_rate_pct": hit_rate,
+            "avg_pk": avg_pk,
+            "total_cost_cr": a["total_cost"],
+            "cost_per_kill_cr": cost_per_kill,
+            "top_target_platform": top_target,
+            "weapon_class": spec.get("class", "a2a_bvr"),
+        })
+
+    # Drop entries with zero fired AND zero cost (defensive — shouldn't happen but prevents noise)
+    out = [w for w in out if w["fired"] > 0 or w["total_cost_cr"] > 0]
+    # Sort: fired desc, then weapon_id asc
+    out.sort(key=lambda w: (-w["fired"], w["weapon_id"]))
+    return out
+
+
 def compute_performance(
     resolved_vignettes: list[dict],
     platforms_by_id: dict[str, dict],
@@ -194,7 +265,7 @@ def compute_performance(
         },
         "factions": _aggregate_factions(resolved_vignettes),
         "platforms": _aggregate_platforms(resolved_vignettes, platforms_by_id),
-        "weapons": [],
+        "weapons": _aggregate_weapons(resolved_vignettes, weapons_by_id),
         "support": [
             {
                 "asset": a,

@@ -170,3 +170,69 @@ def test_platform_stats_compute_sorties_kd_win_contribution_first_shot():
     assert su30["kd_ratio"] is None
     assert su30["win_contribution_pct"] == 100
     assert su30["top_weapon"] == "r77"
+
+
+def test_weapon_stats_compute_hit_rate_cost_per_kill_top_target_avg_pk():
+    weapons_by_id = {
+        "meteor": {"unit_cost_cr": 18, "class": "a2a_bvr"},
+        "r77":    {"unit_cost_cr":  4, "class": "a2a_bvr"},
+    }
+    v1 = _mkv(
+        faction="PLAAF",
+        objective_met=True,
+        event_trace=[
+            {"kind": "bvr_launch", "side": "ind", "weapon": "meteor", "pk": 0.30, "target_platform": "j20a"},
+            {"kind": "bvr_launch", "side": "ind", "weapon": "meteor", "pk": 0.10, "target_platform": "j20a"},
+            {"kind": "bvr_launch", "side": "ind", "weapon": "meteor", "pk": 0.50, "target_platform": "kj500"},
+            {"kind": "kill", "side": "ind", "attacker_platform": "rafale_f4", "victim_platform": "kj500", "weapon": "meteor"},
+            {"kind": "bvr_launch", "side": "ind", "weapon": "r77", "pk": 0.00, "target_platform": "j20a"},
+            {"kind": "bvr_launch", "side": "ind", "weapon": "r77", "pk": 0.10, "target_platform": "j16"},
+            {"kind": "kill", "side": "ind", "attacker_platform": "su30_mki", "victim_platform": "j16", "weapon": "r77"},
+        ],
+    )
+    v1["outcome"]["munitions_expended"] = [
+        {"weapon": "meteor", "fired": 3, "hits": 1, "unit_cost_cr": 18, "total_cost_cr": 54},
+        {"weapon": "r77",    "fired": 2, "hits": 1, "unit_cost_cr":  4, "total_cost_cr":  8},
+    ]
+    v1["outcome"]["munitions_cost_total_cr"] = 62
+
+    result = compute_performance([v1], platforms_by_id={}, weapons_by_id=weapons_by_id)
+    # Sort: weapons with fired > 0 desc, then weapon_id asc
+    assert [w["weapon_id"] for w in result["weapons"]] == ["meteor", "r77"]
+
+    meteor = next(w for w in result["weapons"] if w["weapon_id"] == "meteor")
+    assert meteor["fired"] == 3
+    assert meteor["hits"] == 1
+    # hit_rate = round(1/3 * 100) = 33
+    assert meteor["hit_rate_pct"] == 33
+    # avg_pk = mean(0.30, 0.10, 0.50) = 0.30 (rounded to 2 decimals)
+    assert meteor["avg_pk"] == 0.30
+    assert meteor["total_cost_cr"] == 54
+    # cost_per_kill = 54 / 1 = 54
+    assert meteor["cost_per_kill_cr"] == 54
+    assert meteor["top_target_platform"] == "kj500"
+    assert meteor["weapon_class"] == "a2a_bvr"
+
+    r77 = next(w for w in result["weapons"] if w["weapon_id"] == "r77")
+    assert r77["fired"] == 2
+    assert r77["hits"] == 1
+    assert r77["cost_per_kill_cr"] == 8
+    assert r77["top_target_platform"] == "j16"
+
+
+def test_weapon_with_fired_but_no_hits_has_null_cost_per_kill():
+    weapons_by_id = {"meteor": {"unit_cost_cr": 18, "class": "a2a_bvr"}}
+    v = _mkv(event_trace=[
+        {"kind": "bvr_launch", "side": "ind", "weapon": "meteor", "pk": 0.0, "target_platform": "j20a"},
+    ])
+    v["outcome"]["munitions_expended"] = [
+        {"weapon": "meteor", "fired": 1, "hits": 0, "unit_cost_cr": 18, "total_cost_cr": 18},
+    ]
+    v["outcome"]["munitions_cost_total_cr"] = 18
+
+    result = compute_performance([v], platforms_by_id={}, weapons_by_id=weapons_by_id)
+    meteor = next(w for w in result["weapons"] if w["weapon_id"] == "meteor")
+    assert meteor["hits"] == 0
+    assert meteor["hit_rate_pct"] == 0
+    assert meteor["cost_per_kill_cr"] is None
+    assert meteor["top_target_platform"] is None
