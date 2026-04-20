@@ -171,6 +171,14 @@ def tick_rd(
 
         if new_progress >= 100 and s["status"] != "completed":
             s["status"] = "completed"
+            # Flush integer-rounding residual: over a long program, the
+            # per-quarter int() truncation accumulates. Reconcile so the
+            # invariant cost_invested_cr == base_cost_cr * cost_factor holds
+            # at completion.
+            expected_total = int(round(spec["base_cost_cr"] * cost_factor))
+            residual = max(0, expected_total - s["cost_invested_cr"])
+            if residual > 0:
+                s["cost_invested_cr"] = expected_total
             events.append({
                 "event_type": "rd_completed",
                 "payload": {"program_id": s["program_id"]},
