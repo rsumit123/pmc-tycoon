@@ -69,3 +69,33 @@ def test_totals_aggregate_across_vignettes():
     assert result["totals"]["total_munitions_cost_cr"] == 150
     # avg_cost_per_kill = 150 / 3 = 50
     assert result["totals"]["avg_cost_per_kill_cr"] == 50
+
+
+def test_factions_aggregate_and_preserve_order_even_for_unused_factions():
+    vs = [
+        _mkv(faction="PLAAF", objective_met=True, ind_airframes_lost=1, adv_airframes_lost=5, munitions_cost=200),
+        _mkv(faction="PLAAF", objective_met=False, ind_airframes_lost=4, adv_airframes_lost=2, munitions_cost=300),
+        _mkv(faction="PAF",   objective_met=True, ind_airframes_lost=0, adv_airframes_lost=3, munitions_cost=100),
+        # No PLAN vignettes — should still appear with zeroes
+    ]
+    result = compute_performance(vs, platforms_by_id={}, weapons_by_id={})
+    by_faction = {f["faction"]: f for f in result["factions"]}
+    assert [f["faction"] for f in result["factions"]] == ["PLAAF", "PAF", "PLAN"]
+
+    assert by_faction["PLAAF"]["sorties"] == 2
+    assert by_faction["PLAAF"]["wins"] == 1
+    assert by_faction["PLAAF"]["losses"] == 1
+    assert by_faction["PLAAF"]["win_rate_pct"] == 50
+    # exchange_ratio = adv_losses_total (5+2=7) / max(1, ind_losses_total (1+4=5)) = 7/5 = 1.4
+    assert by_faction["PLAAF"]["avg_exchange_ratio"] == 1.4
+    # avg_munitions_cost = (200 + 300) / 2 = 250
+    assert by_faction["PLAAF"]["avg_munitions_cost_cr"] == 250
+
+    assert by_faction["PAF"]["sorties"] == 1
+    assert by_faction["PAF"]["wins"] == 1
+    assert by_faction["PAF"]["win_rate_pct"] == 100
+
+    # PLAN — zero sorties, but entry still present with nulls / zeroes
+    assert by_faction["PLAN"]["sorties"] == 0
+    assert by_faction["PLAN"]["avg_exchange_ratio"] is None
+    assert by_faction["PLAN"]["avg_munitions_cost_cr"] == 0

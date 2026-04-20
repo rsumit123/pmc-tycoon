@@ -28,6 +28,56 @@ FACTION_ORDER = ["PLAAF", "PAF", "PLAN"]
 SUPPORT_KEYS = ["awacs", "tanker", "sead"]  # maps to support.awacs / support.tanker / support.sead_package
 
 
+def _faction_of(vignette: dict) -> str:
+    force = vignette.get("planning_state", {}).get("adversary_force", [])
+    if force and "faction" in force[0]:
+        return force[0]["faction"]
+    return "UNKNOWN"
+
+
+def _aggregate_factions(resolved_vignettes: list[dict]) -> list[dict]:
+    # Seed every faction with zeroes so the response order is stable.
+    agg = {
+        f: {"sorties": 0, "wins": 0, "losses": 0, "ind_losses": 0, "adv_losses": 0, "munitions": 0}
+        for f in FACTION_ORDER
+    }
+    for v in resolved_vignettes:
+        faction = _faction_of(v)
+        if faction not in agg:
+            continue  # skip UNKNOWN/unexpected factions rather than creating new rows
+        outcome = v.get("outcome") or {}
+        a = agg[faction]
+        a["sorties"] += 1
+        if outcome.get("objective_met"):
+            a["wins"] += 1
+        else:
+            a["losses"] += 1
+        a["ind_losses"] += int(outcome.get("ind_airframes_lost", 0) or 0)
+        a["adv_losses"] += int(outcome.get("adv_airframes_lost", 0) or 0)
+        a["munitions"] += int(outcome.get("munitions_cost_total_cr", 0) or 0)
+
+    out = []
+    for f in FACTION_ORDER:
+        a = agg[f]
+        sorties = a["sorties"]
+        win_rate = round((a["wins"] / sorties) * 100) if sorties > 0 else 0
+        if sorties == 0:
+            exchange = None
+        else:
+            exchange = round(a["adv_losses"] / max(1, a["ind_losses"]), 2)
+        avg_munitions = (a["munitions"] // sorties) if sorties > 0 else 0
+        out.append({
+            "faction": f,
+            "sorties": sorties,
+            "wins": a["wins"],
+            "losses": a["losses"],
+            "win_rate_pct": win_rate,
+            "avg_exchange_ratio": exchange,
+            "avg_munitions_cost_cr": avg_munitions,
+        })
+    return out
+
+
 def compute_performance(
     resolved_vignettes: list[dict],
     platforms_by_id: dict[str, dict],
@@ -60,18 +110,7 @@ def compute_performance(
             "total_munitions_cost_cr": total_munitions_cost,
             "avg_cost_per_kill_cr": avg_cost_per_kill,
         },
-        "factions": [
-            {
-                "faction": f,
-                "sorties": 0,
-                "wins": 0,
-                "losses": 0,
-                "win_rate_pct": 0,
-                "avg_exchange_ratio": None,
-                "avg_munitions_cost_cr": 0,
-            }
-            for f in FACTION_ORDER
-        ],
+        "factions": _aggregate_factions(resolved_vignettes),
         "platforms": [],
         "weapons": [],
         "support": [
