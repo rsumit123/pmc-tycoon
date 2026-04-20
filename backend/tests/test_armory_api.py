@@ -170,3 +170,62 @@ def test_install_ad_system_rejects_non_unlocked():
     finally:
         app.dependency_overrides.clear()
         Base.metadata.drop_all(bind=engine)
+
+
+def test_install_ad_system_rejects_duplicate_at_same_base():
+    """Strict one-battery-per-(base, system_id). Second install at same base → 409."""
+    client, engine = _make_client()
+    try:
+        resp = client.post("/api/campaigns", json={"name": "Test"})
+        cid = resp.json()["id"]
+
+        from app.models.campaign_base import CampaignBase
+        from app.models.rd_program import RDProgramState
+        from app.models.ad_battery import ADBattery
+        from app.models.campaign import Campaign
+
+        with Session(engine) as s:
+            bases = s.query(CampaignBase).filter_by(campaign_id=cid).all()
+            base_a_id = bases[0].id
+            base_b_id = bases[1].id
+            # Force long_range_sam R&D to completed so the unlock check passes.
+            s.add(RDProgramState(
+                campaign_id=cid, program_id="long_range_sam",
+                funding_level="standard", status="completed",
+                progress_pct=100, cost_invested_cr=0,
+            ))
+            # Pump treasury so the install-cost check doesn't fire.
+            camp = s.get(Campaign, cid)
+            camp.budget_cr = 500_000
+            s.commit()
+
+        # First install: succeeds
+        r1 = client.post(
+            f"/api/campaigns/{cid}/armory/ad-systems/long_range_sam/install",
+            json={"base_id": base_a_id},
+        )
+        assert r1.status_code == 200, r1.text
+
+        # Second install at SAME base: 409 duplicate
+        r2 = client.post(
+            f"/api/campaigns/{cid}/armory/ad-systems/long_range_sam/install",
+            json={"base_id": base_a_id},
+        )
+        assert r2.status_code == 409
+        assert "already installed" in r2.json()["detail"].lower()
+
+        # Install at a DIFFERENT base: succeeds (same system, different base)
+        r3 = client.post(
+            f"/api/campaigns/{cid}/armory/ad-systems/long_range_sam/install",
+            json={"base_id": base_b_id},
+        )
+        assert r3.status_code == 200, r3.text
+
+        # Confirm two battery rows, one per base
+        with Session(engine) as s:
+            rows = s.query(ADBattery).filter_by(campaign_id=cid, system_id="long_range_sam").all()
+            assert len(rows) == 2
+            assert {r.base_id for r in rows} == {base_a_id, base_b_id}
+    finally:
+        app.dependency_overrides.clear()
+        Base.metadata.drop_all(bind=engine)

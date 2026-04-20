@@ -23,6 +23,8 @@ export function ArmoryPage() {
   const loadHangar = useCampaignStore((s) => s.loadHangar);
   const bases = useCampaignStore((s) => s.bases);
   const loadBases = useCampaignStore((s) => s.loadBases);
+  const adBatteries = useCampaignStore((s) => s.adBatteries);
+  const loadADBatteries = useCampaignStore((s) => s.loadADBatteries);
   const equipMissile = useCampaignStore((s) => s.equipMissile);
   const installADSystem = useCampaignStore((s) => s.installADSystem);
 
@@ -35,7 +37,15 @@ export function ArmoryPage() {
     loadUnlocks(cid);
     loadHangar(cid);
     loadBases(cid);
-  }, [cid, campaign, loadCampaign, loadUnlocks, loadHangar, loadBases]);
+    loadADBatteries(cid);
+  }, [cid, campaign, loadCampaign, loadUnlocks, loadHangar, loadBases, loadADBatteries]);
+
+  const basesById = Object.fromEntries(bases.map((b) => [b.id, b]));
+  const installedBasesBySystem: Record<string, string[]> = {};
+  for (const b of adBatteries) {
+    const baseName = basesById[b.base_id]?.name ?? `base-${b.base_id}`;
+    (installedBasesBySystem[b.system_id] ??= []).push(baseName);
+  }
 
   if (!unlocks || !hangar) return <div className="p-6 text-sm">Loading armory…</div>;
 
@@ -134,7 +144,13 @@ export function ArmoryPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {unlocks.ad_systems.map((a) => (
-                <ADSystemCard key={a.target_id} a={a} onInstall={() => setADModal(a)} />
+                <ADSystemCard
+                  key={a.target_id}
+                  a={a}
+                  installedBaseNames={installedBasesBySystem[a.target_id] ?? []}
+                  totalBases={bases.length}
+                  onInstall={() => setADModal(a)}
+                />
               ))}
             </div>
           )
@@ -164,10 +180,12 @@ export function ArmoryPage() {
           <ADInstallModal
             system={adModal}
             bases={bases}
+            adBatteries={adBatteries}
             onClose={() => setADModal(null)}
             budgetAvailable={campaign?.budget_cr ?? 0}
-            onPick={(baseId) => {
-              void installADSystem(adModal.target_id, baseId);
+            onPick={async (baseId) => {
+              await installADSystem(adModal.target_id, baseId);
+              await loadADBatteries(cid);
             }}
           />
         )}

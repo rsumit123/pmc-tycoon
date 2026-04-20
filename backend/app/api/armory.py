@@ -197,6 +197,18 @@ def install_ad_system(
     if base is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "base not found")
 
+    # Strict one-battery-per-(base, system_id). Install the same system at
+    # another base for more coverage; install a different system at this
+    # base for layered AD.
+    existing = db.query(ADBattery).filter_by(
+        campaign_id=campaign_id, base_id=payload.base_id, system_id=system_id,
+    ).first()
+    if existing is not None:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"{adspec.name} is already installed at {base.template_id}",
+        )
+
     camp = db.get(Campaign, campaign_id)
     if camp is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "campaign not found")
