@@ -6,6 +6,7 @@ import { MissileCard } from "../components/armory/MissileCard";
 import { MissileEquipModal } from "../components/armory/MissileEquipModal";
 import { ADSystemCard } from "../components/armory/ADSystemCard";
 import { ADInstallModal } from "../components/armory/ADInstallModal";
+import { ADDeploymentsTable } from "../components/armory/ADDeploymentsTable";
 import { DroneRoster } from "../components/armory/DroneRoster";
 import type { MissileUnlock, ADSystemUnlock } from "../lib/types";
 import { isCampaignComplete } from "../lib/campaignLifecycle";
@@ -147,16 +148,19 @@ export function ArmoryPage() {
           unlocks.ad_systems.length === 0 ? (
             <p className="text-xs opacity-60 py-4 text-center">No AD systems unlocked yet.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {unlocks.ad_systems.map((a) => (
-                <ADSystemCard
-                  key={a.target_id}
-                  a={a}
-                  installedBaseNames={installedBasesBySystem[a.target_id] ?? []}
-                  totalBases={bases.length}
-                  onInstall={() => setADModal(a)}
-                />
-              ))}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {unlocks.ad_systems.map((a) => (
+                  <ADSystemCard
+                    key={a.target_id}
+                    a={a}
+                    installedBaseNames={installedBasesBySystem[a.target_id] ?? []}
+                    totalBases={bases.length}
+                    onInstall={() => setADModal(a)}
+                  />
+                ))}
+              </div>
+              <ADDeploymentsTable adBatteries={adBatteries} bases={bases} />
             </div>
           )
         )}

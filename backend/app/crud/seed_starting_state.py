@@ -130,8 +130,11 @@ SEED_ACQUISITIONS = [
 
 SEED_AD_BATTERIES = [
     # (system_id, base_template_id, coverage_km, installed_year, installed_quarter)
-    # Long-range: S-400 at the China-facing AD hub.
+    # Long-range: S-400 at two hubs. IRL 2026 state: 3 of 5 squadrons delivered —
+    # 322 Sqn Pathankot (west/PLAAF+PAF), 323 Sqn Kheria (central/UP), 324 Sqn
+    # covering east. Pathankot + Bareilly approximates west + central layering.
     ("s400", "pathankot", 150, 2026, 2),
+    ("s400", "bareilly", 150, 2026, 2),
     # Medium-range Akash-NG at 3 theater-facing bases (west / east / south).
     ("akash_ng", "ambala", 70, 2026, 2),
     ("akash_ng", "adampur", 70, 2026, 2),

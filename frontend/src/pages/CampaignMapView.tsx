@@ -330,6 +330,7 @@ export function CampaignMapView() {
       <BaseSheet
         base={selectedBase}
         platforms={platformsById}
+        adBatteries={adBatteries}
         onClose={() => setSelectedBase(null)}
         onRebaseStart={(sq, baseId) => setRebaseTarget({ squadron: sq, baseId })}
       />
