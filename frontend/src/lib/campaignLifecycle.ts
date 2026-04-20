@@ -7,3 +7,4 @@ export function isCampaignComplete(campaign: Campaign | null | undefined): boole
     (campaign.current_year === 2036 && campaign.current_quarter > 1)
   );
 }
+
