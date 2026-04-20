@@ -4,7 +4,7 @@ programs:
     description: Indigenous 5th-generation stealth multirole fighter. First flight 2028-29, serial production 2035.
     base_duration_quarters: 36
     base_cost_cr: 150000
-    dependencies: []
+    dependencies: [amca_mk1_engine]
     unlocks:
       kind: platform
       target_id: amca_mk1
@@ -64,7 +64,7 @@ programs:
     description: 350km dual-pulse ramjet BVR AAM. Combat-ready ~2029.
     base_duration_quarters: 12
     base_cost_cr: 15000
-    dependencies: []
+    dependencies: [astra_mk2]
     unlocks:
       kind: missile
       target_id: astra_mk3
@@ -86,7 +86,7 @@ programs:
     description: Long-range ARM, 550+ km. Production nod 2026, IOC ~2028.
     base_duration_quarters: 8
     base_cost_cr: 8000
-    dependencies: []
+    dependencies: [rudram_2]
     unlocks:
       kind: missile
       target_id: rudram_3
@@ -216,7 +216,7 @@ programs:
     description: Ballistic missile defense system with layered interception.
     base_duration_quarters: 24
     base_cost_cr: 45000
-    dependencies: []
+    dependencies: [long_range_sam]
     unlocks:
       kind: ad_system
       target_id: project_kusha
