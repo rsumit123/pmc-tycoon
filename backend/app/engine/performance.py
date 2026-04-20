@@ -78,6 +78,88 @@ def _aggregate_factions(resolved_vignettes: list[dict]) -> list[dict]:
     return out
 
 
+def _committed_platforms(vignette: dict) -> set[str]:
+    """Set of platform_ids committed in this vignette (dedup across squadrons)."""
+    eligible = {s["squadron_id"]: s for s in vignette.get("planning_state", {}).get("eligible_squadrons", [])}
+    out: set[str] = set()
+    for c in vignette.get("committed_force", {}).get("squadrons", []):
+        es = eligible.get(c["squadron_id"])
+        if es and es.get("platform_id"):
+            out.add(es["platform_id"])
+    return out
+
+
+def _detection_advantage(vignette: dict) -> str | None:
+    for ev in vignette.get("event_trace", []) or []:
+        if ev.get("kind") == "detection":
+            return ev.get("advantage")
+    return None
+
+
+def _aggregate_platforms(resolved_vignettes: list[dict], platforms_by_id: dict[str, dict]) -> list[dict]:
+    # platform_id -> {sorties, kills, losses, wins, first_shots, weapon_counts: {weapon: int}}
+    agg: dict[str, dict] = {}
+
+    for v in resolved_vignettes:
+        committed = _committed_platforms(v)
+        if not committed:
+            continue
+        outcome = v.get("outcome") or {}
+        won = bool(outcome.get("objective_met"))
+        det = _detection_advantage(v)
+
+        for pid in committed:
+            a = agg.setdefault(pid, {
+                "sorties": 0, "kills": 0, "losses": 0,
+                "wins": 0, "first_shots": 0,
+                "weapon_counts": {},
+            })
+            a["sorties"] += 1
+            if won:
+                a["wins"] += 1
+            if det == "ind":
+                a["first_shots"] += 1
+
+        for ev in v.get("event_trace") or []:
+            kind = ev.get("kind")
+            if kind == "kill":
+                if ev.get("side") == "ind":
+                    pid = ev.get("attacker_platform")
+                    if pid in agg:
+                        agg[pid]["kills"] += 1
+                elif ev.get("side") == "adv":
+                    pid = ev.get("victim_platform")
+                    if pid in agg:
+                        agg[pid]["losses"] += 1
+            elif kind in ("bvr_launch", "wvr_launch") and ev.get("side") == "ind":
+                pid = ev.get("attacker_platform")
+                w = ev.get("weapon")
+                if pid in agg and w:
+                    agg[pid]["weapon_counts"][w] = agg[pid]["weapon_counts"].get(w, 0) + 1
+
+    out = []
+    for pid, a in agg.items():
+        sorties = a["sorties"]
+        kd = None
+        if a["losses"] > 0:
+            kd = round(a["kills"] / a["losses"], 2)
+        top_weapon = max(a["weapon_counts"].items(), key=lambda kv: kv[1])[0] if a["weapon_counts"] else None
+        out.append({
+            "platform_id": pid,
+            "platform_name": (platforms_by_id.get(pid) or {}).get("name", pid),
+            "sorties": sorties,
+            "kills": a["kills"],
+            "losses": a["losses"],
+            "kd_ratio": kd,
+            "win_contribution_pct": round((a["wins"] / sorties) * 100) if sorties > 0 else 0,
+            "first_shot_pct": round((a["first_shots"] / sorties) * 100) if sorties > 0 else 0,
+            "top_weapon": top_weapon,
+        })
+    # Sort by sorties desc, then platform_id asc for deterministic tie-break
+    out.sort(key=lambda p: (-p["sorties"], p["platform_id"]))
+    return out
+
+
 def compute_performance(
     resolved_vignettes: list[dict],
     platforms_by_id: dict[str, dict],
@@ -111,7 +193,7 @@ def compute_performance(
             "avg_cost_per_kill_cr": avg_cost_per_kill,
         },
         "factions": _aggregate_factions(resolved_vignettes),
-        "platforms": [],
+        "platforms": _aggregate_platforms(resolved_vignettes, platforms_by_id),
         "weapons": [],
         "support": [
             {

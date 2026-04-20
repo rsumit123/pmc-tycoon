@@ -99,3 +99,74 @@ def test_factions_aggregate_and_preserve_order_even_for_unused_factions():
     assert by_faction["PLAN"]["sorties"] == 0
     assert by_faction["PLAN"]["avg_exchange_ratio"] is None
     assert by_faction["PLAN"]["avg_munitions_cost_cr"] == 0
+
+
+def test_platform_stats_compute_sorties_kd_win_contribution_first_shot():
+    platforms_by_id = {
+        "rafale_f4": {"name": "Dassault Rafale F4"},
+        "su30_mki":  {"name": "Sukhoi Su-30 MKI"},
+    }
+    v1 = _mkv(
+        faction="PLAAF",
+        objective_met=True,
+        ind_airframes_lost=1,
+        adv_airframes_lost=4,
+        eligible=[
+            {"squadron_id": 101, "platform_id": "rafale_f4"},
+            {"squadron_id": 201, "platform_id": "su30_mki"},
+        ],
+        committed=[
+            {"squadron_id": 101, "airframes": 6},
+            {"squadron_id": 201, "airframes": 4},
+        ],
+        event_trace=[
+            {"kind": "detection", "advantage": "ind"},
+            # Rafale scores 2 kills, Su-30 scores 1
+            {"kind": "bvr_launch", "side": "ind", "attacker_platform": "rafale_f4", "weapon": "meteor"},
+            {"kind": "kill", "side": "ind", "attacker_platform": "rafale_f4", "victim_platform": "j20a", "weapon": "meteor"},
+            {"kind": "bvr_launch", "side": "ind", "attacker_platform": "rafale_f4", "weapon": "meteor"},
+            {"kind": "kill", "side": "ind", "attacker_platform": "rafale_f4", "victim_platform": "j20a", "weapon": "meteor"},
+            {"kind": "bvr_launch", "side": "ind", "attacker_platform": "su30_mki", "weapon": "r77"},
+            {"kind": "kill", "side": "ind", "attacker_platform": "su30_mki", "victim_platform": "j16", "weapon": "r77"},
+            # Rafale loses 1
+            {"kind": "kill", "side": "adv", "attacker_platform": "j20a", "victim_platform": "rafale_f4"},
+        ],
+    )
+    v2 = _mkv(
+        faction="PAF",
+        objective_met=False,
+        ind_airframes_lost=2,
+        adv_airframes_lost=1,
+        eligible=[{"squadron_id": 101, "platform_id": "rafale_f4"}],
+        committed=[{"squadron_id": 101, "airframes": 4}],
+        event_trace=[
+            {"kind": "detection", "advantage": "adv"},
+            {"kind": "bvr_launch", "side": "ind", "attacker_platform": "rafale_f4", "weapon": "meteor"},
+            {"kind": "kill", "side": "adv", "attacker_platform": "j10c", "victim_platform": "rafale_f4"},
+            {"kind": "kill", "side": "adv", "attacker_platform": "j10c", "victim_platform": "rafale_f4"},
+        ],
+    )
+    result = compute_performance([v1, v2], platforms_by_id=platforms_by_id, weapons_by_id={})
+    # Platforms sorted by sorties desc — Rafale 2, Su-30 1
+    assert [p["platform_id"] for p in result["platforms"]] == ["rafale_f4", "su30_mki"]
+    rafale = next(p for p in result["platforms"] if p["platform_id"] == "rafale_f4")
+    assert rafale["platform_name"] == "Dassault Rafale F4"
+    assert rafale["sorties"] == 2
+    assert rafale["kills"] == 2
+    assert rafale["losses"] == 3
+    # kd_ratio = 2 / 3 = 0.67 (rounded to 2 decimals)
+    assert rafale["kd_ratio"] == 0.67
+    # win_contribution: committed in 2 vignettes, 1 objective_met = 50%
+    assert rafale["win_contribution_pct"] == 50
+    # first_shot: committed in 2 vignettes, 1 had ind detection advantage = 50%
+    assert rafale["first_shot_pct"] == 50
+    assert rafale["top_weapon"] == "meteor"
+
+    su30 = next(p for p in result["platforms"] if p["platform_id"] == "su30_mki")
+    assert su30["sorties"] == 1
+    assert su30["kills"] == 1
+    assert su30["losses"] == 0
+    # kd_ratio is None when losses == 0 (display as "∞" on the frontend)
+    assert su30["kd_ratio"] is None
+    assert su30["win_contribution_pct"] == 100
+    assert su30["top_weapon"] == "r77"
