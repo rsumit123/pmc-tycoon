@@ -15,6 +15,7 @@ import type {
   HangarResponse,
   UnlocksResponse,
   ADBattery,
+  PerformanceResponse,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -38,6 +39,8 @@ interface CampaignState {
   turnReport: TurnReportResponse | null;
   hangar: HangarResponse | null;
   armoryUnlocks: UnlocksResponse | null;
+  performance: PerformanceResponse | null;
+  loadPerformance: (campaignId: number) => Promise<void>;
   adBatteries: ADBattery[];
   loadADBatteries: (campaignId: number) => Promise<void>;
   toasts: Toast[];
@@ -105,6 +108,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   turnReport: null,
   hangar: null,
   armoryUnlocks: null,
+  performance: null,
   adBatteries: [],
   loadADBatteries: async (campaignId: number) => {
     try {
@@ -545,6 +549,15 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     }
   },
 
+  loadPerformance: async (campaignId: number) => {
+    try {
+      const performance = await api.getPerformance(campaignId);
+      set({ performance });
+    } catch (e) {
+      set({ error: (e as Error).message });
+    }
+  },
+
   loadArmoryUnlocks: async (campaignId: number) => {
     try {
       const r = await api.getArmoryUnlocks(campaignId);
@@ -597,6 +610,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     turnReport: null,
     hangar: null,
     armoryUnlocks: null,
+    performance: null,
     adBatteries: [],
     toasts: [], rdLoading: {},
     loading: false, error: null,

@@ -667,3 +667,64 @@ export interface HangarResponse {
   squadrons: HangarSquadron[];
   summary_by_platform: HangarPlatformSummary[];
 }
+
+// ---------- Plan 16: performance stats types ----------
+
+export interface CampaignTotals {
+  total_sorties: number;
+  total_kills: number;
+  total_losses: number;
+  total_munitions_cost_cr: number;
+  avg_cost_per_kill_cr: number | null;
+}
+
+export interface FactionStat {
+  faction: "PLAAF" | "PAF" | "PLAN";
+  sorties: number;
+  wins: number;
+  losses: number;
+  win_rate_pct: number;
+  avg_exchange_ratio: number | null;
+  avg_munitions_cost_cr: number;
+}
+
+export interface PlatformStat {
+  platform_id: string;
+  platform_name: string;
+  sorties: number;
+  kills: number;
+  losses: number;
+  kd_ratio: number | null;
+  win_contribution_pct: number;
+  first_shot_pct: number;
+  top_weapon: string | null;
+}
+
+export interface WeaponStat {
+  weapon_id: string;
+  fired: number;
+  hits: number;
+  hit_rate_pct: number;
+  avg_pk: number;
+  total_cost_cr: number;
+  cost_per_kill_cr: number | null;
+  top_target_platform: string | null;
+  weapon_class: string;
+}
+
+export interface SupportStat {
+  asset: "awacs" | "tanker" | "sead";
+  with_sorties: number;
+  without_sorties: number;
+  with_win_rate_pct: number;
+  without_win_rate_pct: number;
+  delta_win_rate_pp: number;
+}
+
+export interface PerformanceResponse {
+  totals: CampaignTotals;
+  factions: FactionStat[];
+  platforms: PlatformStat[];
+  weapons: WeaponStat[];
+  support: SupportStat[];
+}
