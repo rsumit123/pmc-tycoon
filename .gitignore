@@ -21,6 +21,7 @@ env/
 # Environment
 .env
 .env.local
+.vercel-token
 
 # IDE
 .vscode/

@@ -14,7 +14,13 @@ REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
 deploy_frontend() {
     echo "═══ Deploying Frontend to Vercel ═══"
     cd "$REPO_ROOT/frontend"
-    npx vercel --prod --yes
+    # Use ~/.vercel-token if present (bypasses sandboxed keychain issues);
+    # fall back to stored CLI auth otherwise.
+    if [ -f "$HOME/.vercel-token" ]; then
+        npx vercel --prod --yes --token="$(cat "$HOME/.vercel-token")"
+    else
+        npx vercel --prod --yes
+    fi
     echo "✓ Frontend deployed"
 }
 
