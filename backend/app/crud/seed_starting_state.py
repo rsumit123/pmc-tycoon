@@ -130,7 +130,22 @@ SEED_ACQUISITIONS = [
 
 SEED_AD_BATTERIES = [
     # (system_id, base_template_id, coverage_km, installed_year, installed_quarter)
+    # Long-range: S-400 at the China-facing AD hub.
     ("s400", "pathankot", 150, 2026, 2),
+    # Medium-range Akash-NG at 3 theater-facing bases (west / east / south).
+    ("akash_ng", "ambala", 70, 2026, 2),
+    ("akash_ng", "adampur", 70, 2026, 2),
+    ("akash_ng", "thanjavur", 70, 2026, 2),
+    # Point-defense QRSAM at 3 forward / high-value bases.
+    ("qrsam", "srinagar", 30, 2026, 2),
+    ("qrsam", "tezpur", 30, 2026, 2),
+    ("qrsam", "jodhpur", 30, 2026, 2),
+    # VSHORADS as last-ditch baseline at 5 major bases.
+    ("vshorads", "pathankot", 8, 2026, 2),
+    ("vshorads", "ambala", 8, 2026, 2),
+    ("vshorads", "gwalior", 8, 2026, 2),
+    ("vshorads", "hasimara", 8, 2026, 2),
+    ("vshorads", "bareilly", 8, 2026, 2),
 ]
 
 SEED_RD_PROGRAMS = [

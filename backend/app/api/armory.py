@@ -77,6 +77,27 @@ def _completed_unlocks(db: Session, campaign_id: int) -> dict[str, list]:
                 description=u.description,
             ))
 
+    # Starting-tech AD systems — always available for install, no R&D required.
+    # These are in-service IAF SAMs (Akash-NG, QRSAM, VSHORADS) that the player
+    # can deploy at any base from campaign start. Some are pre-seeded at key
+    # bases; this list lets the player install at additional bases if they want.
+    STARTING_AD_SYSTEMS = ("akash_ng", "qrsam", "vshorads", "s400")
+    already_listed = {a.target_id for a in ads}
+    for sid in STARTING_AD_SYSTEMS:
+        if sid in already_listed:
+            continue
+        adspec = ad_specs.get(sid)
+        if adspec is None:
+            continue
+        ads.append(ADSystemUnlock(
+            target_id=sid,
+            name=adspec.name,
+            description=adspec.description,
+            coverage_km=adspec.coverage_km,
+            install_cost_cr=adspec.install_cost_cr,
+            max_pk=adspec.max_pk,
+        ))
+
     return {"missiles": missiles, "ad_systems": ads, "isr_drones": isrs, "strike_platforms": strikes}
 
 
