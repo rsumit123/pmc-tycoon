@@ -7,6 +7,7 @@ from app.models.campaign import Campaign
 from app.models.event import CampaignEvent
 from app.models.squadron import Squadron
 from app.models.missile_stock import MissileStock
+from app.models.ad_battery import ADBattery
 from app.content.registry import platforms as platforms_reg
 from app.engine.vignette.resolver import resolve
 from app.engine.vignette.non_combat import is_non_combat, resolve_non_combat
@@ -78,6 +79,7 @@ def commit_vignette(
     if is_non_combat(ps.get("objective", {})):
         outcome, event_trace = resolve_non_combat(ps, committed_force)
         stock_rows: list[MissileStock] = []
+        battery_rows: list[ADBattery] = []
     else:
         # Build platforms_registry dict for the combat resolver
         platforms_dict = {
@@ -94,22 +96,33 @@ def commit_vignette(
         stock_rows = db.query(MissileStock).filter_by(
             campaign_id=campaign.id,
         ).all()
+        battery_rows = db.query(ADBattery).filter_by(
+            campaign_id=campaign.id,
+        ).all()
+        battery_stock = {b.id: (b.interceptor_stock or 0) for b in battery_rows}
         ps_with_stock = dict(ps)
         ps_with_stock["missile_stock"] = {
             (r.base_id, r.weapon_id): r.stock for r in stock_rows
         }
+        ps_with_stock["battery_stock"] = battery_stock
 
         outcome, event_trace = resolve(
             ps_with_stock, committed_force, platforms_dict,
             seed=campaign.seed, year=vignette.year, quarter=vignette.quarter,
         )
 
-        # Persist stock decrements back to DB.
+        # Persist missile stock decrements back to DB.
         remaining = outcome.get("missile_stock_remaining", {}) or {}
         for r in stock_rows:
             key = (r.base_id, r.weapon_id)
             new_stock = remaining.get(key, r.stock)
             r.stock = max(0, int(new_stock))
+
+        # Persist AD battery interceptor decrements back to DB.
+        battery_remaining = outcome.get("battery_stock_remaining", {}) or {}
+        for b in battery_rows:
+            new_stock = battery_remaining.get(b.id, b.interceptor_stock)
+            b.interceptor_stock = max(0, int(new_stock))
 
     # Apply readiness cost to committed squadrons.
     # Base cost: 5% per committed squadron. Overcommit (>2x adversary) adds penalty.
@@ -153,9 +166,15 @@ def commit_vignette(
     vignette.status = "resolved"
     vignette.committed_force = committed_force
     vignette.event_trace = event_trace
-    # `missile_stock_remaining` uses tuple keys for in-process book-keeping —
-    # strip before JSON-persist. Public consumers can query MissileStock rows.
-    outcome_for_db = {k: v for k, v in outcome.items() if k != "missile_stock_remaining"}
+    # `missile_stock_remaining` uses tuple keys for in-process book-keeping;
+    # `battery_stock_remaining` keys on DB battery ids which vary across
+    # campaigns (and would break replay determinism). Strip both before
+    # JSON-persist — public consumers query the live MissileStock / ADBattery
+    # rows for current state.
+    outcome_for_db = {
+        k: v for k, v in outcome.items()
+        if k not in ("missile_stock_remaining", "battery_stock_remaining")
+    }
     vignette.outcome = outcome_for_db
     vignette.aar_text = (
         f"Vignette {vignette.scenario_id} resolved: "

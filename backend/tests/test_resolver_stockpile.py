@@ -70,6 +70,32 @@ def test_resolver_respects_missile_stock():
     assert remaining.get((1, "mica_ir"), 0) == 0
 
 
+def test_ad_battery_respects_interceptor_stock():
+    """AD battery with stock=2 fires at most 2 shots regardless of attackers."""
+    import random as _random
+    from app.engine.vignette.ad_engagement import resolve_ad_engagement
+
+    ao = {"lat": 28.0, "lon": 77.0}
+    batteries = [{"id": 77, "base_id": 1, "system_id": "akash_ng", "coverage_km": 500}]
+    bases_registry = {1: {"lat": 28.0, "lon": 77.0, "name": "Test Base"}}
+    ad_specs = {"akash_ng": {"name": "Akash-NG", "max_pk": 0.99}}
+    adv_force = [{"role": "CAP", "faction": "PLAAF",
+                  "platform_id": "j16", "count": 5, "loadout": ["pl15"]}]
+    battery_stock = {77: 2}
+    rng = _random.Random(42)
+
+    new_adv, trace = resolve_ad_engagement(
+        ao=ao, batteries=batteries, bases_registry=bases_registry,
+        ad_specs=ad_specs, adv_force=adv_force, rng=rng,
+        battery_stock=battery_stock,
+    )
+    # pk is 0.99 — all 2 shots should (almost certainly) connect
+    ad_kills = [e for e in trace if e.get("kind") == "ad_engagement"]
+    assert len(ad_kills) <= 2, f"fired more than 2 shots: {len(ad_kills)}"
+    # magazine drained to 0
+    assert battery_stock[77] == 0
+
+
 def test_resolver_no_stock_dict_behaves_as_unlimited():
     """Legacy callers pass no missile_stock — resolver must not gate shots."""
     ps = _ps_with_limited_stock()

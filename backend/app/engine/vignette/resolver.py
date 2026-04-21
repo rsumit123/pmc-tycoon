@@ -264,12 +264,16 @@ def resolve(
     ad_batteries = planning_state.get("ad_batteries", [])
     ad_specs = planning_state.get("ad_specs", {})
     bases_reg_ps = planning_state.get("bases_registry", {})
+    # Battery interceptor stock dict (mutable). Caller wires this up; if absent,
+    # AD engagement behaves as unlimited.
+    battery_stock = planning_state.get("battery_stock")
     if ad_batteries:
         new_adv_entries, ad_trace = resolve_ad_engagement(
             ao=planning_state["ao"], batteries=ad_batteries,
             bases_registry=bases_reg_ps, ad_specs=ad_specs,
             adv_force=planning_state.get("adversary_force", []),
             rng=rng,
+            battery_stock=battery_stock,
         )
         trace.extend(ad_trace)
         adv_force = _make_airframes("adv", new_adv_entries, platforms_registry)
@@ -432,11 +436,16 @@ def resolve(
         "munitions_cost_total_cr": total_cost,
         "missile_stock_consumed": consumed_by_weapon,
         "missile_stock_remaining": remaining,
+        "battery_stock_remaining": dict(battery_stock) if battery_stock is not None else {},
     }
     trace.append({"t_min": 12, "kind": "egress",
                   "ind_survivors": len(ind_force), "adv_survivors": len(adv_force)})
-    # Strip the tuple-keyed `missile_stock_remaining` from the trace — the
-    # trace is JSON-persisted to the DB, tuple keys are not serializable.
-    trace_outcome = {k: v for k, v in outcome.items() if k != "missile_stock_remaining"}
+    # Strip tuple-keyed `missile_stock_remaining` + DB-id-keyed
+    # `battery_stock_remaining` from the trace — the trace is JSON-persisted
+    # and battery-id keys would break replay determinism across campaigns.
+    trace_outcome = {
+        k: v for k, v in outcome.items()
+        if k not in ("missile_stock_remaining", "battery_stock_remaining")
+    }
     trace.append({"t_min": 12, "kind": "outcome", "outcome": trace_outcome})
     return outcome, trace

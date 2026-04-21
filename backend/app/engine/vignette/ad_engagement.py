@@ -30,11 +30,16 @@ def resolve_ad_engagement(
     ad_specs: dict[str, dict],
     adv_force: list[dict],
     rng: random.Random,
+    battery_stock: dict | None = None,
 ) -> tuple[list[dict], list[dict]]:
     """Return (new_adv_force, trace_events).
 
     Events shape: {t_min: -5, kind: "ad_engagement", battery_system, base_name,
     target_platform, pk}.
+
+    battery_stock: optional mutable dict {battery_id: current_interceptor_stock}.
+    If supplied, each shot decrements by 1 and empty magazines skip the roll.
+    If None, behavior is unlimited (legacy / backward compat).
     """
     in_range: list[dict] = []
     for bat in batteries:
@@ -61,7 +66,12 @@ def resolve_ad_engagement(
         count = entry["count"]
         for bat_info in in_range:
             pk = bat_info["max_pk"]
+            bid = bat_info["battery"]["id"]
             for _ in range(count):
+                if battery_stock is not None:
+                    if battery_stock.get(bid, 0) <= 0:
+                        break  # magazine empty
+                    battery_stock[bid] = battery_stock.get(bid, 0) - 1
                 if rng.random() < pk:
                     count -= 1
                     trace.append({
