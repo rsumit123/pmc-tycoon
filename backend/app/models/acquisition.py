@@ -21,3 +21,7 @@ class AcquisitionOrder(Base):
     total_cost_cr: Mapped[int] = mapped_column(Integer, default=0)
     cancelled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     preferred_base_id: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    kind: Mapped[str] = mapped_column(String(32), default="platform", nullable=False)
+    target_battery_id: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, default=None,
+    )

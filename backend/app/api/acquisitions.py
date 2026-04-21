@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.api.campaign_lifecycle import require_active_campaign
 from app.crud.campaign import get_campaign
-from app.crud.acquisition import create_order, list_orders, PlatformNotFound, InvalidDeliveryWindow
+from app.crud.acquisition import (
+    create_order, list_orders,
+    PlatformNotFound, InvalidDeliveryWindow, InvalidKindPayload,
+)
 from app.schemas.acquisition import AcquisitionCreatePayload, AcquisitionRead, AcquisitionListResponse
 
 router = APIRouter(prefix="/api/campaigns", tags=["acquisitions"])
@@ -45,9 +48,13 @@ def create_acquisition_endpoint(
             foc_quarter=payload.foc_quarter,
             total_cost_cr=payload.total_cost_cr,
             preferred_base_id=payload.preferred_base_id,
+            kind=payload.kind,
+            target_battery_id=payload.target_battery_id,
         )
     except PlatformNotFound:
         raise HTTPException(status_code=404, detail=f"Platform {payload.platform_id} not in registry")
+    except InvalidKindPayload as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except InvalidDeliveryWindow as e:
         raise HTTPException(status_code=400, detail=str(e))
 
