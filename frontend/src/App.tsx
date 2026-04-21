@@ -12,6 +12,7 @@ import { HangarPage } from "./pages/HangarPage";
 import { ArmoryPage } from "./pages/ArmoryPage";
 import { CombatHistoryPage } from "./pages/CombatHistoryPage";
 import { PerformancePage } from "./pages/PerformancePage";
+import { NotificationsPage } from "./pages/NotificationsPage";
 import { ToastStack } from "./components/primitives/ToastStack";
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/campaign/:id/armory" element={<ArmoryPage />} />
         <Route path="/campaign/:id/combat-history" element={<CombatHistoryPage />} />
         <Route path="/campaign/:id/performance" element={<PerformancePage />} />
+        <Route path="/campaign/:id/notifications" element={<NotificationsPage />} />
         <Route path="/campaign/:id/raw" element={<CampaignConsoleRaw />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
