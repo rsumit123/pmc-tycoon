@@ -23,6 +23,7 @@ from app.api.campaign_export import router as campaign_export_router
 from app.api.squadrons import router as squadrons_router
 from app.api.armory import router as armory_router, hangar_router
 from app.api.performance import router as performance_router
+from app.api.missile_stocks import router as missile_stocks_router
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,7 @@ app.include_router(squadrons_router)
 app.include_router(armory_router)
 app.include_router(hangar_router)
 app.include_router(performance_router)
+app.include_router(missile_stocks_router)
 
 
 @app.get("/")
