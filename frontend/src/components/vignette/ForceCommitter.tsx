@@ -58,6 +58,7 @@ function estimateAdvTotal(planning: PlanningState): number {
 export function ForceCommitter({ planning, value, onChange }: ForceCommitterProps) {
   const platformsById = useCampaignStore((s) => s.platformsById);
   const weaponsById = useCampaignStore((s) => s.weaponsById);
+  const missileStocks = useCampaignStore((s) => s.missileStocks);
   const [showOutOfReach, setShowOutOfReach] = useState(false);
   const stealthAdversary = useMemo(
     () => adversaryHasStealth(planning, platformsById),
@@ -178,6 +179,23 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
             const ineffective = stealthAdversary && sq.loadout_stealth_effective === false;
             const checked = value.squadrons.some((s) => s.squadron_id === sq.squadron_id);
             const picked = value.squadrons.find((s) => s.squadron_id === sq.squadron_id);
+            // Depot status — primary A2A BVR weapon at the squadron's base
+            const primaryWeapon = sq.loadout.find((w) => {
+              const m = weaponsById[w];
+              return m && m.class === "a2a_bvr";
+            });
+            const primaryStock = primaryWeapon
+              ? (missileStocks.find((m) => m.base_id === sq.base_id && m.weapon_id === primaryWeapon)?.stock ?? 0)
+              : 0;
+            const expectedShots = sq.airframes_available * 2.5;
+            const depotTier: "green" | "amber" | "red" =
+              primaryStock >= expectedShots ? "green"
+              : primaryStock >= expectedShots * 0.5 ? "amber"
+              : "red";
+            const depotClass =
+              depotTier === "green" ? "text-emerald-300"
+              : depotTier === "amber" ? "text-amber-300"
+              : "text-rose-300";
             return (
               <li
                 key={sq.squadron_id}
@@ -231,6 +249,11 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
                   <div className="text-[10px] opacity-60 truncate mt-0.5">
                     📍 {sq.base_name} • {sq.distance_km} km • {sq.readiness_pct}% ready • {sq.airframes_available} airframes
                   </div>
+                  {primaryWeapon && (
+                    <div className={`text-[10px] mt-0.5 ${depotClass}`}>
+                      📦 {primaryWeapon} {primaryStock}/{Math.round(expectedShots * 2)} · depot status
+                    </div>
+                  )}
                   {ineffective && (
                     <div className="text-[10px] text-amber-300 mt-1">
                       ⚠ Loadout ineffective vs low-RCS targets (needs Meteor / Astra Mk2+ / PL-15+).
