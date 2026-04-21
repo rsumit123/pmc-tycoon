@@ -279,11 +279,20 @@ export function RDDashboard({
 
   const [tab, setTab] = useState<"active" | "catalog">(active.length > 0 ? "active" : "catalog");
   const [category, setCategory] = useState<string>("All");
+  const [sortMode, setSortMode] = useState<"name" | "duration" | "cost">("name");
+  const [showCompleted, setShowCompleted] = useState(false);
 
-  const sortedActive = useMemo(
-    () => [...active].sort((a, b) => b.progress_pct - a.progress_pct),
+  const completedCount = useMemo(
+    () => active.filter((a) => a.status === "completed" || a.status === "cancelled").length,
     [active],
   );
+
+  const sortedActive = useMemo(() => {
+    const rows = showCompleted
+      ? active
+      : active.filter((a) => a.status !== "completed" && a.status !== "cancelled");
+    return [...rows].sort((a, b) => b.progress_pct - a.progress_pct);
+  }, [active, showCompleted]);
 
   // Reverse dependency index: programId → list of program ids that list it as a dependency
   const dependentsByProgram = useMemo(() => {
@@ -310,9 +319,28 @@ export function RDDashboard({
   );
 
   const filteredCatalog = useMemo(() => {
-    if (category === "All") return availableCatalog;
-    return availableCatalog.filter((s) => categorize(s) === category);
-  }, [availableCatalog, category]);
+    const base = category === "All"
+      ? availableCatalog
+      : availableCatalog.filter((s) => categorize(s) === category);
+    const sorted = [...base];
+    if (sortMode === "duration") {
+      sorted.sort((a, b) => a.base_duration_quarters - b.base_duration_quarters);
+    } else if (sortMode === "cost") {
+      sorted.sort((a, b) => a.base_cost_cr - b.base_cost_cr);
+    } else {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return sorted;
+  }, [availableCatalog, category, sortMode]);
+
+  // Category counts for the inner tab labels.
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: availableCatalog.length };
+    for (const c of ["Fighters", "Weapons", "Sensors", "Drones", "Infrastructure", "Other"]) {
+      counts[c] = availableCatalog.filter((s) => categorize(s) === c).length;
+    }
+    return counts;
+  }, [availableCatalog]);
 
   const totalQuarterlyCost = useMemo(() => {
     return active.reduce((sum, a) => {
@@ -383,8 +411,24 @@ export function RDDashboard({
 
       {tab === "active" ? (
         <section className="space-y-2">
+          {completedCount > 0 && (
+            <label className="flex items-center gap-2 text-[11px] opacity-70 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showCompleted}
+                onChange={(e) => setShowCompleted(e.target.checked)}
+              />
+              Show {completedCount} completed / cancelled
+            </label>
+          )}
           {sortedActive.length === 0 ? (
-            <p className="text-xs opacity-60 py-4 text-center">No R&D programs underway. Open Catalog to start one.</p>
+            <p className="text-xs opacity-60 py-4 text-center">
+              {active.length === 0
+                ? "No R&D programs underway. Open Catalog to start one."
+                : completedCount > 0
+                  ? <>All programs completed. Tick <span className="font-semibold">Show {completedCount} completed</span> to review.</>
+                  : "No active programs."}
+            </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {sortedActive.map((a) => (
@@ -401,22 +445,34 @@ export function RDDashboard({
         </section>
       ) : (
         <section className="space-y-3">
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 overflow-x-auto">
             {["All", "Fighters", "Weapons", "Sensors", "Drones", "Infrastructure", "Other"].map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setCategory(c)}
                 className={[
-                  "text-[11px] rounded-full px-2.5 py-1 border",
-                  category === c
-                    ? "bg-amber-600 border-amber-500 text-slate-900 font-semibold"
-                    : "bg-slate-800 border-slate-700 text-slate-300",
+                  "flex-1 min-w-0 px-2.5 py-1.5 text-xs font-semibold rounded whitespace-nowrap",
+                  category === c ? "bg-amber-600 text-slate-900" : "text-slate-300",
                 ].join(" ")}
               >
-                {c}
+                {c} ({categoryCounts[c] ?? 0})
               </button>
             ))}
+          </div>
+
+          <div className="flex items-center justify-end gap-2">
+            <span className="text-[10px] opacity-60">Sort</span>
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as "name" | "duration" | "cost")}
+              className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[11px]"
+              aria-label="Sort R&D catalog"
+            >
+              <option value="name">Name</option>
+              <option value="duration">Duration ↑</option>
+              <option value="cost">Cost ↑</option>
+            </select>
           </div>
 
           {filteredCatalog.length === 0 ? (

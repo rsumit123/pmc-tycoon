@@ -6,6 +6,7 @@ import type {
 } from "../../lib/types";
 import { Stepper } from "../primitives/Stepper";
 import { CommitHoldButton } from "../primitives/CommitHoldButton";
+import { flagFor, WEAPON_ORIGIN, AD_SYSTEM_ORIGIN } from "../../lib/origin";
 
 export const AD_STARTING_INTERCEPTORS: Record<string, number> = {
   s400: 16, long_range_sam: 16, project_kusha: 12,
@@ -129,7 +130,10 @@ function OfferCard({
     >
       <p className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-semibold">{platform.name}</span>
-        <span className="text-[10px] opacity-60">{platform.origin}</span>
+        <span className="text-[11px] opacity-80 flex items-center gap-1 flex-shrink-0">
+          <span>{flagFor(platform.origin)}</span>
+          <span className="opacity-70">{platform.origin}</span>
+        </span>
       </p>
       <div className="text-xs opacity-70">
         {platform.role} • gen {platform.generation}
@@ -377,7 +381,10 @@ export function MissileBatchOfferCard({
     <div className="rounded-lg p-3 space-y-2 border bg-slate-900/50 border-slate-800">
       <p className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-semibold">{missile.name}</span>
-        <span className="text-[10px] opacity-60">missile batch</span>
+        <span className="text-[11px] flex items-center gap-1 flex-shrink-0">
+          <span>{flagFor(WEAPON_ORIGIN[missile.target_id])}</span>
+          <span className="opacity-60">missile batch</span>
+        </span>
       </p>
       <div className="text-xs opacity-70">
         ₹{unitCostCr.toLocaleString("en-US")} cr/unit • NEZ {missile.nez_km} km
@@ -479,7 +486,10 @@ export function ADBatteryOfferCard({
     >
       <p className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-semibold">{system.name}</span>
-        <span className="text-[10px] opacity-60">AD battery</span>
+        <span className="text-[11px] flex items-center gap-1 flex-shrink-0">
+          <span>{flagFor(AD_SYSTEM_ORIGIN[system.target_id])}</span>
+          <span className="opacity-60">AD battery</span>
+        </span>
       </p>
       <div className="text-xs opacity-70">
         Coverage {system.coverage_km} km • max Pk {system.max_pk.toFixed(2)}
@@ -596,6 +606,8 @@ export function ADReloadOfferCard({
   );
 }
 
+type OfferCategory = "aircraft" | "missiles" | "ad_systems" | "reloads";
+
 export function AcquisitionPipeline({
   platforms, orders, currentYear, currentQuarter, onSign, onCancel, disabled,
   rdCatalog = [], rdActive = [], bases = [], initialView, focusPlatformId,
@@ -605,6 +617,14 @@ export function AcquisitionPipeline({
   const [tab, setTab] = useState<"orders" | "offers">(
     initialView ?? (orders.length > 0 ? "orders" : "offers"),
   );
+  // Inner Offers category — deep-link hints (focus*/focusAd) auto-jump tabs.
+  const initialOfferCat: OfferCategory =
+    focusPlatformId ? "aircraft" : focusAdId ? "ad_systems" : "aircraft";
+  const [offerCat, setOfferCat] = useState<OfferCategory>(initialOfferCat);
+  useEffect(() => {
+    if (focusPlatformId) setOfferCat("aircraft");
+    else if (focusAdId) setOfferCat("ad_systems");
+  }, [focusPlatformId, focusAdId]);
   const [showCompleted, setShowCompleted] = useState(false);
   // Clear the highlight after a few seconds so it doesn't pulse forever.
   const [focusId, setFocusId] = useState<string | undefined>(focusPlatformId);
@@ -726,44 +746,72 @@ export function AcquisitionPipeline({
           )}
         </section>
       ) : (
-        <section className="space-y-6">
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wide opacity-70">
-              Aircraft ({availablePlatforms.length})
-            </h3>
-            {lockedCount > 0 && (
-              <p className="text-[11px] opacity-60">
-                {lockedCount} platform{lockedCount === 1 ? "" : "s"} hidden — {lockedCount === 1 ? "it's" : "they're"} gated by in-progress R&D or not yet introduced.
-              </p>
-            )}
-            {availablePlatforms.length === 0 ? (
-              <p className="text-xs opacity-60 py-6 text-center">
-                No platforms available to procure right now.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {availablePlatforms.map((p) => (
-                  <OfferCard
-                    key={p.id}
-                    platform={p}
-                    currentYear={currentYear}
-                    currentQuarter={currentQuarter}
-                    onSign={onSign}
-                    disabled={disabled}
-                    bases={bases}
-                    highlighted={focusId === p.id}
-                  />
+        <section className="space-y-3">
+          {(() => {
+            const counts: Record<OfferCategory, number> = {
+              aircraft: availablePlatforms.length,
+              missiles: armoryUnlocks?.missiles.length ?? 0,
+              ad_systems: armoryUnlocks?.ad_systems.length ?? 0,
+              reloads: adBatteries.length,
+            };
+            const catTabs: Array<{ k: OfferCategory; label: string }> = [
+              { k: "aircraft", label: "Aircraft" },
+              { k: "missiles", label: "Missiles" },
+              { k: "ad_systems", label: "AD Systems" },
+              { k: "reloads", label: "Reloads" },
+            ];
+            return (
+              <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 overflow-x-auto">
+                {catTabs.map((ct) => (
+                  <button
+                    key={ct.k}
+                    type="button"
+                    onClick={() => setOfferCat(ct.k)}
+                    className={[
+                      "flex-1 min-w-0 px-2.5 py-1.5 text-xs font-semibold rounded whitespace-nowrap",
+                      offerCat === ct.k ? "bg-amber-600 text-slate-900" : "text-slate-300",
+                    ].join(" ")}
+                  >
+                    {ct.label} ({counts[ct.k]})
+                  </button>
                 ))}
               </div>
-            )}
-          </div>
+            );
+          })()}
 
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wide opacity-70">
-              Missile Batches ({armoryUnlocks?.missiles.length ?? 0})
-            </h3>
-            {(!armoryUnlocks || armoryUnlocks.missiles.length === 0) ? (
-              <p className="text-xs opacity-60 py-3">
+          {offerCat === "aircraft" && (
+            <div className="space-y-2">
+              {lockedCount > 0 && (
+                <p className="text-[11px] opacity-60">
+                  {lockedCount} platform{lockedCount === 1 ? "" : "s"} hidden — {lockedCount === 1 ? "it's" : "they're"} gated by in-progress R&D or not yet introduced.
+                </p>
+              )}
+              {availablePlatforms.length === 0 ? (
+                <p className="text-xs opacity-60 py-6 text-center">
+                  No platforms available to procure right now.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {availablePlatforms.map((p) => (
+                    <OfferCard
+                      key={p.id}
+                      platform={p}
+                      currentYear={currentYear}
+                      currentQuarter={currentQuarter}
+                      onSign={onSign}
+                      disabled={disabled}
+                      bases={bases}
+                      highlighted={focusId === p.id}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {offerCat === "missiles" && (
+            (!armoryUnlocks || armoryUnlocks.missiles.length === 0) ? (
+              <p className="text-xs opacity-60 py-6 text-center">
                 No missiles unlocked yet. Complete R&D programs to unlock.
               </p>
             ) : (
@@ -784,15 +832,12 @@ export function AcquisitionPipeline({
                   );
                 })}
               </div>
-            )}
-          </div>
+            )
+          )}
 
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wide opacity-70">
-              AD Batteries ({armoryUnlocks?.ad_systems.length ?? 0})
-            </h3>
-            {(!armoryUnlocks || armoryUnlocks.ad_systems.length === 0) ? (
-              <p className="text-xs opacity-60 py-3">
+          {offerCat === "ad_systems" && (
+            (!armoryUnlocks || armoryUnlocks.ad_systems.length === 0) ? (
+              <p className="text-xs opacity-60 py-6 text-center">
                 No AD systems unlocked yet.
               </p>
             ) : (
@@ -810,15 +855,12 @@ export function AcquisitionPipeline({
                   />
                 ))}
               </div>
-            )}
-          </div>
+            )
+          )}
 
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wide opacity-70">
-              AD Reloads ({adBatteries.length})
-            </h3>
-            {adBatteries.length === 0 ? (
-              <p className="text-xs opacity-60 py-3">
+          {offerCat === "reloads" && (
+            adBatteries.length === 0 ? (
+              <p className="text-xs opacity-60 py-6 text-center">
                 No installed batteries to reload.
               </p>
             ) : (
@@ -839,8 +881,8 @@ export function AcquisitionPipeline({
                   );
                 })}
               </div>
-            )}
-          </div>
+            )
+          )}
         </section>
       )}
     </div>

@@ -103,7 +103,7 @@ describe("RDDashboard", () => {
   it("filters catalog by Weapons category chip", () => {
     setup();
     fireEvent.click(screen.getByText(/^Catalog \(/));
-    fireEvent.click(screen.getByRole("button", { name: "Weapons" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Weapons/ }));
     // Astra Mk2 matches "astra" keyword → Weapons
     expect(screen.getByText("Astra Mk2")).toBeTruthy();
     // AMCA already hidden (it's active), but filter would also hide it
