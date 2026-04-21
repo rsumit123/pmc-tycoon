@@ -354,6 +354,19 @@ export interface RDProgramStateListResponse {
   programs: RDProgramState[];
 }
 
+export type AcquisitionKind = "platform" | "missile_batch" | "ad_battery" | "ad_reload";
+
+export interface MissileStock {
+  id: number;
+  base_id: number;
+  weapon_id: string;
+  stock: number;
+}
+
+export interface MissileStockListResponse {
+  stocks: MissileStock[];
+}
+
 export interface AcquisitionOrder {
   id: number;
   platform_id: string;
@@ -368,6 +381,8 @@ export interface AcquisitionOrder {
   total_cost_cr: number;
   cancelled?: boolean;
   preferred_base_id?: number | null;
+  kind?: AcquisitionKind;
+  target_battery_id?: number | null;
 }
 
 export interface AcquisitionListResponse {
@@ -383,6 +398,8 @@ export interface AcquisitionCreatePayload {
   foc_quarter: number;
   total_cost_cr: number;
   preferred_base_id?: number | null;
+  kind?: AcquisitionKind;
+  target_battery_id?: number | null;
 }
 
 export interface RDUpdatePayload {
@@ -578,6 +595,7 @@ export interface ADBattery {
   coverage_km: number;
   installed_year: number;
   installed_quarter: number;
+  interceptor_stock?: number;
 }
 
 export type WeaponClass =

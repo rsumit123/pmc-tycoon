@@ -16,6 +16,7 @@ import type {
   UnlocksResponse,
   ADBattery,
   PerformanceResponse,
+  MissileStock,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -43,6 +44,8 @@ interface CampaignState {
   loadPerformance: (campaignId: number) => Promise<void>;
   adBatteries: ADBattery[];
   loadADBatteries: (campaignId: number) => Promise<void>;
+  missileStocks: MissileStock[];
+  loadMissileStocks: (campaignId: number) => Promise<void>;
   toasts: Toast[];
   rdLoading: Record<string, boolean>;
   loading: boolean;
@@ -114,6 +117,15 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     try {
       const rows = await api.getADBatteries(campaignId);
       set({ adBatteries: rows });
+    } catch {
+      // silent
+    }
+  },
+  missileStocks: [],
+  loadMissileStocks: async (campaignId: number) => {
+    try {
+      const { stocks } = await api.getMissileStocks(campaignId);
+      set({ missileStocks: stocks });
     } catch {
       // silent
     }
@@ -612,6 +624,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     armoryUnlocks: null,
     performance: null,
     adBatteries: [],
+    missileStocks: [],
     toasts: [], rdLoading: {},
     loading: false, error: null,
   }),

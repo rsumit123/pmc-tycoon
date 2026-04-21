@@ -32,6 +32,7 @@ import type {
   HangarResponse,
   WeaponCatalogResponse,
   PerformanceResponse,
+  MissileStockListResponse,
 } from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
@@ -357,6 +358,13 @@ export const api = {
   async getHangar(campaignId: number): Promise<HangarResponse> {
     const { data } = await http.get<HangarResponse>(
       `/api/campaigns/${campaignId}/hangar`
+    );
+    return data;
+  },
+
+  async getMissileStocks(campaignId: number): Promise<MissileStockListResponse> {
+    const { data } = await http.get<MissileStockListResponse>(
+      `/api/campaigns/${campaignId}/missile-stocks`,
     );
     return data;
   },
