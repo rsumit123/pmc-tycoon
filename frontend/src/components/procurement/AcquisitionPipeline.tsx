@@ -46,6 +46,18 @@ export interface AcquisitionPipelineProps {
   armoryUnlocks?: UnlocksResponse | null;
   /** Weapon catalog for missile_batch unit cost lookup. */
   weaponsById?: Record<string, WeaponMeta>;
+  /** Explicit initial offer sub-tab (overrides focus-hint inference). */
+  initialOfferCat?: "aircraft" | "missiles" | "ad_systems" | "reloads" | null;
+  /** When set, scrolls to + pre-fills MissileBatchOfferCard for this weapon. */
+  focusMissile?: string;
+  /** When set, seeds the base select on the focused missile card. */
+  focusBaseId?: number;
+  /** When set, seeds the qty stepper on the focused missile card. */
+  focusQty?: number;
+  /** Pre-select the AD reload group matching this system id. */
+  focusAdSystem?: string;
+  /** Pre-select the target battery within an AD reload card. */
+  focusBatteryId?: number;
 }
 
 // Strip noisy suffixes so base names fit in narrow select dropdowns on mobile.
@@ -355,6 +367,7 @@ function computeDelivery(
 
 export function MissileBatchOfferCard({
   missile, unitCostCr, currentYear, currentQuarter, bases, onSign, disabled,
+  initialBaseId, initialQty, highlighted,
 }: {
   missile: MissileUnlock;
   unitCostCr: number;
@@ -363,14 +376,31 @@ export function MissileBatchOfferCard({
   bases: BaseMarker[];
   onSign: (p: AcquisitionCreatePayload) => void;
   disabled?: boolean;
+  initialBaseId?: number;
+  initialQty?: number;
+  highlighted?: boolean;
 }) {
-  const [qty, setQty] = useState<number>(50);
-  const [baseId, setBaseId] = useState<number | "">("");
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (highlighted && ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlighted]);
+  const [qty, setQty] = useState<number>(initialQty && initialQty > 0 ? initialQty : 50);
+  const [baseId, setBaseId] = useState<number | "">(
+    typeof initialBaseId === "number" ? initialBaseId : "",
+  );
   const firstDeliveryQ = 2;
   const focQ = 4;
   const dates = computeDelivery(currentYear, currentQuarter, firstDeliveryQ, focQ);
   const totalCost = qty * unitCostCr;
   const canSign = typeof baseId === "number" && unitCostCr > 0;
+  const totalQuarters = Math.max(
+    1,
+    (dates.focYear - dates.firstDeliveryYear) * 4 +
+      (dates.focQuarter - dates.firstDeliveryQuarter) + 1,
+  );
+  const perQ = Math.ceil(qty / totalQuarters);
 
   const sign = () => {
     if (typeof baseId !== "number") return;
@@ -388,7 +418,15 @@ export function MissileBatchOfferCard({
   };
 
   return (
-    <div className="rounded-lg p-3 space-y-2 border bg-slate-900/50 border-slate-800">
+    <div
+      ref={ref}
+      className={[
+        "rounded-lg p-3 space-y-2 border",
+        highlighted
+          ? "bg-amber-900/30 border-amber-500 ring-2 ring-amber-400/70 animate-pulse"
+          : "bg-slate-900/50 border-slate-800",
+      ].join(" ")}
+    >
       <p className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-semibold">{missile.name}</span>
         <span className="text-[11px] flex items-center gap-1 flex-shrink-0">
@@ -432,6 +470,9 @@ export function MissileBatchOfferCard({
         Total: <span className="font-semibold">₹{totalCost.toLocaleString("en-US")} cr</span>
         {" • Delivery "}{dates.firstDeliveryYear}-Q{dates.firstDeliveryQuarter}
         {" → FOC "}{dates.focYear}-Q{dates.focQuarter}
+      </div>
+      <div className="text-[10px] opacity-60">
+        ≈{perQ} {missile.target_id.toLowerCase()}/q across {totalQuarters} quarter{totalQuarters === 1 ? "" : "s"}
       </div>
       <CommitHoldButton
         label={`Hold to sign ₹${totalCost.toLocaleString("en-US")}`}
@@ -530,6 +571,9 @@ export function ADBatteryOfferCard({
         {" • Delivery "}{dates.firstDeliveryYear}-Q{dates.firstDeliveryQuarter}
         {" → FOC "}{dates.focYear}-Q{dates.focQuarter}
       </div>
+      <div className="text-[10px] opacity-60">
+        Full battery + {startingStock} interceptors delivered at FOC ({dates.focYear}-Q{dates.focQuarter}). Treasury billed pro-rata each quarter.
+      </div>
       <CommitHoldButton
         label={`Hold to sign ₹${totalCost.toLocaleString("en-US")}`}
         holdMs={1800}
@@ -553,6 +597,7 @@ const AD_SYSTEM_DISPLAY: Record<string, string> = {
 
 export function ADReloadOfferCard({
   systemId, batteries, baseNameById, currentYear, currentQuarter, onSign, disabled,
+  initialTargetBatteryId, highlighted,
 }: {
   systemId: string;
   batteries: ADBattery[];  // all batteries of this system type
@@ -561,7 +606,15 @@ export function ADReloadOfferCard({
   currentQuarter: number;
   onSign: (p: AcquisitionCreatePayload) => void;
   disabled?: boolean;
+  initialTargetBatteryId?: number;
+  highlighted?: boolean;
 }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (highlighted && ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlighted]);
   const capacity = AD_STARTING_INTERCEPTORS[systemId] ?? 16;
   const perShot = AD_INTERCEPTOR_COST[systemId] ?? 5;
   const displayName = AD_SYSTEM_DISPLAY[systemId] ?? systemId;
@@ -570,9 +623,12 @@ export function ADReloadOfferCard({
   const sortedByNeed = [...batteries].sort(
     (a, b) => (a.interceptor_stock ?? 0) - (b.interceptor_stock ?? 0),
   );
-  const [targetId, setTargetId] = useState<number>(
-    sortedByNeed[0]?.id ?? batteries[0]?.id ?? 0,
-  );
+  const initialTarget =
+    typeof initialTargetBatteryId === "number" &&
+    batteries.some((b) => b.id === initialTargetBatteryId)
+      ? initialTargetBatteryId
+      : (sortedByNeed[0]?.id ?? batteries[0]?.id ?? 0);
+  const [targetId, setTargetId] = useState<number>(initialTarget);
   const target = batteries.find((b) => b.id === targetId);
   const currentStock = target?.interceptor_stock ?? 0;
   const maxRefill = Math.max(1, capacity - currentStock);
@@ -580,6 +636,12 @@ export function ADReloadOfferCard({
   const [qty, setQty] = useState<number>(defaultQty);
   const dates = computeDelivery(currentYear, currentQuarter, 1, 2);
   const totalCost = qty * perShot;
+  const totalQuarters = Math.max(
+    1,
+    (dates.focYear - dates.firstDeliveryYear) * 4 +
+      (dates.focQuarter - dates.firstDeliveryQuarter) + 1,
+  );
+  const perQRate = Math.ceil(qty / totalQuarters);
 
   // Aggregate stock across all batteries of this system
   const totalCurrent = batteries.reduce((a, b) => a + (b.interceptor_stock ?? 0), 0);
@@ -601,7 +663,15 @@ export function ADReloadOfferCard({
   };
 
   return (
-    <div className="rounded-lg p-3 space-y-2 border bg-slate-900/50 border-slate-800">
+    <div
+      ref={ref}
+      className={[
+        "rounded-lg p-3 space-y-2 border",
+        highlighted
+          ? "bg-amber-900/30 border-amber-500 ring-2 ring-amber-400/70 animate-pulse"
+          : "bg-slate-900/50 border-slate-800",
+      ].join(" ")}
+    >
       <p className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-semibold">{displayName}</span>
         <span className="text-[11px] flex items-center gap-1 flex-shrink-0">
@@ -662,6 +732,9 @@ export function ADReloadOfferCard({
         {" • Delivery "}{dates.firstDeliveryYear}-Q{dates.firstDeliveryQuarter}
         {" → FOC "}{dates.focYear}-Q{dates.focQuarter}
       </div>
+      <div className="text-[10px] opacity-60">
+        ≈{perQRate}/q across {totalQuarters} quarter{totalQuarters === 1 ? "" : "s"}
+      </div>
       <CommitHoldButton
         label={`Hold to sign ₹${totalCost.toLocaleString("en-US")}`}
         holdMs={1800}
@@ -679,19 +752,29 @@ export function AcquisitionPipeline({
   platforms, orders, currentYear, currentQuarter, onSign, onCancel, disabled,
   rdCatalog = [], rdActive = [], bases = [], initialView, focusPlatformId,
   focusAdId, adBatteries = [], armoryUnlocks = null, weaponsById = {},
+  initialOfferCat: initialOfferCatProp, focusMissile, focusBaseId, focusQty,
+  focusAdSystem, focusBatteryId,
 }: AcquisitionPipelineProps) {
   const byId = Object.fromEntries(platforms.map((p) => [p.id, p]));
   const [tab, setTab] = useState<"orders" | "offers">(
     initialView ?? (orders.length > 0 ? "orders" : "offers"),
   );
-  // Inner Offers category — deep-link hints (focus*/focusAd) auto-jump tabs.
+  // Inner Offers category — explicit prop wins, else deep-link hints auto-jump tabs.
   const initialOfferCat: OfferCategory =
-    focusPlatformId ? "aircraft" : focusAdId ? "ad_systems" : "aircraft";
+    initialOfferCatProp ??
+    (focusPlatformId ? "aircraft"
+      : focusAdId ? "ad_systems"
+      : focusMissile ? "missiles"
+      : focusBatteryId || focusAdSystem ? "reloads"
+      : "aircraft");
   const [offerCat, setOfferCat] = useState<OfferCategory>(initialOfferCat);
   useEffect(() => {
-    if (focusPlatformId) setOfferCat("aircraft");
+    if (initialOfferCatProp) setOfferCat(initialOfferCatProp);
+    else if (focusPlatformId) setOfferCat("aircraft");
     else if (focusAdId) setOfferCat("ad_systems");
-  }, [focusPlatformId, focusAdId]);
+    else if (focusMissile) setOfferCat("missiles");
+    else if (focusBatteryId || focusAdSystem) setOfferCat("reloads");
+  }, [initialOfferCatProp, focusPlatformId, focusAdId, focusMissile, focusBatteryId, focusAdSystem]);
   const [showCompleted, setShowCompleted] = useState(false);
   // Clear the highlight after a few seconds so it doesn't pulse forever.
   const [focusId, setFocusId] = useState<string | undefined>(focusPlatformId);
@@ -893,6 +976,7 @@ export function AcquisitionPipeline({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {armoryUnlocks.missiles.map((m) => {
                   const unit = weaponsById[m.target_id]?.unit_cost_cr ?? 0;
+                  const isFocus = focusMissile === m.target_id;
                   return (
                     <MissileBatchOfferCard
                       key={m.target_id}
@@ -903,6 +987,9 @@ export function AcquisitionPipeline({
                       bases={bases}
                       onSign={onSign}
                       disabled={disabled}
+                      initialBaseId={isFocus ? focusBaseId : undefined}
+                      initialQty={isFocus ? focusQty : undefined}
+                      highlighted={isFocus}
                     />
                   );
                 })}
@@ -946,18 +1033,27 @@ export function AcquisitionPipeline({
             const baseNameById = Object.fromEntries(bases.map((b) => [b.id, b.name]));
             return (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {Object.entries(bySystem).map(([systemId, bats]) => (
-                  <ADReloadOfferCard
-                    key={systemId}
-                    systemId={systemId}
-                    batteries={bats}
-                    baseNameById={baseNameById}
-                    currentYear={currentYear}
-                    currentQuarter={currentQuarter}
-                    onSign={onSign}
-                    disabled={disabled}
-                  />
-                ))}
+                {Object.entries(bySystem).map(([systemId, bats]) => {
+                  const batteryInGroup =
+                    typeof focusBatteryId === "number" &&
+                    bats.some((b) => b.id === focusBatteryId);
+                  const systemMatches = focusAdSystem === systemId;
+                  const isFocus = batteryInGroup || systemMatches;
+                  return (
+                    <ADReloadOfferCard
+                      key={systemId}
+                      systemId={systemId}
+                      batteries={bats}
+                      baseNameById={baseNameById}
+                      currentYear={currentYear}
+                      currentQuarter={currentQuarter}
+                      onSign={onSign}
+                      disabled={disabled}
+                      initialTargetBatteryId={batteryInGroup ? focusBatteryId : undefined}
+                      highlighted={isFocus}
+                    />
+                  );
+                })}
               </div>
             );
           })()}

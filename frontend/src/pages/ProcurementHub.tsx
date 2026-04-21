@@ -173,6 +173,17 @@ export function ProcurementHub() {
               initialView={searchParams.get("view") === "offers" ? "offers" : undefined}
               focusPlatformId={searchParams.get("focus") ?? undefined}
               focusAdId={searchParams.get("focus_ad") ?? undefined}
+              initialOfferCat={
+                (() => {
+                  const v = searchParams.get("offer");
+                  return v === "aircraft" || v === "missiles" || v === "ad_systems" || v === "reloads" ? v : null;
+                })()
+              }
+              focusMissile={searchParams.get("missile") ?? undefined}
+              focusBaseId={searchParams.get("base") ? Number(searchParams.get("base")) : undefined}
+              focusQty={searchParams.get("qty") ? Number(searchParams.get("qty")) : undefined}
+              focusAdSystem={searchParams.get("ad_system") ?? undefined}
+              focusBatteryId={searchParams.get("battery") ? Number(searchParams.get("battery")) : undefined}
               missileStocks={missileStocks}
               adBatteries={adBatteries}
               armoryUnlocks={armoryUnlocks}
