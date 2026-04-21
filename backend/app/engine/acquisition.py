@@ -112,6 +112,9 @@ def tick_acquisitions(
                 "cost_cr": cost,
                 "delivered_total": order["delivered"],
                 "quantity": order["quantity"],
+                "kind": order.get("kind", "platform"),
+                "target_battery_id": order.get("target_battery_id"),
+                "preferred_base_id": order.get("preferred_base_id"),
             },
         })
 

@@ -95,6 +95,9 @@ def _serialize_order(order: AcquisitionOrder) -> dict:
         "delivered": order.delivered,
         "total_cost_cr": order.total_cost_cr,
         "cancelled": bool(getattr(order, "cancelled", False)),
+        "kind": getattr(order, "kind", "platform") or "platform",
+        "target_battery_id": getattr(order, "target_battery_id", None),
+        "preferred_base_id": getattr(order, "preferred_base_id", None),
     }
 
 
@@ -378,9 +381,79 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         for row in db.query(_AO).filter(_AO.id.in_(_order_ids_in_events)).all():
             _order_prefs[row.id] = row.preferred_base_id
 
+    # Import lazily to avoid circular imports.
+    from app.models.missile_stock import MissileStock as _MissileStock
+    from app.models.ad_battery import ADBattery as _ADBattery
+    from app.crud.seed_starting_state import AD_STARTING_INTERCEPTORS as _AD_INITS
+    from app.content.registry import ad_systems as _ad_systems
+
+    def _deliver_missile_batch(payload: dict) -> None:
+        base_id = payload.get("preferred_base_id")
+        weapon_id = payload.get("platform_id")
+        count = int(payload.get("count", 0) or 0)
+        if base_id is None or not weapon_id or count <= 0:
+            return
+        row = db.query(_MissileStock).filter_by(
+            campaign_id=campaign.id, base_id=base_id, weapon_id=weapon_id,
+        ).first()
+        if row is None:
+            db.add(_MissileStock(
+                campaign_id=campaign.id, base_id=base_id,
+                weapon_id=weapon_id, stock=count,
+            ))
+        else:
+            row.stock = (row.stock or 0) + count
+
+    def _deliver_ad_battery(payload: dict) -> None:
+        system_id = payload.get("platform_id")
+        base_id = payload.get("preferred_base_id")
+        if not system_id or base_id is None:
+            return
+        # Only create the battery on FOC (all qty delivered)
+        if int(payload.get("delivered_total", 0)) < int(payload.get("quantity", 0)):
+            return
+        adspec = _ad_systems().get(system_id)
+        if adspec is None:
+            return
+        existing = db.query(_ADBattery).filter_by(
+            campaign_id=campaign.id, base_id=base_id, system_id=system_id,
+        ).first()
+        if existing is not None:
+            return  # idempotent — one battery per (base, system)
+        db.add(_ADBattery(
+            campaign_id=campaign.id, base_id=base_id, system_id=system_id,
+            coverage_km=adspec.coverage_km,
+            installed_year=campaign.current_year,
+            installed_quarter=campaign.current_quarter,
+            interceptor_stock=_AD_INITS.get(system_id, 16),
+        ))
+
+    def _deliver_ad_reload(payload: dict) -> None:
+        target = payload.get("target_battery_id")
+        count = int(payload.get("count", 0) or 0)
+        if target is None or count <= 0:
+            return
+        row = db.query(_ADBattery).filter_by(
+            id=target, campaign_id=campaign.id,
+        ).first()
+        if row is None:
+            return
+        row.interceptor_stock = (row.interceptor_stock or 0) + count
+
     for ev in result.events:
         if ev["event_type"] != "acquisition_delivery":
             continue
+        kind = ev["payload"].get("kind", "platform")
+        if kind == "missile_batch":
+            _deliver_missile_batch(ev["payload"])
+            continue
+        if kind == "ad_battery":
+            _deliver_ad_battery(ev["payload"])
+            continue
+        if kind == "ad_reload":
+            _deliver_ad_reload(ev["payload"])
+            continue
+        # kind == "platform" — fall through to the existing squadron-assignment logic.
         pid = ev["payload"].get("platform_id")
         count = ev["payload"].get("count", 0)
         if not pid or count <= 0:
