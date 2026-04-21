@@ -20,7 +20,28 @@ from app.models.rd_program import RDProgramState
 from app.models.adversary import AdversaryState
 from app.models.intel import IntelCard
 from app.models.ad_battery import ADBattery
+from app.models.missile_stock import MissileStock
 from app.engine.adversary.state import OOB_2026_Q2
+from app.engine.vignette.bvr import PLATFORM_LOADOUTS
+
+
+AD_STARTING_INTERCEPTORS: dict[str, int] = {
+    "s400": 16,
+    "long_range_sam": 16,
+    "project_kusha": 12,
+    "mrsam_air": 24,
+    "akash_ng": 24,
+    "qrsam": 32,
+    "vshorads": 32,
+}
+
+SHOTS_PER_AIRFRAME = 4
+
+
+def _loadout_for(platform_id: str) -> list[str]:
+    p = PLATFORM_LOADOUTS.get(platform_id, {})
+    return list(p.get("bvr", [])) + list(p.get("wvr", []))
+
 
 
 SEED_BASES = [
@@ -178,10 +199,12 @@ def seed_starting_state(db: Session, campaign: Campaign) -> None:
             coverage_km=cov,
             installed_year=inst_year,
             installed_quarter=inst_qtr,
+            interceptor_stock=AD_STARTING_INTERCEPTORS.get(sys_id, 0),
         ))
 
+    sq_rows: list[Squadron] = []
     for name, call_sign, platform_id, base_tpl, strength, readiness in SEED_SQUADRONS:
-        db.add(Squadron(
+        row = Squadron(
             campaign_id=campaign.id,
             name=name,
             call_sign=call_sign,
@@ -190,6 +213,28 @@ def seed_starting_state(db: Session, campaign: Campaign) -> None:
             strength=strength,
             readiness_pct=readiness,
             xp=0,
+        )
+        db.add(row)
+        sq_rows.append(row)
+    db.flush()  # populate squadron IDs before seeding missile stock
+
+    # Seed per-base missile stock: for each (base_id, weapon_id) across all
+    # squadrons at that base, aggregate squadron.strength × SHOTS_PER_AIRFRAME.
+    stock_by_key: dict[tuple[int, str], int] = {}
+    for sq in sq_rows:
+        for weapon in _loadout_for(sq.platform_id):
+            key = (sq.base_id, weapon)
+            stock_by_key[key] = (
+                stock_by_key.get(key, 0) + sq.strength * SHOTS_PER_AIRFRAME
+            )
+    for (base_id, weapon_id), stock in stock_by_key.items():
+        if stock <= 0:
+            continue
+        db.add(MissileStock(
+            campaign_id=campaign.id,
+            base_id=base_id,
+            weapon_id=weapon_id,
+            stock=stock,
         ))
 
     for ao in SEED_ACQUISITIONS:
