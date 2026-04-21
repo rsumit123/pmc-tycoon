@@ -4,7 +4,6 @@ import { useCampaignStore } from "../store/campaignStore";
 import { BudgetAllocator } from "../components/procurement/BudgetAllocator";
 import { RDDashboard } from "../components/procurement/RDDashboard";
 import { AcquisitionPipeline } from "../components/procurement/AcquisitionPipeline";
-import { DiplomacyStrip } from "../components/procurement/DiplomacyStrip";
 import type { BudgetAllocation } from "../lib/types";
 import { isCampaignComplete } from "../lib/campaignLifecycle";
 import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
@@ -160,7 +159,6 @@ export function ProcurementHub() {
         )}
         {activeTab === "acquisitions" && (
           <>
-            <DiplomacyStrip />
             <AcquisitionPipeline
               platforms={platformList}
               orders={acquisitions}

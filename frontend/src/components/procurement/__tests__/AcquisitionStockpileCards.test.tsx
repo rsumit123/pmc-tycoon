@@ -103,20 +103,23 @@ describe("ADReloadOfferCard", () => {
     interceptor_stock: 8,
   };
 
-  it("renders stock line and submits an ad_reload payload", () => {
+  it("renders fleet stock summary and submits ad_reload targeting lowest-stock battery", () => {
     const onSign = vi.fn();
     render(
       <ADReloadOfferCard
-        battery={battery}
         systemId="s400"
-        baseName="Ambala"
+        batteries={[battery]}
+        baseNameById={{ 7: "Ambala" }}
         currentYear={2026}
         currentQuarter={2}
         onSign={onSign}
       />,
     );
-    expect(screen.getByText(/s400 @ Ambala/)).toBeInTheDocument();
-    expect(screen.getByText(/8 \/ 16/)).toBeInTheDocument();
+    expect(screen.getByText(/S-400 Triumf/)).toBeInTheDocument();
+    // Single battery → inline "Target" row instead of dropdown
+    expect(screen.getByText(/Ambala/)).toBeInTheDocument();
+    // Fleet summary line shows "8/16 across 1 battery"
+    expect(screen.getByText(/fleet:/)).toBeInTheDocument();
     const btn = screen.getByRole("button", { name: /hold to sign/i });
     fireEvent.pointerDown(btn, { pointerId: 1 });
     vi.advanceTimersByTime(2000);

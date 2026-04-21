@@ -533,12 +533,22 @@ export function ADBatteryOfferCard({
   );
 }
 
+const AD_SYSTEM_DISPLAY: Record<string, string> = {
+  s400: "S-400 Triumf",
+  long_range_sam: "Indigenous Long-Range SAM",
+  project_kusha: "Project Kusha BMD",
+  mrsam_air: "MR-SAM (Barak-8)",
+  akash_ng: "Akash-NG",
+  qrsam: "QRSAM",
+  vshorads: "VSHORADS",
+};
+
 export function ADReloadOfferCard({
-  battery, systemId, baseName, currentYear, currentQuarter, onSign, disabled,
+  systemId, batteries, baseNameById, currentYear, currentQuarter, onSign, disabled,
 }: {
-  battery: ADBattery;
   systemId: string;
-  baseName: string;
+  batteries: ADBattery[];  // all batteries of this system type
+  baseNameById: Record<number, string>;
   currentYear: number;
   currentQuarter: number;
   onSign: (p: AcquisitionCreatePayload) => void;
@@ -546,14 +556,29 @@ export function ADReloadOfferCard({
 }) {
   const capacity = AD_STARTING_INTERCEPTORS[systemId] ?? 16;
   const perShot = AD_INTERCEPTOR_COST[systemId] ?? 5;
-  const currentStock = battery.interceptor_stock ?? 0;
+  const displayName = AD_SYSTEM_DISPLAY[systemId] ?? systemId;
+
+  // Default target = battery with the lowest stock (most needs reload).
+  const sortedByNeed = [...batteries].sort(
+    (a, b) => (a.interceptor_stock ?? 0) - (b.interceptor_stock ?? 0),
+  );
+  const [targetId, setTargetId] = useState<number>(
+    sortedByNeed[0]?.id ?? batteries[0]?.id ?? 0,
+  );
+  const target = batteries.find((b) => b.id === targetId);
+  const currentStock = target?.interceptor_stock ?? 0;
   const maxRefill = Math.max(1, capacity - currentStock);
   const defaultQty = Math.min(maxRefill, Math.max(4, Math.floor(capacity / 2)));
   const [qty, setQty] = useState<number>(defaultQty);
   const dates = computeDelivery(currentYear, currentQuarter, 1, 2);
   const totalCost = qty * perShot;
 
+  // Aggregate stock across all batteries of this system
+  const totalCurrent = batteries.reduce((a, b) => a + (b.interceptor_stock ?? 0), 0);
+  const totalCapacity = batteries.length * capacity;
+
   const sign = () => {
+    if (!target) return;
     onSign({
       kind: "ad_reload",
       platform_id: systemId,
@@ -563,23 +588,50 @@ export function ADReloadOfferCard({
       foc_year: dates.focYear,
       foc_quarter: dates.focQuarter,
       total_cost_cr: totalCost,
-      target_battery_id: battery.id,
+      target_battery_id: target.id,
     });
   };
-
-  const pct = capacity > 0 ? currentStock / capacity : 0;
-  const tierColor =
-    pct >= 0.5 ? "text-emerald-300" : pct > 0 ? "text-amber-300" : "text-rose-300";
 
   return (
     <div className="rounded-lg p-3 space-y-2 border bg-slate-900/50 border-slate-800">
       <p className="flex items-baseline justify-between gap-2">
-        <span className="text-sm font-semibold">{systemId} @ {baseName}</span>
-        <span className="text-[10px] opacity-60">AD reload</span>
+        <span className="text-sm font-semibold">{displayName}</span>
+        <span className="text-[11px] flex items-center gap-1 flex-shrink-0">
+          <span>{flagFor(AD_SYSTEM_ORIGIN[systemId])}</span>
+          <span className="opacity-60">AD reload</span>
+        </span>
       </p>
-      <div className={`text-xs ${tierColor}`}>
-        Current stock: {currentStock} / {capacity}
+      <div className="text-xs opacity-70">
+        ₹{perShot.toLocaleString("en-US")} cr/interceptor · fleet: {totalCurrent}/{totalCapacity} across {batteries.length} {batteries.length === 1 ? "battery" : "batteries"}
       </div>
+      {batteries.length > 1 && (
+        <label className="flex items-center gap-2 text-xs">
+          <span className="opacity-60 flex-shrink-0">Target battery</span>
+          <select
+            value={targetId}
+            onChange={(e) => setTargetId(Number(e.target.value))}
+            className="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
+            aria-label={`${displayName} target battery`}
+          >
+            {sortedByNeed.map((b) => {
+              const stock = b.interceptor_stock ?? 0;
+              const pct = capacity > 0 ? stock / capacity : 0;
+              const indicator = pct >= 0.5 ? "✓" : pct > 0 ? "⚠" : "✗";
+              return (
+                <option key={b.id} value={b.id}>
+                  {indicator} {baseNameById[b.base_id] ?? `base ${b.base_id}`} ({stock}/{capacity})
+                </option>
+              );
+            })}
+          </select>
+        </label>
+      )}
+      {batteries.length === 1 && target && (
+        <div className="text-[11px] opacity-70">
+          Target: <span className="font-semibold">{baseNameById[target.base_id] ?? `base ${target.base_id}`}</span>
+          {" · current "}{currentStock}/{capacity}
+        </div>
+      )}
       <div className="flex items-center gap-2">
         <span className="text-xs opacity-60">Reload qty</span>
         <Stepper
@@ -589,7 +641,7 @@ export function ADReloadOfferCard({
           min={1}
           max={capacity * 2}
           formatValue={(v) => String(v)}
-          ariaLabel={`${systemId} reload quantity`}
+          ariaLabel={`${displayName} reload quantity`}
         />
       </div>
       <div className="text-xs opacity-70">
@@ -600,7 +652,7 @@ export function ADReloadOfferCard({
       <CommitHoldButton
         label={`Hold to sign ₹${totalCost.toLocaleString("en-US")}`}
         holdMs={1800}
-        disabled={disabled}
+        disabled={disabled || !target}
         onCommit={sign}
         className="w-full"
       />
@@ -762,7 +814,7 @@ export function AcquisitionPipeline({
               aircraft: availablePlatforms.length,
               missiles: armoryUnlocks?.missiles.length ?? 0,
               ad_systems: armoryUnlocks?.ad_systems.length ?? 0,
-              reloads: adBatteries.length,
+              reloads: new Set(adBatteries.map((b) => b.system_id)).size,
             };
             const catTabs: Array<{ k: OfferCategory; label: string }> = [
               { k: "aircraft", label: "Aircraft" },
@@ -868,31 +920,34 @@ export function AcquisitionPipeline({
             )
           )}
 
-          {offerCat === "reloads" && (
-            adBatteries.length === 0 ? (
-              <p className="text-xs opacity-60 py-6 text-center">
-                No installed batteries to reload.
-              </p>
-            ) : (
+          {offerCat === "reloads" && (() => {
+            if (adBatteries.length === 0) {
+              return (
+                <p className="text-xs opacity-60 py-6 text-center">
+                  No installed batteries to reload.
+                </p>
+              );
+            }
+            const bySystem: Record<string, ADBattery[]> = {};
+            for (const b of adBatteries) (bySystem[b.system_id] ??= []).push(b);
+            const baseNameById = Object.fromEntries(bases.map((b) => [b.id, b.name]));
+            return (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {adBatteries.map((b) => {
-                  const baseName = bases.find((bb) => bb.id === b.base_id)?.name ?? `Base ${b.base_id}`;
-                  return (
-                    <ADReloadOfferCard
-                      key={b.id}
-                      battery={b}
-                      systemId={b.system_id}
-                      baseName={baseName}
-                      currentYear={currentYear}
-                      currentQuarter={currentQuarter}
-                      onSign={onSign}
-                      disabled={disabled}
-                    />
-                  );
-                })}
+                {Object.entries(bySystem).map(([systemId, bats]) => (
+                  <ADReloadOfferCard
+                    key={systemId}
+                    systemId={systemId}
+                    batteries={bats}
+                    baseNameById={baseNameById}
+                    currentYear={currentYear}
+                    currentQuarter={currentQuarter}
+                    onSign={onSign}
+                    disabled={disabled}
+                  />
+                ))}
               </div>
-            )
-          )}
+            );
+          })()}
         </section>
       )}
     </div>
