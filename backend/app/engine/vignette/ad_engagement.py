@@ -72,15 +72,18 @@ def resolve_ad_engagement(
                     if battery_stock.get(bid, 0) <= 0:
                         break  # magazine empty
                     battery_stock[bid] = battery_stock.get(bid, 0) - 1
-                if rng.random() < pk:
+                hit = rng.random() < pk
+                trace.append({
+                    "t_min": -5, "kind": "ad_engagement",
+                    "battery_id": bid,
+                    "battery_system": bat_info["name"],
+                    "base_name": bat_info["base_name"],
+                    "target_platform": entry["platform_id"],
+                    "pk": round(pk, 2),
+                    "hit": hit,
+                })
+                if hit:
                     count -= 1
-                    trace.append({
-                        "t_min": -5, "kind": "ad_engagement",
-                        "battery_system": bat_info["name"],
-                        "base_name": bat_info["base_name"],
-                        "target_platform": entry["platform_id"],
-                        "pk": round(pk, 2),
-                    })
         if count > 0:
             new_entry = dict(entry)
             new_entry["count"] = count

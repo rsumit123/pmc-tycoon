@@ -424,6 +424,24 @@ def resolve(
                 wid = key[1]
                 consumed_by_weapon[wid] = consumed_by_weapon.get(wid, 0) + burned
 
+    # Per-battery AD contribution tally for AAR display (Plan 19).
+    ad_contribs: dict = {}
+    for ev in trace:
+        if ev.get("kind") != "ad_engagement":
+            continue
+        bid = ev.get("battery_id")
+        key = bid if bid is not None else f"{ev.get('battery_system')}|{ev.get('base_name')}"
+        c = ad_contribs.setdefault(key, {
+            "battery_id": bid,
+            "system": ev.get("battery_system", "?"),
+            "base_name": ev.get("base_name", "?"),
+            "interceptors_fired": 0,
+            "kills": 0,
+        })
+        c["interceptors_fired"] += 1
+        if ev.get("hit"):
+            c["kills"] += 1
+
     outcome = {
         "ind_kia": ind_kia,
         "adv_kia": adv_kia,
@@ -437,6 +455,7 @@ def resolve(
         "missile_stock_consumed": consumed_by_weapon,
         "missile_stock_remaining": remaining,
         "battery_stock_remaining": dict(battery_stock) if battery_stock is not None else {},
+        "ad_contributions": list(ad_contribs.values()),
     }
     trace.append({"t_min": 12, "kind": "egress",
                   "ind_survivors": len(ind_force), "adv_survivors": len(adv_force)})
