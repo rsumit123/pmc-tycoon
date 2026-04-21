@@ -435,5 +435,8 @@ def resolve(
     }
     trace.append({"t_min": 12, "kind": "egress",
                   "ind_survivors": len(ind_force), "adv_survivors": len(adv_force)})
-    trace.append({"t_min": 12, "kind": "outcome", "outcome": outcome})
+    # Strip the tuple-keyed `missile_stock_remaining` from the trace — the
+    # trace is JSON-persisted to the DB, tuple keys are not serializable.
+    trace_outcome = {k: v for k, v in outcome.items() if k != "missile_stock_remaining"}
+    trace.append({"t_min": 12, "kind": "outcome", "outcome": trace_outcome})
     return outcome, trace

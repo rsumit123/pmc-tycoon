@@ -6,6 +6,7 @@ from app.models.vignette import Vignette
 from app.models.campaign import Campaign
 from app.models.event import CampaignEvent
 from app.models.squadron import Squadron
+from app.models.missile_stock import MissileStock
 from app.content.registry import platforms as platforms_reg
 from app.engine.vignette.resolver import resolve
 from app.engine.vignette.non_combat import is_non_combat, resolve_non_combat
@@ -76,6 +77,7 @@ def commit_vignette(
     # Route to non-combat resolver when objective kind is non-kinetic
     if is_non_combat(ps.get("objective", {})):
         outcome, event_trace = resolve_non_combat(ps, committed_force)
+        stock_rows: list[MissileStock] = []
     else:
         # Build platforms_registry dict for the combat resolver
         platforms_dict = {
@@ -88,10 +90,26 @@ def commit_vignette(
             for pid, p in platforms_reg().items()
         }
 
+        # Load per-base missile stock for this campaign and pass into resolver.
+        stock_rows = db.query(MissileStock).filter_by(
+            campaign_id=campaign.id,
+        ).all()
+        ps_with_stock = dict(ps)
+        ps_with_stock["missile_stock"] = {
+            (r.base_id, r.weapon_id): r.stock for r in stock_rows
+        }
+
         outcome, event_trace = resolve(
-            ps, committed_force, platforms_dict,
+            ps_with_stock, committed_force, platforms_dict,
             seed=campaign.seed, year=vignette.year, quarter=vignette.quarter,
         )
+
+        # Persist stock decrements back to DB.
+        remaining = outcome.get("missile_stock_remaining", {}) or {}
+        for r in stock_rows:
+            key = (r.base_id, r.weapon_id)
+            new_stock = remaining.get(key, r.stock)
+            r.stock = max(0, int(new_stock))
 
     # Apply readiness cost to committed squadrons.
     # Base cost: 5% per committed squadron. Overcommit (>2x adversary) adds penalty.
@@ -135,7 +153,10 @@ def commit_vignette(
     vignette.status = "resolved"
     vignette.committed_force = committed_force
     vignette.event_trace = event_trace
-    vignette.outcome = outcome
+    # `missile_stock_remaining` uses tuple keys for in-process book-keeping —
+    # strip before JSON-persist. Public consumers can query MissileStock rows.
+    outcome_for_db = {k: v for k, v in outcome.items() if k != "missile_stock_remaining"}
+    vignette.outcome = outcome_for_db
     vignette.aar_text = (
         f"Vignette {vignette.scenario_id} resolved: "
         f"IND airframes lost {outcome['ind_kia']}, "
@@ -144,10 +165,11 @@ def commit_vignette(
     )
     vignette.resolved_at = datetime.now(UTC)
 
-    # Deduct munitions expenditure from treasury.
+    # Munitions telemetry event — Plan 18: cost is pre-paid via Acquisitions,
+    # so this event no longer debits the treasury. Retained for analytics so
+    # the AAR can show "stock consumed ~= Rs X cr replacement cost".
     munitions_cost = int(outcome.get("munitions_cost_total_cr", 0) or 0)
     if munitions_cost > 0:
-        campaign.budget_cr = (campaign.budget_cr or 0) - munitions_cost
         db.add(CampaignEvent(
             campaign_id=campaign.id,
             year=vignette.year,
@@ -157,6 +179,7 @@ def commit_vignette(
                 "vignette_id": vignette.id,
                 "total_cost_cr": munitions_cost,
                 "munitions": outcome.get("munitions_expended", []),
+                "stock_consumed": outcome.get("missile_stock_consumed", {}),
             },
         ))
 
@@ -170,7 +193,7 @@ def commit_vignette(
             "scenario_id": vignette.scenario_id,
             "scenario_name": ps.get("scenario_name", ""),
             "ao": ps.get("ao", {}),
-            "outcome": outcome,
+            "outcome": outcome_for_db,
         },
     ))
 
