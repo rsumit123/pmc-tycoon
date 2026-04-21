@@ -104,6 +104,7 @@ class ADSystemSpec(BaseModel):
     install_cost_cr: int
     max_pk: float
     tier: str
+    interceptor_cost_cr: int = 0
 
 
 def load_ad_systems(path: Path) -> dict[str, ADSystemSpec]:
