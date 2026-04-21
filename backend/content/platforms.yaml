@@ -576,3 +576,64 @@ platforms:
     radar_range_km: 0
     cost_cr: 0
     intro_year: 2020
+
+  # --- Cruise munitions / loitering drones (adversary-only, not procurable) ---
+  - id: yj21_missile
+    name: YJ-21 Cruise Missile
+    origin: CHN
+    role: anti_ship_cruise
+    generation: "4"
+    combat_radius_km: 9999
+    payload_kg: 500
+    rcs_band: LO
+    radar_range_km: 0
+    cost_cr: 60
+    intro_year: 2020
+    procurable_by: []
+    default_first_delivery_quarters: 0
+    default_foc_quarters: 0
+
+  - id: cj20_missile
+    name: CJ-20 Land-Attack Cruise Missile
+    origin: CHN
+    role: land_attack_cruise
+    generation: "4"
+    combat_radius_km: 9999
+    payload_kg: 500
+    rcs_band: LO
+    radar_range_km: 0
+    cost_cr: 15
+    intro_year: 2015
+    procurable_by: []
+    default_first_delivery_quarters: 0
+    default_foc_quarters: 0
+
+  - id: babur_missile
+    name: Babur / Ra'ad Cruise Missile
+    origin: PAK
+    role: land_attack_cruise
+    generation: "4"
+    combat_radius_km: 9999
+    payload_kg: 450
+    rcs_band: LO
+    radar_range_km: 0
+    cost_cr: 10
+    intro_year: 2010
+    procurable_by: []
+    default_first_delivery_quarters: 0
+    default_foc_quarters: 0
+
+  - id: shahed_drone
+    name: Shahed-136-class Loitering Munition
+    origin: PAK
+    role: loitering_munition
+    generation: "3"
+    combat_radius_km: 9999
+    payload_kg: 50
+    rcs_band: VLO
+    radar_range_km: 0
+    cost_cr: 1
+    intro_year: 2022
+    procurable_by: []
+    default_first_delivery_quarters: 0
+    default_foc_quarters: 0

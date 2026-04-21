@@ -72,6 +72,11 @@ PLATFORM_LOADOUTS: dict[str, dict[str, list[str]]] = {
     "type004_carrier": {"bvr": [],           "wvr": []},
     "type055_destroyer": {"bvr": [],         "wvr": []},
     "type093b_ssn": {"bvr": [],              "wvr": []},
+    # Cruise missiles + loitering drones — adversary-only, no A2A return fire.
+    "yj21_missile":   {"bvr": [], "wvr": []},
+    "cj20_missile":   {"bvr": [], "wvr": []},
+    "babur_missile":  {"bvr": [], "wvr": []},
+    "shahed_drone":   {"bvr": [], "wvr": []},
 }
 
 GENERATION_SCORES: dict[str, float] = {
