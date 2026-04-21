@@ -66,6 +66,7 @@ class ADBatteryRead(BaseModel):
     coverage_km: int
     installed_year: int
     installed_quarter: int
+    interceptor_stock: int = 0
 
     model_config = {"from_attributes": True}
 
