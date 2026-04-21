@@ -202,6 +202,8 @@ class ScenarioTemplate:
     allowed_ind_roles: list[str]
     roe_options: list[str]
     objective: dict
+    ao_base_candidates: tuple[str, ...] = ()
+    allows_no_cap: bool = False
 
 
 def load_scenario_templates(path: Path) -> list[ScenarioTemplate]:
@@ -211,7 +213,7 @@ def load_scenario_templates(path: Path) -> list[ScenarioTemplate]:
         out.append(ScenarioTemplate(
             id=raw["id"],
             name=raw["name"],
-            ao=dict(raw["ao"]),
+            ao=dict(raw.get("ao") or {}),
             response_clock_minutes=raw["response_clock_minutes"],
             q_index_min=raw["q_index_min"],
             q_index_max=raw["q_index_max"],
@@ -221,5 +223,7 @@ def load_scenario_templates(path: Path) -> list[ScenarioTemplate]:
             allowed_ind_roles=list(raw["allowed_ind_roles"]),
             roe_options=list(raw["roe_options"]),
             objective=dict(raw["objective"]),
+            ao_base_candidates=tuple(raw.get("ao_base_candidates") or ()),
+            allows_no_cap=bool(raw.get("allows_no_cap", False)),
         ))
     return out

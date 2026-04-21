@@ -130,6 +130,7 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         if tpl is None:
             continue
         bases_dict[row.id] = {
+            "template_id": row.template_id,
             "name": tpl.name,
             "lat": tpl.lat,
             "lon": tpl.lon,

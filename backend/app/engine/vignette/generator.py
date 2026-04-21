@@ -85,6 +85,37 @@ def pick_scenario(
     return rng.choices(eligible, weights=weights, k=1)[0]
 
 
+def _resolve_ao(
+    template: ScenarioTemplate,
+    bases_registry: dict,
+    rng: random.Random,
+) -> dict:
+    """If template has ao_base_candidates, pick one friendly base's coords with
+    ±5 km jitter (~0.045°). Otherwise return template.ao as-is. Falls back to
+    template.ao (or a default) when none of the candidate base template_ids
+    are seeded in this campaign."""
+    candidates = getattr(template, "ao_base_candidates", None) or ()
+    if not candidates:
+        return dict(template.ao) if template.ao else {
+            "region": "unknown", "name": "unknown", "lat": 28.0, "lon": 77.0,
+        }
+    by_tpl = {b.get("template_id"): b for b in bases_registry.values() if b.get("template_id")}
+    picks = [by_tpl[t] for t in candidates if t in by_tpl]
+    if not picks:
+        if template.ao:
+            return dict(template.ao)
+        return {"region": "unknown", "name": "unknown", "lat": 28.0, "lon": 77.0}
+    picked = rng.choice(picks)
+    lat_jitter = (rng.random() - 0.5) * 0.09
+    lon_jitter = (rng.random() - 0.5) * 0.09
+    return {
+        "region": picked.get("region", "airbase"),
+        "name": f"{picked.get('name', picked.get('template_id', ''))} vicinity",
+        "lat": round(picked["lat"] + lat_jitter, 4),
+        "lon": round(picked["lon"] + lon_jitter, 4),
+    }
+
+
 def build_planning_state(
     template: ScenarioTemplate,
     adversary_states: dict[str, dict],
@@ -131,7 +162,7 @@ def build_planning_state(
     bases_registry = bases_registry or {}
     recent_intel_confidences = recent_intel_confidences or []
 
-    ao_dict = dict(template.ao)
+    ao_dict = _resolve_ao(template, bases_registry, rng)
     awacs = _awacs_covering(ao_dict, player_squadrons, bases_registry)
     isr = _isr_covering(ao_dict, player_squadrons, bases_registry)
 
@@ -169,6 +200,7 @@ def build_planning_state(
         "ad_batteries": ad_batteries or [],
         "ad_specs": ad_specs or {},
         "bases_registry": bases_registry or {},
+        "allows_no_cap": bool(getattr(template, "allows_no_cap", False)),
     }
 
 
