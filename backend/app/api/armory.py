@@ -77,6 +77,26 @@ def _completed_unlocks(db: Session, campaign_id: int) -> dict[str, list]:
                 description=u.description,
             ))
 
+    # Starting-inventory missiles — friendly weapons already in seeded squadron
+    # loadouts (meteor on Rafale, astra_mk1 on Tejas, r77/r73 on Su-30, etc.).
+    # These aren't R&D-gated; the player must still be able to reorder depot
+    # stock for them via Acquisitions, so surface them in the unlocks list too.
+    STARTING_MISSILES = ("meteor", "mica_ir", "r77", "r73", "astra_mk1", "astra_mk2")
+    already_missiles = {m.target_id for m in missiles}
+    for wid in STARTING_MISSILES:
+        if wid in already_missiles or wid not in WEAPONS:
+            continue
+        w = WEAPONS[wid]
+        missiles.append(MissileUnlock(
+            target_id=wid,
+            name=wid.upper(),
+            description="In-service inventory — reorder depot stock.",
+            eligible_platforms=[],
+            nez_km=w["nez_km"],
+            max_range_km=w["max_range_km"],
+            weapon_class=w.get("class", "a2a_bvr"),
+        ))
+
     # Starting-tech AD systems — always available for install, no R&D required.
     # These are in-service IAF SAMs (Akash-NG, QRSAM, VSHORADS) that the player
     # can deploy at any base from campaign start. Some are pre-seeded at key
