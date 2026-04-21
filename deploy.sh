@@ -35,6 +35,6 @@ echo "═══ Deploying Backend to GCP ═══"
 gcloud compute ssh socialflow \
     --project=polar-pillar-450607-b7 \
     --zone=us-east1-d \
-    --command="cd /home/rsumit123/pmc-tycoon && git pull && docker build -t defense-game-backend ./backend && docker rm -f defense-game-backend 2>/dev/null; docker run -d --name defense-game-backend -p 8010:8010 -v /home/rsumit123/pmc-tycoon/backend/data:/app/data --env-file .env defense-game-backend"
+    --command="cd /home/rsumit123/pmc-tycoon && git pull && docker build -t defense-game-backend ./backend && docker rm -f defense-game-backend 2>/dev/null; docker run -d --name defense-game-backend --restart unless-stopped -p 8010:8010 -v /home/rsumit123/pmc-tycoon/backend/data:/app/data --env-file .env defense-game-backend"
 echo "✓ Backend deployed"
 echo "═══ Deploy complete ═══"
