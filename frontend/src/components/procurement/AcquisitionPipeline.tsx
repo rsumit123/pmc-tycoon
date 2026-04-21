@@ -48,6 +48,14 @@ export interface AcquisitionPipelineProps {
   weaponsById?: Record<string, WeaponMeta>;
 }
 
+// Strip noisy suffixes so base names fit in narrow select dropdowns on mobile.
+// "Pathankot Air Force Station" → "Pathankot"; "Car Nicobar Air Force Station (INS Baaz)" → "Car Nicobar"
+function shortBaseName(name: string): string {
+  return name
+    .replace(/\s+Air Force Station\b.*$/, "")
+    .replace(/\s+AFS\b.*$/, "");
+}
+
 const RUNWAY_COMPATIBILITY: Record<string, Set<string>> = {
   short: new Set(["short", "standard", "long", "medium"]),
   standard: new Set(["standard", "long", "medium"]),
@@ -157,20 +165,20 @@ function OfferCard({
         {" • FOC "}{focYear}-Q{focQuarter}
       </div>
       {compatibleBases.length > 0 && (
-        <label className="flex items-center gap-2 text-xs">
-          <span className="opacity-60 flex-shrink-0">Deliver to</span>
+        <label className="flex flex-col gap-1 text-xs">
+          <span className="opacity-60">Deliver to</span>
           <select
             value={preferredBaseId === "auto" ? "auto" : String(preferredBaseId)}
             onChange={(e) => {
               const v = e.target.value;
               setPreferredBaseId(v === "auto" ? "auto" : Number(v));
             }}
-            className="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
+            className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
             aria-label={`${platform.name} delivery base`}
           >
             <option value="auto">Auto (best fit)</option>
             {compatibleBases.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
+              <option key={b.id} value={b.id}>{shortBaseName(b.name)}</option>
             ))}
           </select>
         </label>
@@ -403,20 +411,20 @@ export function MissileBatchOfferCard({
           ariaLabel={`${missile.name} quantity`}
         />
       </div>
-      <label className="flex items-center gap-2 text-xs">
-        <span className="opacity-60 flex-shrink-0">Deliver to</span>
+      <label className="flex flex-col gap-1 text-xs">
+        <span className="opacity-60">Deliver to</span>
         <select
           value={baseId === "" ? "" : String(baseId)}
           onChange={(e) => {
             const v = e.target.value;
             setBaseId(v === "" ? "" : Number(v));
           }}
-          className="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
+          className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
           aria-label={`${missile.name} delivery base`}
         >
           <option value="">Pick a base…</option>
           {bases.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}</option>
+            <option key={b.id} value={b.id}>{shortBaseName(b.name)}</option>
           ))}
         </select>
       </label>
@@ -500,20 +508,20 @@ export function ADBatteryOfferCard({
         Install: ₹{(system.install_cost_cr ?? 0).toLocaleString("en-US")} cr
         {" + "}{startingStock} interceptors × ₹{perShot} cr
       </div>
-      <label className="flex items-center gap-2 text-xs">
-        <span className="opacity-60 flex-shrink-0">Install at</span>
+      <label className="flex flex-col gap-1 text-xs">
+        <span className="opacity-60">Install at</span>
         <select
           value={baseId === "" ? "" : String(baseId)}
           onChange={(e) => {
             const v = e.target.value;
             setBaseId(v === "" ? "" : Number(v));
           }}
-          className="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
+          className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
           aria-label={`${system.name} install base`}
         >
           <option value="">Pick a base…</option>
           {bases.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}</option>
+            <option key={b.id} value={b.id}>{shortBaseName(b.name)}</option>
           ))}
         </select>
       </label>
@@ -605,21 +613,24 @@ export function ADReloadOfferCard({
         ₹{perShot.toLocaleString("en-US")} cr/interceptor · fleet: {totalCurrent}/{totalCapacity} across {batteries.length} {batteries.length === 1 ? "battery" : "batteries"}
       </div>
       {batteries.length > 1 && (
-        <label className="flex items-center gap-2 text-xs">
-          <span className="opacity-60 flex-shrink-0">Target battery</span>
+        <label className="flex flex-col gap-1 text-xs">
+          <span className="opacity-60">Target battery</span>
           <select
             value={targetId}
             onChange={(e) => setTargetId(Number(e.target.value))}
-            className="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
+            className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
             aria-label={`${displayName} target battery`}
           >
             {sortedByNeed.map((b) => {
               const stock = b.interceptor_stock ?? 0;
               const pct = capacity > 0 ? stock / capacity : 0;
               const indicator = pct >= 0.5 ? "✓" : pct > 0 ? "⚠" : "✗";
+              const baseShort = baseNameById[b.base_id]
+                ? shortBaseName(baseNameById[b.base_id])
+                : `base ${b.base_id}`;
               return (
                 <option key={b.id} value={b.id}>
-                  {indicator} {baseNameById[b.base_id] ?? `base ${b.base_id}`} ({stock}/{capacity})
+                  {indicator} {baseShort} ({stock}/{capacity})
                 </option>
               );
             })}
@@ -628,7 +639,9 @@ export function ADReloadOfferCard({
       )}
       {batteries.length === 1 && target && (
         <div className="text-[11px] opacity-70">
-          Target: <span className="font-semibold">{baseNameById[target.base_id] ?? `base ${target.base_id}`}</span>
+          Target: <span className="font-semibold">
+            {baseNameById[target.base_id] ? shortBaseName(baseNameById[target.base_id]) : `base ${target.base_id}`}
+          </span>
           {" · current "}{currentStock}/{capacity}
         </div>
       )}
@@ -830,7 +843,7 @@ export function AcquisitionPipeline({
                     type="button"
                     onClick={() => setOfferCat(ct.k)}
                     className={[
-                      "flex-1 min-w-0 px-2.5 py-1.5 text-xs font-semibold rounded whitespace-nowrap",
+                      "flex-shrink-0 px-2.5 py-1.5 text-xs font-semibold rounded whitespace-nowrap",
                       offerCat === ct.k ? "bg-amber-600 text-slate-900" : "text-slate-300",
                     ].join(" ")}
                   >
