@@ -5,10 +5,10 @@ import { UnlocksFeed } from "../components/armory/UnlocksFeed";
 import { MissileCard } from "../components/armory/MissileCard";
 import { MissileEquipModal } from "../components/armory/MissileEquipModal";
 import { ADSystemCard } from "../components/armory/ADSystemCard";
-import { ADInstallModal } from "../components/armory/ADInstallModal";
 import { ADDeploymentsTable } from "../components/armory/ADDeploymentsTable";
+import { MissileDepotTable } from "../components/armory/MissileDepotTable";
 import { DroneRoster } from "../components/armory/DroneRoster";
-import type { MissileUnlock, ADSystemUnlock } from "../lib/types";
+import type { MissileUnlock } from "../lib/types";
 import { isCampaignComplete } from "../lib/campaignLifecycle";
 import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
 
@@ -28,12 +28,12 @@ export function ArmoryPage() {
   const loadBases = useCampaignStore((s) => s.loadBases);
   const adBatteries = useCampaignStore((s) => s.adBatteries);
   const loadADBatteries = useCampaignStore((s) => s.loadADBatteries);
+  const missileStocks = useCampaignStore((s) => s.missileStocks);
+  const loadMissileStocks = useCampaignStore((s) => s.loadMissileStocks);
   const equipMissile = useCampaignStore((s) => s.equipMissile);
-  const installADSystem = useCampaignStore((s) => s.installADSystem);
 
   const [tab, setTab] = useState<Tab>("unlocks");
   const [missileModal, setMissileModal] = useState<MissileUnlock | null>(null);
-  const [adModal, setADModal] = useState<ADSystemUnlock | null>(null);
 
   useEffect(() => {
     if (!campaign || campaign.id !== cid) loadCampaign(cid);
@@ -41,7 +41,8 @@ export function ArmoryPage() {
     loadHangar(cid);
     loadBases(cid);
     loadADBatteries(cid);
-  }, [cid, campaign, loadCampaign, loadUnlocks, loadHangar, loadBases, loadADBatteries]);
+    loadMissileStocks(cid);
+  }, [cid, campaign, loadCampaign, loadUnlocks, loadHangar, loadBases, loadADBatteries, loadMissileStocks]);
 
   const basesById = Object.fromEntries(bases.map((b) => [b.id, b]));
   const installedBasesBySystem: Record<string, string[]> = {};
@@ -156,11 +157,12 @@ export function ArmoryPage() {
                     a={a}
                     installedBaseNames={installedBasesBySystem[a.target_id] ?? []}
                     totalBases={bases.length}
-                    onInstall={() => setADModal(a)}
+                    campaignId={cid}
                   />
                 ))}
               </div>
               <ADDeploymentsTable adBatteries={adBatteries} bases={bases} />
+              <MissileDepotTable missileStocks={missileStocks} bases={bases} />
             </div>
           )
         )}
@@ -185,19 +187,6 @@ export function ArmoryPage() {
           />
         )}
 
-        {adModal && (
-          <ADInstallModal
-            system={adModal}
-            bases={bases}
-            adBatteries={adBatteries}
-            onClose={() => setADModal(null)}
-            budgetAvailable={campaign?.budget_cr ?? 0}
-            onPick={async (baseId) => {
-              await installADSystem(adModal.target_id, baseId);
-              await loadADBatteries(cid);
-            }}
-          />
-        )}
       </main>
     </div>
   );

@@ -1,20 +1,19 @@
+import { Link } from "react-router-dom";
 import type { ADSystemUnlock } from "../../lib/types";
 
 export interface ADSystemCardProps {
   a: ADSystemUnlock;
   installedBaseNames: string[];
   totalBases: number;
-  onInstall: () => void;
+  /** Campaign id for the deep-link into Acquisitions. */
+  campaignId: number;
+  /** Kept for backwards-compat; no longer used since install happens via Acquisitions. */
+  onInstall?: () => void;
 }
 
-export function ADSystemCard({ a, installedBaseNames, totalBases, onInstall }: ADSystemCardProps) {
+export function ADSystemCard({ a, installedBaseNames, totalBases, campaignId }: ADSystemCardProps) {
   const installedCount = installedBaseNames.length;
-  const allInstalled = totalBases > 0 && installedCount >= totalBases;
-  const buttonLabel = installedCount === 0
-    ? "Install at first base"
-    : allInstalled
-      ? "Installed everywhere"
-      : "Install at another base";
+  const linkTo = `/campaign/${campaignId}/procurement?tab=acquisitions&view=offers&focus_ad=${a.target_id}`;
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-lg p-3">
@@ -27,7 +26,7 @@ export function ADSystemCard({ a, installedBaseNames, totalBases, onInstall }: A
         Coverage {a.coverage_km}km · Max PK {(a.max_pk * 100).toFixed(0)}%
       </div>
       <div className="mt-1.5 text-[11px] opacity-80">
-        Install cost: ₹{a.install_cost_cr.toLocaleString("en-US")} cr
+        Install cost: ₹{a.install_cost_cr.toLocaleString("en-US")} cr (+ interceptor stock)
       </div>
       <div className="mt-1.5 text-[11px]">
         <span className="opacity-70">Installed at </span>
@@ -44,12 +43,12 @@ export function ADSystemCard({ a, installedBaseNames, totalBases, onInstall }: A
           </div>
         )}
       </div>
-      <button
-        type="button"
-        onClick={onInstall}
-        disabled={allInstalled}
-        className="mt-2 w-full bg-amber-600 hover:bg-amber-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-slate-900 font-semibold text-xs rounded py-1.5"
-      >{buttonLabel}</button>
+      <Link
+        to={linkTo}
+        className="mt-2 w-full block text-center bg-amber-600 hover:bg-amber-500 text-slate-900 font-semibold text-xs rounded py-1.5"
+      >
+        Procure via Acquisitions →
+      </Link>
     </div>
   );
 }

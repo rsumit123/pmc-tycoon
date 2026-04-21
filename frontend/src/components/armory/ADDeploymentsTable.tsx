@@ -11,6 +11,11 @@ const AD_SYSTEM_NAMES: Record<string, string> = {
   vshorads: "VSHORADS",
 };
 
+const AD_STARTING_INTERCEPTORS: Record<string, number> = {
+  s400: 16, long_range_sam: 16, project_kusha: 12,
+  mrsam_air: 24, akash_ng: 24, qrsam: 32, vshorads: 32,
+};
+
 type SortMode = "system" | "base";
 
 export function ADDeploymentsTable({
@@ -23,14 +28,20 @@ export function ADDeploymentsTable({
   const basesById = useMemo(() => Object.fromEntries(bases.map((b) => [b.id, b])), [bases]);
 
   const rows = useMemo(() => {
-    const enriched = adBatteries.map((b) => ({
-      id: b.id,
-      systemId: b.system_id,
-      systemName: AD_SYSTEM_NAMES[b.system_id] ?? b.system_id,
-      baseName: basesById[b.base_id]?.name ?? `base-${b.base_id}`,
-      coverageKm: b.coverage_km,
-      installedLabel: `${b.installed_year} Q${b.installed_quarter}`,
-    }));
+    const enriched = adBatteries.map((b) => {
+      const capacity = AD_STARTING_INTERCEPTORS[b.system_id] ?? 16;
+      const stock = b.interceptor_stock ?? capacity;
+      return {
+        id: b.id,
+        systemId: b.system_id,
+        systemName: AD_SYSTEM_NAMES[b.system_id] ?? b.system_id,
+        baseName: basesById[b.base_id]?.name ?? `base-${b.base_id}`,
+        coverageKm: b.coverage_km,
+        installedLabel: `${b.installed_year} Q${b.installed_quarter}`,
+        stock,
+        capacity,
+      };
+    });
     if (sortMode === "system") {
       enriched.sort((a, b) => a.systemName.localeCompare(b.systemName) || a.baseName.localeCompare(b.baseName));
     } else {
@@ -86,18 +97,27 @@ export function ADDeploymentsTable({
               <th className="py-1 pr-2 font-medium">System</th>
               <th className="py-1 px-2 font-medium">Base</th>
               <th className="py-1 px-2 font-medium text-right">Coverage</th>
+              <th className="py-1 px-2 font-medium text-right">Stock</th>
               <th className="py-1 pl-2 font-medium text-right">Installed</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-b border-slate-900/60">
-                <td className="py-1 pr-2 font-semibold">{r.systemName}</td>
-                <td className="py-1 px-2 truncate max-w-[14rem]">{r.baseName}</td>
-                <td className="py-1 px-2 text-right font-mono opacity-80">{r.coverageKm} km</td>
-                <td className="py-1 pl-2 text-right font-mono opacity-80">{r.installedLabel}</td>
-              </tr>
-            ))}
+            {rows.map((r) => {
+              const pct = r.capacity > 0 ? r.stock / r.capacity : 1;
+              const stockClass =
+                r.stock === 0 ? "text-rose-300"
+                : pct < 0.5 ? "text-amber-300"
+                : "opacity-80";
+              return (
+                <tr key={r.id} className="border-b border-slate-900/60">
+                  <td className="py-1 pr-2 font-semibold">{r.systemName}</td>
+                  <td className="py-1 px-2 truncate max-w-[14rem]">{r.baseName}</td>
+                  <td className="py-1 px-2 text-right font-mono opacity-80">{r.coverageKm} km</td>
+                  <td className={`py-1 px-2 text-right font-mono ${stockClass}`}>{r.stock} / {r.capacity}</td>
+                  <td className="py-1 pl-2 text-right font-mono opacity-80">{r.installedLabel}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
