@@ -18,6 +18,7 @@ import { synthesizeContacts } from "../lib/intelContacts";
 import { playRadarPing, getAudioEnabled, setAudioEnabled } from "../lib/audio";
 import { isCampaignComplete as isCampComplete } from "../lib/campaignLifecycle";
 import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
+import { NotificationBell } from "../components/notifications/NotificationBell";
 import type { BaseSquadronSummary } from "../lib/types";
 
 export function CampaignMapView() {
@@ -44,6 +45,7 @@ export function CampaignMapView() {
   const adBatteries = useCampaignStore((s) => s.adBatteries);
   const loadADBatteries = useCampaignStore((s) => s.loadADBatteries);
   const loadIntel = useCampaignStore((s) => s.loadIntel);
+  const loadNotifications = useCampaignStore((s) => s.loadNotifications);
 
   const selectedBaseId = useMapStore((s) => s.selectedBaseId);
   const setSelectedBase = useMapStore((s) => s.setSelectedBase);
@@ -76,8 +78,9 @@ export function CampaignMapView() {
       loadRdCatalog();
       loadADBatteries(campaign.id);
       loadIntel(campaign.id);
+      loadNotifications(campaign.id);
     }
-  }, [campaign, loadBases, loadPlatforms, loadAcquisitions, loadRdActive, loadRdCatalog, loadADBatteries, loadIntel]);
+  }, [campaign, loadBases, loadPlatforms, loadAcquisitions, loadRdActive, loadRdCatalog, loadADBatteries, loadIntel, loadNotifications]);
 
   useEffect(() => {
     if (campaign) {
@@ -190,6 +193,7 @@ export function CampaignMapView() {
           </p>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          <NotificationBell campaignId={campaign.id} />
           {pendingVignettes.length > 0 && (
             <Link
               to={`/campaign/${campaign.id}/vignette/${pendingVignettes[0].id}`}
