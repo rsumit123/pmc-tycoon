@@ -452,11 +452,11 @@ export function RDDashboard({
                 type="button"
                 onClick={() => setCategory(c)}
                 className={[
-                  "flex-1 min-w-0 px-2.5 py-1.5 text-xs font-semibold rounded whitespace-nowrap",
+                  "flex-shrink-0 px-2.5 py-1.5 text-xs font-semibold rounded whitespace-nowrap",
                   category === c ? "bg-amber-600 text-slate-900" : "text-slate-300",
                 ].join(" ")}
               >
-                {c} ({categoryCounts[c] ?? 0})
+                {c === "Infrastructure" ? "Infra" : c} ({categoryCounts[c] ?? 0})
               </button>
             ))}
           </div>

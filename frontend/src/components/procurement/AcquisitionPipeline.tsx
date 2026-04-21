@@ -187,10 +187,11 @@ function OfferCard({
 }
 
 function TimelineBar({
-  order, platformName, currentYear, currentQuarter, onCancel,
+  order, platformName, originFlag, currentYear, currentQuarter, onCancel,
 }: {
   order: AcquisitionOrder;
   platformName: string;
+  originFlag?: string;
   currentYear: number;
   currentQuarter: number;
   onCancel?: (orderId: number) => void;
@@ -226,6 +227,7 @@ function TimelineBar({
     <div className="space-y-1.5 bg-slate-900/40 border border-slate-800 rounded-lg p-3">
       <div className="flex items-baseline justify-between gap-2 text-xs">
         <div className="min-w-0 flex-1">
+          {originFlag && <span className="mr-1">{originFlag}</span>}
           <span className="font-semibold">{platformName}</span>
           {order.cancelled && (
             <span className="ml-2 text-[10px] bg-rose-900/50 text-rose-200 px-1.5 py-0.5 rounded">CANCELLED</span>
@@ -731,16 +733,24 @@ export function AcquisitionPipeline({
           ) : (
             <div className="overflow-x-auto">
               <div className="space-y-3 min-w-min">
-                {visibleOrders.map((o) => (
-                  <TimelineBar
-                    key={o.id}
-                    order={o}
-                    platformName={byId[o.platform_id]?.name ?? o.platform_id}
-                    currentYear={currentYear}
-                    currentQuarter={currentQuarter}
-                    onCancel={onCancel}
-                  />
-                ))}
+                {visibleOrders.map((o) => {
+                  const kind = o.kind ?? "platform";
+                  let origin: string | undefined;
+                  if (kind === "platform") origin = byId[o.platform_id]?.origin;
+                  else if (kind === "missile_batch") origin = WEAPON_ORIGIN[o.platform_id];
+                  else if (kind === "ad_battery" || kind === "ad_reload") origin = AD_SYSTEM_ORIGIN[o.platform_id];
+                  return (
+                    <TimelineBar
+                      key={o.id}
+                      order={o}
+                      platformName={byId[o.platform_id]?.name ?? o.platform_id}
+                      originFlag={flagFor(origin)}
+                      currentYear={currentYear}
+                      currentQuarter={currentQuarter}
+                      onCancel={onCancel}
+                    />
+                  );
+                })}
               </div>
             </div>
           )}
