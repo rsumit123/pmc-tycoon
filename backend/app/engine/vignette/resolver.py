@@ -80,6 +80,7 @@ def _make_airframes(side: str, unit_list: list[dict], platforms: dict[str, dict]
                 "rcs_band": plat.get("rcs_band", "conventional"),
                 "loadout": list(loadout),
                 "squadron_id": unit.get("squadron_id"),
+                "base_id": unit.get("base_id"),
                 "xp": unit.get("xp", 0),
             })
     return out
@@ -128,6 +129,7 @@ def _resolve_round(
     trace: list[dict],
     t_min: int,
     fire_rate: float = 1.0,
+    stock: dict | None = None,
 ) -> tuple[list[dict], list[dict]]:
     """Each attacker fires one weapon-of-kind at a random surviving defender.
     Returns (attackers_unchanged, new_defenders) — defenders with hits removed.
@@ -145,6 +147,15 @@ def _resolve_round(
         weapon = _best_weapon(a["loadout"], weapon_kind)
         if weapon is None:
             continue
+        # Per-base stockpile gate (IND side only; adversary stock is abstracted).
+        # If the caller supplied a stock dict, check the attacker's base depot
+        # for this weapon. Empty depot → hold fire, no shot.
+        if side_label == "ind" and stock is not None:
+            base_id = a.get("base_id")
+            if base_id is not None:
+                key = (base_id, weapon)
+                if key in stock and stock[key] <= 0:
+                    continue
         if fire_rate < 1.0 and rng.random() >= fire_rate:
             continue  # ROE: holding fire this pass
         weights = [TARGET_PRIORITY.get(s["rcs_band"], 1.0) for s in survivors]
@@ -166,6 +177,12 @@ def _resolve_round(
             "target_platform": target["platform_id"],
             "pk": round(pk, 3), "distance_km": distance_km,
         })
+        if side_label == "ind" and stock is not None:
+            base_id = a.get("base_id")
+            if base_id is not None:
+                key = (base_id, weapon)
+                if key in stock:
+                    stock[key] = stock[key] - 1
         if rng.random() < pk:
             survivors.remove(target)
             kills_this_round += 1
@@ -223,12 +240,25 @@ def resolve(
             "platform_id": eligible["platform_id"],
             "airframes": s["airframes"],
             "squadron_id": sid,
+            "base_id": eligible.get("base_id"),
             "xp": eligible.get("xp", 0),
             "loadout": eligible.get("loadout", []),
         })
     ind_force = _make_airframes("ind", ind_units, platforms_registry)
     adv_force = _make_airframes("adv", planning_state.get("adversary_force", []),
                                 platforms_registry)
+
+    # Per-base missile stockpile. If the caller passed an empty dict (or none),
+    # stock gating is disabled (legacy/unlimited behavior). We keep the
+    # initial snapshot for consumed/remaining reporting after combat.
+    initial_stock_raw = planning_state.get("missile_stock") or {}
+    initial_stock: dict[tuple[int, str], int] = {
+        tuple(k) if not isinstance(k, tuple) else k: v
+        for k, v in initial_stock_raw.items()
+    }
+    stock: dict[tuple[int, str], int] | None = (
+        dict(initial_stock) if initial_stock else None
+    )
 
     # AD pre-round — friendly SAMs engage adversary airframes if AO is in coverage.
     ad_batteries = planning_state.get("ad_batteries", [])
@@ -299,12 +329,14 @@ def resolve(
             first, second, distance_km=120, weapon_kind="bvr",
             side_label=first_label, rng=rng, pk_bonus=first_bonus,
             trace=trace, t_min=3, fire_rate=first_rate,
+            stock=stock,
         )
         # Second mover returns fire if still alive
         _, first = _resolve_round(
             second, first, distance_km=120, weapon_kind="bvr",
             side_label=second_label, rng=rng, pk_bonus=second_bonus,
             trace=trace, t_min=4, fire_rate=second_rate,
+            stock=stock,
         )
         if det == "ind":
             ind_force, adv_force = first, second
@@ -316,6 +348,7 @@ def resolve(
             ind_force, adv_force, distance_km=50, weapon_kind="bvr",
             side_label="ind", rng=rng, pk_bonus=ind_pk_bonus,
             trace=trace, t_min=6, fire_rate=ind_fire_rate,
+            stock=stock,
         )
         _, ind_force = _resolve_round(
             adv_force, ind_force, distance_km=50, weapon_kind="bvr",
@@ -329,6 +362,7 @@ def resolve(
             ind_force, adv_force, distance_km=15, weapon_kind="wvr",
             side_label="ind", rng=rng, pk_bonus=ind_pk_bonus,
             trace=trace, t_min=9, fire_rate=ind_fire_rate,
+            stock=stock,
         )
         _, ind_force = _resolve_round(
             adv_force, ind_force, distance_km=15, weapon_kind="wvr",
@@ -374,6 +408,18 @@ def resolve(
             "total_cost_cr": line_total,
         })
 
+    # Compute stock consumption for UI + post-combat persistence.
+    consumed_by_weapon: dict[str, int] = {}
+    remaining: dict[tuple[int, str], int] = {}
+    if stock is not None:
+        for key, remaining_count in stock.items():
+            remaining[key] = remaining_count
+            initial_count = initial_stock.get(key, remaining_count)
+            burned = initial_count - remaining_count
+            if burned > 0:
+                wid = key[1]
+                consumed_by_weapon[wid] = consumed_by_weapon.get(wid, 0) + burned
+
     outcome = {
         "ind_kia": ind_kia,
         "adv_kia": adv_kia,
@@ -384,6 +430,8 @@ def resolve(
         "support": {"awacs": awacs, "tanker": tanker, "sead_package": sead},
         "munitions_expended": munitions_expended,
         "munitions_cost_total_cr": total_cost,
+        "missile_stock_consumed": consumed_by_weapon,
+        "missile_stock_remaining": remaining,
     }
     trace.append({"t_min": 12, "kind": "egress",
                   "ind_survivors": len(ind_force), "adv_survivors": len(adv_force)})
