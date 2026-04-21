@@ -514,3 +514,94 @@ templates:
     objective:
       kind: show_of_force
       success_threshold: {airframes_committed_min: 6}
+
+  # --- AD-focused defense scenarios (Plan 19) ---
+  # AOs sit at/near friendly airbases so SAM coverage earns its keep.
+  # allows_no_cap=true permits AD-only defense (zero committed squadrons).
+  - id: plan_cruise_coastal
+    name: "PLAN Coastal Cruise-Missile Raid"
+    response_clock_minutes: 30
+    q_index_min: 8
+    q_index_max: 39
+    weight: 1.0
+    requires:
+      adversary_inventory: {}
+    adversary_roster:
+      - role: strike
+        faction: PLAN
+        platform_pool: [yj21_missile]
+        count_range: [12, 12]
+    ao_base_candidates: [thanjavur, car_nicobar]
+    allows_no_cap: true
+    allowed_ind_roles: [CAP, awacs]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 10, ind_losses_max: 4}
+
+  - id: paf_cruise_raid_nw
+    name: "PAF Cruise-Missile Raid — NW Sector"
+    response_clock_minutes: 30
+    q_index_min: 4
+    q_index_max: 39
+    weight: 1.0
+    requires:
+      adversary_inventory: {}
+    adversary_roster:
+      - role: strike
+        faction: PAF
+        platform_pool: [babur_missile]
+        count_range: [10, 10]
+    ao_base_candidates: [pathankot, halwara, adampur]
+    allows_no_cap: true
+    allowed_ind_roles: [CAP, awacs]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 8, ind_losses_max: 3}
+
+  - id: drone_swarm_forward
+    name: "Drone-Swarm Strike — Forward Base"
+    response_clock_minutes: 30
+    q_index_min: 6
+    q_index_max: 39
+    weight: 0.9
+    requires:
+      adversary_inventory: {}
+    adversary_roster:
+      - role: strike
+        faction: PAF
+        platform_pool: [shahed_drone]
+        count_range: [20, 20]
+    ao_base_candidates: [srinagar, tezpur, jodhpur]
+    allows_no_cap: true
+    allowed_ind_roles: [CAP, awacs]
+    roe_options: [weapons_free, weapons_tight]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 16, ind_losses_max: 2}
+
+  - id: paf_f16_strike_pkg
+    name: "PAF F-16 Strike Package"
+    response_clock_minutes: 30
+    q_index_min: 8
+    q_index_max: 39
+    weight: 0.9
+    requires:
+      adversary_inventory: {}
+    adversary_roster:
+      - role: strike
+        faction: PAF
+        platform_pool: [f16_blk52]
+        count_range: [6, 6]
+      - role: strike
+        faction: PAF
+        platform_pool: [babur_missile]
+        count_range: [4, 4]
+    ao_base_candidates: [pathankot, adampur]
+    allows_no_cap: false
+    allowed_ind_roles: [CAP, SEAD, awacs, tanker]
+    roe_options: [weapons_free, weapons_tight, visual_id_required]
+    objective:
+      kind: defend_airspace
+      success_threshold: {adv_kills_min: 6, ind_losses_max: 3}

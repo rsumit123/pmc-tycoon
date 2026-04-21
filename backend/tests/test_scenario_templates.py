@@ -12,7 +12,12 @@ def test_every_template_has_required_fields():
     for t in tpls:
         assert t.id
         assert t.name
-        assert t.ao["lat"] and t.ao["lon"]
+        # Scenarios with ao_base_candidates resolve coords at build_planning_state
+        # time from the candidate list; their template.ao is optional.
+        if not t.ao_base_candidates:
+            assert t.ao["lat"] and t.ao["lon"]
+        else:
+            assert len(t.ao_base_candidates) >= 1
         assert 30 <= t.response_clock_minutes <= 180
         assert 0 <= t.q_index_min <= t.q_index_max <= 40
         assert t.weight > 0
