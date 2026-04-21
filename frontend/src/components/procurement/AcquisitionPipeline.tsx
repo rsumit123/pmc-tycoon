@@ -6,6 +6,8 @@ import type {
 } from "../../lib/types";
 import { Stepper } from "../primitives/Stepper";
 import { CommitHoldButton } from "../primitives/CommitHoldButton";
+import { PlatformDossier } from "../primitives/PlatformDossier";
+import { InfoButton } from "../primitives/RoleInfo";
 import { flagFor, WEAPON_ORIGIN, AD_SYSTEM_ORIGIN } from "../../lib/origin";
 
 export const AD_STARTING_INTERCEPTORS: Record<string, number> = {
@@ -112,6 +114,7 @@ function OfferCard({
   }, [highlighted]);
   const [qty, setQty] = useState<number>(DEFAULT_QTY);
   const [preferredBaseId, setPreferredBaseId] = useState<number | "auto">("auto");
+  const [dossierOpen, setDossierOpen] = useState(false);
 
   const runwayReq = platform.runway_class ?? "standard";
   const acceptable = RUNWAY_COMPATIBILITY[runwayReq] ?? new Set(["standard", "long", "medium"]);
@@ -149,12 +152,16 @@ function OfferCard({
       ].join(" ")}
     >
       <p className="flex items-baseline justify-between gap-2">
-        <span className="text-sm font-semibold">{platform.name}</span>
+        <span className="text-sm font-semibold flex items-center gap-1.5">
+          {platform.name}
+          <InfoButton onClick={() => setDossierOpen(true)} ariaLabel={`${platform.name} info`} />
+        </span>
         <span className="text-[11px] opacity-80 flex items-center gap-1 flex-shrink-0">
           <span>{flagFor(platform.origin)}</span>
           <span className="opacity-70">{platform.origin}</span>
         </span>
       </p>
+      <PlatformDossier platform={platform} open={dossierOpen} onClose={() => setDossierOpen(false)} />
       <div className="text-xs opacity-70">
         {platform.role} • gen {platform.generation}
         {" • "}₹{platform.cost_cr.toLocaleString("en-US")} cr/unit
@@ -802,7 +809,7 @@ export function AcquisitionPipeline({
     for (const prog of rdCatalog) {
       const u = prog.unlocks;
       if (!u || !u.target_id) continue;
-      if (u.kind !== "platform" && u.kind !== "strike_platform") continue;
+      if (u.kind !== "platform" && u.kind !== "strike_platform" && u.kind !== "isr_drone") continue;
       if (completedProgramIds.has(prog.id)) unlocked.add(u.target_id);
     }
     return unlocked;
@@ -817,7 +824,7 @@ export function AcquisitionPipeline({
     for (const prog of rdCatalog) {
       const u = prog.unlocks;
       if (!u || !u.target_id) continue;
-      if (u.kind !== "platform" && u.kind !== "strike_platform") continue;
+      if (u.kind !== "platform" && u.kind !== "strike_platform" && u.kind !== "isr_drone") continue;
       if (completedProgramIds.has(prog.id)) continue;
       locked.add(u.target_id);
     }

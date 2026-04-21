@@ -67,6 +67,7 @@ PLATFORM_LOADOUTS: dict[str, dict[str, list[str]]] = {
     "eurofighter_typhoon": {"bvr": ["meteor"], "wvr": ["mica_ir"]},
     "mq9b_seaguardian": {"bvr": [],          "wvr": []},
     "heron_tp":   {"bvr": [],                "wvr": []},
+    "tapas_uav":  {"bvr": [],                "wvr": []},
     "h6n":        {"bvr": ["yj21", "cj20"], "wvr": []},
     "fujian":     {"bvr": [],                "wvr": []},
     "type004_carrier": {"bvr": [],           "wvr": []},

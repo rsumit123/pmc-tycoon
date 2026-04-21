@@ -225,6 +225,21 @@ platforms:
     default_first_delivery_quarters: 6
     default_foc_quarters: 20
 
+  - id: tapas_uav
+    name: DRDO Tapas MALE UAV
+    origin: IND
+    role: isr
+    generation: "4.5"
+    combat_radius_km: 1000
+    payload_kg: 350
+    rcs_band: conventional
+    radar_range_km: 60
+    cost_cr: 250
+    intro_year: 2028
+    procurable_by: [IND]
+    default_first_delivery_quarters: 4
+    default_foc_quarters: 12
+
   - id: ghatak_ucav
     name: Ghatak UCAV
     origin: IND

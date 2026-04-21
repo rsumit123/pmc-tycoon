@@ -3,6 +3,7 @@ import type {
   RDProgramSpec, RDProgramState, RDFundingLevel, RDUpdatePayload,
 } from "../../lib/types";
 import { CommitHoldButton } from "../primitives/CommitHoldButton";
+import { RoleInfo, InfoButton } from "../primitives/RoleInfo";
 import { useCampaignStore } from "../../store/campaignStore";
 
 export interface RDDashboardProps {
@@ -167,6 +168,7 @@ function CatalogRow({
   dependentNames: string[];
 }) {
   const [funding, setFunding] = useState<RDFundingLevel>("standard");
+  const [infoOpen, setInfoOpen] = useState(false);
   const campaign = useCampaignStore((s) => s.campaign);
 
   function clientProjection(lvl: RDFundingLevel, progress: number) {
@@ -218,8 +220,19 @@ function CatalogRow({
       isDoctrinalFlavor ? "bg-slate-900/30 border-slate-800 opacity-70" : "bg-slate-900/50 border-slate-800",
     ].join(" ")}>
       <div className="flex items-baseline justify-between gap-2">
-        <div className="text-sm font-semibold">{spec.name}</div>
+        <div className="text-sm font-semibold flex items-center gap-1.5">
+          {spec.name}
+          <InfoButton onClick={() => setInfoOpen(true)} ariaLabel={`${spec.name} info`} />
+        </div>
       </div>
+      <RoleInfo
+        open={infoOpen}
+        onClose={() => setInfoOpen(false)}
+        title={spec.name}
+        description={spec.description}
+        unlockKind={spec.unlocks?.kind}
+        unlockTarget={spec.unlocks?.target_id}
+      />
       <div className="text-xs opacity-70">{spec.description}</div>
       {outcomeChip && (
         <div className={`text-[10px] inline-block border rounded px-1.5 py-0.5 ${outcomeChip.cls}`}>

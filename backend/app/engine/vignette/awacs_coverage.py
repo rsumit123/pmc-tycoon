@@ -19,7 +19,7 @@ EARTH_RADIUS_KM = 6371.0
 AWACS_PLATFORM_IDS: set[str] = {"netra_aewc", "phalcon_a50"}
 
 # Known IAF ISR/drone platform ids. Keep in sync with platforms.yaml.
-ISR_DRONE_PLATFORM_IDS: set[str] = {"tapas_uav", "ghatak_ucav"}
+ISR_DRONE_PLATFORM_IDS: set[str] = {"tapas_uav", "ghatak_ucav", "mq9b_seaguardian", "heron_tp"}
 ISR_ORBIT_RADIUS_KM = 700
 
 
