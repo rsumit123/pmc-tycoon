@@ -35,6 +35,14 @@ export function ProcurementHub() {
   const loadAcquisitions = useCampaignStore((s) => s.loadAcquisitions);
   const bases = useCampaignStore((s) => s.bases);
   const loadBases = useCampaignStore((s) => s.loadBases);
+  const missileStocks = useCampaignStore((s) => s.missileStocks);
+  const loadMissileStocks = useCampaignStore((s) => s.loadMissileStocks);
+  const adBatteries = useCampaignStore((s) => s.adBatteries);
+  const loadADBatteries = useCampaignStore((s) => s.loadADBatteries);
+  const armoryUnlocks = useCampaignStore((s) => s.armoryUnlocks);
+  const loadArmoryUnlocks = useCampaignStore((s) => s.loadArmoryUnlocks);
+  const weaponsById = useCampaignStore((s) => s.weaponsById);
+  const loadWeapons = useCampaignStore((s) => s.loadWeapons);
   const setBudget = useCampaignStore((s) => s.setBudget);
   const startRd = useCampaignStore((s) => s.startRdProgram);
   const updateRd = useCampaignStore((s) => s.updateRdProgram);
@@ -52,12 +60,16 @@ export function ProcurementHub() {
   useEffect(() => {
     if (campaign) {
       loadPlatforms();
+      loadWeapons();
       loadRdCatalog();
       loadRdActive(campaign.id);
       loadAcquisitions(campaign.id);
       loadBases(campaign.id);
+      loadMissileStocks(campaign.id);
+      loadADBatteries(campaign.id);
+      loadArmoryUnlocks(campaign.id);
     }
-  }, [campaign, loadPlatforms, loadRdCatalog, loadRdActive, loadAcquisitions, loadBases]);
+  }, [campaign, loadPlatforms, loadWeapons, loadRdCatalog, loadRdActive, loadAcquisitions, loadBases, loadMissileStocks, loadADBatteries, loadArmoryUnlocks]);
 
   if (!campaign) return <div className="p-6">Loading…</div>;
 
@@ -162,6 +174,11 @@ export function ProcurementHub() {
               bases={bases}
               initialView={searchParams.get("view") === "offers" ? "offers" : undefined}
               focusPlatformId={searchParams.get("focus") ?? undefined}
+              focusAdId={searchParams.get("focus_ad") ?? undefined}
+              missileStocks={missileStocks}
+              adBatteries={adBatteries}
+              armoryUnlocks={armoryUnlocks}
+              weaponsById={weaponsById}
             />
           </>
         )}
