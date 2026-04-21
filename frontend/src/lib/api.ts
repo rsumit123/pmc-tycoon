@@ -33,6 +33,7 @@ import type {
   WeaponCatalogResponse,
   PerformanceResponse,
   MissileStockListResponse,
+  NotificationListResponse,
 } from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
@@ -372,6 +373,13 @@ export const api = {
   async getPerformance(campaignId: number): Promise<PerformanceResponse> {
     const { data } = await http.get<PerformanceResponse>(
       `/api/campaigns/${campaignId}/performance`,
+    );
+    return data;
+  },
+
+  async getNotifications(campaignId: number): Promise<NotificationListResponse> {
+    const { data } = await http.get<NotificationListResponse>(
+      `/api/campaigns/${campaignId}/notifications`,
     );
     return data;
   },

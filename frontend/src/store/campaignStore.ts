@@ -17,8 +17,30 @@ import type {
   ADBattery,
   PerformanceResponse,
   MissileStock,
+  Notification,
 } from "../lib/types";
 import { api } from "../lib/api";
+
+function notificationsReadKey(cid: number): string {
+  return `notifications_read_${cid}`;
+}
+function loadReadFromStorage(cid: number): Set<string> {
+  try {
+    const raw = localStorage.getItem(notificationsReadKey(cid));
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+function saveReadToStorage(cid: number, ids: Set<string>) {
+  try {
+    localStorage.setItem(notificationsReadKey(cid), JSON.stringify([...ids]));
+  } catch {
+    /* quota/SSR — silent */
+  }
+}
 
 interface CampaignState {
   campaign: Campaign | null;
@@ -46,6 +68,10 @@ interface CampaignState {
   loadADBatteries: (campaignId: number) => Promise<void>;
   missileStocks: MissileStock[];
   loadMissileStocks: (campaignId: number) => Promise<void>;
+  notifications: Notification[];
+  readNotificationIds: Set<string>;
+  loadNotifications: (campaignId: number) => Promise<void>;
+  markNotificationRead: (id: string) => void;
   toasts: Toast[];
   rdLoading: Record<string, boolean>;
   loading: boolean;
@@ -130,6 +156,26 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       // silent
     }
   },
+  notifications: [],
+  readNotificationIds: new Set<string>(),
+  loadNotifications: async (campaignId: number) => {
+    try {
+      const resp = await api.getNotifications(campaignId);
+      set({
+        notifications: resp.notifications,
+        readNotificationIds: loadReadFromStorage(campaignId),
+      });
+    } catch (e) {
+      set({ error: (e as Error).message });
+    }
+  },
+  markNotificationRead: (id: string) => {
+    const cid = get().campaign?.id;
+    const next = new Set(get().readNotificationIds);
+    next.add(id);
+    set({ readNotificationIds: next });
+    if (cid) saveReadToStorage(cid, next);
+  },
   toasts: [],
   rdLoading: {},
   loading: false,
@@ -180,6 +226,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       void get().loadAcquisitions(cid);
       void get().loadPendingVignettes(cid);
       void get().loadIntel(cid, { year: campaign.current_year, quarter: campaign.current_quarter });
+      void get().loadNotifications(cid);
     } catch (e) {
       set({ error: (e as Error).message, loading: false });
     }
@@ -396,6 +443,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
         pendingVignettes: s.pendingVignettes.filter((pv) => pv.id !== v.id),
         loading: false,
       }));
+      void get().loadNotifications(campaignId);
       return v;
     } catch (e) {
       set({ loading: false, error: (e as Error).message });
@@ -625,6 +673,8 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     performance: null,
     adBatteries: [],
     missileStocks: [],
+    notifications: [],
+    readNotificationIds: new Set<string>(),
     toasts: [], rdLoading: {},
     loading: false, error: null,
   }),

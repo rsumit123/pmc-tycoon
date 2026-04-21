@@ -756,3 +756,30 @@ export interface PerformanceResponse {
   weapons: WeaponStat[];
   support: SupportStat[];
 }
+
+// ---------- Plan 20: notifications ----------
+
+export type NotificationKind =
+  | "low_stock"
+  | "empty_stock"
+  | "empty_ad"
+  | "rd_completed"
+  | "acquisition_completed"
+  | "acquisition_slipped"
+  | "pending_vignette";
+
+export type NotificationSeverity = "warning" | "info";
+
+export interface Notification {
+  id: string;
+  kind: NotificationKind;
+  severity: NotificationSeverity;
+  title: string;
+  body: string;
+  action_url: string;
+  created_at: string | null;
+}
+
+export interface NotificationListResponse {
+  notifications: Notification[];
+}
