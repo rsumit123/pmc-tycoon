@@ -3,6 +3,31 @@ import { useMemo, useState } from "react";
 import type { EligibleSquadron, PlanningState, VignetteCommitPayload, ROE, Platform } from "../../lib/types";
 import { Stepper } from "../primitives/Stepper";
 import { useCampaignStore } from "../../store/campaignStore";
+import { AD_STARTING_INTERCEPTORS } from "../procurement/AcquisitionPipeline";
+
+const AD_SYSTEM_DISPLAY: Record<string, string> = {
+  s400: "S-400 Triumf",
+  long_range_sam: "Indigenous Long-Range SAM",
+  project_kusha: "Project Kusha BMD",
+  mrsam_air: "MR-SAM (Barak-8)",
+  akash_ng: "Akash-NG",
+  qrsam: "QRSAM",
+  vshorads: "VSHORADS",
+};
+
+function shortBaseName(name: string): string {
+  return name
+    .replace(/\s+Air Force Station\b.*$/, "")
+    .replace(/\s+AFS\b.*$/, "");
+}
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const a = Math.sin(toRad(lat1)) * Math.sin(toRad(lat2))
+    + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(toRad(lon1 - lon2));
+  const clamped = Math.max(-1, Math.min(1, a));
+  return Math.acos(clamped) * 6371;
+}
 
 const LOW_RCS_BANDS = new Set(["VLO", "LO"]);
 
@@ -59,6 +84,8 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
   const platformsById = useCampaignStore((s) => s.platformsById);
   const weaponsById = useCampaignStore((s) => s.weaponsById);
   const missileStocks = useCampaignStore((s) => s.missileStocks);
+  const adBatteries = useCampaignStore((s) => s.adBatteries);
+  const bases = useCampaignStore((s) => s.bases);
   const [showOutOfReach, setShowOutOfReach] = useState(false);
   const stealthAdversary = useMemo(
     () => adversaryHasStealth(planning, platformsById),
@@ -106,8 +133,51 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
   });
   const tankerBlocking = tierBInCommit && !value.support.tanker;
 
+  // AD Defense coverage check (only for allows_no_cap scenarios)
+  const adCoverageRows = planning.allows_no_cap
+    ? adBatteries.map((bat) => {
+        const base = bases.find((b) => b.id === bat.base_id);
+        const dist = base
+          ? haversineKm(base.lat, base.lon, planning.ao.lat, planning.ao.lon)
+          : Infinity;
+        const covers = dist <= bat.coverage_km;
+        return { bat, base, dist, covers };
+      }).filter((r) => r.covers)
+    : [];
+
   return (
     <div className="flex flex-col gap-5">
+      {planning.allows_no_cap && (
+        <section className="bg-slate-900 border border-amber-700/50 rounded-lg p-3">
+          <h3 className="text-sm font-bold mb-2 flex items-baseline gap-2">
+            🛡 AD Defense
+            <span className="text-[10px] opacity-70 font-normal">(primary defender)</span>
+          </h3>
+          {adCoverageRows.length === 0 ? (
+            <div className="text-xs text-rose-300 border border-rose-800 bg-rose-950/30 rounded p-2">
+              ⚠ No AD batteries cover this AO — attack will likely breach defenses.
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-1 text-xs">
+              {adCoverageRows.map(({ bat, base }) => {
+                const name = AD_SYSTEM_DISPLAY[bat.system_id] ?? bat.system_id;
+                const capacity = AD_STARTING_INTERCEPTORS[bat.system_id] ?? 16;
+                const stock = bat.interceptor_stock ?? capacity;
+                const baseLabel = base ? shortBaseName(base.name) : `base ${bat.base_id}`;
+                return (
+                  <li key={bat.id} className="flex items-center justify-between gap-2 border border-slate-800 bg-slate-950/50 rounded px-2 py-1.5">
+                    <span className="font-semibold">{name}</span>
+                    <span className="opacity-80">
+                      @ {baseLabel} · {stock}/{capacity} · {bat.coverage_km} km
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
+
       {/* PROMOTED: Support section first */}
       <section>
         <h3 className="text-sm font-semibold mb-2 text-slate-300">Support Assets</h3>

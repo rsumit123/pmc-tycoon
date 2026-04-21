@@ -1,8 +1,9 @@
 // frontend/src/components/vignette/__tests__/ForceCommitter.test.tsx
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ForceCommitter } from "../ForceCommitter";
 import type { PlanningState, VignetteCommitPayload } from "../../../lib/types";
+import { useCampaignStore } from "../../../store/campaignStore";
 
 const planning: PlanningState = {
   scenario_id: "saturation_raid",
@@ -47,5 +48,69 @@ describe("ForceCommitter", () => {
     render(<ForceCommitter planning={planning} value={{ squadrons: [], support: { awacs: false, tanker: false, sead_package: false }, roe: "weapons_free" }} onChange={onChange} />);
     const opts = screen.getAllByRole("option").map((o) => (o as HTMLOptionElement).value);
     expect(opts).toEqual(["weapons_free", "weapons_tight"]);
+  });
+
+  describe("AD Defense section (allows_no_cap)", () => {
+    afterEach(() => {
+      useCampaignStore.setState({ adBatteries: [], bases: [] });
+    });
+
+    it("does not render AD Defense section when allows_no_cap is false", () => {
+      const onChange = vi.fn();
+      render(
+        <ForceCommitter
+          planning={{ ...planning, allows_no_cap: false }}
+          value={{ squadrons: [], support: { awacs: false, tanker: false, sead_package: false }, roe: "weapons_free" }}
+          onChange={onChange}
+        />
+      );
+      expect(screen.queryByText(/AD Defense/i)).toBeNull();
+    });
+
+    it("renders AD Defense batteries list when allows_no_cap and batteries cover AO", () => {
+      useCampaignStore.setState({
+        bases: [{
+          id: 10, template_id: "pathankot", name: "Pathankot Air Force Station",
+          lat: 32.23, lon: 75.63, shelter_count: 0, fuel_depot_size: 0,
+          ad_integration_level: 1, runway_class: "long", squadrons: [],
+        }],
+        adBatteries: [{
+          id: 1, base_id: 10, system_id: "s400", coverage_km: 200,
+          installed_year: 2026, installed_quarter: 2, interceptor_stock: 12,
+        }],
+      });
+      const adPlanning: PlanningState = {
+        ...planning,
+        allows_no_cap: true,
+        ao: { region: "Punjab", name: "Pathankot vicinity", lat: 32.25, lon: 75.65 },
+      };
+      const onChange = vi.fn();
+      render(
+        <ForceCommitter
+          planning={adPlanning}
+          value={{ squadrons: [], support: { awacs: false, tanker: false, sead_package: false }, roe: "weapons_free" }}
+          onChange={onChange}
+        />
+      );
+      expect(screen.getByText(/AD Defense/i)).toBeInTheDocument();
+      expect(screen.getByText(/S-400 Triumf/i)).toBeInTheDocument();
+      expect(screen.getByText(/Pathankot/i)).toBeInTheDocument();
+    });
+
+    it("shows warning when allows_no_cap and no batteries cover AO", () => {
+      const adPlanning: PlanningState = {
+        ...planning,
+        allows_no_cap: true,
+      };
+      const onChange = vi.fn();
+      render(
+        <ForceCommitter
+          planning={adPlanning}
+          value={{ squadrons: [], support: { awacs: false, tanker: false, sead_package: false }, roe: "weapons_free" }}
+          onChange={onChange}
+        />
+      );
+      expect(screen.getByText(/No AD batteries cover this AO/i)).toBeInTheDocument();
+    });
   });
 });

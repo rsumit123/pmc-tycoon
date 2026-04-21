@@ -24,6 +24,7 @@ export function OpsRoom() {
   const loading = useCampaignStore((s) => s.loading);
   const bases = useCampaignStore((s) => s.bases);
   const loadBases = useCampaignStore((s) => s.loadBases);
+  const loadADBatteries = useCampaignStore((s) => s.loadADBatteries);
   const loadPlatforms = useCampaignStore((s) => s.loadPlatforms);
   const loadWeapons = useCampaignStore((s) => s.loadWeapons);
   const weaponsById = useCampaignStore((s) => s.weaponsById);
@@ -42,8 +43,11 @@ export function OpsRoom() {
   }, [campaign, campaignId, loadCampaign]);
 
   useEffect(() => {
-    if (campaign) loadBases(campaign.id);
-  }, [campaign, loadBases]);
+    if (campaign) {
+      loadBases(campaign.id);
+      loadADBatteries(campaign.id);
+    }
+  }, [campaign, loadBases, loadADBatteries]);
 
   useEffect(() => {
     loadPlatforms();
@@ -151,8 +155,14 @@ export function OpsRoom() {
           </p>
           <CommitHoldButton
             onCommit={onCommit}
-            disabled={loading || payload.squadrons.length === 0}
-            label="Hold to commit"
+            disabled={loading || (payload.squadrons.length === 0 && !ps.allows_no_cap)}
+            label={
+              ps.allows_no_cap && payload.squadrons.length === 0
+                ? "Hold to commit (AD only)"
+                : payload.squadrons.length > 0
+                  ? `Hold to commit (${totalAirframes} airframes)`
+                  : "Hold to commit"
+            }
           />
         </div>
       </main>

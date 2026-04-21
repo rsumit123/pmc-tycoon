@@ -163,6 +163,15 @@ export interface PlanningState {
   intel_quality?: IntelQuality;
   awacs_covering?: AwacsCovering[];
   adversary_force_observed?: AdversaryForceObserved[];
+  allows_no_cap?: boolean;
+}
+
+export interface ADContribution {
+  battery_id?: number;
+  system: string;
+  base_name: string;
+  interceptors_fired: number;
+  kills: number;
 }
 
 export interface EventTraceEntry {
@@ -181,6 +190,7 @@ export interface VignetteOutcome {
   support: { awacs: boolean; tanker: boolean; sead_package: boolean };
   munitions_expended?: MunitionsExpendedEntry[];
   munitions_cost_total_cr?: number;
+  ad_contributions?: ADContribution[];
 }
 
 export interface VignetteCommitSquadron {
