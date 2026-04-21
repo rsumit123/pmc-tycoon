@@ -100,6 +100,59 @@ def _valid_commit(eligible_squadrons, roe_options=None, roe_override=None):
     }
 
 
+def test_allows_no_cap_permits_zero_squadron_commit(client):
+    """Plan 19: when planning_state.allows_no_cap=True, committing with an
+    empty squadrons list (AD-only defense) must not raise
+    CommitValidationError."""
+    from app.crud.vignette import commit_vignette
+    from app.models.campaign import Campaign
+    from app.models.vignette import Vignette
+    from app.api.deps import get_db
+
+    c = _create_campaign(client, seed=11)
+    # Build an AD-only vignette directly via the overridden session.
+    db_gen = app.dependency_overrides[get_db]()
+    db = next(db_gen)
+    try:
+        campaign = db.query(Campaign).filter_by(id=c["id"]).first()
+        planning_state = {
+            "scenario_id": "plan_cruise_coastal",
+            "scenario_name": "AD-Only Test",
+            "ao": {"region": "coast", "name": "Thanjavur vicinity",
+                   "lat": 10.77, "lon": 79.1},
+            "response_clock_minutes": 30,
+            "adversary_force": [
+                {"role": "strike", "faction": "PLAN",
+                 "platform_id": "yj21_missile", "count": 4, "loadout": []},
+            ],
+            "adversary_force_observed": [],
+            "intel_quality": {"tier": "medium", "score": 0.5},
+            "awacs_covering": [], "isr_covering": [],
+            "eligible_squadrons": [],
+            "allowed_ind_roles": ["CAP", "awacs"],
+            "roe_options": ["weapons_free", "weapons_tight"],
+            "objective": {"kind": "defend_airspace",
+                          "success_threshold": {"adv_kills_min": 2, "ind_losses_max": 4}},
+            "ad_batteries": [], "ad_specs": {}, "bases_registry": {},
+            "allows_no_cap": True,
+        }
+        v = Vignette(
+            campaign_id=campaign.id, year=2026, quarter=3,
+            scenario_id="plan_cruise_coastal", status="pending",
+            planning_state=planning_state,
+        )
+        db.add(v)
+        db.commit()
+        db.refresh(v)
+        # Empty squadrons — AD defends alone.
+        body = {"squadrons": [], "support": {}, "roe": "weapons_free"}
+        # Should NOT raise — this is the Plan 19 semantic.
+        resolved = commit_vignette(db, campaign, v, body)
+        assert resolved.status == "resolved"
+    finally:
+        db.close()
+
+
 def test_commit_resolves_vignette(client):
     c = _create_campaign(client, seed=7)
     v = _advance_until_vignette(client, c["id"])

@@ -46,6 +46,13 @@ def commit_vignette(
 
     # Validate against planning_state
     ps = vignette.planning_state or {}
+    squadrons_committed = committed_force.get("squadrons", [])
+    # allows_no_cap (Plan 19): scenarios where AD defends alone — empty
+    # squadrons list is permitted. Non-allows_no_cap scenarios don't error
+    # today on empty either, but the semantic is now explicit.
+    if not squadrons_committed and not ps.get("allows_no_cap", False):
+        # Preserve legacy behavior (no error) — AD-centric flag is additive.
+        pass
     eligible_by_id = {s["squadron_id"]: s for s in ps.get("eligible_squadrons", [])}
     tanker_selected = bool(
         (committed_force.get("support") or {}).get("tanker", False)
