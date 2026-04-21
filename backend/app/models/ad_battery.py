@@ -14,3 +14,4 @@ class ADBattery(Base):
     coverage_km: Mapped[int] = mapped_column(Integer)
     installed_year: Mapped[int] = mapped_column(Integer)
     installed_quarter: Mapped[int] = mapped_column(Integer)
+    interceptor_stock: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
