@@ -70,11 +70,17 @@ function shortBaseName(name: string): string {
     .replace(/\s+AFS\b.*$/, "");
 }
 
+// Base runway_class values in content (bases.yaml): "medium" or "heavy".
+// Platform runway_class (if set) declares its minimum requirement. A "heavy"
+// runway hosts anything; "medium" hosts anything except long/heavy-req
+// platforms. Keep every set broad — prior table missed "heavy" entirely,
+// which reduced eligible bases to 2/15 for any standard-req platform.
 const RUNWAY_COMPATIBILITY: Record<string, Set<string>> = {
-  short: new Set(["short", "standard", "long", "medium"]),
-  standard: new Set(["standard", "long", "medium"]),
-  medium: new Set(["standard", "long", "medium"]),
-  long: new Set(["long"]),
+  short:    new Set(["short", "standard", "medium", "long", "heavy"]),
+  standard: new Set(["standard", "medium", "long", "heavy"]),
+  medium:   new Set(["medium", "long", "heavy"]),
+  long:     new Set(["long", "heavy"]),
+  heavy:    new Set(["heavy"]),
 };
 
 const DEFAULT_QTY = 16;
@@ -117,7 +123,7 @@ function OfferCard({
   const [dossierOpen, setDossierOpen] = useState(false);
 
   const runwayReq = platform.runway_class ?? "standard";
-  const acceptable = RUNWAY_COMPATIBILITY[runwayReq] ?? new Set(["standard", "long", "medium"]);
+  const acceptable = RUNWAY_COMPATIBILITY[runwayReq] ?? new Set(["standard", "medium", "long", "heavy"]);
   const compatibleBases = bases.filter((b) => acceptable.has(b.runway_class));
 
   const totalCost = qty * platform.cost_cr;
@@ -214,7 +220,7 @@ function OfferCard({
 }
 
 function TimelineBar({
-  order, platformName, originFlag, currentYear, currentQuarter, onCancel,
+  order, platformName, originFlag, currentYear, currentQuarter, onCancel, deliveryBaseName,
 }: {
   order: AcquisitionOrder;
   platformName: string;
@@ -222,6 +228,7 @@ function TimelineBar({
   currentYear: number;
   currentQuarter: number;
   onCancel?: (orderId: number) => void;
+  deliveryBaseName?: string;
 }) {
   const [confirming, setConfirming] = useState(false);
 
@@ -273,6 +280,11 @@ function TimelineBar({
           {order.delivered}/{order.quantity}
         </span>
       </div>
+      {deliveryBaseName && (
+        <div className="text-[10px] opacity-70">
+          → Delivering to <span className="font-semibold">{deliveryBaseName}</span>
+        </div>
+      )}
       <div className="relative h-3 bg-slate-800 rounded">
         <div
           className={`absolute inset-y-0 border rounded ${
@@ -400,11 +412,19 @@ export function MissileBatchOfferCard({
     typeof initialBaseId === "number" ? initialBaseId : "",
   );
   const [infoOpen, setInfoOpen] = useState(false);
+  const [splitMode, setSplitMode] = useState(false);
   const firstDeliveryQ = 2;
   const focQ = 4;
   const dates = computeDelivery(currentYear, currentQuarter, firstDeliveryQ, focQ);
   const totalCost = qty * unitCostCr;
-  const canSign = typeof baseId === "number" && unitCostCr > 0;
+  const splitBaseCount = bases.length;
+  const perBase = splitBaseCount > 0 ? Math.floor(qty / splitBaseCount) : 0;
+  const splitRemainder = splitBaseCount > 0 ? qty - perBase * splitBaseCount : 0;
+  const canSign = unitCostCr > 0 && (
+    splitMode
+      ? splitBaseCount > 0 && perBase > 0
+      : typeof baseId === "number"
+  );
   const totalQuarters = Math.max(
     1,
     (dates.focYear - dates.firstDeliveryYear) * 4 +
@@ -413,15 +433,33 @@ export function MissileBatchOfferCard({
   const perQ = Math.ceil(qty / totalQuarters);
 
   const sign = () => {
-    if (typeof baseId !== "number") return;
-    onSign({
-      kind: "missile_batch",
+    const basePayload = {
+      kind: "missile_batch" as const,
       platform_id: missile.target_id,
-      quantity: qty,
       first_delivery_year: dates.firstDeliveryYear,
       first_delivery_quarter: dates.firstDeliveryQuarter,
       foc_year: dates.focYear,
       foc_quarter: dates.focQuarter,
+    };
+    if (splitMode) {
+      // Fire one missile_batch order per eligible base. First N bases get an
+      // extra round if qty doesn't divide cleanly, so the full total ships.
+      bases.forEach((b, idx) => {
+        const thisQty = perBase + (idx < splitRemainder ? 1 : 0);
+        if (thisQty <= 0) return;
+        onSign({
+          ...basePayload,
+          quantity: thisQty,
+          total_cost_cr: thisQty * unitCostCr,
+          preferred_base_id: b.id,
+        });
+      });
+      return;
+    }
+    if (typeof baseId !== "number") return;
+    onSign({
+      ...basePayload,
+      quantity: qty,
       total_cost_cr: totalCost,
       preferred_base_id: baseId,
     });
@@ -471,30 +509,50 @@ export function MissileBatchOfferCard({
           ariaLabel={`${missile.name} quantity`}
         />
       </div>
-      <label className="flex flex-col gap-1 text-xs">
-        <span className="opacity-60">Deliver to</span>
-        <select
-          value={baseId === "" ? "" : String(baseId)}
-          onChange={(e) => {
-            const v = e.target.value;
-            setBaseId(v === "" ? "" : Number(v));
-          }}
-          className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
-          aria-label={`${missile.name} delivery base`}
-        >
-          <option value="">Pick a base…</option>
-          {bases.map((b) => {
-            const s = missileStocks.find(
-              (x) => x.base_id === b.id && x.weapon_id === missile.target_id,
-            );
-            const label = s
-              ? `${shortBaseName(b.name)} — depot ${s.stock}`
-              : `${shortBaseName(b.name)} — depot 0`;
-            return <option key={b.id} value={b.id}>{label}</option>;
-          })}
-        </select>
+      <label className="flex items-center gap-2 text-xs">
+        <input
+          type="checkbox"
+          checked={splitMode}
+          onChange={(e) => setSplitMode(e.target.checked)}
+          aria-label={`${missile.name} split across bases`}
+        />
+        <span>Split evenly across {splitBaseCount} bases (~{perBase}/base)</span>
       </label>
-      {typeof baseId === "number" && (() => {
+      {!splitMode && (
+        <label className="flex flex-col gap-1 text-xs">
+          <span className="opacity-60">Deliver to</span>
+          <select
+            value={baseId === "" ? "" : String(baseId)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setBaseId(v === "" ? "" : Number(v));
+            }}
+            className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs"
+            aria-label={`${missile.name} delivery base`}
+          >
+            <option value="">Pick a base…</option>
+            {bases.map((b) => {
+              const s = missileStocks.find(
+                (x) => x.base_id === b.id && x.weapon_id === missile.target_id,
+              );
+              const label = s
+                ? `${shortBaseName(b.name)} — depot ${s.stock}`
+                : `${shortBaseName(b.name)} — depot 0`;
+              return <option key={b.id} value={b.id}>{label}</option>;
+            })}
+          </select>
+        </label>
+      )}
+      {splitMode && (
+        <div className="text-xs rounded border px-2 py-1.5 bg-sky-950/30 border-sky-800 text-sky-100">
+          Fires <span className="font-semibold">{splitBaseCount}</span> orders —{" "}
+          {splitRemainder === 0
+            ? <><span className="font-semibold">{perBase}</span> rounds each.</>
+            : <>first {splitRemainder} get <span className="font-semibold">{perBase + 1}</span>, rest get <span className="font-semibold">{perBase}</span>.</>}
+          <div className="text-[10px] opacity-80 mt-0.5">Pick a single base for focused deliveries.</div>
+        </div>
+      )}
+      {!splitMode && typeof baseId === "number" && (() => {
         const current = missileStocks.find(
           (s) => s.base_id === baseId && s.weapon_id === missile.target_id,
         )?.stock ?? 0;
@@ -960,6 +1018,10 @@ export function AcquisitionPipeline({
                   if (kind === "platform") origin = byId[o.platform_id]?.origin;
                   else if (kind === "missile_batch") origin = WEAPON_ORIGIN[o.platform_id];
                   else if (kind === "ad_battery" || kind === "ad_reload") origin = AD_SYSTEM_ORIGIN[o.platform_id];
+                  const deliveryBaseId = o.preferred_base_id ?? null;
+                  const deliveryBaseName = deliveryBaseId
+                    ? shortBaseName(bases.find((b) => b.id === deliveryBaseId)?.name ?? "")
+                    : (kind === "platform" ? "Best-fit base (auto)" : "");
                   return (
                     <TimelineBar
                       key={o.id}
@@ -969,6 +1031,7 @@ export function AcquisitionPipeline({
                       currentYear={currentYear}
                       currentQuarter={currentQuarter}
                       onCancel={onCancel}
+                      deliveryBaseName={deliveryBaseName || undefined}
                     />
                   );
                 })}

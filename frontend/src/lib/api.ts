@@ -385,6 +385,16 @@ export const api = {
     return data;
   },
 
+  async transferMissileStock(
+    campaignId: number,
+    payload: { weapon_id: string; from_base_id: number; to_base_id: number; quantity: number },
+  ): Promise<MissileStockListResponse> {
+    const { data } = await http.post<MissileStockListResponse>(
+      `/api/campaigns/${campaignId}/missile-stocks/transfer`, payload,
+    );
+    return data;
+  },
+
   async getAdversaryBases(
     campaignId: number,
     coveredOnly: boolean = false,

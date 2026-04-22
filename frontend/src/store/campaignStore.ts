@@ -75,6 +75,7 @@ interface CampaignState {
   markNotificationRead: (id: string) => void;
   adversaryBases: AdversaryBase[];
   loadAdversaryBases: (campaignId: number) => Promise<void>;
+  transferMissileStock: (payload: { weapon_id: string; from_base_id: number; to_base_id: number; quantity: number }) => Promise<void>;
   toasts: Toast[];
   rdLoading: Record<string, boolean>;
   loading: boolean;
@@ -187,6 +188,19 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     } catch (e) {
       // silent — map renders empty layer when load fails
       console.warn("loadAdversaryBases failed", e);
+    }
+  },
+  transferMissileStock: async (payload) => {
+    const cid = get().campaign?.id;
+    if (!cid) return;
+    try {
+      const resp = await api.transferMissileStock(cid, payload);
+      set({ missileStocks: resp.stocks });
+      get().pushToast("info", `Transferred ${payload.quantity} ${payload.weapon_id}`);
+    } catch (e) {
+      const msg = (e as { response?: { data?: { detail?: string } } }).response?.data?.detail ?? (e as Error).message;
+      get().pushToast("error", `Transfer failed: ${msg}`);
+      throw e;
     }
   },
   toasts: [],

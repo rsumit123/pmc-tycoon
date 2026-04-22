@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import type { ADBattery, BaseMarker, BaseSquadronSummary, MissileStock, Platform } from "../../lib/types";
 import { SquadronCard } from "../primitives/SquadronCard";
 import { PlatformDossier } from "../primitives/PlatformDossier";
+import { MissileTransferModal } from "./MissileTransferModal";
+import { useCampaignStore } from "../../store/campaignStore";
 
 // Friendly display names for AD systems (matches ad_systems.yaml entries).
 const AD_SYSTEM_NAMES: Record<string, string> = {
@@ -29,6 +31,9 @@ export function BaseSheet({
   base, platforms, adBatteries = [], missileStocks = [], campaignId, onClose, onRebaseStart,
 }: BaseSheetProps) {
   const [dossierFor, setDossierFor] = useState<Platform | null>(null);
+  const [transferFor, setTransferFor] = useState<{ weaponId: string; stock: number } | null>(null);
+  const allBases = useCampaignStore((s) => s.bases);
+  const transferMissileStock = useCampaignStore((s) => s.transferMissileStock);
   if (!base) return null;
 
   return (
@@ -114,12 +119,20 @@ export function BaseSheet({
                 {depot.map((s) => (
                   <li
                     key={s.weapon_id}
-                    className="flex items-baseline justify-between gap-2 text-xs bg-slate-950/40 border border-slate-800 rounded px-2 py-1"
+                    className="flex items-center justify-between gap-2 text-xs bg-slate-950/40 border border-slate-800 rounded px-2 py-1"
                   >
                     <span className="font-semibold truncate">
                       {s.weapon_id.toUpperCase().replace(/_/g, "-")}
                     </span>
-                    <span className="font-mono opacity-80">{s.stock}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono opacity-80">{s.stock}</span>
+                      <button
+                        type="button"
+                        onClick={() => setTransferFor({ weaponId: s.weapon_id, stock: s.stock })}
+                        className="text-[10px] text-amber-400 hover:text-amber-300 underline"
+                        aria-label={`Rebase ${s.weapon_id}`}
+                      >Rebase →</button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -162,6 +175,25 @@ export function BaseSheet({
           platform={dossierFor}
           open={!!dossierFor}
           onClose={() => setDossierFor(null)}
+        />
+      )}
+
+      {transferFor && (
+        <MissileTransferModal
+          weaponId={transferFor.weaponId}
+          fromBase={base}
+          availableStock={transferFor.stock}
+          allBases={allBases}
+          allStocks={missileStocks}
+          onClose={() => setTransferFor(null)}
+          onTransfer={async (toBaseId, quantity) => {
+            await transferMissileStock({
+              weapon_id: transferFor.weaponId,
+              from_base_id: base.id,
+              to_base_id: toBaseId,
+              quantity,
+            });
+          }}
         />
       )}
     </>
