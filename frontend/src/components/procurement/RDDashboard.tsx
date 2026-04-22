@@ -82,7 +82,7 @@ function ActiveRow({
           title={spec.name}
           description={spec.description}
           unlockKind={spec.unlocks?.kind}
-          unlockTarget={spec.unlocks?.target_id}
+          unlockTarget={spec.unlocks?.target_id ?? undefined}
         />
       )}
       <div className="relative h-2 rounded bg-slate-800 overflow-hidden">
@@ -250,7 +250,7 @@ function CatalogRow({
         title={spec.name}
         description={spec.description}
         unlockKind={spec.unlocks?.kind}
-        unlockTarget={spec.unlocks?.target_id}
+        unlockTarget={spec.unlocks?.target_id ?? undefined}
       />
       <div className="text-xs opacity-70">{spec.description}</div>
       {outcomeChip && (

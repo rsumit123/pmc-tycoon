@@ -16,11 +16,18 @@ export type IntelSubjectType =
 
 export interface IntelCardPayload {
   headline: string;
-  template_id: string;
-  subject_faction: FactionId;
-  subject_type: IntelSubjectType;
-  observed: Record<string, unknown>;
-  ground_truth: Record<string, unknown>;
+  template_id?: string;
+  subject_faction?: FactionId;
+  subject_type?: IntelSubjectType;
+  observed?: Record<string, unknown>;
+  ground_truth?: Record<string, unknown>;
+  // Plan 21 drone_recon cards use 'faction' (IntelSubjectType="adversary_base")
+  // and carry observed_force + covering_drones instead of observed/ground_truth.
+  faction?: string;
+  subject_id?: string;
+  subject_kind?: string;
+  observed_force?: Record<string, unknown>;
+  covering_drones?: string[];
 }
 
 export interface IntelCard {
@@ -787,7 +794,7 @@ export interface NotificationListResponse {
 
 // ---------- Plan 21: ISR drone recon ----------
 
-export type AdversaryFaction = "PAF" | "PLAAF" | "PLAN";
+export type AdversaryFactionCode = "PAF" | "PLAAF" | "PLAN";
 export type SightingTier = "low" | "medium" | "high";
 export type ReadinessTier = "low" | "medium" | "high";
 export type AdversaryBaseTier = "main" | "forward" | "support";
@@ -807,7 +814,7 @@ export interface AdversaryBase {
   id: number;
   base_id_str: string;
   name: string;
-  faction: AdversaryFaction;
+  faction: AdversaryFactionCode;
   lat: number;
   lon: number;
   tier: AdversaryBaseTier;
