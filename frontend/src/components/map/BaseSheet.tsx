@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { ADBattery, BaseMarker, BaseSquadronSummary, Platform } from "../../lib/types";
+import { Link } from "react-router-dom";
+import type { ADBattery, BaseMarker, BaseSquadronSummary, MissileStock, Platform } from "../../lib/types";
 import { SquadronCard } from "../primitives/SquadronCard";
 import { PlatformDossier } from "../primitives/PlatformDossier";
 
@@ -18,11 +19,15 @@ export interface BaseSheetProps {
   base: BaseMarker | null;
   platforms: Record<string, Platform>;
   adBatteries?: ADBattery[];
+  missileStocks?: MissileStock[];
+  campaignId?: number;
   onClose: () => void;
   onRebaseStart?: (squadron: BaseSquadronSummary, baseId: number) => void;
 }
 
-export function BaseSheet({ base, platforms, adBatteries = [], onClose, onRebaseStart }: BaseSheetProps) {
+export function BaseSheet({
+  base, platforms, adBatteries = [], missileStocks = [], campaignId, onClose, onRebaseStart,
+}: BaseSheetProps) {
   const [dossierFor, setDossierFor] = useState<Platform | null>(null);
   if (!base) return null;
 
@@ -75,6 +80,55 @@ export function BaseSheet({ base, platforms, adBatteries = [], onClose, onRebase
             ))}
           </div>
         )}
+
+        {(() => {
+          const depot = missileStocks
+            .filter((s) => s.base_id === base.id && s.stock > 0)
+            .sort((a, b) => b.stock - a.stock);
+          if (depot.length === 0) {
+            return (
+              <section className="mt-4 pt-3 border-t border-slate-800">
+                <h4 className="text-xs font-semibold uppercase tracking-wide opacity-70 mb-2">
+                  🎯 Missile Depot
+                </h4>
+                <p className="text-xs opacity-60">
+                  No missiles stocked at this base.{" "}
+                  {campaignId !== undefined && (
+                    <Link
+                      to={`/campaign/${campaignId}/procurement?tab=acquisitions&view=offers&offer=missiles`}
+                      className="text-amber-400 hover:text-amber-300 underline"
+                    >
+                      Order a batch →
+                    </Link>
+                  )}
+                </p>
+              </section>
+            );
+          }
+          return (
+            <section className="mt-4 pt-3 border-t border-slate-800">
+              <h4 className="text-xs font-semibold uppercase tracking-wide opacity-70 mb-2">
+                🎯 Missile Depot
+              </h4>
+              <ul className="space-y-1">
+                {depot.map((s) => (
+                  <li
+                    key={s.weapon_id}
+                    className="flex items-baseline justify-between gap-2 text-xs bg-slate-950/40 border border-slate-800 rounded px-2 py-1"
+                  >
+                    <span className="font-semibold truncate">
+                      {s.weapon_id.toUpperCase().replace(/_/g, "-")}
+                    </span>
+                    <span className="font-mono opacity-80">{s.stock}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[10px] opacity-60 mt-1.5">
+                Shared depot — any squadron at this base can fire from stock.
+              </p>
+            </section>
+          );
+        })()}
 
         {adBatteries.filter((b) => b.base_id === base.id).length > 0 && (
           <section className="mt-4 pt-3 border-t border-slate-800">

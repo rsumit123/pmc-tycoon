@@ -155,8 +155,10 @@ def _synthesize(db: Session, campaign_id: int) -> list[Notification]:
             unlock_kind = getattr(unlocks, "kind", None) if unlocks else None
             target_id = getattr(unlocks, "target_id", None) if unlocks else None
 
+            body_override: str | None = None
             if unlock_kind == "missile":
                 url = f"/campaign/{campaign_id}/armory?tab=missiles"
+                body_override = "Equip squadrons in Armory + procure a batch via Acquisitions → Missile Batches. Equipping alone does not stock the depot."
             elif unlock_kind == "ad_system" and target_id:
                 url = (
                     f"/campaign/{campaign_id}/procurement"
@@ -175,7 +177,11 @@ def _synthesize(db: Session, campaign_id: int) -> list[Notification]:
                 id=f"event:{ev.id}",
                 kind="rd_completed", severity="info",
                 title=f"{spec.name if spec else program_id} R&D complete",
-                body="Unlocked — procure via Acquisitions" if unlock_kind else "Doctrinal benefit applied",
+                body=(
+                    body_override
+                    if body_override is not None
+                    else ("Unlocked — procure via Acquisitions" if unlock_kind else "Doctrinal benefit applied")
+                ),
                 action_url=url,
                 created_at=created_iso,
             ))

@@ -1,14 +1,19 @@
 import { useMemo, useState } from "react";
-import type { MissileUnlock, HangarSquadron } from "../../lib/types";
+import { Link } from "react-router-dom";
+import type { MissileUnlock, HangarSquadron, MissileStock } from "../../lib/types";
 
 export interface MissileEquipModalProps {
   missile: MissileUnlock;
   squadrons: HangarSquadron[];
+  missileStocks?: MissileStock[];
+  campaignId?: number;
   onClose: () => void;
   onPick: (squadronId: number) => Promise<void> | void;
 }
 
-export function MissileEquipModal({ missile, squadrons, onClose, onPick }: MissileEquipModalProps) {
+export function MissileEquipModal({
+  missile, squadrons, missileStocks = [], campaignId, onClose, onPick,
+}: MissileEquipModalProps) {
   const [pendingId, setPendingId] = useState<number | null>(null);
 
   const eligible = useMemo(
@@ -73,6 +78,32 @@ export function MissileEquipModal({ missile, squadrons, onClose, onPick }: Missi
                 <div className="text-[10px] opacity-70 mt-0.5">
                   Current: {sq.loadout.join(" · ") || "—"}
                 </div>
+                {(() => {
+                  const depot = missileStocks.find(
+                    (s) => s.base_id === sq.base_id && s.weapon_id === missile.target_id,
+                  )?.stock ?? 0;
+                  if (depot > 0) {
+                    return (
+                      <div className="text-[10px] mt-1 text-emerald-300">
+                        Depot at {sq.base_name}: <span className="font-mono">{depot}</span> rounds
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="text-[10px] mt-1 text-rose-300 leading-snug">
+                      ⚠ Depot at {sq.base_name}: <span className="font-mono">0</span> rounds. Squadron cannot fire this missile in combat until you procure a batch.
+                      {campaignId !== undefined && (
+                        <Link
+                          to={`/campaign/${campaignId}/procurement?tab=acquisitions&view=offers&offer=missiles&missile=${missile.target_id}&base=${sq.base_id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="block mt-0.5 text-amber-400 hover:text-amber-300 underline"
+                        >
+                          Procure at Acquisitions →
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })()}
               </button>
             );
           })}
@@ -86,7 +117,7 @@ export function MissileEquipModal({ missile, squadrons, onClose, onPick }: Missi
             <p>• Rollout takes 3 quarters. Squadron keeps its current loadout during rollout.</p>
             <p>• A squadron can carry <span className="font-semibold">one missile of each class</span> (BVR, WVR, ARM, strike). Same-class equip <span className="font-semibold">replaces</span> the older one (astra_mk3 ← astra_mk2).</p>
             <p>• Different classes <span className="font-semibold">stack</span>: a Rafale can carry astra_mk3 (BVR) + mica_ir (WVR) + brahmos_ng (strike) at once.</p>
-            <p>• Missile production is abstracted — no stockpile modeled in this version.</p>
+            <p>• Equipping <span className="font-semibold">does not stock missiles</span> — procure a batch via Acquisitions → Missile Batches so the base depot has rounds to fire.</p>
           </div>
         </div>
       </div>

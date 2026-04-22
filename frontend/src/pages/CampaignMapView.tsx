@@ -48,6 +48,8 @@ export function CampaignMapView() {
   const loadRdCatalog = useCampaignStore((s) => s.loadRdCatalog);
   const adBatteries = useCampaignStore((s) => s.adBatteries);
   const loadADBatteries = useCampaignStore((s) => s.loadADBatteries);
+  const missileStocks = useCampaignStore((s) => s.missileStocks);
+  const loadMissileStocks = useCampaignStore((s) => s.loadMissileStocks);
   const loadIntel = useCampaignStore((s) => s.loadIntel);
   const loadNotifications = useCampaignStore((s) => s.loadNotifications);
   const adversaryBases = useCampaignStore((s) => s.adversaryBases);
@@ -99,12 +101,13 @@ export function CampaignMapView() {
       loadRdActive(campaign.id);
       loadRdCatalog();
       loadADBatteries(campaign.id);
+      loadMissileStocks(campaign.id);
       loadIntel(campaign.id);
       loadNotifications(campaign.id);
       loadAdversaryBases(campaign.id);
       loadHangar(campaign.id);
     }
-  }, [campaign, loadBases, loadPlatforms, loadAcquisitions, loadRdActive, loadRdCatalog, loadADBatteries, loadIntel, loadNotifications, loadAdversaryBases, loadHangar]);
+  }, [campaign, loadBases, loadPlatforms, loadAcquisitions, loadRdActive, loadRdCatalog, loadADBatteries, loadMissileStocks, loadIntel, loadNotifications, loadAdversaryBases, loadHangar]);
 
   useEffect(() => {
     if (campaign) {
@@ -376,6 +379,8 @@ export function CampaignMapView() {
         base={selectedBase}
         platforms={platformsById}
         adBatteries={adBatteries}
+        missileStocks={missileStocks}
+        campaignId={campaign?.id}
         onClose={() => setSelectedBase(null)}
         onRebaseStart={(sq, baseId) => setRebaseTarget({ squadron: sq, baseId })}
       />

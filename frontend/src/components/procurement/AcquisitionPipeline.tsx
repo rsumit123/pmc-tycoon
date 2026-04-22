@@ -374,7 +374,7 @@ function computeDelivery(
 
 export function MissileBatchOfferCard({
   missile, unitCostCr, currentYear, currentQuarter, bases, onSign, disabled,
-  initialBaseId, initialQty, highlighted,
+  initialBaseId, initialQty, highlighted, missileStocks = [],
 }: {
   missile: MissileUnlock;
   unitCostCr: number;
@@ -386,6 +386,8 @@ export function MissileBatchOfferCard({
   initialBaseId?: number;
   initialQty?: number;
   highlighted?: boolean;
+  /** All missile stocks for the campaign — used to surface current depot count per base. */
+  missileStocks?: MissileStock[];
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -481,11 +483,37 @@ export function MissileBatchOfferCard({
           aria-label={`${missile.name} delivery base`}
         >
           <option value="">Pick a base…</option>
-          {bases.map((b) => (
-            <option key={b.id} value={b.id}>{shortBaseName(b.name)}</option>
-          ))}
+          {bases.map((b) => {
+            const s = missileStocks.find(
+              (x) => x.base_id === b.id && x.weapon_id === missile.target_id,
+            );
+            const label = s
+              ? `${shortBaseName(b.name)} — depot ${s.stock}`
+              : `${shortBaseName(b.name)} — depot 0`;
+            return <option key={b.id} value={b.id}>{label}</option>;
+          })}
         </select>
       </label>
+      {typeof baseId === "number" && (() => {
+        const current = missileStocks.find(
+          (s) => s.base_id === baseId && s.weapon_id === missile.target_id,
+        )?.stock ?? 0;
+        const baseName = shortBaseName(bases.find((b) => b.id === baseId)?.name ?? "");
+        const low = current === 0;
+        return (
+          <div className={[
+            "text-xs rounded border px-2 py-1.5",
+            low ? "bg-rose-950/30 border-rose-800 text-rose-200"
+                : "bg-slate-800/40 border-slate-700 text-slate-200",
+          ].join(" ")}>
+            Current depot at <span className="font-semibold">{baseName}</span>:{" "}
+            <span className="font-semibold">{current}</span>
+            {" → after delivery: "}
+            <span className="font-semibold">{current + qty}</span>
+            {low && <div className="text-[10px] opacity-80 mt-0.5">Empty depot — squadron cannot fire this weapon until delivery begins.</div>}
+          </div>
+        );
+      })()}
       <div className="text-xs opacity-70">
         Total: <span className="font-semibold">₹{totalCost.toLocaleString("en-US")} cr</span>
         {" • Delivery "}{dates.firstDeliveryYear}-Q{dates.firstDeliveryQuarter}
@@ -796,6 +824,7 @@ export function AcquisitionPipeline({
   platforms, orders, currentYear, currentQuarter, onSign, onCancel, disabled,
   rdCatalog = [], rdActive = [], bases = [], initialView, focusPlatformId,
   focusAdId, adBatteries = [], armoryUnlocks = null, weaponsById = {},
+  missileStocks = [],
   initialOfferCat: initialOfferCatProp, focusMissile, focusBaseId, focusQty,
   focusAdSystem, focusBatteryId,
 }: AcquisitionPipelineProps) {
@@ -1031,6 +1060,7 @@ export function AcquisitionPipeline({
                       bases={bases}
                       onSign={onSign}
                       disabled={disabled}
+                      missileStocks={missileStocks}
                       initialBaseId={isFocus ? focusBaseId : undefined}
                       initialQty={isFocus ? focusQty : undefined}
                       highlighted={isFocus}

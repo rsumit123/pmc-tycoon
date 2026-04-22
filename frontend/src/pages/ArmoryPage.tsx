@@ -179,6 +179,8 @@ export function ArmoryPage() {
           <MissileEquipModal
             missile={missileModal}
             squadrons={hangar.squadrons}
+            missileStocks={missileStocks}
+            campaignId={cid}
             onClose={() => setMissileModal(null)}
             onPick={async (sqid) => {
               await equipMissile(missileModal.target_id, sqid);
