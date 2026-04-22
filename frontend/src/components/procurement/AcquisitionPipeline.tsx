@@ -7,7 +7,7 @@ import type {
 import { Stepper } from "../primitives/Stepper";
 import { CommitHoldButton } from "../primitives/CommitHoldButton";
 import { PlatformDossier } from "../primitives/PlatformDossier";
-import { InfoButton } from "../primitives/RoleInfo";
+import { InfoButton, WeaponInfo, ADSystemInfo } from "../primitives/RoleInfo";
 import { flagFor, WEAPON_ORIGIN, AD_SYSTEM_ORIGIN } from "../../lib/origin";
 
 export const AD_STARTING_INTERCEPTORS: Record<string, number> = {
@@ -397,6 +397,7 @@ export function MissileBatchOfferCard({
   const [baseId, setBaseId] = useState<number | "">(
     typeof initialBaseId === "number" ? initialBaseId : "",
   );
+  const [infoOpen, setInfoOpen] = useState(false);
   const firstDeliveryQ = 2;
   const focQ = 4;
   const dates = computeDelivery(currentYear, currentQuarter, firstDeliveryQ, focQ);
@@ -435,12 +436,24 @@ export function MissileBatchOfferCard({
       ].join(" ")}
     >
       <p className="flex items-baseline justify-between gap-2">
-        <span className="text-sm font-semibold">{missile.name}</span>
+        <span className="text-sm font-semibold flex items-center gap-1.5">
+          {missile.name}
+          <InfoButton onClick={() => setInfoOpen(true)} ariaLabel={`${missile.name} info`} />
+        </span>
         <span className="text-[11px] flex items-center gap-1 flex-shrink-0">
           <span>{flagFor(WEAPON_ORIGIN[missile.target_id])}</span>
           <span className="opacity-60">missile batch</span>
         </span>
       </p>
+      <WeaponInfo
+        open={infoOpen}
+        onClose={() => setInfoOpen(false)}
+        name={missile.name}
+        weaponClass={missile.weapon_class}
+        nezKm={missile.nez_km}
+        maxRangeKm={missile.max_range_km}
+        unitCostCr={unitCostCr}
+      />
       <div className="text-xs opacity-70">
         ₹{unitCostCr.toLocaleString("en-US")} cr/unit • NEZ {missile.nez_km} km
       </div>
@@ -510,6 +523,7 @@ export function ADBatteryOfferCard({
     }
   }, [highlighted]);
   const [baseId, setBaseId] = useState<number | "">("");
+  const [infoOpen, setInfoOpen] = useState(false);
   const startingStock = AD_STARTING_INTERCEPTORS[system.target_id] ?? 16;
   const perShot = AD_INTERCEPTOR_COST[system.target_id] ?? 5;
   const totalCost = (system.install_cost_cr ?? 0) + (startingStock * perShot);
@@ -543,12 +557,25 @@ export function ADBatteryOfferCard({
       ].join(" ")}
     >
       <p className="flex items-baseline justify-between gap-2">
-        <span className="text-sm font-semibold">{system.name}</span>
+        <span className="text-sm font-semibold flex items-center gap-1.5">
+          {system.name}
+          <InfoButton onClick={() => setInfoOpen(true)} ariaLabel={`${system.name} info`} />
+        </span>
         <span className="text-[11px] flex items-center gap-1 flex-shrink-0">
           <span>{flagFor(AD_SYSTEM_ORIGIN[system.target_id])}</span>
           <span className="opacity-60">AD battery</span>
         </span>
       </p>
+      <ADSystemInfo
+        open={infoOpen}
+        onClose={() => setInfoOpen(false)}
+        name={system.name}
+        coverageKm={system.coverage_km}
+        maxPk={system.max_pk}
+        installCostCr={system.install_cost_cr}
+        interceptorCostCr={perShot}
+        description={system.description}
+      />
       <div className="text-xs opacity-70">
         Coverage {system.coverage_km} km • max Pk {system.max_pk.toFixed(2)}
       </div>
@@ -641,6 +668,7 @@ export function ADReloadOfferCard({
   const maxRefill = Math.max(1, capacity - currentStock);
   const defaultQty = Math.min(maxRefill, Math.max(4, Math.floor(capacity / 2)));
   const [qty, setQty] = useState<number>(defaultQty);
+  const [infoOpen, setInfoOpen] = useState(false);
   const dates = computeDelivery(currentYear, currentQuarter, 1, 2);
   const totalCost = qty * perShot;
   const totalQuarters = Math.max(
@@ -680,12 +708,21 @@ export function ADReloadOfferCard({
       ].join(" ")}
     >
       <p className="flex items-baseline justify-between gap-2">
-        <span className="text-sm font-semibold">{displayName}</span>
+        <span className="text-sm font-semibold flex items-center gap-1.5">
+          {displayName}
+          <InfoButton onClick={() => setInfoOpen(true)} ariaLabel={`${displayName} info`} />
+        </span>
         <span className="text-[11px] flex items-center gap-1 flex-shrink-0">
           <span>{flagFor(AD_SYSTEM_ORIGIN[systemId])}</span>
           <span className="opacity-60">AD reload</span>
         </span>
       </p>
+      <ADSystemInfo
+        open={infoOpen}
+        onClose={() => setInfoOpen(false)}
+        name={displayName}
+        interceptorCostCr={perShot}
+      />
       <div className="text-xs opacity-70">
         ₹{perShot.toLocaleString("en-US")} cr/interceptor · fleet: {totalCurrent}/{totalCapacity} across {batteries.length} {batteries.length === 1 ? "battery" : "batteries"}
       </div>

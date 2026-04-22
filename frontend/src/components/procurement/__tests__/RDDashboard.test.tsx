@@ -188,7 +188,10 @@ describe("RDDashboard", () => {
       },
     ];
     setup({}, multiActive);
-    const names = screen.getAllByText(/AMCA Mk1|Astra Mk2/).map((el) => el.textContent);
+    // Each name is followed by an InfoButton ("i") in the same flex container,
+    // so textContent is e.g. "Astra Mk2i". Match on trimmed prefix.
+    const names = screen.getAllByText(/AMCA Mk1|Astra Mk2/)
+      .map((el) => (el.textContent ?? "").replace(/i$/, "").trim());
     // Astra (60%) should appear before AMCA (10%)
     expect(names[0]).toBe("Astra Mk2");
     expect(names[1]).toBe("AMCA Mk1");

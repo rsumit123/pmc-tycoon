@@ -45,6 +45,7 @@ function ActiveRow({
   loading: boolean;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const statusBadge =
     state.status === "completed"
@@ -61,11 +62,29 @@ function ActiveRow({
         </div>
       )}
       <div className="flex items-baseline justify-between gap-2">
-        <div className="text-sm font-semibold">{spec?.name ?? state.program_id}</div>
+        <div className="text-sm font-semibold flex items-center gap-1.5">
+          {spec?.name ?? state.program_id}
+          {spec && (
+            <InfoButton
+              onClick={() => setInfoOpen(true)}
+              ariaLabel={`${spec.name} info`}
+            />
+          )}
+        </div>
         <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase ${statusBadge.classes}`}>
           {statusBadge.text}
         </span>
       </div>
+      {spec && (
+        <RoleInfo
+          open={infoOpen}
+          onClose={() => setInfoOpen(false)}
+          title={spec.name}
+          description={spec.description}
+          unlockKind={spec.unlocks?.kind}
+          unlockTarget={spec.unlocks?.target_id}
+        />
+      )}
       <div className="relative h-2 rounded bg-slate-800 overflow-hidden">
         <div
           className="absolute inset-y-0 left-0 bg-amber-500 transition-all"
