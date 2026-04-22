@@ -878,6 +878,182 @@ export function ADReloadOfferCard({
 
 type OfferCategory = "aircraft" | "missiles" | "ad_systems" | "reloads";
 
+type OrderGroupKey = string;
+
+function groupKey(o: AcquisitionOrder): OrderGroupKey {
+  const kind = o.kind ?? "platform";
+  const status =
+    o.cancelled ? "c"
+    : o.delivered >= o.quantity ? "d"
+    : "a";
+  return [
+    kind, o.platform_id,
+    o.first_delivery_year, o.first_delivery_quarter,
+    o.foc_year, o.foc_quarter,
+    status,
+  ].join("|");
+}
+
+function OrdersList({
+  orders, byId, bases, currentYear, currentQuarter, onCancel,
+}: {
+  orders: AcquisitionOrder[];
+  byId: Record<string, Platform>;
+  bases: BaseMarker[];
+  currentYear: number;
+  currentQuarter: number;
+  onCancel?: (id: number) => void;
+}) {
+  const groups = new Map<OrderGroupKey, AcquisitionOrder[]>();
+  for (const o of orders) {
+    const k = groupKey(o);
+    const arr = groups.get(k);
+    if (arr) arr.push(o);
+    else groups.set(k, [o]);
+  }
+
+  // Render in insertion order (first seen per group).
+  return (
+    <>
+      {Array.from(groups.values()).map((group) =>
+        group.length === 1 ? (
+          <SingleOrderRow
+            key={group[0].id}
+            order={group[0]}
+            byId={byId}
+            bases={bases}
+            currentYear={currentYear}
+            currentQuarter={currentQuarter}
+            onCancel={onCancel}
+          />
+        ) : (
+          <OrderGroup
+            key={`grp-${group[0].id}`}
+            group={group}
+            byId={byId}
+            bases={bases}
+            currentYear={currentYear}
+            currentQuarter={currentQuarter}
+            onCancel={onCancel}
+          />
+        ),
+      )}
+    </>
+  );
+}
+
+function orderMeta(o: AcquisitionOrder, byId: Record<string, Platform>, bases: BaseMarker[]) {
+  const kind = o.kind ?? "platform";
+  let origin: string | undefined;
+  if (kind === "platform") origin = byId[o.platform_id]?.origin;
+  else if (kind === "missile_batch") origin = WEAPON_ORIGIN[o.platform_id];
+  else if (kind === "ad_battery" || kind === "ad_reload") origin = AD_SYSTEM_ORIGIN[o.platform_id];
+  const deliveryBaseId = o.preferred_base_id ?? null;
+  const deliveryBaseName = deliveryBaseId
+    ? shortBaseName(bases.find((b) => b.id === deliveryBaseId)?.name ?? "")
+    : (kind === "platform" ? "Best-fit base (auto)" : "");
+  return {
+    kind,
+    originFlag: flagFor(origin),
+    platformName: byId[o.platform_id]?.name ?? o.platform_id,
+    deliveryBaseName,
+  };
+}
+
+function SingleOrderRow({
+  order, byId, bases, currentYear, currentQuarter, onCancel,
+}: {
+  order: AcquisitionOrder;
+  byId: Record<string, Platform>;
+  bases: BaseMarker[];
+  currentYear: number;
+  currentQuarter: number;
+  onCancel?: (id: number) => void;
+}) {
+  const m = orderMeta(order, byId, bases);
+  return (
+    <TimelineBar
+      order={order}
+      platformName={m.platformName}
+      originFlag={m.originFlag}
+      currentYear={currentYear}
+      currentQuarter={currentQuarter}
+      onCancel={onCancel}
+      deliveryBaseName={m.deliveryBaseName || undefined}
+    />
+  );
+}
+
+function OrderGroup({
+  group, byId, bases, currentYear, currentQuarter, onCancel,
+}: {
+  group: AcquisitionOrder[];
+  byId: Record<string, Platform>;
+  bases: BaseMarker[];
+  currentYear: number;
+  currentQuarter: number;
+  onCancel?: (id: number) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const first = group[0];
+  const m = orderMeta(first, byId, bases);
+  const totalQty = group.reduce((a, o) => a + o.quantity, 0);
+  const totalDelivered = group.reduce((a, o) => a + o.delivered, 0);
+  const totalCost = group.reduce((a, o) => a + o.total_cost_cr, 0);
+  const baseCount = new Set(
+    group.map((o) => o.preferred_base_id).filter((x): x is number => typeof x === "number"),
+  ).size;
+
+  const status =
+    first.cancelled ? { label: "CANCELLED", cls: "bg-rose-900/50 text-rose-200" }
+    : totalDelivered >= totalQty ? { label: "COMPLETE", cls: "bg-emerald-900/50 text-emerald-200" }
+    : currentYear * 4 + currentQuarter - 1 < first.first_delivery_year * 4 + first.first_delivery_quarter - 1
+      ? { label: "SIGNED", cls: "bg-sky-900/50 text-sky-200" }
+      : { label: "DELIVERING", cls: "bg-amber-900/50 text-amber-200" };
+
+  return (
+    <div className="bg-slate-900/40 border border-slate-800 rounded-lg">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full p-3 text-left hover:bg-slate-900/60 rounded-lg"
+      >
+        <div className="flex items-baseline justify-between gap-2 text-xs">
+          <div className="min-w-0 flex-1 flex items-baseline gap-2">
+            <span className="text-[10px] opacity-60">{expanded ? "▼" : "▶"}</span>
+            {m.originFlag && <span>{m.originFlag}</span>}
+            <span className="font-semibold truncate">{m.platformName}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded ${status.cls}`}>{status.label}</span>
+          </div>
+          <span className="opacity-70 flex-shrink-0 font-mono">
+            {totalDelivered}/{totalQty}
+          </span>
+        </div>
+        <div className="text-[10px] opacity-70 mt-1">
+          {group.length} orders across {baseCount || group.length} base{baseCount === 1 ? "" : "s"} ·
+          ₹{totalCost.toLocaleString("en-US")} cr total ·
+          delivery {first.first_delivery_year}-Q{first.first_delivery_quarter} → FOC {first.foc_year}-Q{first.foc_quarter}
+        </div>
+      </button>
+      {expanded && (
+        <div className="px-3 pb-3 space-y-2 border-t border-slate-800 pt-2">
+          {group.map((o) => (
+            <SingleOrderRow
+              key={o.id}
+              order={o}
+              byId={byId}
+              bases={bases}
+              currentYear={currentYear}
+              currentQuarter={currentQuarter}
+              onCancel={onCancel}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AcquisitionPipeline({
   platforms, orders, currentYear, currentQuarter, onSign, onCancel, disabled,
   rdCatalog = [], rdActive = [], bases = [], initialView, focusPlatformId,
@@ -1012,29 +1188,14 @@ export function AcquisitionPipeline({
           ) : (
             <div className="overflow-x-auto">
               <div className="space-y-3 min-w-min">
-                {visibleOrders.map((o) => {
-                  const kind = o.kind ?? "platform";
-                  let origin: string | undefined;
-                  if (kind === "platform") origin = byId[o.platform_id]?.origin;
-                  else if (kind === "missile_batch") origin = WEAPON_ORIGIN[o.platform_id];
-                  else if (kind === "ad_battery" || kind === "ad_reload") origin = AD_SYSTEM_ORIGIN[o.platform_id];
-                  const deliveryBaseId = o.preferred_base_id ?? null;
-                  const deliveryBaseName = deliveryBaseId
-                    ? shortBaseName(bases.find((b) => b.id === deliveryBaseId)?.name ?? "")
-                    : (kind === "platform" ? "Best-fit base (auto)" : "");
-                  return (
-                    <TimelineBar
-                      key={o.id}
-                      order={o}
-                      platformName={byId[o.platform_id]?.name ?? o.platform_id}
-                      originFlag={flagFor(origin)}
-                      currentYear={currentYear}
-                      currentQuarter={currentQuarter}
-                      onCancel={onCancel}
-                      deliveryBaseName={deliveryBaseName || undefined}
-                    />
-                  );
-                })}
+                <OrdersList
+                  orders={visibleOrders}
+                  byId={byId}
+                  bases={bases}
+                  currentYear={currentYear}
+                  currentQuarter={currentQuarter}
+                  onCancel={onCancel}
+                />
               </div>
             </div>
           )}
