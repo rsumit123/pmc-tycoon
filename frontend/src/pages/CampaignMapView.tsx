@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { Map as MLMap } from "maplibre-gl";
 
 import { useCampaignStore } from "../store/campaignStore";
@@ -8,6 +8,9 @@ import { useMapStore } from "../store/mapStore";
 import { SubcontinentMap } from "../components/map/SubcontinentMap";
 import { ADCoverageLayer } from "../components/map/ADCoverageLayer";
 import { IntelContactsLayer } from "../components/map/IntelContactsLayer";
+import { AdversaryBaseLayer } from "../components/map/AdversaryBaseLayer";
+import { DroneOrbitLayer } from "../components/map/DroneOrbitLayer";
+import { AdversaryBaseSheet } from "../components/map/AdversaryBaseSheet";
 import { LayerTogglePanel } from "../components/map/LayerTogglePanel";
 import { BaseSheet } from "../components/map/BaseSheet";
 import { RebaseOverlay } from "../components/map/RebaseOverlay";
@@ -19,10 +22,11 @@ import { playRadarPing, getAudioEnabled, setAudioEnabled } from "../lib/audio";
 import { isCampaignComplete as isCampComplete } from "../lib/campaignLifecycle";
 import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
 import { NotificationBell } from "../components/notifications/NotificationBell";
-import type { BaseSquadronSummary } from "../lib/types";
+import type { BaseSquadronSummary, AdversaryBase } from "../lib/types";
 
 export function CampaignMapView() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const campaign = useCampaignStore((s) => s.campaign);
   const bases = useCampaignStore((s) => s.bases);
@@ -46,6 +50,10 @@ export function CampaignMapView() {
   const loadADBatteries = useCampaignStore((s) => s.loadADBatteries);
   const loadIntel = useCampaignStore((s) => s.loadIntel);
   const loadNotifications = useCampaignStore((s) => s.loadNotifications);
+  const adversaryBases = useCampaignStore((s) => s.adversaryBases);
+  const loadAdversaryBases = useCampaignStore((s) => s.loadAdversaryBases);
+  const hangar = useCampaignStore((s) => s.hangar);
+  const loadHangar = useCampaignStore((s) => s.loadHangar);
 
   const selectedBaseId = useMapStore((s) => s.selectedBaseId);
   const setSelectedBase = useMapStore((s) => s.setSelectedBase);
@@ -56,6 +64,20 @@ export function CampaignMapView() {
   const [mapInstance, setMapInstance] = useState<MLMap | null>(null);
   const [projectionVersion, setProjectionVersion] = useState(0);
   const [rebaseTarget, setRebaseTarget] = useState<{ squadron: BaseSquadronSummary; baseId: number } | null>(null);
+  const [selectedAdversaryBase, setSelectedAdversaryBase] = useState<AdversaryBase | null>(null);
+
+  // Deep-link: /campaign/:id?focus_adversary_base=<base_id_str> opens the sheet.
+  useEffect(() => {
+    const focus = searchParams.get("focus_adversary_base");
+    if (!focus || adversaryBases.length === 0) return;
+    const match = adversaryBases.find((b) => b.base_id_str === focus);
+    if (match) {
+      setSelectedAdversaryBase(match);
+      const next = new URLSearchParams(searchParams);
+      next.delete("focus_adversary_base");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, adversaryBases, setSearchParams]);
   const [audioOn, setAudioOn] = useState(getAudioEnabled);
   const [showGuide, setShowGuide] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -79,8 +101,10 @@ export function CampaignMapView() {
       loadADBatteries(campaign.id);
       loadIntel(campaign.id);
       loadNotifications(campaign.id);
+      loadAdversaryBases(campaign.id);
+      loadHangar(campaign.id);
     }
-  }, [campaign, loadBases, loadPlatforms, loadAcquisitions, loadRdActive, loadRdCatalog, loadADBatteries, loadIntel, loadNotifications]);
+  }, [campaign, loadBases, loadPlatforms, loadAcquisitions, loadRdActive, loadRdCatalog, loadADBatteries, loadIntel, loadNotifications, loadAdversaryBases, loadHangar]);
 
   useEffect(() => {
     if (campaign) {
@@ -322,6 +346,23 @@ export function CampaignMapView() {
             projectionVersion={projectionVersion}
           />
         )}
+        {activeLayers.drone_orbits && hangar && (
+          <DroneOrbitLayer
+            map={mapInstance}
+            squadrons={hangar.squadrons}
+            bases={bases}
+            projectionVersion={projectionVersion}
+          />
+        )}
+        {activeLayers.adversary_bases && (
+          <AdversaryBaseLayer
+            map={mapInstance}
+            bases={adversaryBases}
+            onSelect={(b) => setSelectedAdversaryBase(b)}
+            projectionVersion={projectionVersion}
+            filterCovered
+          />
+        )}
         <LayerTogglePanel />
 
         {error && (
@@ -345,6 +386,11 @@ export function CampaignMapView() {
         currentBaseId={rebaseTarget?.baseId ?? 0}
         onRebase={handleRebase}
         onCancel={() => setRebaseTarget(null)}
+      />
+
+      <AdversaryBaseSheet
+        base={selectedAdversaryBase}
+        onClose={() => setSelectedAdversaryBase(null)}
       />
 
       <YearEndRecapToast />

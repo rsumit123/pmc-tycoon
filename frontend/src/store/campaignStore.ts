@@ -18,6 +18,7 @@ import type {
   PerformanceResponse,
   MissileStock,
   Notification,
+  AdversaryBase,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -72,6 +73,8 @@ interface CampaignState {
   readNotificationIds: Set<string>;
   loadNotifications: (campaignId: number) => Promise<void>;
   markNotificationRead: (id: string) => void;
+  adversaryBases: AdversaryBase[];
+  loadAdversaryBases: (campaignId: number) => Promise<void>;
   toasts: Toast[];
   rdLoading: Record<string, boolean>;
   loading: boolean;
@@ -176,6 +179,16 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     set({ readNotificationIds: next });
     if (cid) saveReadToStorage(cid, next);
   },
+  adversaryBases: [],
+  loadAdversaryBases: async (campaignId: number) => {
+    try {
+      const resp = await api.getAdversaryBases(campaignId, false);
+      set({ adversaryBases: resp.bases });
+    } catch (e) {
+      // silent — map renders empty layer when load fails
+      console.warn("loadAdversaryBases failed", e);
+    }
+  },
   toasts: [],
   rdLoading: {},
   loading: false,
@@ -227,6 +240,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       void get().loadPendingVignettes(cid);
       void get().loadIntel(cid, { year: campaign.current_year, quarter: campaign.current_quarter });
       void get().loadNotifications(cid);
+      void get().loadAdversaryBases(cid);
     } catch (e) {
       set({ error: (e as Error).message, loading: false });
     }
@@ -444,6 +458,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
         loading: false,
       }));
       void get().loadNotifications(campaignId);
+      void get().loadAdversaryBases(campaignId);
       return v;
     } catch (e) {
       set({ loading: false, error: (e as Error).message });
@@ -675,6 +690,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     missileStocks: [],
     notifications: [],
     readNotificationIds: new Set<string>(),
+    adversaryBases: [],
     toasts: [], rdLoading: {},
     loading: false, error: null,
   }),

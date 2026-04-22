@@ -3,6 +3,8 @@ import { useMapStore, type MapLayerKey } from "../../store/mapStore";
 const LABELS: Record<MapLayerKey, string> = {
   ad_coverage: "AD coverage",
   intel_contacts: "Intel contacts",
+  drone_orbits: "Drone orbits",
+  adversary_bases: "Adversary bases",
 };
 
 export function LayerTogglePanel() {

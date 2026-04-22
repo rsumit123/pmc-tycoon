@@ -11,6 +11,11 @@ const SOURCE_COLORS: Record<string, string> = {
   IMINT: "bg-purple-600 text-slate-100",
   OSINT: "bg-slate-500 text-slate-100",
   ELINT: "bg-emerald-600 text-slate-900",
+  drone_recon: "bg-cyan-700 text-cyan-50",
+};
+
+const SOURCE_LABEL: Record<string, string> = {
+  drone_recon: "🛸 ISR",
 };
 
 const FACTION_FLAG: Record<string, string> = {
@@ -31,9 +36,12 @@ export function IntelCard({ card, className = "" }: IntelCardProps) {
     >
       <div className="flex items-center justify-between text-xs">
         <span className={["px-2 py-0.5 rounded font-semibold", SOURCE_COLORS[card.source_type] ?? "bg-slate-700"].join(" ")}>
-          {card.source_type}
+          {SOURCE_LABEL[card.source_type] ?? card.source_type}
         </span>
-        <span className="opacity-70">{FACTION_FLAG[card.payload.subject_faction] ?? card.payload.subject_faction}</span>
+        <span className="opacity-70">
+          {FACTION_FLAG[card.payload.subject_faction ?? card.payload.faction ?? ""]
+            ?? card.payload.subject_faction ?? card.payload.faction ?? ""}
+        </span>
       </div>
       <p className="text-sm leading-snug text-slate-100 flex-1">{card.payload.headline}</p>
       <div className="flex items-center gap-2 text-xs text-slate-400">

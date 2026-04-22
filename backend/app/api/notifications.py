@@ -203,7 +203,38 @@ def _synthesize(db: Session, campaign_id: int) -> list[Notification]:
                 created_at=created_iso,
             ))
 
-    # 5. Sort: warnings first (by id desc for stable newest-first-ish),
+    # 5. Recent drone_recon IntelCards (ISR surveillance sightings). Info-only
+    # — warnings surface only for genuine depletion-style problems.
+    from app.models.intel import IntelCard
+    recon_cards = (
+        db.query(IntelCard)
+        .filter(
+            IntelCard.campaign_id == campaign_id,
+            IntelCard.source_type == "drone_recon",
+        )
+        .order_by(IntelCard.id.desc())
+        .limit(20)
+        .all()
+    )
+    for card in recon_cards:
+        card_q = card.appeared_year * 4 + (card.appeared_quarter - 1)
+        if card_q < cutoff_q:
+            continue
+        p = card.payload or {}
+        subject_id = p.get("subject_id", "")
+        faction = p.get("faction", "")
+        tier = (p.get("observed_force") or {}).get("tier", "low")
+        infos.append(Notification(
+            id=f"drone_recon:{card.id}",
+            kind="drone_recon",
+            severity="info",
+            title=p.get("headline") or f"ISR recon: {faction} base ({tier})",
+            body=f"New sighting at {subject_id}",
+            action_url=f"/campaign/{campaign_id}?focus_adversary_base={subject_id}",
+            created_at=f"{card.appeared_year}-Q{card.appeared_quarter}",
+        ))
+
+    # 6. Sort: warnings first (by id desc for stable newest-first-ish),
     # then infos (by id desc — higher event.id = newer).
     warnings.sort(key=lambda n: n.id, reverse=True)
     infos.sort(key=lambda n: n.id, reverse=True)

@@ -766,7 +766,8 @@ export type NotificationKind =
   | "rd_completed"
   | "acquisition_completed"
   | "acquisition_slipped"
-  | "pending_vignette";
+  | "pending_vignette"
+  | "drone_recon";
 
 export type NotificationSeverity = "warning" | "info";
 
@@ -782,4 +783,38 @@ export interface Notification {
 
 export interface NotificationListResponse {
   notifications: Notification[];
+}
+
+// ---------- Plan 21: ISR drone recon ----------
+
+export type AdversaryFaction = "PAF" | "PLAAF" | "PLAN";
+export type SightingTier = "low" | "medium" | "high";
+export type ReadinessTier = "low" | "medium" | "high";
+export type AdversaryBaseTier = "main" | "forward" | "support";
+
+export interface AdversaryBaseSighting {
+  tier: SightingTier;
+  year: number;
+  quarter: number;
+  count_range?: [number, number] | null;
+  platforms?: string[] | null;
+  platforms_detailed?: Record<string, number> | null;
+  readiness?: ReadinessTier | null;
+  covering_drones: string[];
+}
+
+export interface AdversaryBase {
+  id: number;
+  base_id_str: string;
+  name: string;
+  faction: AdversaryFaction;
+  lat: number;
+  lon: number;
+  tier: AdversaryBaseTier;
+  is_covered: boolean;
+  latest_sighting: AdversaryBaseSighting | null;
+}
+
+export interface AdversaryBaseListResponse {
+  bases: AdversaryBase[];
 }
