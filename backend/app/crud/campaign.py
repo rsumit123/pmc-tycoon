@@ -19,6 +19,7 @@ from app.engine.delivery_assignment import pick_base_for_delivery
 from app.content.registry import rd_programs as rd_program_specs
 from app.content.registry import adversary_roadmap as adversary_roadmap_reg
 from app.content.registry import intel_templates as intel_templates_reg
+from app.content.registry import adversary_bases as adversary_bases_reg
 from app.content.registry import (
     scenario_templates as scenario_templates_reg,
     bases as bases_reg,
@@ -257,6 +258,75 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
             truth_value=card["truth_value"],
             payload=card["payload"],
         ))
+
+    # ── ISR drone recon pass (Plan 21) ─────────────────────────────────────
+    # Passive per-quarter surveillance. Runs after the engine's intel subsystem
+    # so new cards land in the same turn's IntelCard pool and flow into the
+    # notification feed + map adversary-base layer.
+    from app.engine.drone_recon import generate_drone_sightings
+    from app.engine.rng import subsystem_rng
+    from app.models.adversary_base import AdversaryBase
+
+    adv_bases_rows = db.query(AdversaryBase).filter_by(campaign_id=campaign.id).all()
+    if adv_bases_rows:
+        adv_bases_cat = adversary_bases_reg()
+        adv_bases_input = [
+            {
+                "id": r.id,
+                "base_id_str": r.base_id_str,
+                "faction": r.faction,
+                "lat": r.lat,
+                "lon": r.lon,
+                "tier": r.tier,
+                "home_platforms": tuple(
+                    adv_bases_cat[r.base_id_str].home_platforms
+                    if r.base_id_str in adv_bases_cat
+                    else ()
+                ),
+            }
+            for r in adv_bases_rows
+        ]
+        drone_squadrons = [
+            {
+                "id": s.id,
+                "platform_id": s.platform_id,
+                "base_id": s.base_id,
+                "strength": s.strength,
+                "readiness_pct": s.readiness_pct,
+            }
+            for s in sq_rows
+            if s.platform_id in {"tapas_uav", "ghatak_ucav", "heron_tp", "mq9b_seaguardian"}
+        ]
+        friendly_bases_reg_map = {
+            bid: {"lat": info["lat"], "lon": info["lon"], "name": info["name"]}
+            for bid, info in bases_dict.items()
+        }
+        adv_force_by_faction = {
+            r.faction: dict((r.state or {}).get("inventory", {}))
+            for r in adv_rows
+        }
+        drone_rng = subsystem_rng(
+            campaign.seed, "drone_recon", from_year, from_quarter,
+        )
+        sightings = generate_drone_sightings(
+            adv_bases_input,
+            drone_squadrons,
+            friendly_bases_reg_map,
+            adv_force_by_faction,
+            year=from_year,
+            quarter=from_quarter,
+            rng=drone_rng,
+        )
+        for card in sightings:
+            db.add(IntelCard(
+                campaign_id=campaign.id,
+                appeared_year=from_year,
+                appeared_quarter=from_quarter,
+                source_type=card["source_type"],
+                confidence=card["confidence"],
+                truth_value=card["truth_value"],
+                payload=card["payload"],
+            ))
 
     for v in result.new_vignettes:
         db.add(Vignette(
