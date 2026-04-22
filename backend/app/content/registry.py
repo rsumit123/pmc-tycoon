@@ -4,8 +4,10 @@ from pathlib import Path
 from app.core.config import settings
 from app.content.loader import (
     PlatformSpec, BaseSpec, ObjectiveSpec, RDProgramSpec, ADSystemSpec,
+    AdversaryBaseSpec,
     load_platforms, load_bases, load_objectives, load_rd_programs, load_ad_systems,
     load_adversary_roadmap, load_intel_templates, load_scenario_templates,
+    load_adversary_bases,
 )
 
 
@@ -49,7 +51,13 @@ def scenario_templates() -> list:
     return load_scenario_templates(Path(settings.content_dir) / "scenario_templates.yaml")
 
 
+@lru_cache(maxsize=1)
+def adversary_bases() -> dict[str, AdversaryBaseSpec]:
+    return load_adversary_bases(Path(settings.content_dir) / "adversary_bases.yaml")
+
+
 def reload_all() -> None:
     for fn in (platforms, bases, objectives, rd_programs, ad_systems,
-               adversary_roadmap, intel_templates, scenario_templates):
+               adversary_roadmap, intel_templates, scenario_templates,
+               adversary_bases):
         fn.cache_clear()

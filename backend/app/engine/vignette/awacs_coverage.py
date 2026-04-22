@@ -20,7 +20,31 @@ AWACS_PLATFORM_IDS: set[str] = {"netra_aewc", "phalcon_a50"}
 
 # Known IAF ISR/drone platform ids. Keep in sync with platforms.yaml.
 ISR_DRONE_PLATFORM_IDS: set[str] = {"tapas_uav", "ghatak_ucav", "mq9b_seaguardian", "heron_tp"}
-ISR_ORBIT_RADIUS_KM = 700
+
+# Per-platform operational orbit radius. Real-world endurance + datalink class
+# drives this: Tapas (line-of-sight MALE) < Ghatak (stealth strike, secondary
+# ISR) < Heron TP (SATCOM MALE) < MQ-9B (SATCOM HALE + wide-area SAR).
+ISR_ORBIT_RADIUS_KM_BY_PLATFORM: dict[str, int] = {
+    "tapas_uav":         300,
+    "ghatak_ucav":       500,
+    "heron_tp":         1000,
+    "mq9b_seaguardian": 1800,
+}
+
+# Reconnaissance fidelity tier drives fog-of-war fuzziness of adversary-base
+# observations. 'low' = count ranges only; 'medium' = count range + platform
+# types; 'high' = exact counts per platform + readiness signal.
+ISR_FIDELITY_TIER: dict[str, str] = {
+    "tapas_uav":        "low",
+    "ghatak_ucav":      "low",
+    "heron_tp":         "medium",
+    "mq9b_seaguardian": "high",
+}
+
+# Legacy default retained for existing callers (vignette planning intel buff)
+# that pass a single radius. Use the longest-reach drone so the buff rule
+# doesn't regress for high-end platforms.
+ISR_ORBIT_RADIUS_KM = max(ISR_ORBIT_RADIUS_KM_BY_PLATFORM.values())
 
 
 def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -64,11 +88,18 @@ def isr_drone_covering(
     ao: dict,
     squadrons: list[dict],
     bases_registry: dict[int, dict],
-    orbit_radius_km: int = ISR_ORBIT_RADIUS_KM,
+    orbit_radius_km: int | None = None,
 ) -> list[dict]:
+    """Coverage check with per-platform orbit radius.
+
+    If ``orbit_radius_km`` is provided, all drones use that single radius
+    (back-compat for existing callers). If None, each drone's radius is
+    looked up from ``ISR_ORBIT_RADIUS_KM_BY_PLATFORM``.
+    """
     out: list[dict] = []
     for sq in squadrons:
-        if sq.get("platform_id") not in ISR_DRONE_PLATFORM_IDS:
+        pid = sq.get("platform_id")
+        if pid not in ISR_DRONE_PLATFORM_IDS:
             continue
         if sq.get("readiness_pct", 0) <= 0 or sq.get("strength", 0) <= 0:
             continue
@@ -76,7 +107,12 @@ def isr_drone_covering(
         if base is None:
             continue
         dist = _haversine_km(base["lat"], base["lon"], ao["lat"], ao["lon"])
-        if dist > orbit_radius_km:
+        radius = (
+            orbit_radius_km
+            if orbit_radius_km is not None
+            else ISR_ORBIT_RADIUS_KM_BY_PLATFORM.get(pid, 700)
+        )
+        if dist > radius:
             continue
         out.append({
             "squadron_id": sq["id"],

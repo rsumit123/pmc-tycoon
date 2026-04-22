@@ -112,6 +112,21 @@ def load_ad_systems(path: Path) -> dict[str, ADSystemSpec]:
     return {row["id"]: ADSystemSpec(**row) for row in data.get("ad_systems", [])}
 
 
+class AdversaryBaseSpec(BaseModel):
+    id: str
+    name: str
+    faction: Literal["PAF", "PLAAF", "PLAN"]
+    lat: float
+    lon: float
+    tier: Literal["main", "forward", "support"]
+    home_platforms: list[str] = Field(default_factory=list)
+
+
+def load_adversary_bases(path: Path) -> dict[str, AdversaryBaseSpec]:
+    data = _load_yaml(path)
+    return {row["id"]: AdversaryBaseSpec(**row) for row in data.get("bases", [])}
+
+
 @dataclass(frozen=True)
 class RoadmapEffect:
     kind: str

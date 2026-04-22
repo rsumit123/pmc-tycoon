@@ -1,0 +1,111 @@
+bases:
+  # PAF (Pakistan Air Force)
+  - id: paf_sargodha
+    name: PAF Base Sargodha (Mushaf)
+    faction: PAF
+    lat: 32.0483
+    lon: 72.6644
+    tier: main
+    home_platforms: [f16_blk52, jf17_blk3]
+  - id: paf_peshawar
+    name: PAF Base Peshawar
+    faction: PAF
+    lat: 33.9939
+    lon: 71.5147
+    tier: forward
+    home_platforms: [jf17_blk3, f16_blk52]
+  - id: paf_kamra
+    name: PAF Base Minhas (Kamra)
+    faction: PAF
+    lat: 33.8689
+    lon: 72.4006
+    tier: main
+    home_platforms: [jf17_blk3, j10ce]
+  - id: paf_karachi
+    name: PAF Base Masroor (Karachi)
+    faction: PAF
+    lat: 24.8939
+    lon: 66.9383
+    tier: main
+    home_platforms: [jf17_blk3]
+  - id: paf_shahbaz
+    name: PAF Base Shahbaz (Jacobabad)
+    faction: PAF
+    lat: 28.2814
+    lon: 68.4497
+    tier: forward
+    home_platforms: [f16_blk52]
+  - id: paf_rafiqui
+    name: PAF Base Rafiqui (Shorkot)
+    faction: PAF
+    lat: 30.7575
+    lon: 72.2828
+    tier: forward
+    home_platforms: [jf17_blk3]
+
+  # PLAAF (People's Liberation Army Air Force)
+  - id: plaaf_hotan
+    name: Hotan AB
+    faction: PLAAF
+    lat: 37.0353
+    lon: 79.8647
+    tier: forward
+    home_platforms: [j10c, j11b, j16]
+  - id: plaaf_kashgar
+    name: Kashi AB (Kashgar)
+    faction: PLAAF
+    lat: 39.5431
+    lon: 76.0200
+    tier: forward
+    home_platforms: [j10c, j16]
+  - id: plaaf_lhasa_gonggar
+    name: Lhasa Gonggar AB
+    faction: PLAAF
+    lat: 29.2978
+    lon: 90.9120
+    tier: main
+    home_platforms: [j10c, j20a, j16]
+  - id: plaaf_shigatse
+    name: Shigatse Peace Airport
+    faction: PLAAF
+    lat: 29.3519
+    lon: 89.3111
+    tier: forward
+    home_platforms: [j10c, j11b]
+  - id: plaaf_chengdu
+    name: Chengdu / Wenjiang
+    faction: PLAAF
+    lat: 30.5728
+    lon: 103.9506
+    tier: support
+    home_platforms: [j20a, j20s, j36]
+
+  # PLAN (People's Liberation Army Navy)
+  - id: plan_yulin
+    name: Yulin Naval Base (Hainan)
+    faction: PLAN
+    lat: 18.2072
+    lon: 109.6992
+    tier: main
+    home_platforms: [h6n, type055_destroyer, type093b_ssn]
+  - id: plan_ledong
+    name: Ledong Naval Airfield (Hainan)
+    faction: PLAN
+    lat: 18.5583
+    lon: 108.9425
+    tier: forward
+    home_platforms: [j35a, h6n]
+  - id: plan_woody_island
+    name: Woody Island (Yongxing)
+    faction: PLAN
+    lat: 16.8333
+    lon: 112.3333
+    tier: forward
+    home_platforms: [j11b, j35a]
+  - id: plan_zhanjiang
+    name: Zhanjiang Naval Base
+    faction: PLAN
+    lat: 21.2583
+    lon: 110.4100
+    tier: support
+    home_platforms: [type055_destroyer, type093b_ssn]

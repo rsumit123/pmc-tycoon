@@ -259,6 +259,21 @@ def seed_starting_state(db: Session, campaign: Campaign) -> None:
             state=dict(state),  # shallow copy of the module-level constant
         ))
 
+    # Seed adversary bases (PAF/PLAAF/PLAN named airfields). These become
+    # targets for ISR drone passive surveillance in Plan 21.
+    from app.content.registry import adversary_bases as _adv_bases_catalog
+    from app.models.adversary_base import AdversaryBase
+    for spec in _adv_bases_catalog().values():
+        db.add(AdversaryBase(
+            campaign_id=campaign.id,
+            base_id_str=spec.id,
+            name=spec.name,
+            faction=spec.faction,
+            lat=spec.lat,
+            lon=spec.lon,
+            tier=spec.tier,
+        ))
+
     # Pre-seed the PAF J-35E deal as a Turn-0 visible intel card.
     db.add(IntelCard(
         campaign_id=campaign.id,
