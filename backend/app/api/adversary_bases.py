@@ -8,7 +8,10 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.content.registry import bases as _bases_catalog
+from app.content.registry import (
+    adversary_bases as _adv_bases_catalog,
+    bases as _bases_catalog,
+)
 from app.engine.drone_recon import bases_covered_by_drones
 from app.models.adversary_base import AdversaryBase
 from app.models.campaign_base import CampaignBase
@@ -37,6 +40,24 @@ def list_adversary_bases(
     adv_rows = (
         db.query(AdversaryBase).filter_by(campaign_id=campaign_id).all()
     )
+    # Lazy backfill: campaigns created before the AdversaryBase table was
+    # introduced have zero rows. Seed them on first read from the content
+    # catalog so the feature works on legacy campaigns without migration.
+    if not adv_rows:
+        for spec in _adv_bases_catalog().values():
+            db.add(AdversaryBase(
+                campaign_id=campaign_id,
+                base_id_str=spec.id,
+                name=spec.name,
+                faction=spec.faction,
+                lat=spec.lat,
+                lon=spec.lon,
+                tier=spec.tier,
+            ))
+        db.commit()
+        adv_rows = (
+            db.query(AdversaryBase).filter_by(campaign_id=campaign_id).all()
+        )
     drones = [
         {
             "id": s.id,
