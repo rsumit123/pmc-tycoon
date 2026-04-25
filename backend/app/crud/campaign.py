@@ -458,22 +458,45 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
     from app.crud.seed_starting_state import AD_STARTING_INTERCEPTORS as _AD_INITS
     from app.content.registry import ad_systems as _ad_systems
 
+    # Aggregate same-key deliveries before writing — multiple missile_batch
+    # orders can deliver to the same (base, weapon) in one turn (especially
+    # after a bulk-split). Without this, two find-or-create calls would each
+    # see no existing row, both INSERT, and the second hits the unique
+    # constraint on commit.
+    _missile_batch_pending: dict[tuple[int, str], int] = {}
+
     def _deliver_missile_batch(payload: dict) -> None:
         base_id = payload.get("preferred_base_id")
         weapon_id = payload.get("platform_id")
         count = int(payload.get("count", 0) or 0)
         if base_id is None or not weapon_id or count <= 0:
             return
-        row = db.query(_MissileStock).filter_by(
-            campaign_id=campaign.id, base_id=base_id, weapon_id=weapon_id,
-        ).first()
-        if row is None:
-            db.add(_MissileStock(
-                campaign_id=campaign.id, base_id=base_id,
-                weapon_id=weapon_id, stock=count,
-            ))
-        else:
-            row.stock = (row.stock or 0) + count
+        key = (int(base_id), str(weapon_id))
+        _missile_batch_pending[key] = _missile_batch_pending.get(key, 0) + count
+
+    def _flush_missile_batch_deliveries() -> None:
+        if not _missile_batch_pending:
+            return
+        # Single SELECT for all keys we need to upsert.
+        keys = list(_missile_batch_pending.keys())
+        existing = {
+            (r.base_id, r.weapon_id): r
+            for r in db.query(_MissileStock).filter(
+                _MissileStock.campaign_id == campaign.id,
+                _MissileStock.base_id.in_({k[0] for k in keys}),
+                _MissileStock.weapon_id.in_({k[1] for k in keys}),
+            ).all()
+        }
+        for (base_id, weapon_id), count in _missile_batch_pending.items():
+            row = existing.get((base_id, weapon_id))
+            if row is None:
+                db.add(_MissileStock(
+                    campaign_id=campaign.id, base_id=base_id,
+                    weapon_id=weapon_id, stock=count,
+                ))
+            else:
+                row.stock = (row.stock or 0) + count
+        _missile_batch_pending.clear()
 
     def _deliver_ad_battery(payload: dict) -> None:
         system_id = payload.get("platform_id")
@@ -595,6 +618,8 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
             event_type=e["event_type"],
             payload=e["payload"],
         ))
+
+    _flush_missile_batch_deliveries()
 
     db.commit()
     db.refresh(campaign)
