@@ -13,6 +13,7 @@ from app.models.loadout_upgrade import LoadoutUpgrade  # noqa: F401
 from app.models.ad_battery import ADBattery  # noqa: F401
 from app.models.missile_stock import MissileStock  # noqa: F401
 from app.models.adversary_base import AdversaryBase  # noqa: F401
+from app.models.base_damage import BaseDamage  # noqa: F401
 
 __all__ = [
     "Campaign",
@@ -30,4 +31,5 @@ __all__ = [
     "ADBattery",
     "MissileStock",
     "AdversaryBase",
+    "BaseDamage",
 ]

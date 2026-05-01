@@ -53,6 +53,7 @@ def list_adversary_bases(
                 lat=spec.lat,
                 lon=spec.lon,
                 tier=spec.tier,
+                shelter_count=spec.shelter_count,
             ))
         db.commit()
         adv_rows = (

@@ -7,6 +7,11 @@ bases:
     lon: 72.6644
     tier: main
     home_platforms: [f16_blk52, jf17_blk3]
+    shelter_count: 24
+    garrisoned_platforms: [f16_blk52, jf17_blk3]
+    value: 5
+    command_node: true
+
   - id: paf_peshawar
     name: PAF Base Peshawar
     faction: PAF
@@ -14,6 +19,11 @@ bases:
     lon: 71.5147
     tier: forward
     home_platforms: [jf17_blk3, f16_blk52]
+    shelter_count: 16
+    garrisoned_platforms: [jf17_blk3, f16_blk52]
+    value: 3
+    command_node: false
+
   - id: paf_kamra
     name: PAF Base Minhas (Kamra)
     faction: PAF
@@ -21,6 +31,11 @@ bases:
     lon: 72.4006
     tier: main
     home_platforms: [jf17_blk3, j10ce]
+    shelter_count: 24
+    garrisoned_platforms: [jf17_blk3, j10ce]
+    value: 5
+    command_node: true
+
   - id: paf_karachi
     name: PAF Base Masroor (Karachi)
     faction: PAF
@@ -28,6 +43,11 @@ bases:
     lon: 66.9383
     tier: main
     home_platforms: [jf17_blk3]
+    shelter_count: 24
+    garrisoned_platforms: [jf17_blk3]
+    value: 5
+    command_node: false
+
   - id: paf_shahbaz
     name: PAF Base Shahbaz (Jacobabad)
     faction: PAF
@@ -35,6 +55,11 @@ bases:
     lon: 68.4497
     tier: forward
     home_platforms: [f16_blk52]
+    shelter_count: 16
+    garrisoned_platforms: [f16_blk52]
+    value: 3
+    command_node: false
+
   - id: paf_rafiqui
     name: PAF Base Rafiqui (Shorkot)
     faction: PAF
@@ -42,6 +67,10 @@ bases:
     lon: 72.2828
     tier: forward
     home_platforms: [jf17_blk3]
+    shelter_count: 16
+    garrisoned_platforms: [jf17_blk3]
+    value: 3
+    command_node: false
 
   # PLAAF (People's Liberation Army Air Force)
   - id: plaaf_hotan
@@ -51,6 +80,11 @@ bases:
     lon: 79.8647
     tier: forward
     home_platforms: [j10c, j11b, j16]
+    shelter_count: 16
+    garrisoned_platforms: [j10c, j11b, j16]
+    value: 3
+    command_node: false
+
   - id: plaaf_kashgar
     name: Kashi AB (Kashgar)
     faction: PLAAF
@@ -58,6 +92,11 @@ bases:
     lon: 76.0200
     tier: forward
     home_platforms: [j10c, j16]
+    shelter_count: 16
+    garrisoned_platforms: [j10c, j16]
+    value: 3
+    command_node: false
+
   - id: plaaf_lhasa_gonggar
     name: Lhasa Gonggar AB
     faction: PLAAF
@@ -65,6 +104,11 @@ bases:
     lon: 90.9120
     tier: main
     home_platforms: [j10c, j20a, j16]
+    shelter_count: 24
+    garrisoned_platforms: [j10c, j20a, j16]
+    value: 5
+    command_node: false
+
   - id: plaaf_shigatse
     name: Shigatse Peace Airport
     faction: PLAAF
@@ -72,6 +116,11 @@ bases:
     lon: 89.3111
     tier: forward
     home_platforms: [j10c, j11b]
+    shelter_count: 16
+    garrisoned_platforms: [j10c, j11b]
+    value: 3
+    command_node: false
+
   - id: plaaf_chengdu
     name: Chengdu / Wenjiang
     faction: PLAAF
@@ -79,6 +128,10 @@ bases:
     lon: 103.9506
     tier: support
     home_platforms: [j20a, j20s, j36]
+    shelter_count: 8
+    garrisoned_platforms: [j20a, j20s, j36]
+    value: 2
+    command_node: true
 
   # PLAN (People's Liberation Army Navy)
   - id: plan_yulin
@@ -88,6 +141,11 @@ bases:
     lon: 109.6992
     tier: main
     home_platforms: [h6n, type055_destroyer, type093b_ssn]
+    shelter_count: 24
+    garrisoned_platforms: [h6n, type055_destroyer, type093b_ssn]
+    value: 5
+    command_node: true
+
   - id: plan_ledong
     name: Ledong Naval Airfield (Hainan)
     faction: PLAN
@@ -95,6 +153,11 @@ bases:
     lon: 108.9425
     tier: forward
     home_platforms: [j35a, h6n]
+    shelter_count: 16
+    garrisoned_platforms: [j35a, h6n]
+    value: 3
+    command_node: false
+
   - id: plan_woody_island
     name: Woody Island (Yongxing)
     faction: PLAN
@@ -102,6 +165,11 @@ bases:
     lon: 112.3333
     tier: forward
     home_platforms: [j11b, j35a]
+    shelter_count: 16
+    garrisoned_platforms: [j11b, j35a]
+    value: 3
+    command_node: false
+
   - id: plan_zhanjiang
     name: Zhanjiang Naval Base
     faction: PLAN
@@ -109,3 +177,7 @@ bases:
     lon: 110.4100
     tier: support
     home_platforms: [type055_destroyer, type093b_ssn]
+    shelter_count: 8
+    garrisoned_platforms: [type055_destroyer, type093b_ssn]
+    value: 2
+    command_node: false

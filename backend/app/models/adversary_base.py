@@ -17,3 +17,4 @@ class AdversaryBase(Base):
     lat: Mapped[float] = mapped_column(Float)
     lon: Mapped[float] = mapped_column(Float)
     tier: Mapped[str] = mapped_column(String(16))
+    shelter_count: Mapped[int] = mapped_column(Integer, default=12)

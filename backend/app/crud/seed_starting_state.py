@@ -272,6 +272,7 @@ def seed_starting_state(db: Session, campaign: Campaign) -> None:
             lat=spec.lat,
             lon=spec.lon,
             tier=spec.tier,
+            shelter_count=spec.shelter_count,
         ))
 
     # Pre-seed the PAF J-35E deal as a Turn-0 visible intel card.

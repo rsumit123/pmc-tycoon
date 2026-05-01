@@ -120,6 +120,10 @@ class AdversaryBaseSpec(BaseModel):
     lon: float
     tier: Literal["main", "forward", "support"]
     home_platforms: list[str] = Field(default_factory=list)
+    shelter_count: int = 12
+    garrisoned_platforms: list[str] = Field(default_factory=list)
+    value: int = Field(default=2, ge=1, le=5)
+    command_node: bool = False
 
 
 def load_adversary_bases(path: Path) -> dict[str, AdversaryBaseSpec]:
