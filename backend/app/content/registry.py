@@ -6,10 +6,12 @@ from app.content.loader import (
     PlatformSpec, BaseSpec, ObjectiveSpec, RDProgramSpec, ADSystemSpec,
     AdversaryBaseSpec,
     DiplomacyConfig,
+    StrikeProfileSpec,
     load_platforms, load_bases, load_objectives, load_rd_programs, load_ad_systems,
     load_adversary_roadmap, load_intel_templates, load_scenario_templates,
     load_adversary_bases,
     load_diplomacy,
+    load_strike_profiles,
 )
 
 
@@ -63,8 +65,13 @@ def diplomacy() -> DiplomacyConfig:
     return load_diplomacy(Path(settings.content_dir) / "diplomacy.yaml")
 
 
+@lru_cache(maxsize=1)
+def strike_profiles() -> dict[str, StrikeProfileSpec]:
+    return load_strike_profiles(Path(settings.content_dir) / "strike_profiles.yaml")
+
+
 def reload_all() -> None:
     for fn in (platforms, bases, objectives, rd_programs, ad_systems,
                adversary_roadmap, intel_templates, scenario_templates,
-               adversary_bases, diplomacy):
+               adversary_bases, diplomacy, strike_profiles):
         fn.cache_clear()

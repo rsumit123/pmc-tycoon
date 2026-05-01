@@ -1,0 +1,44 @@
+profiles:
+  - id: deep_strike
+    name: Deep Strike
+    description: Manned package penetrating to target. Requires CAP + strike escort.
+    eligible_squadron_roles: [multirole, strike, stealth, stealth_strike, air_superiority]
+    requires_min_squadrons: 2
+    pk_modifier: 1.0
+    detection_modifier: 1.0
+    egress_risk: 0.30
+    weapon_classes_used: [a2a_bvr, a2a_wvr, glide_bomb, anti_radiation, land_attack]
+
+  - id: sead_suppression
+    name: SEAD Suppression
+    description: Anti-radiation strike to degrade adversary AD before main package.
+    eligible_squadron_roles: [multirole, strike, air_superiority]
+    requires_min_squadrons: 1
+    pk_modifier: 0.85
+    detection_modifier: 0.9
+    egress_risk: 0.18
+    weapon_classes_used: [anti_radiation]
+    suppresses_ad: true
+    suppression_pct: 50
+
+  - id: standoff_cruise
+    name: Stand-off Cruise
+    description: Cruise missile launch from launch base — no penetration risk.
+    eligible_squadron_roles: [multirole, bomber, strike]
+    requires_min_squadrons: 1
+    pk_modifier: 0.65
+    detection_modifier: 0.0
+    egress_risk: 0.0
+    weapon_classes_used: [land_attack, anti_ship]
+    target_priority: [shelters, runway]
+
+  - id: drone_swarm
+    name: Drone Swarm
+    description: Ghatak-led unmanned strike. Lower P_kill but minimal aircrew risk.
+    eligible_squadron_roles: [stealth_strike, isr]
+    requires_min_squadrons: 1
+    pk_modifier: 0.55
+    detection_modifier: 0.4
+    egress_risk: 0.22
+    weapon_classes_used: [glide_bomb, anti_radiation]
+    targeted_platform_ids: [ghatak_ucav]

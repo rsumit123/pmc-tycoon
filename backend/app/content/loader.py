@@ -142,6 +142,27 @@ class DiplomacyConfig:
     grant_bump_cap_pct: int
 
 
+class StrikeProfileSpec(BaseModel):
+    id: str
+    name: str
+    description: str
+    eligible_squadron_roles: list[str] = Field(default_factory=list)
+    requires_min_squadrons: int = 1
+    pk_modifier: float = 1.0
+    detection_modifier: float = 1.0
+    egress_risk: float = 0.25
+    weapon_classes_used: list[str] = Field(default_factory=list)
+    suppresses_ad: bool = False
+    suppression_pct: int = 0
+    target_priority: list[str] = Field(default_factory=list)
+    targeted_platform_ids: list[str] = Field(default_factory=list)
+
+
+def load_strike_profiles(path: Path) -> dict[str, StrikeProfileSpec]:
+    data = _load_yaml(path)
+    return {row["id"]: StrikeProfileSpec(**row) for row in data.get("profiles", [])}
+
+
 def load_diplomacy(path: Path) -> DiplomacyConfig:
     data = _load_yaml(path)
     factions = data.get("factions", {})

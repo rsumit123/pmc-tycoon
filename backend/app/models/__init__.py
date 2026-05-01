@@ -15,6 +15,7 @@ from app.models.missile_stock import MissileStock  # noqa: F401
 from app.models.adversary_base import AdversaryBase  # noqa: F401
 from app.models.base_damage import BaseDamage  # noqa: F401
 from app.models.diplomatic_state import DiplomaticState  # noqa: F401
+from app.models.offensive_op import OffensiveOp  # noqa: F401
 
 __all__ = [
     "Campaign",
@@ -34,4 +35,5 @@ __all__ = [
     "AdversaryBase",
     "BaseDamage",
     "DiplomaticState",
+    "OffensiveOp",
 ]
