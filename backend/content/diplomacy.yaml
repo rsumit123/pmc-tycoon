@@ -1,25 +1,34 @@
-relations:
-  - country: France
-    code: FR
-    level: allied
-    description: Strategic partner. Rafale deal anchor. Full technology transfer.
-  - country: Russia
-    code: RU
-    level: warm
-    description: Legacy defense partner. Su-30 backbone. S-400 delivered.
-  - country: United States
-    code: US
-    level: warm
-    description: Growing defense ties. MQ-9B SeaGuardian offered. DTTI framework.
-  - country: Israel
-    code: IL
-    level: allied
-    description: Close defense-tech partner. Heron TP, Barak systems, sensors.
-  - country: Sweden
-    code: SE
-    level: neutral
-    description: Gripen E offered through MRFA. No prior defense relationship.
-  - country: European Union
-    code: EU
-    level: warm
-    description: Eurofighter consortium offered through MRFA. Mixed bilateral ties.
+# Plan 22 — adversary-faction diplomatic temperature config.
+# (Pre-Plan-22 supplier-relations content moved to suppliers.yaml — kept here
+# under `_legacy_supplier_relations` for reference; not loaded.)
+
+factions:
+  PAF:
+    starting_temperature: 25
+  PLAAF:
+    starting_temperature: 35
+  PLAN:
+    starting_temperature: 40
+
+# Map of supplier origin code → faction whose hostility blocks new orders.
+supplier_factions:
+  CHN: PLAAF
+  PAK: PAF
+
+tiers:
+  friendly: [70, 100]
+  neutral:  [50, 69]
+  cool:     [30, 49]
+  cold:     [10, 29]
+  hostile:  [0, 9]
+
+drift_per_quarter: 2
+strike_temperature_drop: 8
+
+grant_bump_pct:
+  friendly: 0
+  neutral:  0
+  cool:     10
+  cold:     30
+  hostile:  75
+grant_bump_cap_pct: 150

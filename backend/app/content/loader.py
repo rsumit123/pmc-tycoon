@@ -132,6 +132,35 @@ def load_adversary_bases(path: Path) -> dict[str, AdversaryBaseSpec]:
 
 
 @dataclass(frozen=True)
+class DiplomacyConfig:
+    starting_temperatures: dict[str, int]
+    supplier_factions: dict[str, str]
+    tier_bands: dict[str, tuple[int, int]]
+    drift_per_quarter: int
+    strike_temperature_drop: int
+    grant_bump_pct: dict[str, int]
+    grant_bump_cap_pct: int
+
+
+def load_diplomacy(path: Path) -> DiplomacyConfig:
+    data = _load_yaml(path)
+    factions = data.get("factions", {})
+    return DiplomacyConfig(
+        starting_temperatures={
+            k: int(v["starting_temperature"]) for k, v in factions.items()
+        },
+        supplier_factions=dict(data.get("supplier_factions", {})),
+        tier_bands={
+            tier: (int(b[0]), int(b[1])) for tier, b in data.get("tiers", {}).items()
+        },
+        drift_per_quarter=int(data.get("drift_per_quarter", 2)),
+        strike_temperature_drop=int(data.get("strike_temperature_drop", 8)),
+        grant_bump_pct=dict(data.get("grant_bump_pct", {})),
+        grant_bump_cap_pct=int(data.get("grant_bump_cap_pct", 150)),
+    )
+
+
+@dataclass(frozen=True)
 class RoadmapEffect:
     kind: str
     payload: object

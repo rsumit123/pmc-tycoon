@@ -26,12 +26,22 @@ def compute_quarterly_grant(
     difficulty: str,
     current_year: int,
     base: int = BASE_QUARTERLY_GRANT_CR,
+    *,
+    faction_tiers: dict[str, str] | None = None,
 ) -> int:
     mult = DIFFICULTY_GRANT_MULTIPLIER.get(difficulty, 1.0)
     years_past_start = max(0, current_year - 2026)
     raw = base * mult * (1 + YOY_GRANT_GROWTH) ** years_past_start
-    # Round to nearest 500 so grants read cleanly in the UI.
-    return int(round(raw / 500) * 500)
+    base_grant = int(round(raw / 500) * 500)
+    if not faction_tiers:
+        return base_grant
+    # Plan 22 — war-footing bump from per-faction temperature.
+    from app.engine.diplomacy import grant_multiplier_pct
+    bump_pct = grant_multiplier_pct(faction_tiers)
+    if bump_pct == 0:
+        return base_grant
+    scaled = base_grant * (100 + bump_pct) / 100
+    return int(round(scaled / 500) * 500)
 
 DEFAULT_PCT: dict[str, int] = {
     "rd": 25,

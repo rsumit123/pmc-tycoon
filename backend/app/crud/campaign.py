@@ -217,10 +217,43 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
     campaign.current_year = result.next_year
     campaign.current_quarter = result.next_quarter
     campaign.budget_cr = result.next_treasury_cr
+    # Plan 22 — diplomacy tick BEFORE grant recompute so the war-footing
+    # bump reflects this turn's tensions. strikes_by_faction would be
+    # populated by offensive ops resolution (Phase 2 of Plan 22); for now
+    # passive drift only.
+    from app.models.diplomatic_state import DiplomaticState as _DS
+    from app.engine.diplomacy import tick_diplomacy_temp, tier_from_temperature
+    diplo_rows = db.query(_DS).filter_by(campaign_id=campaign.id).all()
+    strikes_by_faction: dict[str, int] = {}
+    for diplo_row in diplo_rows:
+        diplo_row.temperature_pct = tick_diplomacy_temp(
+            diplo_row.temperature_pct,
+            strikes_this_quarter=strikes_by_faction.get(diplo_row.faction, 0),
+        )
+    faction_tiers = {r.faction: tier_from_temperature(r.temperature_pct) for r in diplo_rows}
+
     # Recompute grant each turn so YoY growth + difficulty multiplier apply.
     campaign.quarterly_grant_cr = compute_quarterly_grant(
         campaign.difficulty, campaign.current_year,
+        faction_tiers=faction_tiers or None,
     )
+
+    # Plan 22 — base damage repair tick.
+    from app.engine.repair import tick_base_damage
+    from app.models.base_damage import BaseDamage as _BaseDamage
+    for bd in db.query(_BaseDamage).filter_by(campaign_id=campaign.id).all():
+        new_state = tick_base_damage({
+            "shelter_loss_pct": bd.shelter_loss_pct,
+            "runway_disabled_quarters_remaining": bd.runway_disabled_quarters_remaining,
+            "ad_destroyed": bd.ad_destroyed,
+            "ad_destroyed_quarters_since": bd.ad_destroyed_quarters_since,
+            "garrisoned_loss": bd.garrisoned_loss,
+        })
+        bd.shelter_loss_pct = new_state["shelter_loss_pct"]
+        bd.runway_disabled_quarters_remaining = new_state["runway_disabled_quarters_remaining"]
+        bd.ad_destroyed = new_state["ad_destroyed"]
+        bd.ad_destroyed_quarters_since = new_state["ad_destroyed_quarters_since"]
+        bd.garrisoned_loss = new_state["garrisoned_loss"]
 
     rd_by_id = {r.id: r for r in rd_rows}
     for s in result.next_rd_states:

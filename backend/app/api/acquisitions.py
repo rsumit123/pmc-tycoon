@@ -37,6 +37,27 @@ def create_acquisition_endpoint(
     if campaign is None:
         raise HTTPException(status_code=404, detail="Campaign not found")
     require_active_campaign(campaign)
+
+    # Plan 22 — block new platform orders from hostile-tier supplier nations.
+    if payload.kind == "platform":
+        from app.content.registry import platforms as _plats
+        from app.engine.diplomacy import tier_from_temperature, is_supplier_blocked
+        from app.models.diplomatic_state import DiplomaticState as _DS
+        plat_spec = _plats().get(payload.platform_id)
+        if plat_spec is not None:
+            tiers = {
+                r.faction: tier_from_temperature(r.temperature_pct)
+                for r in db.query(_DS).filter_by(campaign_id=campaign_id).all()
+            }
+            if is_supplier_blocked(plat_spec.origin, tiers):
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        f"Supplier blocked — {plat_spec.origin} platforms unavailable "
+                        f"while diplomatic relations are hostile."
+                    ),
+                )
+
     try:
         return create_order(
             db, campaign,

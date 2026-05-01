@@ -275,6 +275,16 @@ def seed_starting_state(db: Session, campaign: Campaign) -> None:
             shelter_count=spec.shelter_count,
         ))
 
+    # Plan 22 — diplomatic state per faction (PAF/PLAAF/PLAN).
+    from app.content.registry import diplomacy as _diplo_cfg
+    from app.models.diplomatic_state import DiplomaticState
+    for faction, temp in _diplo_cfg().starting_temperatures.items():
+        db.add(DiplomaticState(
+            campaign_id=campaign.id,
+            faction=faction,
+            temperature_pct=temp,
+        ))
+
     # Pre-seed the PAF J-35E deal as a Turn-0 visible intel card.
     db.add(IntelCard(
         campaign_id=campaign.id,
