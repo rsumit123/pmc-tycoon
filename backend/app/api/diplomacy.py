@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.content.registry import diplomacy as _diplo_cfg
 from app.engine.diplomacy import grant_multiplier_pct, tier_from_temperature
 from app.models.campaign import Campaign
 from app.models.diplomatic_state import DiplomaticState
@@ -15,6 +16,14 @@ def get_diplomacy(campaign_id: int, db: Session = Depends(get_db)):
     if db.get(Campaign, campaign_id) is None:
         raise HTTPException(404, "Campaign not found")
     rows = db.query(DiplomaticState).filter_by(campaign_id=campaign_id).all()
+    # Lazy backfill for pre-Plan-22 campaigns.
+    if not rows:
+        for faction, temp in _diplo_cfg().starting_temperatures.items():
+            db.add(DiplomaticState(
+                campaign_id=campaign_id, faction=faction, temperature_pct=temp,
+            ))
+        db.commit()
+        rows = db.query(DiplomaticState).filter_by(campaign_id=campaign_id).all()
     factions = [
         FactionDiplomacy(
             faction=r.faction,
