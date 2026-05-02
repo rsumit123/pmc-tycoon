@@ -238,6 +238,21 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
         faction_tiers=faction_tiers or None,
     )
 
+    # Plan 22 — first reactive vignette resolution unlocks offensive ops.
+    if not campaign.offensive_unlocked:
+        from app.models.vignette import Vignette as _Vig
+        any_resolved = db.query(_Vig).filter(
+            _Vig.campaign_id == campaign.id,
+            _Vig.status == "resolved",
+        ).first()
+        if any_resolved is not None:
+            campaign.offensive_unlocked = True
+            db.add(CampaignEvent(
+                campaign_id=campaign.id,
+                year=from_year, quarter=from_quarter,
+                event_type="offensive_unlocked", payload={},
+            ))
+
     # Plan 22 — base damage repair tick.
     from app.engine.repair import tick_base_damage
     from app.models.base_damage import BaseDamage as _BaseDamage

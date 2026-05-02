@@ -26,6 +26,9 @@ from app.api.performance import router as performance_router
 from app.api.missile_stocks import router as missile_stocks_router
 from app.api.notifications import router as notifications_router
 from app.api.adversary_bases import router as adversary_bases_router
+from app.api.offensive_ops import router as offensive_router
+from app.api.diplomacy import router as diplomacy_router
+from app.api.posture import router as posture_router
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +67,9 @@ app.include_router(performance_router)
 app.include_router(missile_stocks_router)
 app.include_router(notifications_router)
 app.include_router(adversary_bases_router)
+app.include_router(offensive_router)
+app.include_router(diplomacy_router)
+app.include_router(posture_router)
 
 
 @app.get("/")
