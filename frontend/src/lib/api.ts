@@ -35,6 +35,12 @@ import type {
   MissileStockListResponse,
   NotificationListResponse,
   AdversaryBaseListResponse,
+  DiplomacyResponse,
+  PostureSnapshot,
+  StrikePackagePayload,
+  StrikePreview,
+  StrikeRead,
+  StrikeListResponse,
 } from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
@@ -402,6 +408,56 @@ export const api = {
     const { data } = await http.get<AdversaryBaseListResponse>(
       `/api/campaigns/${campaignId}/adversary-bases`,
       { params: { covered_only: coveredOnly } },
+    );
+    return data;
+  },
+
+  async getDiplomacy(campaignId: number): Promise<DiplomacyResponse> {
+    const { data } = await http.get<DiplomacyResponse>(
+      `/api/campaigns/${campaignId}/diplomacy`,
+    );
+    return data;
+  },
+
+  async getPosture(campaignId: number): Promise<PostureSnapshot> {
+    const { data } = await http.get<PostureSnapshot>(
+      `/api/campaigns/${campaignId}/posture`,
+    );
+    return data;
+  },
+
+  async previewStrike(
+    campaignId: number,
+    payload: StrikePackagePayload,
+  ): Promise<StrikePreview> {
+    const { data } = await http.post<StrikePreview>(
+      `/api/campaigns/${campaignId}/strikes/preview`,
+      payload,
+    );
+    return data;
+  },
+
+  async commitStrike(
+    campaignId: number,
+    payload: StrikePackagePayload,
+  ): Promise<StrikeRead> {
+    const { data } = await http.post<StrikeRead>(
+      `/api/campaigns/${campaignId}/strikes`,
+      payload,
+    );
+    return data;
+  },
+
+  async listStrikes(campaignId: number): Promise<StrikeListResponse> {
+    const { data } = await http.get<StrikeListResponse>(
+      `/api/campaigns/${campaignId}/strikes`,
+    );
+    return data;
+  },
+
+  async getStrike(campaignId: number, strikeId: number): Promise<StrikeRead> {
+    const { data } = await http.get<StrikeRead>(
+      `/api/campaigns/${campaignId}/strikes/${strikeId}`,
     );
     return data;
   },

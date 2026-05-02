@@ -825,3 +825,85 @@ export interface AdversaryBase {
 export interface AdversaryBaseListResponse {
   bases: AdversaryBase[];
 }
+
+// ---------- Plan 22: Ops Screen + Offensive Operations ----------
+
+export type DiplomaticTier = "friendly" | "neutral" | "cool" | "cold" | "hostile";
+
+export interface FactionDiplomacy {
+  faction: "PAF" | "PLAAF" | "PLAN";
+  temperature_pct: number;
+  tier: DiplomaticTier;
+}
+
+export interface DiplomacyResponse {
+  factions: FactionDiplomacy[];
+  grant_bump_pct: number;
+}
+
+export interface PostureSnapshot {
+  treasury: { treasury_cr: number; quarterly_grant_cr: number; runway_quarters: number };
+  fleet_by_role: { role: string; airframes: number; avg_readiness_pct: number }[];
+  threat_history_by_faction: Record<string, number[]>;
+  total_active_orders: number;
+  nearest_delivery: { platform_id: string; kind: string; foc_year: number; foc_quarter: number } | null;
+  rd_active_count: number;
+  rd_completed_count: number;
+  diplomacy_summary: Record<string, DiplomaticTier>;
+  offensive_unlocked: boolean;
+  strikes_this_quarter: number;
+}
+
+export type StrikeProfileId = "deep_strike" | "sead_suppression" | "standoff_cruise" | "drone_swarm";
+export type StrikeRoe = "clean_strike" | "unrestricted" | "decapitation";
+
+export interface StrikePackagePayload {
+  target_base_id: number;
+  profile: StrikeProfileId;
+  squadrons: { squadron_id: number; airframes: number }[];
+  weapons_planned: Record<string, number>;
+  support: { awacs?: boolean; tanker?: boolean };
+  roe: StrikeRoe;
+}
+
+export interface StrikePreview {
+  issues: string[];
+  forecast: {
+    ind_losses: [number, number];
+    damage_pct: [number, number];
+    diplomatic_blowback: "low" | "medium" | "high" | "critical";
+    weapons_consumed: Record<string, number>;
+    treasury_cost_estimate_cr: number;
+  };
+  weapons_avail: Record<string, number>;
+  intel_quality: "low" | "medium" | "high";
+}
+
+export interface StrikeBaseDamageState {
+  shelter_loss_pct: number;
+  runway_disabled_quarters_remaining: number;
+  ad_destroyed: boolean;
+  garrisoned_loss: number;
+}
+
+export interface StrikeRead {
+  id: number;
+  year: number;
+  quarter: number;
+  target_base_id: number;
+  profile: StrikeProfileId;
+  roe: string;
+  package_json: Record<string, unknown>;
+  outcome_json: {
+    damage: StrikeBaseDamageState;
+    ind_airframes_lost: number;
+    weapons_consumed: Record<string, number>;
+  };
+  event_trace: Array<Record<string, unknown>>;
+  aar_text: string;
+  status: string;
+}
+
+export interface StrikeListResponse {
+  strikes: StrikeRead[];
+}

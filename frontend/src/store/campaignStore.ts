@@ -19,6 +19,10 @@ import type {
   MissileStock,
   Notification,
   AdversaryBase,
+  DiplomacyResponse,
+  PostureSnapshot,
+  StrikePackagePayload,
+  StrikeRead,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -76,6 +80,13 @@ interface CampaignState {
   adversaryBases: AdversaryBase[];
   loadAdversaryBases: (campaignId: number) => Promise<void>;
   transferMissileStock: (payload: { weapon_id: string; from_base_id: number; to_base_id: number; quantity: number }) => Promise<void>;
+  posture: PostureSnapshot | null;
+  diplomacy: DiplomacyResponse | null;
+  strikes: StrikeRead[];
+  loadPosture: (campaignId: number) => Promise<void>;
+  loadDiplomacy: (campaignId: number) => Promise<void>;
+  loadStrikes: (campaignId: number) => Promise<void>;
+  commitStrike: (payload: StrikePackagePayload) => Promise<StrikeRead>;
   toasts: Toast[];
   rdLoading: Record<string, boolean>;
   loading: boolean;
@@ -190,6 +201,43 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       console.warn("loadAdversaryBases failed", e);
     }
   },
+  posture: null,
+  diplomacy: null,
+  strikes: [],
+  loadPosture: async (cid) => {
+    try { set({ posture: await api.getPosture(cid) }); }
+    catch (e) { console.warn("loadPosture failed", e); }
+  },
+  loadDiplomacy: async (cid) => {
+    try { set({ diplomacy: await api.getDiplomacy(cid) }); }
+    catch (e) { console.warn("loadDiplomacy failed", e); }
+  },
+  loadStrikes: async (cid) => {
+    try {
+      const r = await api.listStrikes(cid);
+      set({ strikes: r.strikes });
+    } catch (e) { console.warn("loadStrikes failed", e); }
+  },
+  commitStrike: async (payload) => {
+    const cid = get().campaign?.id;
+    if (!cid) throw new Error("no campaign");
+    try {
+      const op = await api.commitStrike(cid, payload);
+      set((s) => ({ strikes: [op, ...s.strikes] }));
+      void get().loadPosture(cid);
+      void get().loadDiplomacy(cid);
+      void get().loadMissileStocks(cid);
+      void get().loadHangar(cid);
+      void get().loadAdversaryBases(cid);
+      get().pushToast("info", "Strike resolved");
+      return op;
+    } catch (e) {
+      const msg = (e as { response?: { data?: { detail?: string } } }).response?.data?.detail
+                  ?? (e as Error).message;
+      get().pushToast("error", `Strike failed: ${msg}`);
+      throw e;
+    }
+  },
   transferMissileStock: async (payload) => {
     const cid = get().campaign?.id;
     if (!cid) return;
@@ -255,6 +303,9 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       void get().loadIntel(cid, { year: campaign.current_year, quarter: campaign.current_quarter });
       void get().loadNotifications(cid);
       void get().loadAdversaryBases(cid);
+      void get().loadPosture(cid);
+      void get().loadDiplomacy(cid);
+      void get().loadStrikes(cid);
     } catch (e) {
       set({ error: (e as Error).message, loading: false });
     }
@@ -705,6 +756,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     notifications: [],
     readNotificationIds: new Set<string>(),
     adversaryBases: [],
+    posture: null, diplomacy: null, strikes: [],
     toasts: [], rdLoading: {},
     loading: false, error: null,
   }),

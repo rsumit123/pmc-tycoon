@@ -1,8 +1,11 @@
+import { Link } from "react-router-dom";
 import type { AdversaryBase } from "../../lib/types";
+import { useCampaignStore } from "../../store/campaignStore";
 
 export interface AdversaryBaseSheetProps {
   base: AdversaryBase | null;
   onClose: () => void;
+  campaignId?: number;
 }
 
 const TIER_BADGE: Record<string, string> = {
@@ -11,9 +14,11 @@ const TIER_BADGE: Record<string, string> = {
   low:    "border-slate-700 text-slate-300 bg-slate-800/50",
 };
 
-export function AdversaryBaseSheet({ base, onClose }: AdversaryBaseSheetProps) {
+export function AdversaryBaseSheet({ base, onClose, campaignId }: AdversaryBaseSheetProps) {
+  const posture = useCampaignStore((s) => s.posture);
   if (!base) return null;
   const s = base.latest_sighting;
+  const offensiveUnlocked = posture?.offensive_unlocked ?? false;
 
   return (
     <div
@@ -83,6 +88,16 @@ export function AdversaryBaseSheet({ base, onClose }: AdversaryBaseSheetProps) {
             </p>
           )}
         </div>
+      )}
+
+      {offensiveUnlocked && campaignId !== undefined && base.is_covered && (
+        <Link
+          to={`/campaign/${campaignId}/ops?tab=strike&target=${base.id}`}
+          onClick={onClose}
+          className="block mt-4 w-full text-center bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs px-3 py-2 rounded"
+        >
+          🎯 Plan strike on this base →
+        </Link>
       )}
     </div>
   );

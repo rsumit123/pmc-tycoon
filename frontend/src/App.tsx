@@ -13,6 +13,8 @@ import { ArmoryPage } from "./pages/ArmoryPage";
 import { CombatHistoryPage } from "./pages/CombatHistoryPage";
 import { PerformancePage } from "./pages/PerformancePage";
 import { NotificationsPage } from "./pages/NotificationsPage";
+import { OpsScreen } from "./pages/OpsScreen";
+import { StrikeAARPage } from "./pages/StrikeAARPage";
 import { ToastStack } from "./components/primitives/ToastStack";
 
 export default function App() {
@@ -32,6 +34,8 @@ export default function App() {
         <Route path="/campaign/:id/combat-history" element={<CombatHistoryPage />} />
         <Route path="/campaign/:id/performance" element={<PerformancePage />} />
         <Route path="/campaign/:id/notifications" element={<NotificationsPage />} />
+        <Route path="/campaign/:id/ops" element={<OpsScreen />} />
+        <Route path="/campaign/:id/ops/strike/:sid" element={<StrikeAARPage />} />
         <Route path="/campaign/:id/raw" element={<CampaignConsoleRaw />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

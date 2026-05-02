@@ -60,6 +60,8 @@ export interface AcquisitionPipelineProps {
   focusAdSystem?: string;
   /** Pre-select the target battery within an AD reload card. */
   focusBatteryId?: number;
+  /** Origin codes (e.g. CHN, PAK) currently blocked due to hostile diplomacy. */
+  diplomacyBlockedOrigins?: string[];
 }
 
 // Strip noisy suffixes so base names fit in narrow select dropdowns on mobile.
@@ -103,6 +105,7 @@ function qFraction(year: number, quarter: number): number {
 
 function OfferCard({
   platform, currentYear, currentQuarter, onSign, disabled, bases = [], highlighted,
+  blockedReason,
 }: {
   platform: Platform;
   currentYear: number;
@@ -111,6 +114,8 @@ function OfferCard({
   disabled?: boolean;
   bases?: BaseMarker[];
   highlighted?: boolean;
+  /** When set, sign is disabled and the card displays this rose-tinted reason. */
+  blockedReason?: string;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -208,13 +213,19 @@ function OfferCard({
           </select>
         </label>
       )}
-      <CommitHoldButton
-        label={`Hold to sign ₹${totalCost.toLocaleString("en-US")}`}
-        holdMs={1800}
-        disabled={disabled}
-        onCommit={sign}
-        className="w-full"
-      />
+      {blockedReason ? (
+        <div className="bg-rose-950/40 border border-rose-800 text-rose-200 text-[11px] rounded p-2 text-center">
+          🔒 {blockedReason}
+        </div>
+      ) : (
+        <CommitHoldButton
+          label={`Hold to sign ₹${totalCost.toLocaleString("en-US")}`}
+          holdMs={1800}
+          disabled={disabled}
+          onCommit={sign}
+          className="w-full"
+        />
+      )}
     </div>
   );
 }
@@ -1061,6 +1072,7 @@ export function AcquisitionPipeline({
   missileStocks = [],
   initialOfferCat: initialOfferCatProp, focusMissile, focusBaseId, focusQty,
   focusAdSystem, focusBatteryId,
+  diplomacyBlockedOrigins = [],
 }: AcquisitionPipelineProps) {
   const byId = Object.fromEntries(platforms.map((p) => [p.id, p]));
   const [tab, setTab] = useState<"orders" | "offers">(
@@ -1247,18 +1259,22 @@ export function AcquisitionPipeline({
                 </p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {availablePlatforms.map((p) => (
-                    <OfferCard
-                      key={p.id}
-                      platform={p}
-                      currentYear={currentYear}
-                      currentQuarter={currentQuarter}
-                      onSign={onSign}
-                      disabled={disabled}
-                      bases={bases}
-                      highlighted={focusId === p.id}
-                    />
-                  ))}
+                  {availablePlatforms.map((p) => {
+                    const blocked = diplomacyBlockedOrigins.includes(p.origin);
+                    return (
+                      <OfferCard
+                        key={p.id}
+                        platform={p}
+                        currentYear={currentYear}
+                        currentQuarter={currentQuarter}
+                        onSign={onSign}
+                        disabled={disabled}
+                        bases={bases}
+                        highlighted={focusId === p.id}
+                        blockedReason={blocked ? `${p.origin} supplier hostile — relations must thaw before new orders.` : undefined}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>

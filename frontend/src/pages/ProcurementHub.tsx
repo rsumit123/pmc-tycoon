@@ -49,6 +49,15 @@ export function ProcurementHub() {
   const cancelAcquisition = useCampaignStore((s) => s.cancelAcquisition);
   const loading = useCampaignStore((s) => s.loading);
   const error = useCampaignStore((s) => s.error);
+  const diplomacy = useCampaignStore((s) => s.diplomacy);
+  const loadDiplomacy = useCampaignStore((s) => s.loadDiplomacy);
+
+  // Plan 22 — derive blocked origins from hostile-tier factions.
+  const SUPPLIER_BY_FACTION: Record<string, string> = { PLAAF: "CHN", PAF: "PAK" };
+  const diplomacyBlockedOrigins = (diplomacy?.factions ?? [])
+    .filter((f) => f.tier === "hostile")
+    .map((f) => SUPPLIER_BY_FACTION[f.faction])
+    .filter(Boolean);
 
   useEffect(() => {
     if (id && (!campaign || campaign.id !== Number(id))) {
@@ -67,8 +76,9 @@ export function ProcurementHub() {
       loadMissileStocks(campaign.id);
       loadADBatteries(campaign.id);
       loadArmoryUnlocks(campaign.id);
+      loadDiplomacy(campaign.id);
     }
-  }, [campaign, loadPlatforms, loadWeapons, loadRdCatalog, loadRdActive, loadAcquisitions, loadBases, loadMissileStocks, loadADBatteries, loadArmoryUnlocks]);
+  }, [campaign, loadPlatforms, loadWeapons, loadRdCatalog, loadRdActive, loadAcquisitions, loadBases, loadMissileStocks, loadADBatteries, loadArmoryUnlocks, loadDiplomacy]);
 
   if (!campaign) return <div className="p-6">Loading…</div>;
 
@@ -182,6 +192,7 @@ export function ProcurementHub() {
               focusMissile={searchParams.get("missile") ?? undefined}
               focusBaseId={searchParams.get("base") ? Number(searchParams.get("base")) : undefined}
               focusQty={searchParams.get("qty") ? Number(searchParams.get("qty")) : undefined}
+              diplomacyBlockedOrigins={diplomacyBlockedOrigins}
               focusAdSystem={searchParams.get("ad_system") ?? undefined}
               focusBatteryId={searchParams.get("battery") ? Number(searchParams.get("battery")) : undefined}
               missileStocks={missileStocks}

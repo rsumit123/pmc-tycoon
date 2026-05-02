@@ -54,6 +54,7 @@ export function CampaignMapView() {
   const loadNotifications = useCampaignStore((s) => s.loadNotifications);
   const adversaryBases = useCampaignStore((s) => s.adversaryBases);
   const loadAdversaryBases = useCampaignStore((s) => s.loadAdversaryBases);
+  const loadPosture = useCampaignStore((s) => s.loadPosture);
   const hangar = useCampaignStore((s) => s.hangar);
   const loadHangar = useCampaignStore((s) => s.loadHangar);
 
@@ -105,9 +106,10 @@ export function CampaignMapView() {
       loadIntel(campaign.id);
       loadNotifications(campaign.id);
       loadAdversaryBases(campaign.id);
+      loadPosture(campaign.id);
       loadHangar(campaign.id);
     }
-  }, [campaign, loadBases, loadPlatforms, loadAcquisitions, loadRdActive, loadRdCatalog, loadADBatteries, loadMissileStocks, loadIntel, loadNotifications, loadAdversaryBases, loadHangar]);
+  }, [campaign, loadBases, loadPlatforms, loadAcquisitions, loadRdActive, loadRdCatalog, loadADBatteries, loadMissileStocks, loadIntel, loadNotifications, loadAdversaryBases, loadPosture, loadHangar]);
 
   useEffect(() => {
     if (campaign) {
@@ -270,6 +272,11 @@ export function CampaignMapView() {
               <div className="text-[10px] uppercase tracking-wide opacity-60 px-2 pt-3 pb-1">Operations</div>
               <Link
                 onClick={() => setShowMenu(false)}
+                to={`/campaign/${campaign.id}/ops`}
+                className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
+              >🎯 Ops Screen</Link>
+              <Link
+                onClick={() => setShowMenu(false)}
                 to={`/campaign/${campaign.id}/procurement`}
                 className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
               >💰 Procurement</Link>
@@ -396,6 +403,7 @@ export function CampaignMapView() {
       <AdversaryBaseSheet
         base={selectedAdversaryBase}
         onClose={() => setSelectedAdversaryBase(null)}
+        campaignId={campaign?.id}
       />
 
       <YearEndRecapToast />
