@@ -3,16 +3,36 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.auth.deps import get_current_user
+from app.core.config import settings
 from app.crud.campaign import get_campaign
 from app.crud.vignette import get_vignette
 from app.crud.narrative import list_narratives
 from app.llm import service as llm
 from app.llm.client import LLMUnavailableError, LLMRequestError
+from app.llm.guardrails import (
+    check_user_daily_cap, check_global_token_ceiling, RateLimitedError,
+)
+from app.models.user import User
 from app.schemas.narrative import (
     CampaignNarrativeRead, CampaignNarrativeListResponse, GenerateResponse,
 )
 
 router = APIRouter(prefix="/api/campaigns", tags=["narratives"])
+
+
+def _enforce_limits(db: Session, user: User) -> None:
+    """Raises HTTP 429 if the per-user daily cap or global token ceiling is hit.
+
+    Run before any generation/cache work. A cache hit (which costs nothing)
+    still counts toward the per-user cap; that minor over-count is accepted in
+    favor of simplicity.
+    """
+    try:
+        check_user_daily_cap(db, user.id, settings.llm_daily_user_cap)
+        check_global_token_ceiling(db, settings.llm_daily_token_ceiling)
+    except RateLimitedError as exc:
+        raise HTTPException(status_code=429, detail=str(exc))
 
 
 def _wrap(call, *, kind: str, subject_id: str | None):
@@ -37,7 +57,9 @@ def _wrap(call, *, kind: str, subject_id: str | None):
 
 
 @router.post("/{campaign_id}/vignettes/{vignette_id}/aar", response_model=GenerateResponse)
-def aar_endpoint(campaign_id: int, vignette_id: int, db: Session = Depends(get_db)):
+def aar_endpoint(campaign_id: int, vignette_id: int, db: Session = Depends(get_db),
+                 user: User = Depends(get_current_user)):
+    _enforce_limits(db, user)
     c = get_campaign(db, campaign_id)
     if c is None:
         raise HTTPException(404, "Campaign not found")
@@ -49,7 +71,9 @@ def aar_endpoint(campaign_id: int, vignette_id: int, db: Session = Depends(get_d
 
 
 @router.post("/{campaign_id}/intel-briefs/generate", response_model=GenerateResponse)
-def intel_brief_endpoint(campaign_id: int, db: Session = Depends(get_db)):
+def intel_brief_endpoint(campaign_id: int, db: Session = Depends(get_db),
+                         user: User = Depends(get_current_user)):
+    _enforce_limits(db, user)
     c = get_campaign(db, campaign_id)
     if c is None:
         raise HTTPException(404, "Campaign not found")
@@ -59,7 +83,9 @@ def intel_brief_endpoint(campaign_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{campaign_id}/vignettes/{vignette_id}/ace-name", response_model=GenerateResponse)
-def ace_name_endpoint(campaign_id: int, vignette_id: int, db: Session = Depends(get_db)):
+def ace_name_endpoint(campaign_id: int, vignette_id: int, db: Session = Depends(get_db),
+                      user: User = Depends(get_current_user)):
+    _enforce_limits(db, user)
     c = get_campaign(db, campaign_id)
     if c is None:
         raise HTTPException(404, "Campaign not found")
@@ -75,7 +101,9 @@ def year_recap_endpoint(
     campaign_id: int,
     year: int = Query(..., description="The year to recap (must be fully closed)"),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
+    _enforce_limits(db, user)
     c = get_campaign(db, campaign_id)
     if c is None:
         raise HTTPException(404, "Campaign not found")
@@ -84,7 +112,9 @@ def year_recap_endpoint(
 
 
 @router.post("/{campaign_id}/retrospective", response_model=GenerateResponse)
-def retrospective_endpoint(campaign_id: int, db: Session = Depends(get_db)):
+def retrospective_endpoint(campaign_id: int, db: Session = Depends(get_db),
+                           user: User = Depends(get_current_user)):
+    _enforce_limits(db, user)
     c = get_campaign(db, campaign_id)
     if c is None:
         raise HTTPException(404, "Campaign not found")
