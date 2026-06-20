@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth.deps import require_owned_campaign
 from app.auth.bootstrap import ensure_owner_and_backfill, ensure_user_id_column
+from app.core.checks import assert_production_secrets, verify_user_id_migration
 from app.core.config import settings
 from app.db.base import Base
 from app.db.session import engine, SessionLocal
@@ -35,6 +36,9 @@ from app.api.posture import router as posture_router
 
 logger = logging.getLogger(__name__)
 
+# Refuse to boot a prod-like deployment with the insecure default JWT secret.
+assert_production_secrets(settings)
+
 try:
     Base.metadata.create_all(bind=engine)
 except Exception as exc:  # noqa: BLE001
@@ -47,6 +51,9 @@ try:
     _db.close()
 except Exception as exc:  # noqa: BLE001
     logger.warning("owner backfill skipped at startup: %s", exc)
+
+# Fail loud (ERROR, not silent) if the migration left the DB unusable.
+verify_user_id_migration(engine)
 
 app = FastAPI(title="Sovereign Shield API", version="0.1.0")
 
