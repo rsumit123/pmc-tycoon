@@ -4,9 +4,10 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth.deps import require_owned_campaign
+from app.auth.bootstrap import ensure_owner_and_backfill
 from app.core.config import settings
 from app.db.base import Base
-from app.db.session import engine
+from app.db.session import engine, SessionLocal
 import app.models  # noqa: F401  # register all models with Base.metadata
 from app.api.auth import router as auth_router
 from app.api.campaigns import router as campaigns_router
@@ -38,6 +39,13 @@ try:
     Base.metadata.create_all(bind=engine)
 except Exception as exc:  # noqa: BLE001
     logger.warning("create_all skipped at startup: %s", exc)
+
+try:
+    _db = SessionLocal()
+    ensure_owner_and_backfill(_db, settings.owner_email)
+    _db.close()
+except Exception as exc:  # noqa: BLE001
+    logger.warning("owner backfill skipped at startup: %s", exc)
 
 app = FastAPI(title="Sovereign Shield API", version="0.1.0")
 
