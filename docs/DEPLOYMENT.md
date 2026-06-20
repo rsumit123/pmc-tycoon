@@ -10,6 +10,35 @@ Browser → pmc-tycoon.skdev.one (Vercel) → pmc-tycoon-api.skdev.one (GCP VM)
 
 ---
 
+## Auth setup (Google OAuth)
+
+1. Google Cloud Console -> APIs & Services -> Credentials -> Create Credentials -> OAuth client ID.
+2. Application type: **Web application**.
+3. **Authorized JavaScript origins** (no redirect URI needed for the GIS button flow):
+   - `http://localhost:5173`
+   - `http://localhost:5174`
+   - the production frontend URL (currently `https://pmc-tycoon.skdev.one`; update when the rename lands)
+4. Copy the **Client ID**. Put it in BOTH:
+   - `backend/.env` -> `GOOGLE_CLIENT_ID=<client-id>`
+   - `frontend/.env` (and the Vercel project env) -> `VITE_GOOGLE_CLIENT_ID=<client-id>`
+5. Generate a strong `JWT_SECRET_KEY` (e.g. `openssl rand -hex 32`) and set it in `backend/.env`. If this value changes, all existing sign-in sessions are invalidated.
+6. The same Client ID is used as both the frontend button's client id and the backend verification audience -- they MUST match.
+
+### New backend env vars
+- `GOOGLE_CLIENT_ID` -- required for Google sign-in.
+- `JWT_SECRET_KEY` -- required; sign-in tokens are invalid if this changes.
+- Optional: `ACCESS_TOKEN_EXPIRE_MINUTES` (default 120), `REFRESH_TOKEN_EXPIRE_MINUTES` (default 43200),
+  `LLM_DAILY_USER_CAP` (default 40), `LLM_DAILY_TOKEN_CEILING` (default 2000000), `OWNER_EMAIL` (default thetinkerer018@gmail.com).
+
+### First-deploy migration note
+On first startup after this release, the backend auto-runs an idempotent migration: it adds the
+`campaigns.user_id` column to the existing SQLite DB (create_all cannot alter existing tables),
+creates the owner user (`OWNER_EMAIL`), and assigns all pre-auth campaigns to that owner. No manual
+step required; it is a no-op on subsequent boots. The owner's first Google sign-in (with the matching
+email) links the Google identity to that pre-created owner account by email.
+
+---
+
 ## Frontend (Vercel)
 
 **URL:** https://pmc-tycoon.skdev.one

@@ -12,6 +12,15 @@
 #   OPENROUTER_API_KEY=sk-or-...
 # Docker reads it via --env-file. If missing, LLM narratives fall back
 # to placeholder text.
+#
+# As of Plan 23 (auth), the same backend .env on the VM must ALSO contain:
+#   GOOGLE_CLIENT_ID=<oauth-web-client-id>
+#   JWT_SECRET_KEY=<openssl rand -hex 32>
+# Without these, Google sign-in fails and issued tokens are invalid.
+# (Do NOT hardcode secret values in this script — they live only in the VM .env.)
+# The Vercel frontend project must have VITE_GOOGLE_CLIENT_ID set to the SAME
+# client id (it is the GIS button client id + backend verification audience).
+# See docs/DEPLOYMENT.md -> "Auth setup (Google OAuth)" for full steps.
 
 set -e
 
