@@ -907,3 +907,18 @@ export interface StrikeRead {
 export interface StrikeListResponse {
   strikes: StrikeRead[];
 }
+
+export interface AuthUser {
+  id: number;
+  email: string;
+  display_name: string;
+  avatar_url: string | null;
+  auth_provider: string;
+}
+
+export interface TokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  user: AuthUser;
+}
