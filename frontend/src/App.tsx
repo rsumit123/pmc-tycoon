@@ -15,28 +15,33 @@ import { PerformancePage } from "./pages/PerformancePage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { OpsScreen } from "./pages/OpsScreen";
 import { StrikeAARPage } from "./pages/StrikeAARPage";
+import { Login } from "./pages/Login";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ToastStack } from "./components/primitives/ToastStack";
 
 export default function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/campaign/:id" element={<CampaignMapView />} />
-        <Route path="/campaign/:id/procurement" element={<ProcurementHub />} />
-        <Route path="/campaign/:id/intel" element={<IntelInbox />} />
-        <Route path="/campaign/:id/vignette/:vid" element={<OpsRoom />} />
-        <Route path="/campaign/:id/vignette/:vid/aar" element={<VignetteAAR />} />
-        <Route path="/campaign/:id/white-paper" element={<DefenseWhitePaper />} />
-        <Route path="/campaign/:id/turn-report/:year/:quarter" element={<TurnReport />} />
-        <Route path="/campaign/:id/hangar" element={<HangarPage />} />
-        <Route path="/campaign/:id/armory" element={<ArmoryPage />} />
-        <Route path="/campaign/:id/combat-history" element={<CombatHistoryPage />} />
-        <Route path="/campaign/:id/performance" element={<PerformancePage />} />
-        <Route path="/campaign/:id/notifications" element={<NotificationsPage />} />
-        <Route path="/campaign/:id/ops" element={<OpsScreen />} />
-        <Route path="/campaign/:id/ops/strike/:sid" element={<StrikeAARPage />} />
-        <Route path="/campaign/:id/raw" element={<CampaignConsoleRaw />} />
+        <Route path="/login" element={<Login />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Landing />} />
+          <Route path="/campaign/:id" element={<CampaignMapView />} />
+          <Route path="/campaign/:id/procurement" element={<ProcurementHub />} />
+          <Route path="/campaign/:id/intel" element={<IntelInbox />} />
+          <Route path="/campaign/:id/vignette/:vid" element={<OpsRoom />} />
+          <Route path="/campaign/:id/vignette/:vid/aar" element={<VignetteAAR />} />
+          <Route path="/campaign/:id/white-paper" element={<DefenseWhitePaper />} />
+          <Route path="/campaign/:id/turn-report/:year/:quarter" element={<TurnReport />} />
+          <Route path="/campaign/:id/hangar" element={<HangarPage />} />
+          <Route path="/campaign/:id/armory" element={<ArmoryPage />} />
+          <Route path="/campaign/:id/combat-history" element={<CombatHistoryPage />} />
+          <Route path="/campaign/:id/performance" element={<PerformancePage />} />
+          <Route path="/campaign/:id/notifications" element={<NotificationsPage />} />
+          <Route path="/campaign/:id/ops" element={<OpsScreen />} />
+          <Route path="/campaign/:id/ops/strike/:sid" element={<StrikeAARPage />} />
+          <Route path="/campaign/:id/raw" element={<CampaignConsoleRaw />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ToastStack />

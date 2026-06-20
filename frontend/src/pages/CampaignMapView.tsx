@@ -4,6 +4,7 @@ import type { Map as MLMap } from "maplibre-gl";
 
 import { useCampaignStore } from "../store/campaignStore";
 import { useMapStore } from "../store/mapStore";
+import { useAuthStore } from "../store/authStore";
 
 import { SubcontinentMap } from "../components/map/SubcontinentMap";
 import { ADCoverageLayer } from "../components/map/ADCoverageLayer";
@@ -57,6 +58,9 @@ export function CampaignMapView() {
   const loadPosture = useCampaignStore((s) => s.loadPosture);
   const hangar = useCampaignStore((s) => s.hangar);
   const loadHangar = useCampaignStore((s) => s.loadHangar);
+
+  const logout = useAuthStore((s) => s.logout);
+  const user = useAuthStore((s) => s.user);
 
   const selectedBaseId = useMapStore((s) => s.selectedBaseId);
   const setSelectedBase = useMapStore((s) => s.setSelectedBase);
@@ -328,6 +332,11 @@ export function CampaignMapView() {
                 to="/"
                 className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800 opacity-60"
               >🏠 Home / Campaigns</Link>
+              <button
+                type="button"
+                onClick={() => { logout(); navigate("/login"); }}
+                className="w-full text-left flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800 text-slate-300"
+              >🚪 Sign out{user ? ` (${user.display_name})` : ""}</button>
             </nav>
           </aside>
         </>
