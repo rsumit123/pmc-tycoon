@@ -44,6 +44,7 @@ def _seed_campaign(session, *, current_year=2030, current_quarter=1):
         current_year=current_year, current_quarter=current_quarter,
         difficulty="realistic", objectives_json=["amca_operational_by_2035"],
         budget_cr=500000,
+        user_id=1,  # owned by the conftest dummy user so the ownership guard passes
     )
     session.add(c)
     session.commit()

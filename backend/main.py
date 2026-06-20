@@ -1,8 +1,9 @@
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.auth.deps import require_owned_campaign
 from app.core.config import settings
 from app.db.base import Base
 from app.db.session import engine
@@ -49,29 +50,31 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
-app.include_router(campaigns_router)
-app.include_router(budget_router)
-app.include_router(rd_router)
-app.include_router(acquisitions_router)
-app.include_router(intel_router)
-app.include_router(adversary_router)
-app.include_router(vignettes_router)
-app.include_router(narratives_router)
-app.include_router(content_router)
-app.include_router(bases_router)
-app.include_router(summary_router)
-app.include_router(base_upgrade_router)
-app.include_router(campaign_export_router)
-app.include_router(squadrons_router)
-app.include_router(armory_router)
-app.include_router(hangar_router)
-app.include_router(performance_router)
-app.include_router(missile_stocks_router)
-app.include_router(notifications_router)
-app.include_router(adversary_bases_router)
-app.include_router(offensive_router)
-app.include_router(diplomacy_router)
-app.include_router(posture_router)
+app.include_router(campaigns_router)          # protected per-route (Task 8)
+app.include_router(campaign_export_router)    # protected per-route (Task 8)
+app.include_router(content_router)            # public catalogs - intentionally unguarded
+
+_guard = [Depends(require_owned_campaign)]
+app.include_router(budget_router, dependencies=_guard)
+app.include_router(rd_router, dependencies=_guard)
+app.include_router(acquisitions_router, dependencies=_guard)
+app.include_router(intel_router, dependencies=_guard)
+app.include_router(adversary_router, dependencies=_guard)
+app.include_router(vignettes_router, dependencies=_guard)
+app.include_router(narratives_router, dependencies=_guard)
+app.include_router(bases_router, dependencies=_guard)
+app.include_router(summary_router, dependencies=_guard)
+app.include_router(base_upgrade_router, dependencies=_guard)
+app.include_router(squadrons_router, dependencies=_guard)
+app.include_router(armory_router, dependencies=_guard)
+app.include_router(hangar_router, dependencies=_guard)
+app.include_router(performance_router, dependencies=_guard)
+app.include_router(missile_stocks_router, dependencies=_guard)
+app.include_router(notifications_router, dependencies=_guard)
+app.include_router(adversary_bases_router, dependencies=_guard)
+app.include_router(offensive_router, dependencies=_guard)
+app.include_router(diplomacy_router, dependencies=_guard)
+app.include_router(posture_router, dependencies=_guard)
 
 
 @app.get("/")

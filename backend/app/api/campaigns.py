@@ -60,9 +60,8 @@ def delete_campaign_endpoint(
     from app.models.ad_battery import ADBattery
     from app.models.loadout_upgrade import LoadoutUpgrade
 
-    camp = db.query(Campaign).get(campaign_id)
-    if camp is None:
-        raise HTTPException(status_code=404, detail="campaign not found")
+    # `camp` is injected + ownership-checked by require_owned_campaign (404s
+    # non-owners), so no re-query / None-check is needed here.
 
     # Delete all dependent rows (no cascade defined in ORM).
     for model in (
