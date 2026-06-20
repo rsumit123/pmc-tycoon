@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth.deps import require_owned_campaign
-from app.auth.bootstrap import ensure_owner_and_backfill
+from app.auth.bootstrap import ensure_owner_and_backfill, ensure_user_id_column
 from app.core.config import settings
 from app.db.base import Base
 from app.db.session import engine, SessionLocal
@@ -41,6 +41,7 @@ except Exception as exc:  # noqa: BLE001
     logger.warning("create_all skipped at startup: %s", exc)
 
 try:
+    ensure_user_id_column(engine)
     _db = SessionLocal()
     ensure_owner_and_backfill(_db, settings.owner_email)
     _db.close()
