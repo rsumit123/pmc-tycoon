@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.db.base import Base
 from app.db.session import engine
 import app.models  # noqa: F401  # register all models with Base.metadata
+from app.api.auth import router as auth_router
 from app.api.campaigns import router as campaigns_router
 from app.api.budget import router as budget_router
 from app.api.rd import router as rd_router
@@ -47,6 +48,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(campaigns_router)
 app.include_router(budget_router)
 app.include_router(rd_router)

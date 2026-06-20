@@ -12,3 +12,4 @@ pyjwt==2.9.0
 passlib[argon2]==1.7.4
 google-auth==2.35.0
 requests==2.32.3
+email-validator==2.2.0
