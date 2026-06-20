@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Chakravyuh</string>
+    <string name="title_activity_main">Chakravyuh</string>
+    <string name="package_name">com.skdev.chakravyuh</string>
+    <string name="custom_url_scheme">com.skdev.chakravyuh</string>
+</resources>
