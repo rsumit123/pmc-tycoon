@@ -224,3 +224,32 @@ sudo certbot --nginx -d pmc-tycoon-api.skdev.one --non-interactive --agree-tos -
 | 8005 | charade-backend | charade |
 | 8010 | **defense-game-backend** | **PMC Tycoon** |
 | 8080 | socialflow-django-nginx | socialflow nginx |
+
+---
+
+## Android app (Capacitor)
+
+The Android app wraps the same Vite build. Web deploys are unaffected.
+
+### One-time native project (if `frontend/android/` is absent)
+From `frontend/`: `npm run build && npx cap add android && npx cap sync android`, then commit `frontend/android/`. (Already generated and committed as of Plan 24.)
+
+### Build a signed APK (Phase 1 — sideload)
+1. Create a release keystore (once), kept OUT of git:
+   `keytool -genkey -v -keystore chakravyuh-release.keystore -alias chakravyuh -keyalg RSA -keysize 2048 -validity 10000`
+2. Get its SHA-1: `keytool -list -v -keystore chakravyuh-release.keystore -alias chakravyuh` → copy the `SHA1:` line.
+3. From `frontend/`: `npm run cap:sync`, then `npx cap open android` (opens Android Studio). Build > Generate Signed Bundle/APK > APK > select keystore > release > finish. (Or via Gradle: `cd android && ./gradlew assembleRelease`.)
+4. APK is in `android/app/build/outputs/apk/release/`. Transfer to device, enable "install from unknown sources", install.
+
+### Google OAuth — Android client (REQUIRED for sign-in)
+- Google Cloud Console > Credentials > Create OAuth client ID > **Android**.
+- Package name: `com.skdev.chakravyuh`. SHA-1: the **release keystore SHA-1** from above.
+- The existing **Web client ID stays** as `serverClientId` + backend audience — do not change it.
+
+### Phase 2 — Play Store closed testing
+1. Build an **AAB** (Android Studio > Generate Signed Bundle > Android App Bundle, or `./gradlew bundleRelease`).
+2. Play Console > create the app > Testing > **Closed testing** > create a track > upload the AAB > add testers by email > share the opt-in link.
+3. **Play App Signing SHA-1 (the gotcha):** Play re-signs the app with Google's key. Copy the **App signing key SHA-1** from Play Console > Setup > App integrity / App signing, and add a **second Android OAuth client** (same package `com.skdev.chakravyuh`, this new SHA-1). Without it, sign-in works on the sideloaded APK but silently fails on the Play build.
+
+### Updating the app after code changes
+From `frontend/`: `npm run cap:sync`, then rebuild in Android Studio / Gradle and re-upload (bump `versionCode`/`versionName` in `android/app/build.gradle`).
