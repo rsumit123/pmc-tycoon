@@ -41,13 +41,85 @@ import type {
   StrikePreview,
   StrikeRead,
   StrikeListResponse,
+  TokenResponse,
 } from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
 
 export const http = axios.create({ baseURL, timeout: 10_000 });
 
+// --- Auth interceptors ---
+http.interceptors.request.use((config) => {
+  const raw = localStorage.getItem("ss_tokens");
+  if (raw) {
+    try {
+      const { access_token } = JSON.parse(raw);
+      if (access_token) config.headers.Authorization = `Bearer ${access_token}`;
+    } catch { /* ignore */ }
+  }
+  return config;
+});
+
+let refreshing: Promise<string | null> | null = null;
+
+async function tryRefresh(): Promise<string | null> {
+  const raw = localStorage.getItem("ss_tokens");
+  if (!raw) return null;
+  let refresh_token: string | undefined;
+  try { refresh_token = JSON.parse(raw).refresh_token; } catch { return null; }
+  if (!refresh_token) return null;
+  try {
+    const { data } = await axios.post<TokenResponse>(`${baseURL}/api/auth/refresh`, { refresh_token });
+    localStorage.setItem("ss_tokens", JSON.stringify({
+      access_token: data.access_token, refresh_token: data.refresh_token,
+    }));
+    return data.access_token;
+  } catch {
+    return null;
+  }
+}
+
+http.interceptors.response.use(
+  (r) => r,
+  async (error) => {
+    const original = error.config;
+    if (error.response?.status === 401 && original && !original._retried) {
+      original._retried = true;
+      refreshing = refreshing ?? tryRefresh();
+      const newToken = await refreshing;
+      refreshing = null;
+      if (newToken) {
+        original.headers.Authorization = `Bearer ${newToken}`;
+        return http(original);
+      }
+      localStorage.removeItem("ss_tokens");
+      localStorage.removeItem("ss_user");
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        window.location.assign("/login");
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
 export const api = {
+  async signup(email: string, password: string, display_name?: string): Promise<TokenResponse> {
+    const { data } = await http.post<TokenResponse>("/api/auth/signup", { email, password, display_name });
+    return data;
+  },
+  async login(email: string, password: string): Promise<TokenResponse> {
+    const { data } = await http.post<TokenResponse>("/api/auth/login", { email, password });
+    return data;
+  },
+  async loginGoogle(idToken: string): Promise<TokenResponse> {
+    const { data } = await http.post<TokenResponse>("/api/auth/google", { id_token: idToken });
+    return data;
+  },
+  async getMe(): Promise<TokenResponse["user"]> {
+    const { data } = await http.get<TokenResponse["user"]>("/api/auth/me");
+    return data;
+  },
+
   async createCampaign(payload: CampaignCreatePayload): Promise<Campaign> {
     const { data } = await http.post<Campaign>("/api/campaigns", payload);
     return data;
