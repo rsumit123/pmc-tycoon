@@ -10,6 +10,19 @@ class Settings(BaseSettings):
     openrouter_model: str = "anthropic/claude-haiku-4.5"
     content_dir: str = str(Path(__file__).resolve().parent.parent.parent / "content")
 
+    # Auth
+    google_client_id: str = ""
+    jwt_secret_key: str = "dev-insecure-change-me"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 120
+    refresh_token_expire_minutes: int = 43200  # 30 days
+
+    # LLM cost guardrails
+    llm_daily_user_cap: int = 40
+    llm_daily_token_ceiling: int = 2_000_000
+
+    owner_email: str = "thetinkerer018@gmail.com"
+
     cors_origins: list[str] = [
         "http://localhost:5173",
         "http://localhost:5174",
