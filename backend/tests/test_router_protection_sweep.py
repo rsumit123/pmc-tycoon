@@ -66,3 +66,32 @@ def test_cross_user_is_404(client, path):
         "name": "C", "difficulty": "realistic",
         "objectives": ["amca_operational_by_2035", "maintain_42_squadrons"]}).json()["id"]
     assert client.get(path.format(cid=cid), headers=hb).status_code == 404
+
+
+from fastapi.routing import APIRoute
+from app.auth.deps import require_owned_campaign
+
+
+def _all_dependency_calls(dependant):
+    calls = []
+    for dep in dependant.dependencies:
+        if dep.call is not None:
+            calls.append(dep.call)
+        calls.extend(_all_dependency_calls(dep))
+    return calls
+
+
+def test_every_campaign_scoped_route_has_ownership_guard():
+    """Regression guard: any route with {campaign_id} in its path MUST have
+    require_owned_campaign in its dependency chain. Fails loudly if a new
+    router is added without the guard."""
+    unguarded = []
+    for route in app.routes:
+        if not isinstance(route, APIRoute):
+            continue
+        if "{campaign_id}" not in route.path:
+            continue
+        calls = _all_dependency_calls(route.dependant)
+        if require_owned_campaign not in calls:
+            unguarded.append(f"{sorted(route.methods)} {route.path}")
+    assert not unguarded, "Campaign-scoped routes missing require_owned_campaign:\n" + "\n".join(unguarded)
