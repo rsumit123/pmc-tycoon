@@ -17,7 +17,7 @@ def _create_test_campaign(db: Session, name: str = "test_campaign", seed: int = 
         objectives=["maintain_42_squadrons"],
         seed=seed,
     )
-    campaign = create_campaign(db, payload)
+    campaign = create_campaign(db, payload, user_id=1)
     db.commit()
     return campaign
 

@@ -17,7 +17,7 @@ def _db():
 
 def test_base_damage_decays_each_turn():
     s = _db()()
-    c = create_campaign(s, CampaignCreate(name="t", difficulty="realistic", objectives=["defend_punjab"]))
+    c = create_campaign(s, CampaignCreate(name="t", difficulty="realistic", objectives=["defend_punjab"]), user_id=1)
     target = s.query(AdversaryBase).filter_by(campaign_id=c.id).first()
     s.add(BaseDamage(
         campaign_id=c.id, adversary_base_id=target.id,

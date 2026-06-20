@@ -16,7 +16,7 @@ def _db():
 
 def test_diplomacy_drift_advance():
     s = _db()()
-    c = create_campaign(s, CampaignCreate(name="t", difficulty="realistic", objectives=["defend_punjab"]))
+    c = create_campaign(s, CampaignCreate(name="t", difficulty="realistic", objectives=["defend_punjab"]), user_id=1)
     rows_before = {r.faction: r.temperature_pct for r in
                    s.query(DiplomaticState).filter_by(campaign_id=c.id).all()}
     advance_turn(s, c)

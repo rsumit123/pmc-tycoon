@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.auth.deps import get_current_user, require_owned_campaign
 from app.models.campaign import Campaign
+from app.models.user import User
 from app.models.squadron import Squadron
 from app.models.campaign_base import CampaignBase
 from app.schemas.campaign_export import CampaignExport, SquadronExport, BaseExport
@@ -11,10 +13,12 @@ router = APIRouter(prefix="/api/campaigns", tags=["export"])
 
 
 @router.get("/{campaign_id}/export", response_model=CampaignExport)
-def export_campaign(campaign_id: int, db: Session = Depends(get_db)):
-    campaign = db.query(Campaign).filter_by(id=campaign_id).first()
-    if not campaign:
-        raise HTTPException(404, "Campaign not found")
+def export_campaign(
+    campaign_id: int,
+    db: Session = Depends(get_db),
+    camp: Campaign = Depends(require_owned_campaign),
+):
+    campaign = camp
 
     squads = db.query(Squadron).filter_by(campaign_id=campaign_id).all()
     bases = db.query(CampaignBase).filter_by(campaign_id=campaign_id).all()
@@ -60,9 +64,14 @@ def export_campaign(campaign_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/import", status_code=201)
-def import_campaign(data: CampaignExport, db: Session = Depends(get_db)):
+def import_campaign(
+    data: CampaignExport,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     campaign = Campaign(
         name=f"{data.name} (imported)",
+        user_id=user.id,
         seed=data.seed,
         difficulty=data.difficulty,
         starting_year=data.starting_year,

@@ -30,7 +30,7 @@ def db():
 def test_40_turn_simulation_sanity(db):
     """Run 40 turns with default settings and check balance invariants."""
     payload = CampaignCreate(name="balance", seed=12345)
-    campaign = create_campaign(db, payload)
+    campaign = create_campaign(db, payload, user_id=1)
     # seed_starting_state is already called inside create_campaign
 
     for _ in range(40):

@@ -29,7 +29,7 @@ def test_advance_turn_emits_drone_recon_when_mq9b_present():
     SessionLocal = _memory_db()
     db = SessionLocal()
     campaign = create_campaign(
-        db, CampaignCreate(name="T", difficulty="realistic", objectives=["defend_punjab"]),
+        db, CampaignCreate(name="T", difficulty="realistic", objectives=["defend_punjab"]), user_id=1,
     )
     # Pick a friendly base near the PAF border (Pathankot if present, else any).
     pathankot = (
@@ -74,7 +74,7 @@ def test_advance_turn_no_drone_recon_without_drones():
     SessionLocal = _memory_db()
     db = SessionLocal()
     campaign = create_campaign(
-        db, CampaignCreate(name="T2", difficulty="realistic", objectives=["defend_punjab"]),
+        db, CampaignCreate(name="T2", difficulty="realistic", objectives=["defend_punjab"]), user_id=1,
     )
     advance_turn(db, campaign)
     db.commit()

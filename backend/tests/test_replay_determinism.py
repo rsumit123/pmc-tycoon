@@ -6,6 +6,7 @@ from sqlalchemy.pool import StaticPool
 from app.db.base import Base
 import app.models  # noqa: F401
 from app.api.deps import get_db
+from app.auth.deps import get_current_user
 from main import app
 
 
@@ -75,12 +76,13 @@ def _run_scenario(client, seed: int) -> dict:
 def test_replay_via_two_independent_runs():
     client_a, eng_a = _make_client()
     final_a = _run_scenario(client_a, seed=20260415)
-    app.dependency_overrides.clear()
+    # Only release the per-run DB override -- preserve the autouse auth override.
+    app.dependency_overrides.pop(get_db, None)
     Base.metadata.drop_all(bind=eng_a)
 
     client_b, eng_b = _make_client()
     final_b = _run_scenario(client_b, seed=20260415)
-    app.dependency_overrides.clear()
+    app.dependency_overrides.pop(get_db, None)
     Base.metadata.drop_all(bind=eng_b)
 
     fields = [

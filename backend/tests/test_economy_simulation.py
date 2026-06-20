@@ -32,7 +32,7 @@ def test_moderate_player_40_turns_stays_solvent():
         name="SimPlayer", difficulty="realistic",
         objectives=["amca_operational_by_2035"], seed=999,
     )
-    campaign = create_campaign(db, payload)
+    campaign = create_campaign(db, payload, user_id=1)
 
     # Pick the Ambala base for Meteor restocks.
     ambala = db.query(CampaignBase).filter_by(

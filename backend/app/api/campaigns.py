@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.auth.deps import get_current_user, require_owned_campaign
 from app.crud.campaign import create_campaign, get_campaign, advance_turn
 from app.models.campaign import Campaign
+from app.models.user import User
 from app.schemas.campaign import CampaignCreate, CampaignRead, CampaignListItem, CampaignListResponse
 from app.schemas.turn_report import (
     TurnReportResponse, RawEvent, DeliverySummary, RDMilestoneSummary,
@@ -14,21 +16,37 @@ router = APIRouter(prefix="/api/campaigns", tags=["campaigns"])
 
 
 @router.post("", response_model=CampaignRead, status_code=status.HTTP_201_CREATED)
-def create_campaign_endpoint(payload: CampaignCreate, db: Session = Depends(get_db)):
-    return create_campaign(db, payload)
+def create_campaign_endpoint(
+    payload: CampaignCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    return create_campaign(db, payload, user_id=user.id)
 
 
 @router.get("", response_model=CampaignListResponse)
-def list_campaigns_endpoint(db: Session = Depends(get_db)):
-    """List all campaigns ordered by most recently updated."""
-    campaigns = db.query(Campaign).order_by(Campaign.updated_at.desc()).all()
+def list_campaigns_endpoint(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """List the calling user's campaigns ordered by most recently updated."""
+    campaigns = (
+        db.query(Campaign)
+        .filter(Campaign.user_id == user.id)
+        .order_by(Campaign.updated_at.desc())
+        .all()
+    )
     return CampaignListResponse(
         campaigns=[CampaignListItem.model_validate(c) for c in campaigns]
     )
 
 
 @router.delete("/{campaign_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_campaign_endpoint(campaign_id: int, db: Session = Depends(get_db)):
+def delete_campaign_endpoint(
+    campaign_id: int,
+    db: Session = Depends(get_db),
+    camp: Campaign = Depends(require_owned_campaign),
+):
     """Delete a campaign and all its dependent rows."""
     from app.models.squadron import Squadron
     from app.models.campaign_base import CampaignBase
@@ -65,6 +83,7 @@ def get_turn_report(
     year: int,
     quarter: int,
     db: Session = Depends(get_db),
+    camp: Campaign = Depends(require_owned_campaign),
 ):
     """Aggregate events for a completed turn into typed groupings."""
     from app.models.event import CampaignEvent
@@ -155,18 +174,20 @@ def get_turn_report(
 
 
 @router.get("/{campaign_id}", response_model=CampaignRead)
-def get_campaign_endpoint(campaign_id: int, db: Session = Depends(get_db)):
-    campaign = get_campaign(db, campaign_id)
-    if campaign is None:
-        raise HTTPException(status_code=404, detail="Campaign not found")
-    return campaign
+def get_campaign_endpoint(
+    campaign_id: int,
+    db: Session = Depends(get_db),
+    camp: Campaign = Depends(require_owned_campaign),
+):
+    return camp
 
 
 @router.post("/{campaign_id}/advance", response_model=CampaignRead)
-def advance_turn_endpoint(campaign_id: int, db: Session = Depends(get_db)):
+def advance_turn_endpoint(
+    campaign_id: int,
+    db: Session = Depends(get_db),
+    camp: Campaign = Depends(require_owned_campaign),
+):
     from app.api.campaign_lifecycle import require_active_campaign
-    campaign = get_campaign(db, campaign_id)
-    if campaign is None:
-        raise HTTPException(status_code=404, detail="Campaign not found")
-    require_active_campaign(campaign)
-    return advance_turn(db, campaign)
+    require_active_campaign(camp)
+    return advance_turn(db, camp)

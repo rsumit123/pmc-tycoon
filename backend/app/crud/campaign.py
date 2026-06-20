@@ -27,13 +27,14 @@ from app.content.registry import (
 )
 
 
-def create_campaign(db: Session, payload: CampaignCreate) -> Campaign:
+def create_campaign(db: Session, payload: CampaignCreate, user_id: int) -> Campaign:
     seed = payload.seed if payload.seed is not None else random.randint(1, 2**31 - 1)
     # Starting treasury = 1 quarter of the difficulty-adjusted grant, not 4.
     # Campaigns begin cash-strapped, forcing early trade-offs.
     grant = compute_quarterly_grant(payload.difficulty, 2026)
     campaign = Campaign(
         name=payload.name,
+        user_id=user_id,
         seed=seed,
         starting_year=2026,
         starting_quarter=2,
