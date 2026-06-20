@@ -55,7 +55,7 @@ except Exception as exc:  # noqa: BLE001
 # Fail loud (ERROR, not silent) if the migration left the DB unusable.
 verify_user_id_migration(engine)
 
-app = FastAPI(title="Sovereign Shield API", version="0.1.0")
+app = FastAPI(title="Chakravyuh API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -95,7 +95,7 @@ app.include_router(posture_router, dependencies=_guard)
 
 @app.get("/")
 def root():
-    return {"message": "Sovereign Shield API", "version": "0.1.0"}
+    return {"message": "Chakravyuh API", "version": "0.1.0"}
 
 
 @app.get("/health")

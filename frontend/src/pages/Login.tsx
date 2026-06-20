@@ -46,7 +46,7 @@ export function Login() {
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
       <div className="w-full max-w-sm space-y-6 rounded-xl border border-slate-800 bg-slate-900 p-6">
         <div>
-          <h1 className="text-xl font-bold text-slate-100">Sovereign Shield</h1>
+          <h1 className="text-xl font-bold text-slate-100">Chakravyuh</h1>
           <p className="text-sm text-slate-400">
             {mode === "login" ? "Sign in to continue" : "Create your account"}
           </p>

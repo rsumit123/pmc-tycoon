@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Campaign critical path", () => {
   test("create campaign and land on map", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText(/Sovereign Shield|New Campaign/i)).toBeVisible();
+    await expect(page.getByText(/Chakravyuh|New Campaign/i)).toBeVisible();
 
     // Fill campaign form
     const nameInput = page.getByLabel(/name/i).or(page.getByPlaceholder(/name/i));

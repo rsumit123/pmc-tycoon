@@ -1,6 +1,8 @@
-# Sovereign Shield
+# Chakravyuh
 
 A browser-based single-player grand strategy game. You play India's Head of Defense Integration, 2026–2036. Manage procurement, R&D, and force structure across 40 quarterly turns against real-world named adversaries (PLAAF, PAF, PLAN).
+
+> Formerly named **Sovereign Shield** (rebranded 2026-06-20). Dated plan/spec docs retain the old name as historical records.
 
 ## Status
 

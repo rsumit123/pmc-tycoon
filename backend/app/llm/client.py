@@ -82,8 +82,8 @@ def chat_completion(
     headers = {
         "Authorization": f"Bearer {settings.openrouter_api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://pmc-tycoon.skdev.one",
-        "X-Title": "Sovereign Shield",
+        "HTTP-Referer": "https://chakravyuh.skdev.one",
+        "X-Title": "Chakravyuh",
     }
 
     transport = _transport_factory()

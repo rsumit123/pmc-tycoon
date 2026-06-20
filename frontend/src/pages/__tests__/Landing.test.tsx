@@ -66,9 +66,9 @@ describe("Landing", () => {
     );
   }
 
-  it("renders title 'Sovereign Shield'", () => {
+  it("renders title 'Chakravyuh'", () => {
     setup(makeStore());
-    expect(screen.getByText("Sovereign Shield")).toBeTruthy();
+    expect(screen.getByText("Chakravyuh")).toBeTruthy();
   });
 
   it("shows new campaign form when no existing campaigns", () => {

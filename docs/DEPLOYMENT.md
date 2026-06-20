@@ -1,9 +1,14 @@
-# PMC Tycoon - Deployment Guide
+# Chakravyuh - Deployment Guide
+
+> The game is **Chakravyuh** (formerly Sovereign Shield). The public frontend domain is moving to
+> `chakravyuh.skdev.one`. The Vercel **project name** (`pmc-tycoon`), the backend host
+> (`pmc-tycoon-api.skdev.one`), and the GCP container/paths are deliberately kept (Decision D18) —
+> only the public frontend domain changes.
 
 ## Architecture
 
 ```
-Browser → pmc-tycoon.skdev.one (Vercel) → pmc-tycoon-api.skdev.one (GCP VM)
+Browser → chakravyuh.skdev.one (Vercel) → pmc-tycoon-api.skdev.one (GCP VM)
                                             ↓
                                        nginx (SSL) → localhost:8010 → Docker
 ```
@@ -17,7 +22,7 @@ Browser → pmc-tycoon.skdev.one (Vercel) → pmc-tycoon-api.skdev.one (GCP VM)
 3. **Authorized JavaScript origins** (no redirect URI needed for the GIS button flow):
    - `http://localhost:5173`
    - `http://localhost:5174`
-   - the production frontend URL (currently `https://pmc-tycoon.skdev.one`; update when the rename lands)
+   - the production frontend URL: `https://chakravyuh.skdev.one` (and `https://pmc-tycoon.skdev.one` until the old domain is retired)
 4. Copy the **Client ID**. Put it in BOTH:
    - `backend/.env` -> `GOOGLE_CLIENT_ID=<client-id>`
    - `frontend/.env` (and the Vercel project env) -> `VITE_GOOGLE_CLIENT_ID=<client-id>`
@@ -41,9 +46,9 @@ email) links the Google identity to that pre-created owner account by email.
 
 ## Frontend (Vercel)
 
-**URL:** https://pmc-tycoon.skdev.one
-**Vercel project:** `pmc-tycoon` (project ID: `prj_Qg9mh7qqjwiyndYVBAu2oI8S0Hah`)
-**DNS:** CNAME `pmc-tycoon` → `cname.vercel-dns.com` (Namecheap)
+**URL:** https://chakravyuh.skdev.one (legacy `https://pmc-tycoon.skdev.one` still attached during cutover)
+**Vercel project:** `pmc-tycoon` (project ID: `prj_Qg9mh7qqjwiyndYVBAu2oI8S0Hah`) — project name unchanged (D18); add the new domain to this same project
+**DNS:** add CNAME `chakravyuh` → `cname.vercel-dns.com` (Namecheap), then attach `chakravyuh.skdev.one` as a domain in the Vercel project. Keep the `pmc-tycoon` CNAME until you retire the old domain.
 
 > **CRITICAL:** This is a dedicated Vercel project. Do NOT deploy to the `frontend` project (that's rasoi).
 >
@@ -84,7 +89,7 @@ npx vercel link --project pmc-tycoon --yes
 echo "https://pmc-tycoon-api.skdev.one" | npx vercel env add VITE_API_URL production --yes
 
 # Add custom domain
-npx vercel domains add pmc-tycoon.skdev.one
+npx vercel domains add chakravyuh.skdev.one
 
 # Deploy
 npx vercel --prod --yes
@@ -92,7 +97,7 @@ npx vercel --prod --yes
 
 ### Troubleshooting
 
-- **404 DEPLOYMENT_NOT_FOUND**: The domain alias was removed. Re-add with `npx vercel domains add pmc-tycoon.skdev.one`.
+- **404 DEPLOYMENT_NOT_FOUND**: The domain alias was removed. Re-add with `npx vercel domains add chakravyuh.skdev.one`.
 - **Wrong project linked**: Check `frontend/.vercel/project.json` — `projectName` should be `pmc-tycoon`.
 - **Stale env vars**: Env vars are baked in at build time. Redeploy after changing them.
 

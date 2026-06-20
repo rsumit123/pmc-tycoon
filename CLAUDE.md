@@ -1,12 +1,12 @@
-# Sovereign Shield — Claude working notes
+# Chakravyuh — Claude working notes
 
 **Important:** This file is auto-loaded into every Claude session in this repo. Treat it as the fast-onboarding page for picking up work in a fresh context.
 
 ## What this project is
 
-Browser-based single-player grand strategy game. You play India's **Head of Defense Integration** from 2026 to 2036, managing IAF procurement / R&D / force structure across 40 quarterly turns. Adversaries are real named forces: PLAAF, PAF, PLAN. It's a personal hobby project for the repo owner (a defense enthusiast), audience of one — not shipping to strangers.
+**Chakravyuh** (named for the Mahabharata's layered, hard-to-breach battle formation) is a browser-based single-player grand strategy game. You play India's **Head of Defense Integration** from 2026 to 2036, managing IAF procurement / R&D / force structure across 40 quarterly turns. Adversaries are real named forces: PLAAF, PAF, PLAN. It's a personal hobby project for the repo owner (a defense enthusiast).
 
-The repo was previously called **PMC Tycoon** (a mercenary-contractor game). All that code has been pruned. The deployment infrastructure still uses `pmc-tycoon.skdev.one` / `pmc-tycoon-api.skdev.one` URLs by deliberate choice (see Decision D18) — that is **not** a rename oversight.
+The game was named **Sovereign Shield** through Plans 1–23; it was rebranded to **Chakravyuh** (2026-06-20). Dated plan/spec/decision docs under `docs/` still say "Sovereign Shield" as historical records — that is intentional, not stale. The `sovereign_shield.db` SQLite filename and the `pmc-tycoon-api.skdev.one` backend host are **deliberately kept** (renaming the DB would orphan prod data; the backend host follows Decision D18). The public frontend is moving from `pmc-tycoon.skdev.one` to `chakravyuh.skdev.one`.
 
 ## Authoritative docs (read before doing anything substantive)
 

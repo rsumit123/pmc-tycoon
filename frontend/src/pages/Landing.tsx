@@ -74,7 +74,7 @@ export function Landing() {
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Sovereign Shield</h1>
+            <h1 className="text-3xl font-bold">Chakravyuh</h1>
             <p className="text-sm opacity-70 mt-1">
               Head of Defense Integration — New Delhi, 2026
             </p>

@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     cors_origins: list[str] = [
         "http://localhost:5173",
         "http://localhost:5174",
+        "https://chakravyuh.skdev.one",
+        "https://chakravyuh.vercel.app",
+        # Legacy origins kept during the pmc-tycoon -> chakravyuh domain cutover; remove once DNS/Vercel fully migrated.
         "https://pmc-tycoon.skdev.one",
         "https://pmc-tycoon.vercel.app",
     ]
