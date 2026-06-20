@@ -1,5 +1,5 @@
 from datetime import datetime, UTC
-from sqlalchemy import String, Integer, JSON, DateTime, Boolean
+from sqlalchemy import String, Integer, JSON, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -9,6 +9,7 @@ class Campaign(Base):
     __tablename__ = "campaigns"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True, nullable=True)
     name: Mapped[str] = mapped_column(String(200))
     seed: Mapped[int] = mapped_column(Integer)
     starting_year: Mapped[int] = mapped_column(Integer)

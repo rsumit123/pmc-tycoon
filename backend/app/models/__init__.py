@@ -16,9 +16,11 @@ from app.models.adversary_base import AdversaryBase  # noqa: F401
 from app.models.base_damage import BaseDamage  # noqa: F401
 from app.models.diplomatic_state import DiplomaticState  # noqa: F401
 from app.models.offensive_op import OffensiveOp  # noqa: F401
+from app.models.user import User  # noqa: F401
 
 __all__ = [
     "Campaign",
+    "User",
     "CampaignBase",
     "Squadron",
     "RDProgramState",
