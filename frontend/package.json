@@ -18,6 +18,10 @@
     "e2e:headed": "npx playwright test --headed"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/status-bar": "^8.0.2",
+    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "axios": "^1.15.0",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.577.0",
@@ -27,7 +31,14 @@
     "react-router-dom": "^7.14.1",
     "zustand": "^5.0.12"
   },
+  "overrides": {
+    "@codetrix-studio/capacitor-google-auth": {
+      "@capacitor/core": "$@capacitor/core"
+    }
+  },
   "devDependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/cli": "^8.4.1",
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.2.1",
