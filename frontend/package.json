@@ -15,7 +15,9 @@
     "test:e2e:mobile": "npx playwright test --project=mobile",
     "test:e2e:desktop": "npx playwright test --project=desktop",
     "e2e": "npx playwright test",
-    "e2e:headed": "npx playwright test --headed"
+    "e2e:headed": "npx playwright test --headed",
+    "cap:sync": "vite build && cap sync",
+    "cap:android": "cap open android"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.0",
