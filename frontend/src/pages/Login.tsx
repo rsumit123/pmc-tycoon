@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuthStore } from "../store/authStore";
 import { GoogleSignInButton } from "../components/auth/GoogleSignInButton";
+import { Capacitor } from "@capacitor/core";
+import { NativeGoogleButton } from "../components/auth/NativeGoogleButton";
 
 export function Login() {
   const navigate = useNavigate();
@@ -28,7 +30,9 @@ export function Login() {
           <p className="text-sm text-slate-400">Sign in with Google to continue</p>
         </div>
 
-        <GoogleSignInButton onCredential={onGoogle} />
+        {Capacitor.isNativePlatform()
+          ? <NativeGoogleButton onCredential={onGoogle} />
+          : <GoogleSignInButton onCredential={onGoogle} />}
 
         {error && <p className="text-sm text-red-400">{error}</p>}
       </div>
