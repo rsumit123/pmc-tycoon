@@ -28,6 +28,12 @@ class Settings(BaseSettings):
         "http://localhost:5174",
         "https://chakravyuh.skdev.one",
         "https://chakravyuh.vercel.app",
+        # Capacitor native WebView origins (Android serves from https://localhost;
+        # http/capacitor variants cover other schemes/iOS). Required for the
+        # mobile app's API + Google sign-in calls to pass CORS.
+        "https://localhost",
+        "http://localhost",
+        "capacitor://localhost",
         # Legacy origins kept during the pmc-tycoon -> chakravyuh domain cutover; remove once DNS/Vercel fully migrated.
         "https://pmc-tycoon.skdev.one",
         "https://pmc-tycoon.vercel.app",
