@@ -13,7 +13,7 @@ function ChakravyuhRings() {
     <svg
       viewBox="0 0 400 400"
       aria-hidden="true"
-      className="pointer-events-none absolute left-1/2 top-[34%] aspect-square w-[150vw] max-w-[680px] -translate-x-1/2 -translate-y-1/2 select-none"
+      className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[150vw] max-w-[680px] -translate-x-1/2 -translate-y-1/2 select-none"
     >
       <defs>
         <radialGradient id="cvGlow" cx="50%" cy="50%" r="50%">
@@ -88,7 +88,7 @@ export function Login() {
           IAF · DEFENSE INTEGRATION COMMAND
         </div>
 
-        <div className="mt-auto">
+        <div className="flex flex-1 flex-col justify-center">
           <div className="cv-rise" style={{ animationDelay: "80ms" }}>
             <div className="font-display text-2xl leading-none text-amber-400/70">चक्रव्यूह</div>
             <h1 className="font-display mt-1 text-5xl font-bold uppercase tracking-[0.12em] text-slate-50">
