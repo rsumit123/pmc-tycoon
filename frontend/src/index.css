@@ -68,6 +68,8 @@ body {
 .cv-spin-med { animation: cv-spin-rev 42s linear infinite; transform-origin: center; }
 .cv-spin-fast { animation: cv-spin 28s linear infinite; transform-origin: center; }
 .cv-pulse { animation: cv-pulse 4s ease-in-out infinite; }
+.cv-loader-a { animation: cv-spin 1.3s linear infinite; transform-origin: center; }
+.cv-loader-b { animation: cv-spin-rev 1.9s linear infinite; transform-origin: center; }
 
 /* Staggered entrance for the sign-in screen. */
 @keyframes cv-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
