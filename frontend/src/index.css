@@ -13,6 +13,20 @@ body {
   min-height: 100vh;
 }
 
+/* Capacitor / mobile safe areas: the WebView renders edge-to-edge (behind the
+   Android status bar + gesture nav), so keep top/bottom chrome clear of them.
+   `viewport-fit=cover` (index.html) populates these env() values; they are 0
+   on the web, so this is a no-op in the browser. */
+#root {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-pt {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* CRT amber theme — activated by data-theme="crt" on <html> */
 [data-theme="crt"] {
   --bg-primary: #0a0a00;

@@ -198,7 +198,7 @@ export function CampaignMapView() {
   if (!campaign) return <div className="p-6">Loading…</div>;
 
   return (
-    <div className="fixed inset-0 flex flex-col">
+    <div className="fixed inset-0 flex flex-col safe-pt safe-pb">
       {isCampaignComplete && <ReadOnlyBanner campaignId={campaign.id} />}
       <header className="flex items-center gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
         <button
@@ -251,7 +251,7 @@ export function CampaignMapView() {
             onClick={() => setShowMenu(false)}
             aria-label="close menu backdrop"
           />
-          <aside className="fixed top-0 right-0 bottom-0 z-50 w-72 max-w-[85vw] bg-slate-900 border-l border-slate-800 flex flex-col shadow-xl">
+          <aside className="fixed top-0 right-0 bottom-0 z-50 w-72 max-w-[85vw] bg-slate-900 border-l border-slate-800 flex flex-col shadow-xl safe-pt safe-pb">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
               <div className="text-sm font-bold">Menu</div>
               <button
