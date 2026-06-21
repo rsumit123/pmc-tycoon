@@ -1,7 +1,8 @@
 import logging
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.auth.deps import require_owned_campaign
 from app.auth.bootstrap import ensure_owner_and_backfill, ensure_user_id_column
@@ -56,6 +57,21 @@ except Exception as exc:  # noqa: BLE001
 verify_user_id_migration(engine)
 
 app = FastAPI(title="Chakravyuh API", version="0.1.0")
+
+
+# Catch-all for unhandled exceptions. Added BEFORE CORS so it sits *inside* the
+# CORS middleware — its 500 response then flows back out through CORS and gets
+# the Access-Control-Allow-Origin header. Without this, an unhandled error
+# returns a 500 with no CORS headers, which a browser/WebView surfaces as an
+# opaque "Network error" instead of the real status.
+@app.middleware("http")
+async def _catch_unhandled_errors(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception:  # noqa: BLE001
+        logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
 
 app.add_middleware(
     CORSMiddleware,
