@@ -22,13 +22,27 @@ export function NativeGoogleButton({ onCredential }: Props) {
   async function handle() {
     setBusy(true);
     setError(null);
+    if (!CLIENT_ID) {
+      setError("Sign-in failed: VITE_GOOGLE_CLIENT_ID missing from build");
+      setBusy(false);
+      return;
+    }
     try {
       const result = await GoogleAuth.signIn();
       const idToken = (result as { authentication?: { idToken?: string } })?.authentication?.idToken;
-      if (!idToken) throw new Error("No ID token from Google");
+      if (!idToken) throw new Error("no ID token returned (check serverClientId)");
       onCredential(idToken);
-    } catch {
-      setError("Google sign-in failed");
+    } catch (e: unknown) {
+      const err = e as { message?: string; code?: string | number };
+      let detail: string;
+      try {
+        detail = err?.message || (err?.code != null ? `code ${err.code}` : JSON.stringify(e));
+      } catch {
+        detail = String(e);
+      }
+      // eslint-disable-next-line no-console
+      console.error("[GoogleAuth] native sign-in failed", e);
+      setError(`Sign-in failed: ${detail}`);
       setBusy(false);
     }
   }
@@ -39,7 +53,7 @@ export function NativeGoogleButton({ onCredential }: Props) {
               className="w-full rounded bg-white py-2 font-semibold text-slate-900 disabled:opacity-50">
         {busy ? "Signing in…" : "Sign in with Google"}
       </button>
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-400 break-words">{error}</p>}
     </div>
   );
 }

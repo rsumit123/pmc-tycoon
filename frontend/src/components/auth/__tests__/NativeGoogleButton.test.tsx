@@ -25,7 +25,7 @@ describe("NativeGoogleButton", () => {
     const onCredential = vi.fn();
     render(<NativeGoogleButton onCredential={onCredential} />);
     fireEvent.click(screen.getByRole("button", { name: /sign in with google/i }));
-    await waitFor(() => expect(screen.getByText(/google sign-in failed/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/sign-in failed: cancelled/i)).toBeInTheDocument());
     expect(onCredential).not.toHaveBeenCalled();
   });
 });
