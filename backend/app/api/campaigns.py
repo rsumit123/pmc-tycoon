@@ -47,29 +47,28 @@ def delete_campaign_endpoint(
     db: Session = Depends(get_db),
     camp: Campaign = Depends(require_owned_campaign),
 ):
-    """Delete a campaign and all its dependent rows."""
-    from app.models.squadron import Squadron
-    from app.models.campaign_base import CampaignBase
-    from app.models.event import CampaignEvent
-    from app.models.intel import IntelCard
-    from app.models.vignette import Vignette
-    from app.models.acquisition import AcquisitionOrder
-    from app.models.rd_program import RDProgramState
-    from app.models.adversary import AdversaryState
-    from app.models.campaign_narrative import CampaignNarrative
-    from app.models.ad_battery import ADBattery
-    from app.models.loadout_upgrade import LoadoutUpgrade
+    """Delete a campaign and ALL its dependent rows.
 
-    # `camp` is injected + ownership-checked by require_owned_campaign (404s
-    # non-owners), so no re-query / None-check is needed here.
+    Iterates every table that carries a ``campaign_id`` column (introspected
+    from the metadata) instead of a hand-maintained model list. A stale list
+    previously skipped ``missile_stocks``, orphaning those rows on delete;
+    SQLite then reused the freed campaign id and the orphans collided with the
+    new campaign's seeding (UNIQUE constraint), breaking campaign creation.
+    Introspection means new per-campaign tables are covered automatically.
 
-    # Delete all dependent rows (no cascade defined in ORM).
-    for model in (
-        LoadoutUpgrade, ADBattery, CampaignNarrative, AdversaryState,
-        RDProgramState, AcquisitionOrder, Vignette, IntelCard,
-        CampaignEvent, Squadron, CampaignBase,
-    ):
-        db.query(model).filter_by(campaign_id=campaign_id).delete(synchronize_session=False)
+    `camp` is injected + ownership-checked by require_owned_campaign (404s
+    non-owners), so no re-query / None-check is needed here.
+    """
+    import app.models  # noqa: F401  ensure every model is registered on Base.metadata
+    from app.db.base import Base
+
+    # Delete children first (reverse FK order); SQLite FK enforcement is off so
+    # order is not strictly required, but it keeps the intent clear.
+    for table in reversed(Base.metadata.sorted_tables):
+        if table.name == "campaigns":
+            continue
+        if "campaign_id" in table.c:
+            db.execute(table.delete().where(table.c.campaign_id == campaign_id))
 
     db.delete(camp)
     db.commit()
