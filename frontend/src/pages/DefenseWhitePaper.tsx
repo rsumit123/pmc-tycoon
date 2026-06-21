@@ -6,6 +6,7 @@ import { TreasurySparkline } from "../components/endgame/TreasurySparkline";
 import { EmergingAceCard } from "../components/endgame/EmergingAceCard";
 import { RetrospectiveReader } from "../components/endgame/RetrospectiveReader";
 import { CampaignCardGenerator } from "../components/endgame/CampaignCardGenerator";
+import { Loader } from "../components/primitives/Loader";
 
 export function DefenseWhitePaper() {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +25,7 @@ export function DefenseWhitePaper() {
     if (campaign && campaign.id === campaignId) loadSummary(campaignId);
   }, [campaign, campaignId, loadSummary]);
 
-  if (!campaign || !summary) return <div className="p-6">Loading Defense White Paper…</div>;
+  if (!campaign || !summary) return <Loader label="Compiling white paper" />;
 
   const objectiveEntries = summary.objectives.length > 0
     ? summary.objectives
@@ -38,7 +39,7 @@ export function DefenseWhitePaper() {
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
         <div>
-          <h1 className="text-base font-bold">Defense White Paper</h1>
+          <h1 className="text-base font-bold font-display">Defense White Paper</h1>
           <p className="text-xs opacity-70">
             {campaign.name} • {summary.starting_year}–{summary.current_year}
           </p>

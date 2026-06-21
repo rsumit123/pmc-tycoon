@@ -7,6 +7,7 @@ import { AcquisitionPipeline } from "../components/procurement/AcquisitionPipeli
 import type { BudgetAllocation } from "../lib/types";
 import { isCampaignComplete } from "../lib/campaignLifecycle";
 import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
+import { Loader } from "../components/primitives/Loader";
 
 type Tab = "budget" | "rd" | "acquisitions";
 const TABS: Array<{ key: Tab; label: string }> = [
@@ -80,7 +81,7 @@ export function ProcurementHub() {
     }
   }, [campaign, loadPlatforms, loadWeapons, loadRdCatalog, loadRdActive, loadAcquisitions, loadBases, loadMissileStocks, loadADBatteries, loadArmoryUnlocks, loadDiplomacy]);
 
-  if (!campaign) return <div className="p-6">Loading…</div>;
+  if (!campaign) return <Loader label="Loading procurement" />;
 
   const defaultAllocation: BudgetAllocation =
     campaign.current_allocation_json ?? {
@@ -102,7 +103,7 @@ export function ProcurementHub() {
       {complete && <ReadOnlyBanner campaignId={campaign.id} />}
       <header className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800">
         <div>
-          <h1 className="text-base font-bold">{campaign.name}</h1>
+          <h1 className="text-base font-bold font-display">{campaign.name}</h1>
           <p className="text-xs opacity-70">
             Procurement • {campaign.current_year}-Q{campaign.current_quarter}
           </p>

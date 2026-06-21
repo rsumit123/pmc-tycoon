@@ -6,6 +6,7 @@ import { FactionSummary } from "../components/performance/FactionSummary";
 import { PlatformTable } from "../components/performance/PlatformTable";
 import { WeaponTable } from "../components/performance/WeaponTable";
 import { SupportPanel } from "../components/performance/SupportPanel";
+import { Loader } from "../components/primitives/Loader";
 
 type Tab = "platforms" | "missiles" | "support";
 
@@ -23,7 +24,7 @@ export function PerformancePage() {
   if (!performance) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 p-6">
-        <p className="text-sm opacity-70">Loading performance…</p>
+        <Loader label="Loading performance" fullScreen={false} />
       </div>
     );
   }
@@ -31,7 +32,7 @@ export function PerformancePage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
-        <h1 className="text-sm font-bold">📊 Performance</h1>
+        <h1 className="text-sm font-bold font-display">📊 Performance</h1>
         <Link to={`/campaign/${cid}`} className="text-xs underline opacity-80 hover:opacity-100">
           Map
         </Link>

@@ -22,6 +22,7 @@ import { synthesizeContacts } from "../lib/intelContacts";
 import { playRadarPing, getAudioEnabled, setAudioEnabled } from "../lib/audio";
 import { isCampaignComplete as isCampComplete } from "../lib/campaignLifecycle";
 import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
+import { Loader } from "../components/primitives/Loader";
 import { NotificationBell } from "../components/notifications/NotificationBell";
 import type { BaseSquadronSummary, AdversaryBase } from "../lib/types";
 
@@ -195,7 +196,7 @@ export function CampaignMapView() {
   const topBarNetQ = (campaign?.quarterly_grant_cr ?? 0) - topBarCommitQ;
   const outstandingOrderCount = acquisitions.filter((o) => !o.cancelled && o.delivered < o.quantity).length;
 
-  if (!campaign) return <div className="p-6">Loading…</div>;
+  if (!campaign) return <Loader label="Loading theater" />;
 
   return (
     <div className="fixed inset-0 flex flex-col safe-pt safe-pb">
@@ -209,7 +210,7 @@ export function CampaignMapView() {
           ☰
         </button>
         <div className="min-w-0 flex-1">
-          <h1 className="text-sm font-bold truncate">{campaign.name}</h1>
+          <h1 className="text-sm font-bold truncate font-display">{campaign.name}</h1>
           <p className="text-[11px] leading-tight flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <span className="opacity-80">{campaign.current_year} Q{campaign.current_quarter}</span>
             <span className="opacity-80">

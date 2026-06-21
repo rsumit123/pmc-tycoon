@@ -6,6 +6,7 @@ import { StrikeBuilder } from "../components/ops/StrikeBuilder";
 import { StrikeHistoryList } from "../components/ops/StrikeHistoryList";
 import { isCampaignComplete } from "../lib/campaignLifecycle";
 import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
+import { Loader } from "../components/primitives/Loader";
 
 type Tab = "posture" | "strike" | "history";
 const TABS: { k: Tab; label: string }[] = [
@@ -50,7 +51,7 @@ export function OpsScreen() {
     loadPlatforms();
   }, [campaign, loadPosture, loadDiplomacy, loadStrikes, loadAdversaryBases, loadHangar, loadMissileStocks, loadBases, loadPlatforms]);
 
-  if (!campaign) return <div className="p-6">Loading…</div>;
+  if (!campaign) return <Loader label="Loading operations" />;
 
   const complete = isCampaignComplete(campaign);
 
@@ -59,7 +60,7 @@ export function OpsScreen() {
       {complete && <ReadOnlyBanner campaignId={campaign.id} />}
       <header className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800 sticky top-0 z-20">
         <div className="min-w-0">
-          <h1 className="text-base font-bold truncate">{campaign.name}</h1>
+          <h1 className="text-base font-bold truncate font-display">{campaign.name}</h1>
           <p className="text-xs opacity-70">
             Operations · {campaign.current_year}-Q{campaign.current_quarter}
           </p>

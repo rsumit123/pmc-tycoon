@@ -11,6 +11,7 @@ import { DroneRoster } from "../components/armory/DroneRoster";
 import type { MissileUnlock } from "../lib/types";
 import { isCampaignComplete } from "../lib/campaignLifecycle";
 import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
+import { Loader } from "../components/primitives/Loader";
 
 type Tab = "unlocks" | "missiles" | "ad" | "drones";
 
@@ -51,7 +52,7 @@ export function ArmoryPage() {
     (installedBasesBySystem[b.system_id] ??= []).push(baseName);
   }
 
-  if (!unlocks || !hangar) return <div className="p-6 text-sm">Loading armory…</div>;
+  if (!unlocks || !hangar) return <Loader label="Loading armory" />;
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     {
@@ -76,7 +77,7 @@ export function ArmoryPage() {
       {complete && campaign && <ReadOnlyBanner campaignId={campaign.id} />}
       <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
         <div className="min-w-0">
-          <h1 className="text-sm font-bold truncate">Armory</h1>
+          <h1 className="text-sm font-bold truncate font-display">Armory</h1>
           <p className="text-xs opacity-70">Unlocks from completed R&D</p>
         </div>
         <Link to={`/campaign/${cid}`} className="text-xs underline opacity-80 hover:opacity-100">Map</Link>

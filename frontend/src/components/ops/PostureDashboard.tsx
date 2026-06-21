@@ -3,6 +3,7 @@ import { useCampaignStore } from "../../store/campaignStore";
 import type { DiplomaticTier } from "../../lib/types";
 import { Sparkline } from "./Sparkline";
 import { DiplomacyMeter } from "./DiplomacyMeter";
+import { Loader } from "../primitives/Loader";
 
 const FACTION_COLOR: Record<string, string> = {
   PAF: "#dc2626", PLAAF: "#ea580c", PLAN: "#d97706",
@@ -14,7 +15,7 @@ export function PostureDashboard() {
   const campaign = useCampaignStore((s) => s.campaign);
 
   if (!posture) {
-    return <div className="text-sm opacity-60 p-6 text-center">Loading posture…</div>;
+    return <Loader label="Loading posture" fullScreen={false} />;
   }
 
   const cid = campaign?.id;

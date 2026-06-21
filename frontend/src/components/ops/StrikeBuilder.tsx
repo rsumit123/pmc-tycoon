@@ -9,6 +9,7 @@ import type {
 import { CommitHoldButton } from "../primitives/CommitHoldButton";
 import { Stepper } from "../primitives/Stepper";
 import { StrikeRiskPreview } from "./StrikeRiskPreview";
+import { Loader } from "../primitives/Loader";
 
 const PROFILES: { id: StrikeProfileId; name: string; emoji: string; tag: string; minSquadrons: number }[] = [
   { id: "deep_strike", name: "Deep Strike", emoji: "✈", tag: "Manned package", minSquadrons: 2 },
@@ -200,7 +201,7 @@ export function StrikeBuilder() {
     }
   };
 
-  if (!campaign || !hangar) return <div className="text-sm opacity-60 p-6 text-center">Loading…</div>;
+  if (!campaign || !hangar) return <Loader label="Loading" fullScreen={false} />;
 
   if (filteredBases.length === 0 && adversaryBases.filter((b) => b.is_covered).length === 0) {
     return (

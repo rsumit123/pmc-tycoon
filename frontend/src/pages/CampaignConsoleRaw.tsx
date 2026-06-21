@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
+import { Loader } from "../components/primitives/Loader";
 
 export function CampaignConsoleRaw() {
   const { id } = useParams<{ id: string }>();
@@ -17,7 +18,7 @@ export function CampaignConsoleRaw() {
   }, [id, campaign, loadCampaign]);
 
   if (!campaign) {
-    return <div className="p-6">Loading…</div>;
+    return <Loader label="Loading" />;
   }
 
   return (

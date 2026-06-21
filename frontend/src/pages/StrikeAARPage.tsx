@@ -4,6 +4,7 @@ import { useCampaignStore } from "../store/campaignStore";
 import { api } from "../lib/api";
 import type { StrikeRead } from "../lib/types";
 import { DamageAssessmentPanel } from "../components/ops/DamageAssessmentPanel";
+import { Loader } from "../components/primitives/Loader";
 
 const PROFILE_LABEL: Record<string, string> = {
   deep_strike: "Deep Strike",
@@ -40,7 +41,7 @@ export function StrikeAARPage() {
   );
 
   if (error) return <div className="p-6 text-rose-300 text-sm">{error}</div>;
-  if (!strike) return <div className="p-6 text-sm opacity-60">Loading AAR…</div>;
+  if (!strike) return <Loader label="Loading AAR" fullScreen={false} />;
 
   const damage = strike.outcome_json.damage;
   const lost = strike.outcome_json.ind_airframes_lost;
@@ -58,7 +59,7 @@ export function StrikeAARPage() {
     <div className="min-h-screen flex flex-col">
       <header className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800 sticky top-0 z-20">
         <div className="min-w-0">
-          <h1 className="text-base font-bold truncate">Strike AAR</h1>
+          <h1 className="text-base font-bold truncate font-display">Strike AAR</h1>
           <p className="text-xs opacity-70">{strike.year}-Q{strike.quarter}</p>
         </div>
         <Link to={`/campaign/${cid}/ops?tab=history`} className="text-xs opacity-60 hover:opacity-100 underline">

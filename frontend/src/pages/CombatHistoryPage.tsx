@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import type { CombatHistoryEntry, CombatHistoryResponse } from "../lib/types";
+import { Loader } from "../components/primitives/Loader";
 
 type FactionFilter = "all" | "PLAAF" | "PAF" | "PLAN";
 type OutcomeFilter = "all" | "wins" | "losses";
@@ -55,7 +56,7 @@ export function CombatHistoryPage() {
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
         <div className="min-w-0">
-          <h1 className="text-sm font-bold truncate">Combat History</h1>
+          <h1 className="text-sm font-bold truncate font-display">Combat History</h1>
           {data && (
             <p className="text-xs opacity-70">
               {data.total} engagement{data.total === 1 ? "" : "s"} · {data.wins} won · {data.losses} lost
@@ -68,7 +69,7 @@ export function CombatHistoryPage() {
 
       <main className="p-4 max-w-3xl mx-auto space-y-4 pb-20">
         {loading ? (
-          <p className="text-xs opacity-60 text-center py-6">Loading history…</p>
+          <Loader label="Loading history" fullScreen={false} />
         ) : !data || data.total === 0 ? (
           <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 text-center">
             <p className="text-sm opacity-80">No combat yet.</p>

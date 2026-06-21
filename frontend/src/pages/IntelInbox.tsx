@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { IntelSwipeStack } from "../components/intel/IntelSwipeStack";
 import { IntelBriefReader } from "../components/intel/IntelBriefReader";
+import { Loader } from "../components/primitives/Loader";
 
 export function IntelInbox() {
   const { id } = useParams<{ id: string }>();
@@ -23,13 +24,13 @@ export function IntelInbox() {
     }
   }, [campaign, campaignId, loadIntel]);
 
-  if (!campaign) return <div className="p-6">Loading…</div>;
+  if (!campaign) return <Loader label="Loading intel" />;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
         <div>
-          <h1 className="text-sm font-bold">Intel Desk</h1>
+          <h1 className="text-sm font-bold font-display">Intel Desk</h1>
           <p className="text-xs opacity-70">Q{campaign.current_quarter} {campaign.current_year}</p>
         </div>
         <Link to={`/campaign/${campaignId}`} className="text-xs underline opacity-80 hover:opacity-100 whitespace-nowrap flex-shrink-0">

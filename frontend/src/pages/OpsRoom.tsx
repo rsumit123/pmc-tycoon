@@ -9,6 +9,7 @@ import { AdversaryForceFogged } from "../components/vignette/AdversaryForceFogge
 import type { Vignette, VignetteCommitPayload } from "../lib/types";
 import { isCampaignComplete } from "../lib/campaignLifecycle";
 import { Navigate } from "react-router-dom";
+import { Loader } from "../components/primitives/Loader";
 
 export function OpsRoom() {
   const { id, vid } = useParams<{ id: string; vid: string }>();
@@ -83,7 +84,7 @@ export function OpsRoom() {
   if (isCampaignComplete(campaign)) {
     return <Navigate to={`/campaign/${campaignId}/performance`} replace />;
   }
-  if (!vignette) return <div className="p-6">Loading vignette…</div>;
+  if (!vignette) return <Loader label="Loading vignette" />;
   if (vignette.status === "resolved") {
     return (
       <div className="p-6 space-y-3">
@@ -100,7 +101,7 @@ export function OpsRoom() {
     <div className="fixed inset-0 flex flex-col bg-slate-950">
       <header className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
         <div className="min-w-0">
-          <h1 className="text-sm font-bold truncate">Ops Room — {ps.scenario_name}</h1>
+          <h1 className="text-sm font-bold truncate font-display">Ops Room — {ps.scenario_name}</h1>
           <p className="text-xs opacity-70 truncate">
             {ps.ao.region} • {ps.ao.name} • T-{ps.response_clock_minutes} min
           </p>
