@@ -8,8 +8,8 @@ export function DeliveryAssignmentStep({ delivery }: { delivery: DeliverySummary
   const plat = platformsById[delivery.platform_id];
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-lg p-3">
-      <div className="text-sm font-semibold">{plat?.name ?? delivery.platform_id}</div>
+    <div className="bg-slate-900 border border-slate-800 border-l-4 border-l-amber-500 rounded-lg p-3">
+      <div className="text-sm font-semibold font-tech uppercase tracking-wider">{plat?.name ?? delivery.platform_id}</div>
       <div className="text-xs opacity-70 mt-0.5">
         {delivery.count}× delivered • ₹{delivery.cost_cr.toLocaleString("en-US")} cr
       </div>

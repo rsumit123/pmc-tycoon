@@ -58,7 +58,7 @@ export function CampaignCardGenerator({ summary }: CampaignCardGeneratorProps) {
           </div>
           <div className="text-3xl font-black text-amber-400">{grade}</div>
         </div>
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-2 gap-2 mb-4">
           {stats.map((s) => (
             <div key={s.label} className="text-center">
               <div className="text-lg font-mono font-bold text-slate-100">{s.value}</div>
@@ -66,7 +66,7 @@ export function CampaignCardGenerator({ summary }: CampaignCardGeneratorProps) {
             </div>
           ))}
         </div>
-        <TreasurySparkline snapshots={summary.year_snapshots} width={320} height={80} />
+        <TreasurySparkline snapshots={summary.year_snapshots} width={260} height={80} />
       </div>
       <div className="text-center">
         <button

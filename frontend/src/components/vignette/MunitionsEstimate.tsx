@@ -93,7 +93,7 @@ export function MunitionsEstimate({
   return (
     <section className={`border rounded-lg p-3 bg-slate-900 ${borderClass}`}>
       <div className="flex items-baseline justify-between gap-2 mb-2">
-        <h3 className="text-sm font-bold">📦 Depot check</h3>
+        <h3 className="text-sm font-bold font-tech uppercase tracking-wider">📦 Depot check</h3>
         <span className="text-[10px] opacity-60">
           Stock at committing bases vs expected launches
         </span>

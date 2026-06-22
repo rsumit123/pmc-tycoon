@@ -74,7 +74,7 @@ export function Landing() {
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Chakravyuh</h1>
+            <h1 className="text-3xl font-bold font-display uppercase tracking-[0.12em]">Chakravyuh</h1>
             <p className="text-sm opacity-70 mt-1">
               Head of Defense Integration — New Delhi, 2026
             </p>
@@ -90,7 +90,7 @@ export function Landing() {
         {/* Existing Campaigns */}
         {hasExisting && (
           <div className="space-y-2">
-            <h2 className="text-sm font-semibold uppercase tracking-wide opacity-60">
+            <h2 className="text-sm font-semibold uppercase tracking-wide opacity-60 font-tech">
               Resume Campaign
             </h2>
             {campaignList.map((c) => (
@@ -155,7 +155,7 @@ export function Landing() {
         {formVisible && (
           <div className="space-y-5">
             {hasExisting && (
-              <h2 className="text-sm font-semibold uppercase tracking-wide opacity-60">
+              <h2 className="text-sm font-semibold uppercase tracking-wide opacity-60 font-tech">
                 New Campaign
               </h2>
             )}
@@ -172,13 +172,13 @@ export function Landing() {
 
             {/* Difficulty */}
             <div className="space-y-2">
-              <label className="block text-sm opacity-80">Difficulty</label>
+              <label className="block text-sm opacity-80 font-tech uppercase tracking-wider">Difficulty</label>
               <div className="grid grid-cols-2 gap-2">
                 {DIFFICULTIES.map((d) => (
                   <button
                     key={d.value}
                     onClick={() => setDifficulty(d.value)}
-                    className={`py-2 px-3 rounded-lg text-sm font-medium border transition-colors ${
+                    className={`py-2 px-3 min-h-[40px] rounded-lg text-sm font-medium border transition-colors ${
                       difficulty === d.value
                         ? "bg-amber-600 border-amber-500 text-slate-900"
                         : "bg-slate-800 border-slate-700 hover:border-slate-500"
@@ -193,7 +193,7 @@ export function Landing() {
             {/* Objective selector */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-sm opacity-80">Objectives</label>
+                <label className="text-sm opacity-80 font-tech uppercase tracking-wider">Objectives</label>
                 <span className="text-xs opacity-60">
                   Select {MIN_OBJ}–{MAX_OBJ} ({objCount} selected)
                 </span>

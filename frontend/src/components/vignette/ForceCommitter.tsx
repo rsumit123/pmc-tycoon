@@ -149,7 +149,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
     <div className="flex flex-col gap-5">
       {planning.allows_no_cap && (
         <section className="bg-slate-900 border border-amber-700/50 rounded-lg p-3">
-          <h3 className="text-sm font-bold mb-2 flex items-baseline gap-2">
+          <h3 className="text-sm font-bold mb-2 flex items-baseline gap-2 font-tech uppercase tracking-wider">
             🛡 AD Defense
             <span className="text-[10px] opacity-70 font-normal">(primary defender)</span>
           </h3>
@@ -180,14 +180,14 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
 
       {/* PROMOTED: Support section first */}
       <section>
-        <h3 className="text-sm font-semibold mb-2 text-slate-300">Support Assets</h3>
+        <h3 className="text-sm font-semibold mb-2 text-slate-300 font-tech uppercase tracking-wider">Support Assets</h3>
         <div className="space-y-2">
           <div className="bg-slate-900 border border-slate-800 rounded-lg p-3">
             {awacsCovering.length > 0 ? (
-              <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <label className="flex items-start gap-2 text-sm cursor-pointer p-2">
                 <input
                   type="checkbox"
-                  className="mt-0.5"
+                  className="mt-0.5 w-5 h-5"
                   checked={value.support.awacs}
                   onChange={(e) => setSupport("awacs", e.target.checked)}
                 />
@@ -213,7 +213,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
               ? "bg-amber-950/40 border-amber-600"
               : "bg-slate-900 border-slate-800",
           ].join(" ")}>
-            <input type="checkbox" className="mt-0.5" checked={value.support.tanker}
+            <input type="checkbox" className="mt-0.5 w-5 h-5" checked={value.support.tanker}
               onChange={(e) => setSupport("tanker", e.target.checked)} />
             <span className="flex-1">
               <span className="font-semibold">Tanker (IL-78)</span>
@@ -226,7 +226,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
             </span>
           </label>
           <label className="flex items-start gap-2 text-sm bg-slate-900 border border-slate-800 rounded-lg p-3 cursor-pointer">
-            <input type="checkbox" className="mt-0.5" checked={value.support.sead_package}
+            <input type="checkbox" className="mt-0.5 w-5 h-5" checked={value.support.sead_package}
               onChange={(e) => setSupport("sead_package", e.target.checked)} />
             <span className="flex-1">
               <span className="font-semibold">SEAD package</span>
@@ -237,7 +237,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
       </section>
 
       <section>
-        <h3 className="text-sm font-semibold mb-2 text-slate-300">Squadrons</h3>
+        <h3 className="text-sm font-semibold mb-2 text-slate-300 font-tech uppercase tracking-wider">Squadrons</h3>
         <p className="text-[10px] opacity-60 mb-2">
           Only combat squadrons are committable here. AWACS, tankers, and ISR drones are activated via the <span className="font-semibold">Support Assets</span> section above.
         </p>
@@ -290,7 +290,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
                       {badge.label}
                     </span>
                   </div>
-                  <div className="text-[11px] opacity-80 mt-0.5">
+                  <div className="text-xs opacity-80 mt-0.5">
                     ✈ <span className="font-semibold">{sq.platform_id.replace(/_/g, " ").toUpperCase()}</span>
                     {sq.loadout.length > 0 && (
                       <span>
@@ -367,7 +367,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
       </section>
 
       <section>
-        <h3 className="text-sm font-semibold mb-2 text-slate-300">Rules of Engagement</h3>
+        <h3 className="text-sm font-semibold mb-2 text-slate-300 font-tech uppercase tracking-wider">Rules of Engagement</h3>
         <select
           aria-label="ROE"
           value={value.roe}

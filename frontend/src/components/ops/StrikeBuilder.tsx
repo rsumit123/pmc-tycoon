@@ -491,7 +491,7 @@ export function StrikeBuilder() {
       )}
 
       {/* Sticky commit CTA */}
-      <div className="sticky bottom-0 -mx-4 px-4 py-3 bg-slate-950/90 backdrop-blur border-t border-slate-800">
+      <div className="sticky bottom-0 -mx-4 px-4 py-3 bg-slate-950/90 backdrop-blur border-t border-slate-800 safe-pb">
         <CommitHoldButton
           label={submitting ? "Launching…" : canCommit
             ? "🚀 Hold to launch strike"
@@ -532,17 +532,17 @@ function Section({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-baseline justify-between gap-2 px-3 py-2.5 text-left hover:bg-slate-800/50"
+        className="w-full flex items-center justify-between gap-2 px-3 py-3 text-left hover:bg-slate-800/50"
       >
-        <span className="flex items-baseline gap-2 min-w-0">
+        <span className="flex items-center gap-2 min-w-0">
           <span className="text-[10px] opacity-50 font-mono">{n}</span>
           <span className={[
             "text-[10px]",
             complete ? "text-emerald-400" : "text-slate-500",
           ].join(" ")}>{complete ? "●" : "○"}</span>
-          <span className="text-xs font-semibold uppercase">{title}</span>
+          <span className="text-xs font-semibold uppercase font-tech tracking-wider">{title}</span>
         </span>
-        <span className="flex items-baseline gap-2 flex-shrink-0">
+        <span className="flex items-center gap-2 flex-shrink-0">
           <span className="text-[11px] opacity-70 truncate max-w-[60vw]">{summary}</span>
           <span className="text-[10px] opacity-50">{open ? "▼" : "▶"}</span>
         </span>

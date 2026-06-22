@@ -42,7 +42,7 @@ export function AOMiniMap({ ao, inRangeBases, faction }: AOMiniMapProps) {
   return (
     <div className="bg-slate-950 border border-slate-800 rounded-lg p-2">
       <div className="flex items-baseline justify-between mb-1">
-        <div className="text-xs font-semibold text-slate-300">{ao.name}</div>
+        <div className="text-xs font-semibold text-slate-300 font-tech uppercase tracking-wider">{ao.name}</div>
         <div className="text-[10px] text-red-300 uppercase">
           Attack from {cardinal}
           {anchor ? ` (${anchor.name})` : ""}

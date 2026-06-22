@@ -42,7 +42,7 @@ export function IntelBriefReader({ campaignId, className = "" }: IntelBriefReade
     return <div className={["text-sm text-red-300 p-4", className].join(" ")}>Error: {state.message}</div>;
   }
   return (
-    <article className={["prose prose-invert max-w-none prose-sm", className].join(" ")}>
+    <article className={["prose prose-invert max-w-none prose-sm border-l-4 border-amber-500 pl-3", className].join(" ")}>
       {state.text.split(/\n\n+/).map((para, i) => (
         <p key={i} className="mb-3 text-slate-200 leading-relaxed">{para}</p>
       ))}

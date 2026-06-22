@@ -19,7 +19,7 @@ export function AdversaryForceFogged({ observed, tier, score }: AdversaryForceFo
   return (
     <div className={`border rounded-lg p-3 ${copy.color}`}>
       <div className="flex items-baseline justify-between gap-2 mb-2">
-        <h3 className="text-sm font-semibold text-slate-200">Adversary Force</h3>
+        <h3 className="text-sm font-semibold text-slate-200 font-tech uppercase tracking-wider">Adversary Force</h3>
         <div className="text-[10px] uppercase tracking-wide opacity-80">
           {copy.title} · {Math.round(score * 100)}%
         </div>

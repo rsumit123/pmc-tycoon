@@ -49,7 +49,7 @@ export function PerformancePage() {
               type="button"
               onClick={() => setTab(t)}
               className={[
-                "flex-1 px-3 py-1.5 text-xs font-semibold rounded capitalize",
+                "flex-1 px-3 py-2 min-h-[40px] inline-flex items-center justify-center text-xs font-semibold rounded capitalize",
                 tab === t ? "bg-amber-600 text-slate-900" : "text-slate-300",
               ].join(" ")}
             >

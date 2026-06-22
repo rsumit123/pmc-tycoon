@@ -81,7 +81,7 @@ export function CombatHistoryPage() {
           <>
             {last10.length > 1 && (
               <div className="bg-slate-900 border border-slate-800 rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wide opacity-60 mb-2">Recent form (oldest → newest)</p>
+                <p className="text-[10px] uppercase tracking-wide opacity-60 mb-2 font-tech">Recent form (oldest → newest)</p>
                 <div className="flex gap-1 flex-wrap">
                   {last10.map((v) => (
                     <span
@@ -108,7 +108,7 @@ export function CombatHistoryPage() {
                     type="button"
                     onClick={() => setOutcomeFilter(o)}
                     className={[
-                      "text-[11px] rounded-full px-2.5 py-1 border capitalize",
+                      "text-[11px] rounded-full px-2.5 py-2 min-h-[40px] inline-flex items-center border capitalize",
                       outcomeFilter === o
                         ? "bg-amber-600 border-amber-500 text-slate-900 font-semibold"
                         : "bg-slate-800 border-slate-700 text-slate-300",
@@ -124,7 +124,7 @@ export function CombatHistoryPage() {
                     type="button"
                     onClick={() => setFactionFilter(f)}
                     className={[
-                      "text-[11px] rounded-full px-2.5 py-1 border",
+                      "text-[11px] rounded-full px-2.5 py-2 min-h-[40px] inline-flex items-center border",
                       factionFilter === f
                         ? "bg-amber-600 border-amber-500 text-slate-900 font-semibold"
                         : "bg-slate-800 border-slate-700 text-slate-300",

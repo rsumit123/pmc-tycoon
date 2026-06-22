@@ -25,7 +25,7 @@ export function FleetFilters({ roleFilter, onRoleChange, sortMode, onSortChange 
             type="button"
             onClick={() => onRoleChange(r)}
             className={[
-              "text-[11px] rounded-full px-2.5 py-1 border",
+              "text-[11px] rounded-full px-2.5 py-2 min-h-[40px] inline-flex items-center border",
               r === roleFilter
                 ? "bg-amber-600 border-amber-500 text-slate-900 font-semibold"
                 : "bg-slate-800 border-slate-700 text-slate-300",

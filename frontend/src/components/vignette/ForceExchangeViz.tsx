@@ -31,7 +31,7 @@ export interface ForceExchangeVizProps {
 export function ForceExchangeViz({ outcome, indCommitted, advCommitted }: ForceExchangeVizProps) {
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-lg p-3 space-y-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wider opacity-70">Force Exchange</h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wider opacity-70 font-tech">Force Exchange</h3>
       {silhouetteRow(indCommitted, outcome.ind_airframes_lost, "#3b82f6", "IAF")}
       {silhouetteRow(advCommitted, outcome.adv_airframes_lost, "#ef4444", "ADV")}
     </div>
