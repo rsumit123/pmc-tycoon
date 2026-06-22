@@ -15,6 +15,7 @@ from __future__ import annotations
 import io
 import json
 import sys
+import time
 from pathlib import Path
 
 import httpx
@@ -27,7 +28,11 @@ MANIFEST = REPO_ROOT / "backend" / "content" / "asset_manifest.yaml"
 OUT_DIR = REPO_ROOT / "frontend" / "public" / "platforms"
 
 MAX_WIDTH = 800
-UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+# Wikimedia's robot policy requires a descriptive UA with contact info; a
+# browser UA gets throttled (HTTP 429). https://w.wiki/4wJS
+UA = "ChakravyuhGame/1.0 (https://chakravyuh.skdev.one; thetinkerer018@gmail.com) python-httpx"
+REQUEST_DELAY_S = 1.5  # be polite between requests
+RETRY_429_BACKOFF_S = (6, 12)  # waits before retrying a 429
 
 
 def load_manifest() -> list[dict]:
@@ -56,6 +61,12 @@ def fetch_one(entry: dict) -> bool:
     try:
         with httpx.Client(follow_redirects=True, timeout=30.0, headers={"User-Agent": UA}) as client:
             r = client.get(url)
+            for backoff in RETRY_429_BACKOFF_S:
+                if r.status_code != 429:
+                    break
+                print(f"  429 throttled — waiting {backoff}s then retrying")
+                time.sleep(backoff)
+                r = client.get(url)
             r.raise_for_status()
     except httpx.HTTPError as e:
         print(f"  FAILED: {e}")
@@ -97,7 +108,11 @@ def main(argv: list[str]) -> int:
         if missing:
             print(f"unknown platforms in manifest: {sorted(missing)}")
             return 2
-    ok = sum(fetch_one(e) for e in manifest)
+    ok = 0
+    for i, e in enumerate(manifest):
+        if i:
+            time.sleep(REQUEST_DELAY_S)
+        ok += fetch_one(e)
     print(f"\n{ok}/{len(manifest)} fetched successfully.")
     write_aggregate()
     return 0 if ok == len(manifest) else 1
