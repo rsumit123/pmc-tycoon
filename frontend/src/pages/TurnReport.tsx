@@ -86,7 +86,7 @@ export function TurnReport() {
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
         <div className="min-w-0">
-          <h1 className="text-sm font-bold truncate">Turn Report — {y} Q{q}</h1>
+          <h1 className="text-sm font-bold truncate font-display">Turn Report — {y} Q{q}</h1>
           <p className="text-xs opacity-70">
             Treasury: ₹{report.treasury_after_cr.toLocaleString("en-US")} cr
           </p>
@@ -123,13 +123,13 @@ export function TurnReport() {
         })()}
         {sections.map((s) => (
           <section key={s.title}>
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{s.title}</h2>
+            <h2 className="font-tech text-[10px] uppercase tracking-wider text-slate-500 mb-2">{s.title}</h2>
             {s.content ?? <p className="text-xs opacity-60">{s.empty}</p>}
           </section>
         ))}
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 p-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 p-3 safe-pb">
         <button
           onClick={() => navigate(nextAction.to)}
           className="w-full bg-amber-600 hover:bg-amber-500 text-slate-900 font-semibold rounded-lg px-4 py-3 text-sm"

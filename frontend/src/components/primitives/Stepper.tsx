@@ -54,7 +54,7 @@ export function Stepper({
   return (
     <div
       className={[
-        "inline-flex items-stretch rounded-lg border border-slate-800 bg-slate-900/60 select-none",
+        "inline-flex items-stretch rounded-lg border border-slate-800 bg-slate-900/60 select-none focus-within:border-amber-500",
         className,
       ].join(" ")}
       role="group"
@@ -68,8 +68,8 @@ export function Stepper({
         disabled={!canDec}
         onClick={dec}
         className={[
-          "w-9 flex items-center justify-center text-lg",
-          canDec ? "hover:bg-slate-800 active:bg-slate-700" : "opacity-40 cursor-not-allowed",
+          "w-10 h-10 min-h-[40px] flex items-center justify-center text-lg",
+          canDec ? "hover:bg-slate-800 active:bg-amber-600 active:text-slate-900" : "opacity-40 cursor-not-allowed",
         ].join(" ")}
       >
         −
@@ -84,8 +84,8 @@ export function Stepper({
         disabled={!canInc}
         onClick={inc}
         className={[
-          "w-9 flex items-center justify-center text-lg",
-          canInc ? "hover:bg-slate-800 active:bg-slate-700" : "opacity-40 cursor-not-allowed",
+          "w-10 h-10 min-h-[40px] flex items-center justify-center text-lg",
+          canInc ? "hover:bg-slate-800 active:bg-amber-600 active:text-slate-900" : "opacity-40 cursor-not-allowed",
         ].join(" ")}
       >
         +

@@ -62,7 +62,7 @@ export function OpsScreen() {
         <div className="min-w-0">
           <h1 className="text-base font-bold truncate font-display">{campaign.name}</h1>
           <p className="text-xs opacity-70">
-            Operations · {campaign.current_year}-Q{campaign.current_quarter}
+            Strike Command · {campaign.current_year}-Q{campaign.current_quarter}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">

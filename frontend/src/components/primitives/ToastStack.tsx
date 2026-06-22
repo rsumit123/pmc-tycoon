@@ -6,7 +6,7 @@ export function ToastStack() {
   const dismiss = useCampaignStore((s) => s.dismissToast);
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 items-center pointer-events-none">
+    <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 items-center pointer-events-none">
       <div className="flex flex-col gap-2 items-center pointer-events-auto">
         {toasts.map((t) => (
           <Toast key={t.id} toast={t} onDismiss={dismiss} />

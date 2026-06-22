@@ -211,17 +211,19 @@ export function CampaignMapView() {
         </button>
         <div className="min-w-0 flex-1">
           <h1 className="text-sm font-bold truncate font-display">{campaign.name}</h1>
-          <p className="text-[11px] leading-tight flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <span className="opacity-80">{campaign.current_year} Q{campaign.current_quarter}</span>
+          <p className="text-xs leading-tight flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <span className="font-tech text-[10px] uppercase tracking-wider text-slate-500">{campaign.current_year} Q{campaign.current_quarter}</span>
             <span className="opacity-80">
               💰 <span className="font-semibold">₹{campaign.budget_cr.toLocaleString("en-US")}</span>
             </span>
             <span className={`${topBarNetQ >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-              {topBarNetQ >= 0 ? "+" : ""}₹{topBarNetQ.toLocaleString("en-US")}/q
+              {topBarNetQ >= 0 ? "+" : ""}₹{topBarNetQ.toLocaleString("en-US")}
+              <span className="font-tech text-[10px] uppercase tracking-wider text-slate-500">/q</span>
             </span>
             {outstandingOrderCount > 0 && (
-              <span className="opacity-70 text-[10px]" title={`${outstandingOrderCount} active orders`}>
-                📜 ₹{topBarOutstanding.toLocaleString("en-US")} outstanding
+              <span title={`${outstandingOrderCount} active orders`}>
+                📜 ₹{topBarOutstanding.toLocaleString("en-US")}{" "}
+                <span className="font-tech text-[10px] uppercase tracking-wider text-slate-500">outstanding</span>
               </span>
             )}
           </p>
@@ -231,9 +233,9 @@ export function CampaignMapView() {
           {pendingVignettes.length > 0 && (
             <Link
               to={`/campaign/${campaign.id}/vignette/${pendingVignettes[0].id}`}
-              className="bg-red-600 hover:bg-red-500 text-slate-100 text-xs font-semibold rounded px-2 py-1 animate-pulse"
+              className="bg-rose-600 hover:bg-rose-500 text-slate-100 text-xs font-semibold rounded px-2 py-1 animate-pulse"
             >
-              ⚠ Ops
+              ⚠ Respond
             </Link>
           )}
           <button
@@ -262,7 +264,7 @@ export function CampaignMapView() {
               >✕</button>
             </div>
             <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-              <div className="text-[10px] uppercase tracking-wide opacity-60 px-2 pt-1 pb-1">Force</div>
+              <div className="font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-1 pb-1">Force</div>
               <Link
                 onClick={() => setShowMenu(false)}
                 to={`/campaign/${campaign.id}/hangar`}
@@ -274,12 +276,12 @@ export function CampaignMapView() {
                 className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
               >🚀 Armory</Link>
 
-              <div className="text-[10px] uppercase tracking-wide opacity-60 px-2 pt-3 pb-1">Operations</div>
+              <div className="font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-3 pb-1">Operations</div>
               <Link
                 onClick={() => setShowMenu(false)}
                 to={`/campaign/${campaign.id}/ops`}
                 className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
-              >🎯 Ops Screen</Link>
+              >🎯 Strike Command</Link>
               <Link
                 onClick={() => setShowMenu(false)}
                 to={`/campaign/${campaign.id}/procurement`}
@@ -308,7 +310,7 @@ export function CampaignMapView() {
                 >📰 White Paper</Link>
               )}
 
-              <div className="text-[10px] uppercase tracking-wide opacity-60 px-2 pt-3 pb-1">Settings</div>
+              <div className="font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-3 pb-1">Settings</div>
               <button
                 type="button"
                 onClick={() => { setAudioEnabled(!audioOn); setAudioOn(!audioOn); }}
