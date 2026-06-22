@@ -1,7 +1,6 @@
-import { useState } from "react";
 import type { Platform } from "../../lib/types";
 import { RadarChart } from "./RadarChart";
-import { PlatformSilhouette } from "./PlatformSilhouette";
+import { PlatformImage } from "./PlatformImage";
 import { useBackButtonClose } from "../../lib/useBackButtonClose";
 
 export interface PlatformDossierProps {
@@ -26,7 +25,6 @@ function statAxes(p: Platform) {
 }
 
 export function PlatformDossier({ platform, open, onClose }: PlatformDossierProps) {
-  const [imgBroken, setImgBroken] = useState(false);
   useBackButtonClose(open, onClose);
   if (!open) return null;
 
@@ -49,17 +47,14 @@ export function PlatformDossier({ platform, open, onClose }: PlatformDossierProp
           ×
         </button>
 
+        <PlatformImage
+          platformId={platform.id}
+          name={platform.name}
+          variant="hero"
+          className="w-full aspect-video rounded-lg"
+        />
+
         <div className="flex items-center gap-4">
-          {imgBroken ? (
-            <PlatformSilhouette />
-          ) : (
-            <img
-              src={`/platforms/${platform.id}/hero.jpg`}
-              alt={platform.name}
-              onError={() => setImgBroken(true)}
-              className="w-40 h-24 object-cover rounded-lg bg-slate-800"
-            />
-          )}
           <div>
             <h2 className="text-xl font-bold">{platform.name}</h2>
             <p className="text-xs opacity-70">

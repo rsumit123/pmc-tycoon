@@ -7,6 +7,7 @@ import type {
 import { Stepper } from "../primitives/Stepper";
 import { CommitHoldButton } from "../primitives/CommitHoldButton";
 import { PlatformDossier } from "../primitives/PlatformDossier";
+import { PlatformImage } from "../primitives/PlatformImage";
 import { InfoButton, WeaponInfo, ADSystemInfo } from "../primitives/RoleInfo";
 import { flagFor, WEAPON_ORIGIN, AD_SYSTEM_ORIGIN } from "../../lib/origin";
 
@@ -162,6 +163,12 @@ function OfferCard({
           : "bg-slate-900/50 border-slate-800",
       ].join(" ")}
     >
+      <PlatformImage
+        platformId={platform.id}
+        name={platform.name}
+        variant="thumb"
+        className="w-full aspect-video rounded mb-2"
+      />
       <p className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-semibold flex items-center gap-1.5">
           {platform.name}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { HangarPlatformSummary, Platform } from "../../lib/types";
 import { PlatformDossier } from "../primitives/PlatformDossier";
+import { PlatformImage } from "../primitives/PlatformImage";
 import { InfoButton } from "../primitives/RoleInfo";
 import { useCampaignStore } from "../../store/campaignStore";
 
@@ -16,6 +17,12 @@ export function PlatformSummaryCard({
       onClick={onClick}
       className="w-full text-left bg-slate-900 border border-slate-800 hover:border-amber-600/60 rounded-lg p-3 transition-colors"
     >
+      <PlatformImage
+        platformId={s.platform_id}
+        name={s.platform_name}
+        variant="thumb"
+        className="w-full aspect-video rounded mb-2"
+      />
       <div className="flex items-baseline justify-between gap-2">
         <div className="text-sm font-semibold truncate flex items-center gap-1.5">
           {s.platform_name}
