@@ -28,8 +28,18 @@ export function IntelSwipeStack({ cards, className = "" }: IntelSwipeStackProps)
         renderCard={(c) => <IntelCard card={c} />}
         onDismiss={(item) => setRemaining((r) => r.filter((x) => x.id !== item.id))}
       />
+      {remaining.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setRemaining((r) => r.slice(1))}
+          className="mt-3 w-full min-h-[40px] rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm font-semibold text-slate-100"
+          aria-label="Dismiss top intel card"
+        >
+          Dismiss ↓
+        </button>
+      )}
       <p className="mt-3 text-center text-xs opacity-60">
-        Swipe to dismiss • {remaining.length} remaining
+        Swipe or tap Dismiss • {remaining.length} remaining
       </p>
     </div>
   );

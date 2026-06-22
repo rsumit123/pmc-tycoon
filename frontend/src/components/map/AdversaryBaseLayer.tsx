@@ -36,7 +36,7 @@ export function AdversaryBaseLayer({
             onClick={() => onSelect(b)}
             aria-label={b.name}
           >
-            <circle r={14} fill="transparent" />
+            <circle r={20} fill="transparent" />
             <circle r={6} fill={color} fillOpacity={0.85} stroke="#1e293b" strokeWidth={1} />
             <circle r={10} fill="none" stroke={color} strokeOpacity={0.5} strokeWidth={1} strokeDasharray="2 2" />
           </g>

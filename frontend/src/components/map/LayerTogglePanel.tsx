@@ -18,7 +18,7 @@ export function LayerTogglePanel() {
           key={k}
           onClick={() => toggle(k)}
           className={[
-            "block w-full text-left text-xs px-2 py-1 rounded",
+            "flex items-center w-full text-left text-xs px-2 py-2.5 min-h-[40px] rounded",
             active[k] ? "bg-amber-600 text-slate-900 font-semibold"
                       : "text-slate-300 hover:bg-slate-800",
           ].join(" ")}

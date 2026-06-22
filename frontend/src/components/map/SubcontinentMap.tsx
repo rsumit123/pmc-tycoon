@@ -67,10 +67,19 @@ export function SubcontinentMap({
       const hasAD = adBaseIds?.has(b.id) ?? false;
       const isFlash = flashBaseId === b.id;
 
+      // Outer wrapper is a ~40px transparent hit area centered around the 12px
+      // visual dot, so tapping a base (the primary nav action) is reliable on
+      // touch screens while the dot still reads as 12px.
       const wrap = document.createElement("div");
-      wrap.className = "relative";
-      wrap.style.width = "12px";
-      wrap.style.height = "12px";
+      wrap.className = "flex items-center justify-center";
+      wrap.style.width = "40px";
+      wrap.style.height = "40px";
+
+      // Inner 12px relative container keeps the corner status badges anchored to
+      // the visual dot rather than the enlarged hit area.
+      const dot = document.createElement("div");
+      dot.className = "relative w-3 h-3";
+      wrap.appendChild(dot);
 
       const el = document.createElement("button");
       el.type = "button";
@@ -83,13 +92,13 @@ export function SubcontinentMap({
           : "bg-amber-400 border-amber-900",
       ].join(" ");
       el.addEventListener("click", () => onMarkerClick?.(b.id));
-      wrap.appendChild(el);
+      dot.appendChild(el);
 
       const addDot = (color: string, pos: string, title: string) => {
         const d = document.createElement("span");
         d.title = title;
         d.className = `absolute w-1.5 h-1.5 rounded-full border border-slate-900 ${color} ${pos} pointer-events-none`;
-        wrap.appendChild(d);
+        dot.appendChild(d);
       };
       if (hasAwacs) addDot("bg-emerald-400", "-top-1 -right-1", "AWACS");
       if (hasTanker) addDot("bg-orange-400", "-bottom-1 -right-1", "Tanker");

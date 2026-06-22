@@ -5,6 +5,7 @@ import { SquadronCard } from "../primitives/SquadronCard";
 import { PlatformDossier } from "../primitives/PlatformDossier";
 import { MissileTransferModal } from "./MissileTransferModal";
 import { useCampaignStore } from "../../store/campaignStore";
+import { useBackButtonClose } from "../../lib/useBackButtonClose";
 
 // Friendly display names for AD systems (matches ad_systems.yaml entries).
 const AD_SYSTEM_NAMES: Record<string, string> = {
@@ -34,6 +35,7 @@ export function BaseSheet({
   const [transferFor, setTransferFor] = useState<{ weaponId: string; stock: number } | null>(null);
   const allBases = useCampaignStore((s) => s.bases);
   const transferMissileStock = useCampaignStore((s) => s.transferMissileStock);
+  useBackButtonClose(base !== null, onClose);
   if (!base) return null;
 
   return (
@@ -54,7 +56,7 @@ export function BaseSheet({
           <button
             onClick={onClose}
             aria-label="close base sheet"
-            className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200"
           >
             ×
           </button>

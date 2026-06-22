@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { AdversaryBase } from "../../lib/types";
 import { useCampaignStore } from "../../store/campaignStore";
+import { useBackButtonClose } from "../../lib/useBackButtonClose";
 
 export interface AdversaryBaseSheetProps {
   base: AdversaryBase | null;
@@ -16,6 +17,7 @@ const TIER_BADGE: Record<string, string> = {
 
 export function AdversaryBaseSheet({ base, onClose, campaignId }: AdversaryBaseSheetProps) {
   const posture = useCampaignStore((s) => s.posture);
+  useBackButtonClose(base !== null, onClose);
   if (!base) return null;
   const s = base.latest_sighting;
   const offensiveUnlocked = posture?.offensive_unlocked ?? false;
@@ -36,7 +38,7 @@ export function AdversaryBaseSheet({ base, onClose, campaignId }: AdversaryBaseS
         <button
           onClick={onClose}
           aria-label="close"
-          className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200"
         >×</button>
       </div>
 

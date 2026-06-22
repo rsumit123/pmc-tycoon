@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Platform } from "../../lib/types";
 import { RadarChart } from "./RadarChart";
 import { PlatformSilhouette } from "./PlatformSilhouette";
+import { useBackButtonClose } from "../../lib/useBackButtonClose";
 
 export interface PlatformDossierProps {
   platform: Platform;
@@ -26,6 +27,7 @@ function statAxes(p: Platform) {
 
 export function PlatformDossier({ platform, open, onClose }: PlatformDossierProps) {
   const [imgBroken, setImgBroken] = useState(false);
+  useBackButtonClose(open, onClose);
   if (!open) return null;
 
   return (
@@ -42,7 +44,7 @@ export function PlatformDossier({ platform, open, onClose }: PlatformDossierProp
         <button
           onClick={onClose}
           aria-label="close dossier"
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200"
+          className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200"
         >
           ×
         </button>

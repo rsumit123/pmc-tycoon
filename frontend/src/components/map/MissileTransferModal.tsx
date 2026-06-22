@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { BaseMarker, MissileStock } from "../../lib/types";
+import { useBackButtonClose } from "../../lib/useBackButtonClose";
 
 export interface MissileTransferModalProps {
   weaponId: string;
@@ -21,6 +22,7 @@ export function MissileTransferModal({
   const [toBaseId, setToBaseId] = useState<number | "">("");
   const [qty, setQty] = useState<number>(Math.min(availableStock, 20));
   const [submitting, setSubmitting] = useState(false);
+  useBackButtonClose(true, onClose);
 
   const eligibleBases = allBases.filter((b) => b.id !== fromBase.id);
   const destStock =
@@ -61,7 +63,7 @@ export function MissileTransferModal({
               From <span className="font-semibold">{shortBaseName(fromBase.name)}</span> · {availableStock} in stock
             </p>
           </div>
-          <button onClick={onClose} aria-label="close" className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700">×</button>
+          <button onClick={onClose} aria-label="close" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700">×</button>
         </div>
 
         <label className="flex flex-col gap-1 text-xs">

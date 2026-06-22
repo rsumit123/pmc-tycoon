@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { MissileUnlock, HangarSquadron, MissileStock } from "../../lib/types";
+import { useBackButtonClose } from "../../lib/useBackButtonClose";
 
 export interface MissileEquipModalProps {
   missile: MissileUnlock;
@@ -15,6 +16,7 @@ export function MissileEquipModal({
   missile, squadrons, missileStocks = [], campaignId, onClose, onPick,
 }: MissileEquipModalProps) {
   const [pendingId, setPendingId] = useState<number | null>(null);
+  useBackButtonClose(true, onClose);
 
   const eligible = useMemo(
     () => squadrons.filter((s) => missile.eligible_platforms.includes(s.platform_id)),
@@ -29,7 +31,7 @@ export function MissileEquipModal({
       >
         <div className="sticky top-0 bg-slate-900 border-b border-slate-800 p-4 flex items-baseline justify-between">
           <h2 className="text-base font-bold">Equip {missile.name.replace(/_/g, " ")}</h2>
-          <button onClick={onClose} aria-label="close" className="text-slate-400 hover:text-slate-200">✕</button>
+          <button onClick={onClose} aria-label="close" className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-200">✕</button>
         </div>
         <div className="p-4 space-y-2">
           {eligible.length === 0 ? (

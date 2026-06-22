@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { HangarSquadron } from "../../lib/types";
 import { shortBaseName } from "./SquadronRow";
+import { useBackButtonClose } from "../../lib/useBackButtonClose";
 
 export interface SquadronDetailSheetProps {
   squadron: HangarSquadron | null;
@@ -29,6 +30,8 @@ export function SquadronDetailSheet({ squadron, onClose, onRebaseStart, onSplitS
       setEditing(false);
     }
   }, [squadron?.id]);
+
+  useBackButtonClose(squadron !== null, onClose);
 
   if (!squadron) return null;
   const canSplit = squadron.strength >= 2;
@@ -91,7 +94,7 @@ export function SquadronDetailSheet({ squadron, onClose, onRebaseStart, onSplitS
             <button
               onClick={onClose}
               aria-label="close"
-              className="text-slate-400 hover:text-slate-200 ml-2 flex-shrink-0"
+              className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-200 ml-2 flex-shrink-0"
             >
               ✕
             </button>

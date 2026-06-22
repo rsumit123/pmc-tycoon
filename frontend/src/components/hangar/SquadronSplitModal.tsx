@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { HangarSquadron, BaseMarker } from "../../lib/types";
 import { Stepper } from "../primitives/Stepper";
 import { shortBaseName } from "./SquadronRow";
+import { useBackButtonClose } from "../../lib/useBackButtonClose";
 
 export interface SquadronSplitModalProps {
   squadron: HangarSquadron;
@@ -15,6 +16,7 @@ export function SquadronSplitModal({ squadron, bases, onClose, onSplit }: Squadr
   const [airframes, setAirframes] = useState<number>(Math.min(1, maxSplit));
   const [targetBaseId, setTargetBaseId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  useBackButtonClose(true, onClose);
 
   const otherBases = bases.filter((b) => b.id !== squadron.base_id);
 
@@ -45,7 +47,7 @@ export function SquadronSplitModal({ squadron, bases, onClose, onSplit }: Squadr
               Current: {squadron.strength} airframes at {shortBaseName(squadron.base_name)}
             </p>
           </div>
-          <button onClick={onClose} aria-label="close" className="text-slate-400 hover:text-slate-200 flex-shrink-0">✕</button>
+          <button onClick={onClose} aria-label="close" className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-200 flex-shrink-0">✕</button>
         </div>
 
         <div className="p-4 space-y-4">
