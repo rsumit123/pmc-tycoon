@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-06-20 (Plan 24 done)
+**Last updated:** 2026-06-22 (Plan 25 done)
 
 ---
 
@@ -29,6 +29,7 @@
 | 15 | Armory + Hangar + R&D Unlocks | 🟢 done | [2026-04-19-armory-hangar-unlocks-plan.md](2026-04-19-armory-hangar-unlocks-plan.md) |
 | 23 | Auth + Release Readiness | 🟢 done | 2026-06-20-auth-release-readiness-plan.md |
 | 24 | Capacitor Android Packaging | 🟢 done | 2026-06-20-capacitor-android-plan.md |
+| 25 | Platform Imagery (Visual Engagement P1) | 🟢 done | 2026-06-22-platform-imagery-plan.md |
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 
