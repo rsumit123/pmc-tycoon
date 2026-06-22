@@ -1,88 +1,192 @@
 # Hand-curated Wikimedia Commons hero-image URLs for platform dossiers.
 # Fetcher: scripts/fetch_platform_assets.py. Results land in
 # frontend/public/platforms/{id}/hero.jpg + attribution.json.
+#
+# Every entry was license-verified on its Commons File: page (CC-BY / CC-BY-SA /
+# CC0 / Public domain / GODL-India). hero_url uses the Special:FilePath form,
+# which redirects to the current full-res file and survives thumb-cache churn.
 platforms:
+  # ---- Indian Air Force fleet ----
   - id: rafale_f4
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Dassault_Rafale_%28sideview%29.jpg/960px-Dassault_Rafale_%28sideview%29.jpg"
-    license: "CC BY-SA 4.0"
-    attribution: "Dassault Rafale — Wikimedia Commons"
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Dassault_Rafale_B.jpg?width=960"
+    license: "Public domain"
+    author: "Dmitry A. Mottl"
+    source_url: "https://commons.wikimedia.org/wiki/File:Dassault_Rafale_B.jpg"
+    attribution: "Dassault Rafale B — Wikimedia Commons"
+
   - id: tejas_mk1a
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/HAL_Tejas_MK1.jpg/960px-HAL_Tejas_MK1.jpg"
-    license: "CC BY-SA 4.0"
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Tejas_air_force_grey.JPG?width=960"
+    license: "CC BY 2.5 India"
+    author: "Ajai Shukla"
+    source_url: "https://commons.wikimedia.org/wiki/File:Tejas_air_force_grey.JPG"
     attribution: "HAL Tejas — Wikimedia Commons"
+
+  - id: tejas_mk2
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Tejas_MKII.jpg?width=960"
+    license: "GODL-India"
+    author: "Government of India (DRDO)"
+    source_url: "https://commons.wikimedia.org/wiki/File:Tejas_MKII.jpg"
+    attribution: "HAL Tejas Mk2 — Wikimedia Commons"
+
   - id: su30_mki
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Sukhoi_Su-30MKI_Indian_Air_Force.jpg/960px-Sukhoi_Su-30MKI_Indian_Air_Force.jpg"
-    license: "CC BY-SA 4.0"
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Sukhoi_Su-30MKI_'SB_065'_(20307480210).jpg?width=960"
+    license: "CC BY-SA 2.0"
+    author: "Alan Wilson"
+    source_url: "https://commons.wikimedia.org/wiki/File:Sukhoi_Su-30MKI_'SB_065'_(20307480210).jpg"
     attribution: "Su-30MKI — Wikimedia Commons"
+
   - id: mirage2000
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Mirage_2000H.jpg/960px-Mirage_2000H.jpg"
-    license: "CC BY-SA 4.0"
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Indian_Air_Force_Dassault_Mirage_2000.JPG?width=960"
+    license: "Public domain"
+    author: "U.S. Air Force"
+    source_url: "https://commons.wikimedia.org/wiki/File:Indian_Air_Force_Dassault_Mirage_2000.JPG"
     attribution: "Mirage 2000 — Wikimedia Commons"
-  - id: j20a
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Chengdu_J-20_at_Airshow_China_2016.jpg/960px-Chengdu_J-20_at_Airshow_China_2016.jpg"
-    license: "CC BY-SA 4.0"
-    attribution: "Chengdu J-20 — Wikimedia Commons"
-  - id: j35a
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Shenyang_J-35.jpg/960px-Shenyang_J-35.jpg"
-    license: "CC BY-SA 4.0"
-    attribution: "Shenyang J-35 — Wikimedia Commons"
-
-  - id: su35
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Russian_Air_Force_Sukhoi_Su-35S.jpg/960px-Russian_Air_Force_Sukhoi_Su-35S.jpg"
-    license: "CC BY-SA 4.0"
-    attribution: "Sukhoi Su-35S — Wikimedia Commons"
-
-  - id: j16
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Shenyang_J-16.jpg/960px-Shenyang_J-16.jpg"
-    license: "CC BY-SA 4.0"
-    attribution: "Shenyang J-16 — Wikimedia Commons"
-
-  - id: j10c
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Chengdu_J-10C.jpg/960px-Chengdu_J-10C.jpg"
-    license: "CC BY-SA 4.0"
-    attribution: "Chengdu J-10C — Wikimedia Commons"
 
   - id: mig29_upg
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/MiG-29_Fulcrum.jpg/960px-MiG-29_Fulcrum.jpg"
-    license: "CC BY-SA 3.0"
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Mikoyan_MiG_29.jpg?width=960"
+    license: "CC BY-SA 4.0"
+    author: "Md Shaifuzzaman Ayon"
+    source_url: "https://commons.wikimedia.org/wiki/File:Mikoyan_MiG_29.jpg"
     attribution: "MiG-29 — Wikimedia Commons"
 
   - id: jaguar_darin3
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Jaguar_Indian_Air_Force.jpg/960px-Jaguar_Indian_Air_Force.jpg"
-    license: "CC BY-SA 4.0"
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Indian_Air_Force_Jaguar.jpg?width=960"
+    license: "Public domain"
+    author: "SrA Joshua Strang, U.S. Air Force"
+    source_url: "https://commons.wikimedia.org/wiki/File:Indian_Air_Force_Jaguar.jpg"
     attribution: "SEPECAT Jaguar IAF — Wikimedia Commons"
 
-  - id: f16_blk52
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/F-16_June_2008.jpg/960px-F-16_June_2008.jpg"
+  - id: mig21_bison
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Sheeju_mig21.JPG?width=960"
     license: "Public domain"
-    attribution: "F-16 Fighting Falcon — Wikimedia Commons"
+    author: "Sheeju (English Wikipedia)"
+    source_url: "https://commons.wikimedia.org/wiki/File:Sheeju_mig21.JPG"
+    attribution: "MiG-21 Bison IAF — Wikimedia Commons"
 
-  - id: jf17_blk3
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Pakistan_Air_Force_JF-17_Thunder.jpg/960px-Pakistan_Air_Force_JF-17_Thunder.jpg"
-    license: "CC BY-SA 4.0"
-    attribution: "JF-17 Thunder — Wikimedia Commons"
+  - id: netra_aewc
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/DRDO_Netra_AEW&CS.jpg?width=960"
+    license: "GODL-India"
+    author: "Ministry of Defence (India)"
+    source_url: "https://commons.wikimedia.org/wiki/File:DRDO_Netra_AEW%26CS.jpg"
+    attribution: "DRDO Netra AEW&C — Wikimedia Commons"
+
+  - id: il78_tanker
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/RK-3452_Ilyushin_IL-78MKI_Indian_AF_78_Sqdn._(2993322560).jpg?width=960"
+    license: "CC BY 2.0"
+    author: "Jerry Gunner"
+    source_url: "https://commons.wikimedia.org/wiki/File:RK-3452_Ilyushin_IL-78MKI_Indian_AF_78_Sqdn._(2993322560).jpg"
+    attribution: "Il-78MKI IAF tanker — Wikimedia Commons"
+
+  # ---- Western platforms (MRFA / future buys) ----
+  - id: su35
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Sukhoi_Su-35.jpg?width=960"
+    license: "CC BY-SA 3.0"
+    author: "Dmitry A. Mottl"
+    source_url: "https://commons.wikimedia.org/wiki/File:Sukhoi_Su-35.jpg"
+    attribution: "Sukhoi Su-35 — Wikimedia Commons"
 
   - id: f18e_super_hornet
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/FA-18E_Super_Hornet_VFA-143.jpg/960px-FA-18E_Super_Hornet_VFA-143.jpg"
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/FA-18E_Super_Hornet_of_VFA-81_in_flight_with_Malaysian_Su-30MKM_in_May_2015.JPG?width=960"
     license: "Public domain"
+    author: "Lt Jonathan Pfaff, U.S. Navy"
+    source_url: "https://commons.wikimedia.org/wiki/File:FA-18E_Super_Hornet_of_VFA-81_in_flight_with_Malaysian_Su-30MKM_in_May_2015.JPG"
     attribution: "F/A-18E Super Hornet — Wikimedia Commons"
 
   - id: f15ex
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/F-15EX_Eagle_II.jpg/960px-F-15EX_Eagle_II.jpg"
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/F-15EX_Eagle_II.jpg?width=960"
     license: "Public domain"
+    author: "Ethan Wagner, U.S. Air Force"
+    source_url: "https://commons.wikimedia.org/wiki/File:F-15EX_Eagle_II.jpg"
     attribution: "F-15EX Eagle II — Wikimedia Commons"
 
   - id: gripen_e
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Saab_JAS_39_Gripen_E.jpg/960px-Saab_JAS_39_Gripen_E.jpg"
-    license: "CC BY-SA 4.0"
-    attribution: "Saab JAS 39 Gripen E — Wikimedia Commons"
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Saab_JAS-39E_Gripen_(53327257948).jpg?width=960"
+    license: "CC BY-SA 2.0"
+    author: "Airwolfhound (Tim Felce)"
+    source_url: "https://commons.wikimedia.org/wiki/File:Saab_JAS-39E_Gripen_(53327257948).jpg"
+    attribution: "Saab JAS-39E Gripen — Wikimedia Commons"
 
   - id: eurofighter_typhoon
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Eurofighter_Typhoon_FGR4.jpg/960px-Eurofighter_Typhoon_FGR4.jpg"
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Eurofighter_Typhoon_'30+62'_(14738724866).jpg?width=960"
     license: "CC BY-SA 2.0"
+    author: "Alan Wilson"
+    source_url: "https://commons.wikimedia.org/wiki/File:Eurofighter_Typhoon_'30+62'_(14738724866).jpg"
     attribution: "Eurofighter Typhoon — Wikimedia Commons"
 
-  - id: h6kj
-    hero_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Xian_H-6.jpg/960px-Xian_H-6.jpg"
+  - id: mq9b_seaguardian
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/MQ-9_Reaper_-_090609-F-0000M-777.JPG?width=960"
+    license: "Public domain"
+    author: "Paul Ridgeway, U.S. Air Force"
+    source_url: "https://commons.wikimedia.org/wiki/File:MQ-9_Reaper_-_090609-F-0000M-777.JPG"
+    attribution: "MQ-9 Reaper — Wikimedia Commons"
+
+  - id: heron_tp
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/IAI_Heron_1_in_flight_2.JPEG?width=960"
+    license: "Public domain"
+    author: "SSgt Reynaldo Ramon, U.S. Air Force"
+    source_url: "https://commons.wikimedia.org/wiki/File:IAI_Heron_1_in_flight_2.JPEG"
+    attribution: "IAI Heron — Wikimedia Commons"
+
+  # ---- Adversary fleet (PLAAF / PAF) ----
+  - id: j20a
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/J-20_fighter.jpg?width=960"
+    license: "CC BY-SA 2.0"
+    author: "emperornie"
+    source_url: "https://commons.wikimedia.org/wiki/File:J-20_fighter.jpg"
+    attribution: "Chengdu J-20 — Wikimedia Commons"
+
+  - id: j35a
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Shenyang_J-31_(F60)_at_the_2014_Zhuhai_Air_Show.jpg?width=960"
     license: "CC BY-SA 4.0"
-    attribution: "Xian H-6 — Wikimedia Commons"
+    author: "wc (Wikimedia Commons)"
+    source_url: "https://commons.wikimedia.org/wiki/File:Shenyang_J-31_(F60)_at_the_2014_Zhuhai_Air_Show.jpg"
+    attribution: "Shenyang J-35 / FC-31 — Wikimedia Commons"
+
+  - id: j10c
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/17.08.21-aviadarts-1200-J10B-1.jpg?width=960"
+    license: "CC BY 4.0"
+    author: "Mil.ru (Russian MoD)"
+    source_url: "https://commons.wikimedia.org/wiki/File:17.08.21-aviadarts-1200-J10B-1.jpg"
+    attribution: "Chengdu J-10 — Wikimedia Commons"
+
+  - id: j16
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/17.08.21-aviadarts-1200-J16.jpg?width=960"
+    license: "CC BY 4.0"
+    author: "Mil.ru (Russian MoD)"
+    source_url: "https://commons.wikimedia.org/wiki/File:17.08.21-aviadarts-1200-J16.jpg"
+    attribution: "Shenyang J-16 — Wikimedia Commons"
+
+  - id: j11b
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Chinese_Shenyang_J-11_from_below_in_August_2014.JPG?width=960"
+    license: "Public domain"
+    author: "U.S. Navy"
+    source_url: "https://commons.wikimedia.org/wiki/File:Chinese_Shenyang_J-11_from_below_in_August_2014.JPG"
+    attribution: "Shenyang J-11 — Wikimedia Commons"
+
+  - id: kj500
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/KJ-500.jpg?width=960"
+    license: "CC BY-SA 4.0"
+    author: "Alert5"
+    source_url: "https://commons.wikimedia.org/wiki/File:KJ-500.jpg"
+    attribution: "Shaanxi KJ-500 — Wikimedia Commons"
+
+  - id: h6kj
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Xian_H-6K.jpg?width=960"
+    license: "CC BY-SA 4.0"
+    author: "Andrei Shmatko"
+    source_url: "https://commons.wikimedia.org/wiki/File:Xian_H-6K.jpg"
+    attribution: "Xian H-6K — Wikimedia Commons"
+
+  - id: jf17_blk3
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Pakistan_JF-17_(modified).jpg?width=960"
+    license: "CC BY-SA 4.0"
+    author: "Shimin Gu (mod. FOX 52)"
+    source_url: "https://commons.wikimedia.org/wiki/File:Pakistan_JF-17_(modified).jpg"
+    attribution: "JF-17 Thunder — Wikimedia Commons"
+
+  - id: f16_blk52
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/F-16_Fighting_Falcon.jpg?width=960"
+    license: "Public domain"
+    author: "SSgt Cherie A. Thurlby, U.S. Air Force"
+    source_url: "https://commons.wikimedia.org/wiki/File:F-16_Fighting_Falcon.jpg"
+    attribution: "F-16 Fighting Falcon — Wikimedia Commons"
