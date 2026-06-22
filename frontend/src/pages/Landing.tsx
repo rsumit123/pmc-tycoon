@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { HowToPlayGuide } from "../components/guide/HowToPlayGuide";
 import type { Difficulty } from "../lib/types";
@@ -79,12 +79,15 @@ export function Landing() {
               Head of Defense Integration — New Delhi, 2026
             </p>
           </div>
-          <button
-            onClick={() => setShowGuide(true)}
-            className="text-xs text-amber-400 underline opacity-70 hover:opacity-100 transition-opacity mt-1"
-          >
-            How to play
-          </button>
+          <div className="flex flex-col items-end gap-1 mt-1">
+            <button
+              onClick={() => setShowGuide(true)}
+              className="text-xs text-amber-400 underline opacity-70 hover:opacity-100 transition-opacity"
+            >
+              How to play
+            </button>
+            <Link to="/credits" className="text-xs text-slate-500 underline">Image credits</Link>
+          </div>
         </div>
 
         {/* Existing Campaigns */}
