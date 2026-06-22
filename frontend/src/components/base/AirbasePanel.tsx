@@ -98,12 +98,12 @@ export function AirbasePanel({
   return (
     <div className="p-4 space-y-4">
       <h2 className="text-lg font-bold">{baseName}</h2>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-slate-500">
         Treasury: ₹{budgetCr.toLocaleString("en-US")} cr
       </p>
 
       {error && (
-        <p className="text-red-500 text-sm">{error}</p>
+        <p className="text-rose-500 text-sm">{error}</p>
       )}
 
       <div className="space-y-3">
@@ -114,18 +114,18 @@ export function AirbasePanel({
           return (
             <div
               key={opt.key}
-              className="flex items-center justify-between gap-4 rounded border border-gray-200 p-3"
+              className="flex items-center justify-between gap-4 rounded border border-slate-200 p-3"
             >
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-sm">{opt.label}</div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-slate-500">
                   {opt.atMax
                     ? `Max (${opt.max})`
                     : `Current: ${opt.current} / ${opt.max}`}
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-slate-400">
                   ₹{opt.cost.toLocaleString("en-US")} cr
                 </span>
                 <button
@@ -133,8 +133,8 @@ export function AirbasePanel({
                   disabled={disabled}
                   className={`px-3 py-1 rounded text-sm font-medium transition-colors
                     ${disabled
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800"
+                      ? "bg-slate-800 text-slate-400 cursor-not-allowed"
+                      : "bg-amber-600 text-slate-900 hover:bg-amber-500 active:bg-amber-700"
                     }`}
                 >
                   {loading === opt.key

@@ -91,14 +91,14 @@ export function ADDeploymentsTable({
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-[11px]">
+        <table className="w-full text-xs">
           <thead>
             <tr className="text-left opacity-60 border-b border-slate-800">
               <th className="py-1 pr-2 font-medium">System</th>
               <th className="py-1 px-2 font-medium">Base</th>
-              <th className="py-1 px-2 font-medium text-right">Coverage</th>
+              <th className="hidden sm:table-cell py-1 px-2 font-medium text-right">Coverage</th>
               <th className="py-1 px-2 font-medium text-right">Stock</th>
-              <th className="py-1 pl-2 font-medium text-right">Installed</th>
+              <th className="hidden sm:table-cell py-1 pl-2 font-medium text-right">Installed</th>
             </tr>
           </thead>
           <tbody>
@@ -112,9 +112,9 @@ export function ADDeploymentsTable({
                 <tr key={r.id} className="border-b border-slate-900/60">
                   <td className="py-1 pr-2 font-semibold">{r.systemName}</td>
                   <td className="py-1 px-2 truncate max-w-[14rem]">{r.baseName}</td>
-                  <td className="py-1 px-2 text-right font-mono opacity-80">{r.coverageKm} km</td>
+                  <td className="hidden sm:table-cell py-1 px-2 text-right font-mono opacity-80">{r.coverageKm} km</td>
                   <td className={`py-1 px-2 text-right font-mono ${stockClass}`}>{r.stock} / {r.capacity}</td>
-                  <td className="py-1 pl-2 text-right font-mono opacity-80">{r.installedLabel}</td>
+                  <td className="hidden sm:table-cell py-1 pl-2 text-right font-mono opacity-80">{r.installedLabel}</td>
                 </tr>
               );
             })}

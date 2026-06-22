@@ -116,7 +116,7 @@ export function ArmoryPage() {
               <div className="space-y-4">
                 {a2a.length > 0 && (
                   <section>
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-emerald-300 mb-2">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-400 font-tech mb-2">
                       Air-to-Air ({a2a.length})
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -128,7 +128,7 @@ export function ArmoryPage() {
                 )}
                 {strike.length > 0 && (
                   <section>
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-sky-300 mb-2">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-400 font-tech mb-2">
                       Strike Munitions ({strike.length})
                     </h3>
                     <p className="text-[10px] opacity-60 mb-2 italic">

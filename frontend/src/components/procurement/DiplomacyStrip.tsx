@@ -8,11 +8,11 @@ const RELATIONS = [
 ];
 
 const LEVEL_COLORS: Record<string, string> = {
-  allied: "text-green-400 bg-green-900/30",
+  allied: "text-emerald-400 bg-emerald-900/30",
   warm: "text-amber-400 bg-amber-900/30",
   neutral: "text-slate-400 bg-slate-800",
-  cool: "text-blue-400 bg-blue-900/30",
-  hostile: "text-red-400 bg-red-900/30",
+  cool: "text-sky-400 bg-sky-900/30",
+  hostile: "text-rose-400 bg-rose-900/30",
 };
 
 export function DiplomacyStrip() {

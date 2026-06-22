@@ -26,14 +26,14 @@ export function MunitionsExpended({ outcome }: { outcome: VignetteOutcome }) {
         </span>
       </h3>
       <div className="overflow-x-auto">
-        <table className="w-full text-[11px]">
+        <table className="w-full text-xs">
           <thead>
             <tr className="text-left opacity-60 border-b border-slate-800">
               <th className="py-1 pr-2 font-medium">Weapon</th>
               <th className="py-1 px-2 font-medium text-right">Fired</th>
               <th className="py-1 px-2 font-medium text-right">Hits</th>
               <th className="py-1 px-2 font-medium text-right">Hit %</th>
-              <th className="py-1 px-2 font-medium text-right">₹/shot</th>
+              <th className="hidden sm:table-cell py-1 px-2 font-medium text-right">₹/shot</th>
               <th className="py-1 pl-2 font-medium text-right">Replacement</th>
             </tr>
           </thead>
@@ -55,7 +55,7 @@ export function MunitionsExpended({ outcome }: { outcome: VignetteOutcome }) {
                   <td className="py-1 px-2 text-right">{r.fired}</td>
                   <td className={`py-1 px-2 text-right ${wasted ? "text-rose-400" : ""}`}>{r.hits}</td>
                   <td className={`py-1 px-2 text-right ${wasted ? "text-rose-400" : "opacity-80"}`}>{hitPct}%</td>
-                  <td className="py-1 px-2 text-right opacity-80">₹{r.unit_cost_cr}</td>
+                  <td className="hidden sm:table-cell py-1 px-2 text-right opacity-80">₹{r.unit_cost_cr}</td>
                   <td className="py-1 pl-2 text-right font-semibold">
                     ₹{r.total_cost_cr.toLocaleString("en-US")}
                   </td>
@@ -65,7 +65,8 @@ export function MunitionsExpended({ outcome }: { outcome: VignetteOutcome }) {
           </tbody>
           <tfoot>
             <tr className="border-t border-slate-700">
-              <td className="py-1.5 pr-2 font-bold" colSpan={5}>Replacement cost if restocked</td>
+              <td className="py-1.5 pr-2 font-bold" colSpan={4}>Replacement cost if restocked</td>
+              <td className="hidden sm:table-cell" />
               <td className="py-1.5 pl-2 text-right font-bold text-amber-300">
                 ₹{total.toLocaleString("en-US")} cr
               </td>

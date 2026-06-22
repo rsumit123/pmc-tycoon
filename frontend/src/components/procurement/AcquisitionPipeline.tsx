@@ -296,7 +296,7 @@ function TimelineBar({
           → Delivering to <span className="font-semibold">{deliveryBaseName}</span>
         </div>
       )}
-      <div className="relative h-3 bg-slate-800 rounded">
+      <div className="hidden sm:block relative h-3 bg-slate-800 rounded">
         <div
           className={`absolute inset-y-0 border rounded ${
             order.cancelled ? "bg-slate-700/40 border-slate-600"
@@ -311,9 +311,13 @@ function TimelineBar({
           aria-label="current quarter"
         />
       </div>
-      <div className="flex justify-between text-[10px] opacity-60">
+      <div className="hidden sm:flex justify-between text-[10px] opacity-60">
         <span>{order.first_delivery_year}-Q{order.first_delivery_quarter}</span>
         <span>{order.foc_year}-Q{order.foc_quarter}</span>
+      </div>
+      <div className="sm:hidden text-[10px] opacity-70">
+        FOC {order.foc_year}-Q{order.foc_quarter}
+        {quartersUntilStart > 0 && <> · starts in {quartersUntilStart}q</>}
       </div>
       {isPreDelivery ? (
         <div className="text-[11px] opacity-80 pt-1 space-y-0.5">
@@ -1228,14 +1232,14 @@ export function AcquisitionPipeline({
               { k: "reloads", label: "Reloads" },
             ];
             return (
-              <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 overflow-x-auto">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 sm:overflow-x-auto">
                 {catTabs.map((ct) => (
                   <button
                     key={ct.k}
                     type="button"
                     onClick={() => setOfferCat(ct.k)}
                     className={[
-                      "flex-shrink-0 px-2.5 py-1.5 text-xs font-semibold rounded whitespace-nowrap",
+                      "sm:flex-shrink-0 px-2.5 py-1.5 text-xs font-semibold rounded whitespace-nowrap",
                       offerCat === ct.k ? "bg-amber-600 text-slate-900" : "text-slate-300",
                     ].join(" ")}
                   >

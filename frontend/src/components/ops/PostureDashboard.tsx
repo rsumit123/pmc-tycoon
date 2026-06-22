@@ -51,7 +51,7 @@ export function PostureDashboard() {
 
       {/* Treasury */}
       <section className="bg-slate-900 border border-slate-800 rounded-lg p-3">
-        <h3 className="text-xs font-semibold uppercase opacity-70 mb-2">💰 Treasury</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wider font-tech opacity-70 mb-2">💰 Treasury</h3>
         <div className="flex items-baseline justify-between gap-2 text-sm">
           <span className="font-mono font-semibold">
             ₹{posture.treasury.treasury_cr.toLocaleString("en-US")} cr
@@ -75,7 +75,7 @@ export function PostureDashboard() {
 
       {/* Active Ops */}
       <section className="bg-slate-900 border border-slate-800 rounded-lg p-3">
-        <h3 className="text-xs font-semibold uppercase opacity-70 mb-2">🎯 Active Ops</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wider font-tech opacity-70 mb-2">🎯 Active Ops</h3>
         <div className="flex items-baseline justify-between gap-2 text-xs">
           <span>
             Strikes this quarter:{" "}
@@ -99,7 +99,7 @@ export function PostureDashboard() {
 
       {/* Threat history */}
       <section className="bg-slate-900 border border-slate-800 rounded-lg p-3">
-        <h3 className="text-xs font-semibold uppercase opacity-70 mb-2">
+        <h3 className="text-xs font-semibold uppercase tracking-wider font-tech opacity-70 mb-2">
           ⚔ Threat — last 8 quarters
         </h3>
         <div className="space-y-1.5">
@@ -108,7 +108,7 @@ export function PostureDashboard() {
               <span className="font-semibold w-12">{faction}</span>
               <Sparkline
                 values={vals}
-                width={120}
+                width={64}
                 height={20}
                 stroke={FACTION_COLOR[faction] ?? "#fbbf24"}
                 ariaLabel={`${faction} threat trajectory`}
@@ -126,7 +126,7 @@ export function PostureDashboard() {
 
       {/* Force readiness */}
       <section className="bg-slate-900 border border-slate-800 rounded-lg p-3">
-        <h3 className="text-xs font-semibold uppercase opacity-70 mb-2">✈ Force Readiness</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wider font-tech opacity-70 mb-2">✈ Force Readiness</h3>
         {posture.fleet_by_role.length === 0 ? (
           <p className="text-xs opacity-60">No squadrons.</p>
         ) : (
@@ -160,7 +160,7 @@ export function PostureDashboard() {
       {/* Deliveries */}
       {cid !== undefined && (
         <section className="bg-slate-900 border border-slate-800 rounded-lg p-3">
-          <h3 className="text-xs font-semibold uppercase opacity-70 mb-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider font-tech opacity-70 mb-2">
             📦 Deliveries ({posture.total_active_orders} active)
           </h3>
           {posture.nearest_delivery ? (
@@ -183,7 +183,7 @@ export function PostureDashboard() {
       {/* R&D */}
       {cid !== undefined && (
         <section className="bg-slate-900 border border-slate-800 rounded-lg p-3">
-          <h3 className="text-xs font-semibold uppercase opacity-70 mb-2">🔬 R&D</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider font-tech opacity-70 mb-2">🔬 R&D</h3>
           <p className="text-xs">
             Active: <span className="font-mono font-semibold">{posture.rd_active_count}</span>
             {" · "}

@@ -69,7 +69,7 @@ export function MissileDepotTable({
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-[11px]">
+        <table className="w-full text-xs">
           <thead>
             <tr className="text-left opacity-60 border-b border-slate-800">
               <th className="py-1 pr-2 font-medium">Base</th>

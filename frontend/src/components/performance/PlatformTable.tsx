@@ -13,7 +13,7 @@ export function PlatformTable({ platforms }: { platforms: PlatformStat[] }) {
   }
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-[11px]">
+      <table className="w-full text-xs">
         <thead>
           <tr className="text-left opacity-60 border-b border-slate-800">
             <th className="py-1 pr-2 font-medium">Platform</th>
@@ -22,8 +22,8 @@ export function PlatformTable({ platforms }: { platforms: PlatformStat[] }) {
             <th className="py-1 px-2 font-medium text-right">L</th>
             <th className="py-1 px-2 font-medium text-right">K:D</th>
             <th className="py-1 px-2 font-medium text-right">Win%</th>
-            <th className="py-1 px-2 font-medium text-right">First-shot</th>
-            <th className="py-1 pl-2 font-medium">Top wpn</th>
+            <th className="hidden sm:table-cell py-1 px-2 font-medium text-right">First-shot</th>
+            <th className="hidden sm:table-cell py-1 pl-2 font-medium">Top wpn</th>
           </tr>
         </thead>
         <tbody>
@@ -39,8 +39,8 @@ export function PlatformTable({ platforms }: { platforms: PlatformStat[] }) {
                 <td className="py-1 px-2 text-right text-rose-300">{p.losses}</td>
                 <td className="py-1 px-2 text-right font-mono">{kdDisplay}</td>
                 <td className="py-1 px-2 text-right">{p.win_contribution_pct}%</td>
-                <td className="py-1 px-2 text-right">{p.first_shot_pct}%</td>
-                <td className="py-1 pl-2 font-mono opacity-80">{p.top_weapon ?? "—"}</td>
+                <td className="hidden sm:table-cell py-1 px-2 text-right">{p.first_shot_pct}%</td>
+                <td className="hidden sm:table-cell py-1 pl-2 font-mono opacity-80">{p.top_weapon ?? "—"}</td>
               </tr>
             );
           })}

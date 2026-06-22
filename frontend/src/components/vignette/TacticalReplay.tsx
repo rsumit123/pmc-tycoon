@@ -119,7 +119,7 @@ export function TacticalReplay({ eventTrace, indPlatforms, advPlatforms, ao, fac
 
       <p className="text-xs text-slate-400 mb-2">{PHASE_LABELS[phase]}</p>
 
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[360px] mx-auto" role="img" aria-label={`tactical replay phase ${phase}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-full mx-auto" role="img" aria-label={`tactical replay phase ${phase}`}>
         <rect width={W} height={H} fill="#0f172a" rx={4} />
 
         {/* N-pointer */}

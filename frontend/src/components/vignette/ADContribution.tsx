@@ -13,7 +13,7 @@ export function ADContributionPanel({ outcome }: { outcome: VignetteOutcome }) {
           {totalKills} intercepts / {totalFired} interceptors fired
         </span>
       </h3>
-      <table className="w-full text-[11px]">
+      <table className="w-full text-xs">
         <thead>
           <tr className="text-left opacity-60 border-b border-slate-800">
             <th className="py-1 pr-2 font-medium">System</th>
