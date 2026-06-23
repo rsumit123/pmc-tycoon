@@ -190,3 +190,25 @@ platforms:
     author: "SSgt Cherie A. Thurlby, U.S. Air Force"
     source_url: "https://commons.wikimedia.org/wiki/File:F-16_Fighting_Falcon.jpg"
     attribution: "F-16 Fighting Falcon — Wikimedia Commons"
+
+  # ---- Indigenous future platforms (Plan-22 additions) ----
+  - id: tejas_mk1
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/HAL_Tejas_(LA-5018)_of_Squadron_18_Flying_Bullets.jpg?width=960"
+    license: "GODL-India"
+    author: "Ministry of Defence (India)"
+    source_url: "https://commons.wikimedia.org/wiki/File:HAL_Tejas_(LA-5018)_of_Squadron_18_Flying_Bullets.jpg"
+    attribution: "HAL Tejas Mk1 — Wikimedia Commons"
+
+  - id: tedbf
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Indian_Navy's_HAL_TEDBF.jpg?width=960"
+    license: "GODL-India"
+    author: "Government of India"
+    source_url: "https://commons.wikimedia.org/wiki/File:Indian_Navy's_HAL_TEDBF.jpg"
+    attribution: "HAL TEDBF — Wikimedia Commons"
+
+  - id: ghatak_ucav
+    hero_url: "https://commons.wikimedia.org/wiki/Special:FilePath/Autonomous_Flying_wing_Tech.jpg?width=960"
+    license: "GODL-India"
+    author: "Government of India"
+    source_url: "https://commons.wikimedia.org/wiki/File:Autonomous_Flying_wing_Tech.jpg"
+    attribution: "DRDO Ghatak UCAV — Wikimedia Commons"
