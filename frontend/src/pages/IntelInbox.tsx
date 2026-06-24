@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { IntelSwipeStack } from "../components/intel/IntelSwipeStack";
@@ -14,17 +14,21 @@ export function IntelInbox() {
   const loadCampaign = useCampaignStore((s) => s.loadCampaign);
   const loadIntel = useCampaignStore((s) => s.loadIntel);
 
+  const [intelLoaded, setIntelLoaded] = useState(false);
+
   useEffect(() => {
     if (!campaign || campaign.id !== campaignId) loadCampaign(campaignId);
   }, [campaign, campaignId, loadCampaign]);
 
   useEffect(() => {
     if (campaign && campaign.id === campaignId) {
-      loadIntel(campaignId, { year: campaign.current_year, quarter: campaign.current_quarter });
+      void Promise.resolve(
+        loadIntel(campaignId, { year: campaign.current_year, quarter: campaign.current_quarter }),
+      ).finally(() => setIntelLoaded(true));
     }
   }, [campaign, campaignId, loadIntel]);
 
-  if (!campaign) return <Loader label="Loading intel" />;
+  if (!campaign || !intelLoaded) return <Loader label="Loading intel" />;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">

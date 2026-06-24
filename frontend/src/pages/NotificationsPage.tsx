@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
+import { Loader } from "../components/primitives/Loader";
 import type { Notification } from "../lib/types";
 
 type Filter = "all" | "warnings" | "info" | "read";
@@ -25,9 +26,14 @@ export function NotificationsPage() {
   const markNotificationRead = useCampaignStore((s) => s.markNotificationRead);
 
   const [filter, setFilter] = useState<Filter>("all");
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (Number.isFinite(cid)) loadNotifications(cid);
+    if (Number.isFinite(cid)) {
+      void Promise.resolve(loadNotifications(cid)).finally(() => setLoaded(true));
+    } else {
+      setLoaded(true);
+    }
   }, [cid, loadNotifications]);
 
   const filtered = useMemo(() => {
@@ -84,7 +90,9 @@ export function NotificationsPage() {
           ))}
         </div>
 
-        {filtered.length === 0 ? (
+        {!loaded ? (
+          <Loader label="Loading notifications" fullScreen={false} />
+        ) : filtered.length === 0 ? (
           <p className="text-xs opacity-60 py-6 text-center">
             {filter === "read"
               ? "No read notifications yet."

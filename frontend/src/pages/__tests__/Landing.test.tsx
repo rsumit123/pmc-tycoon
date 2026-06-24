@@ -39,8 +39,8 @@ const mockCampaigns: CampaignListItem[] = [
 function makeStore(overrides: Record<string, unknown> = {}) {
   return {
     createCampaign: vi.fn(),
-    loadCampaignList: vi.fn(),
-    loadObjectivesCatalog: vi.fn(),
+    loadCampaignList: vi.fn().mockResolvedValue(undefined),
+    loadObjectivesCatalog: vi.fn().mockResolvedValue(undefined),
     loading: false,
     error: null,
     campaignList: [],
@@ -66,29 +66,30 @@ describe("Landing", () => {
     );
   }
 
-  it("renders title 'Chakravyuh'", () => {
+  it("renders title 'Chakravyuh'", async () => {
     setup(makeStore());
-    expect(screen.getByText("Chakravyuh")).toBeTruthy();
+    // listLoaded flips after loadCampaignList() resolves; await past the Loader gate.
+    expect(await screen.findByText("Chakravyuh")).toBeTruthy();
   });
 
-  it("shows new campaign form when no existing campaigns", () => {
+  it("shows new campaign form when no existing campaigns", async () => {
     setup(makeStore({ campaignList: [] }));
-    expect(screen.getByText("Assume Command")).toBeTruthy();
+    expect(await screen.findByText("Assume Command")).toBeTruthy();
     expect(screen.getByLabelText !== undefined).toBe(true);
     // objective buttons visible
     expect(screen.getByText("Objective Alpha")).toBeTruthy();
   });
 
-  it("shows resume buttons for existing campaigns", () => {
+  it("shows resume buttons for existing campaigns", async () => {
     setup(makeStore({ campaignList: mockCampaigns }));
-    expect(screen.getByText("Test Campaign Alpha")).toBeTruthy();
+    expect(await screen.findByText("Test Campaign Alpha")).toBeTruthy();
     expect(screen.getByText("Resume Campaign")).toBeTruthy();
   });
 
-  it("disables start button until 3 objectives are selected", () => {
+  it("disables start button until 3 objectives are selected", async () => {
     setup(makeStore({ campaignList: [] }));
 
-    const startBtn = screen.getByText("Assume Command") as HTMLButtonElement;
+    const startBtn = (await screen.findByText("Assume Command")) as HTMLButtonElement;
     // Initially disabled (0 objectives selected)
     expect(startBtn.disabled).toBe(true);
 

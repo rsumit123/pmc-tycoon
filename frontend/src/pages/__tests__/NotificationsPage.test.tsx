@@ -40,7 +40,7 @@ describe("NotificationsPage", () => {
     } as never);
   });
 
-  it("renders warning + info when filter=all", () => {
+  it("renders warning + info when filter=all", async () => {
     render(
       <MemoryRouter initialEntries={["/campaign/1/notifications"]}>
         <Routes>
@@ -48,11 +48,12 @@ describe("NotificationsPage", () => {
         </Routes>
       </MemoryRouter>,
     );
-    expect(screen.getByText(/Meteor depot low/)).toBeTruthy();
+    // loaded flips after loadNotifications() resolves; await past the Loader gate.
+    expect(await screen.findByText(/Meteor depot low/)).toBeTruthy();
     expect(screen.getByText(/AMCA complete/)).toBeTruthy();
   });
 
-  it("warnings filter hides info entries", () => {
+  it("warnings filter hides info entries", async () => {
     render(
       <MemoryRouter initialEntries={["/campaign/1/notifications"]}>
         <Routes>
@@ -60,6 +61,7 @@ describe("NotificationsPage", () => {
         </Routes>
       </MemoryRouter>,
     );
+    await screen.findByText(/Meteor depot low/);
     fireEvent.click(screen.getByRole("button", { name: /^warnings/i }));
     expect(screen.getByText(/Meteor depot low/)).toBeTruthy();
     expect(screen.queryByText(/AMCA complete/)).toBeNull();

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { HowToPlayGuide } from "../components/guide/HowToPlayGuide";
+import { Loader } from "../components/primitives/Loader";
 import type { Difficulty } from "../lib/types";
 
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
@@ -30,10 +31,11 @@ export function Landing() {
   const loadObjectivesCatalog = useCampaignStore((s) => s.loadObjectivesCatalog);
   const deleteCampaign = useCampaignStore((s) => s.deleteCampaign);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [listLoaded, setListLoaded] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    void loadCampaignList();
+    void loadCampaignList().finally(() => setListLoaded(true));
     void loadObjectivesCatalog();
   }, []);
 
@@ -67,6 +69,8 @@ export function Landing() {
       : objCount > MAX_OBJ
       ? `Deselect ${objCount - MAX_OBJ} objective${objCount - MAX_OBJ > 1 ? "s" : ""}`
       : null;
+
+  if (!listLoaded) return <Loader label="Loading campaigns" />;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">

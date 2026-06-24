@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { PostureDashboard } from "../components/ops/PostureDashboard";
@@ -35,6 +35,8 @@ export function OpsScreen() {
   const posture = useCampaignStore((s) => s.posture);
   const pendingVignettes = useCampaignStore((s) => s.pendingVignettes);
 
+  const [strikesLoaded, setStrikesLoaded] = useState(false);
+
   useEffect(() => {
     if (!campaign || campaign.id !== cid) loadCampaign(cid);
   }, [cid, campaign, loadCampaign]);
@@ -43,7 +45,7 @@ export function OpsScreen() {
     if (!campaign) return;
     loadPosture(campaign.id);
     loadDiplomacy(campaign.id);
-    loadStrikes(campaign.id);
+    void Promise.resolve(loadStrikes(campaign.id)).finally(() => setStrikesLoaded(true));
     loadAdversaryBases(campaign.id);
     loadHangar(campaign.id);
     loadMissileStocks(campaign.id);
@@ -96,13 +98,15 @@ export function OpsScreen() {
       <main className="flex-1 overflow-y-auto p-4 max-w-3xl w-full mx-auto pb-24">
         {tab === "posture" && <PostureDashboard />}
         {tab === "strike" && (
-          posture && !posture.offensive_unlocked ? (
+          !posture ? (
+            <Loader label="Loading" />
+          ) : !posture.offensive_unlocked ? (
             <OffensiveLockedHint hasPending={pendingVignettes.length > 0} cid={cid} />
           ) : (
             <StrikeBuilder />
           )
         )}
-        {tab === "history" && <StrikeHistoryList campaignId={cid} />}
+        {tab === "history" && <StrikeHistoryList campaignId={cid} loaded={strikesLoaded} />}
       </main>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { BudgetAllocator } from "../components/procurement/BudgetAllocator";
@@ -53,6 +53,8 @@ export function ProcurementHub() {
   const diplomacy = useCampaignStore((s) => s.diplomacy);
   const loadDiplomacy = useCampaignStore((s) => s.loadDiplomacy);
 
+  const [dataLoaded, setDataLoaded] = useState(false);
+
   // Plan 22 — derive blocked origins from hostile-tier factions.
   const SUPPLIER_BY_FACTION: Record<string, string> = { PLAAF: "CHN", PAF: "PAK" };
   const diplomacyBlockedOrigins = (diplomacy?.factions ?? [])
@@ -68,20 +70,22 @@ export function ProcurementHub() {
 
   useEffect(() => {
     if (campaign) {
-      loadPlatforms();
-      loadWeapons();
-      loadRdCatalog();
-      loadRdActive(campaign.id);
-      loadAcquisitions(campaign.id);
-      loadBases(campaign.id);
-      loadMissileStocks(campaign.id);
-      loadADBatteries(campaign.id);
-      loadArmoryUnlocks(campaign.id);
-      loadDiplomacy(campaign.id);
+      Promise.all([
+        loadPlatforms(),
+        loadWeapons(),
+        loadRdCatalog(),
+        loadRdActive(campaign.id),
+        loadAcquisitions(campaign.id),
+        loadBases(campaign.id),
+        loadMissileStocks(campaign.id),
+        loadADBatteries(campaign.id),
+        loadArmoryUnlocks(campaign.id),
+        loadDiplomacy(campaign.id),
+      ]).finally(() => setDataLoaded(true));
     }
   }, [campaign, loadPlatforms, loadWeapons, loadRdCatalog, loadRdActive, loadAcquisitions, loadBases, loadMissileStocks, loadADBatteries, loadArmoryUnlocks, loadDiplomacy]);
 
-  if (!campaign) return <Loader label="Loading procurement" />;
+  if (!campaign || !dataLoaded) return <Loader label="Loading procurement" />;
 
   const defaultAllocation: BudgetAllocation =
     campaign.current_allocation_json ?? {

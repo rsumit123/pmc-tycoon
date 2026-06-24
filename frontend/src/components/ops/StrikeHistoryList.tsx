@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useCampaignStore } from "../../store/campaignStore";
+import { Loader } from "../primitives/Loader";
 
 const PROFILE_LABEL: Record<string, string> = {
   deep_strike: "Deep Strike",
@@ -14,9 +15,12 @@ const FACTION_BAR: Record<string, string> = {
   PLAN: "border-l-amber-600",
 };
 
-export function StrikeHistoryList({ campaignId }: { campaignId: number }) {
+export function StrikeHistoryList({ campaignId, loaded = true }: { campaignId: number; loaded?: boolean }) {
   const strikes = useCampaignStore((s) => s.strikes);
   const adversaryBases = useCampaignStore((s) => s.adversaryBases);
+  if (!loaded) {
+    return <Loader label="Loading strike history" fullScreen={false} />;
+  }
   if (strikes.length === 0) {
     return (
       <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 text-center">
