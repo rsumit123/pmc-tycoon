@@ -46,7 +46,9 @@ import type {
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
 
-export const http = axios.create({ baseURL, timeout: 10_000 });
+// 30s: tolerant of flaky mobile networks and the heavier campaign-creation
+// seeding call. Was 10s, which caused spurious "timeout of 10000ms exceeded".
+export const http = axios.create({ baseURL, timeout: 30_000 });
 
 // --- Auth interceptors ---
 http.interceptors.request.use((config) => {
