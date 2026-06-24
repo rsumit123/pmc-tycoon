@@ -24,6 +24,7 @@ import { isCampaignComplete as isCampComplete } from "../lib/campaignLifecycle";
 import { ReadOnlyBanner } from "../components/primitives/ReadOnlyBanner";
 import { Loader } from "../components/primitives/Loader";
 import { NotificationBell } from "../components/notifications/NotificationBell";
+import { DeleteAccountButton } from "../components/auth/DeleteAccountButton";
 import type { BaseSquadronSummary, AdversaryBase } from "../lib/types";
 
 export function CampaignMapView() {
@@ -330,6 +331,17 @@ export function CampaignMapView() {
                 to="/credits"
                 className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800 opacity-60"
               >🖼 Image Credits</Link>
+              <Link
+                onClick={() => setShowMenu(false)}
+                to="/privacy"
+                className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800 opacity-60"
+              >🔒 Privacy Policy</Link>
+              <Link
+                onClick={() => setShowMenu(false)}
+                to="/account-deletion"
+                className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800 opacity-60"
+              >📄 Account Deletion</Link>
+              <DeleteAccountButton onClose={() => setShowMenu(false)} />
               <Link
                 onClick={() => setShowMenu(false)}
                 to={`/campaign/${campaign.id}/raw`}

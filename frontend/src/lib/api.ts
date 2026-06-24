@@ -119,6 +119,9 @@ export const api = {
     const { data } = await http.get<TokenResponse["user"]>("/api/auth/me");
     return data;
   },
+  async deleteAccount(): Promise<void> {
+    await http.delete("/api/auth/me");
+  },
 
   async createCampaign(payload: CampaignCreatePayload): Promise<Campaign> {
     const { data } = await http.post<Campaign>("/api/campaigns", payload);

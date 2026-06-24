@@ -17,6 +17,8 @@ import { OpsScreen } from "./pages/OpsScreen";
 import { StrikeAARPage } from "./pages/StrikeAARPage";
 import { Login } from "./pages/Login";
 import { ImageCredits } from "./pages/ImageCredits";
+import { PrivacyPolicy } from "./pages/PrivacyPolicy";
+import { AccountDeletion } from "./pages/AccountDeletion";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ToastStack } from "./components/primitives/ToastStack";
 
@@ -26,6 +28,8 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/credits" element={<ImageCredits />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/account-deletion" element={<AccountDeletion />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Landing />} />
           <Route path="/campaign/:id" element={<CampaignMapView />} />

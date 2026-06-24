@@ -91,6 +91,7 @@ export function Landing() {
               How to play
             </button>
             <Link to="/credits" className="text-xs text-slate-500 underline">Image credits</Link>
+            <Link to="/privacy" className="text-xs text-slate-500 underline">Privacy</Link>
           </div>
         </div>
 
