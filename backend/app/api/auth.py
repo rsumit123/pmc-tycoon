@@ -68,3 +68,41 @@ def refresh(payload: RefreshRequest, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserRead)
 def me(user: User = Depends(get_current_user)):
     return UserRead.model_validate(user)
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_me(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Delete the authenticated user and ALL their data (Play Store requirement).
+
+    Deletes ONLY the caller's own campaigns and their campaign-scoped dependent
+    rows, then the user row. Dependent rows are cascade-deleted by introspecting
+    every table carrying a ``campaign_id`` column (same pattern as
+    ``delete_campaign_endpoint``) so new per-campaign tables are covered
+    automatically. Once the user row is gone, any access token referencing that
+    user id fails ``get_current_user`` (401).
+    """
+    import app.models  # noqa: F401  ensure every model is registered on Base.metadata
+    from app.db.base import Base
+    from app.models.campaign import Campaign
+
+    camp_ids = [
+        c.id for c in db.query(Campaign).filter(Campaign.user_id == user.id).all()
+    ]
+    if camp_ids:
+        # Delete children first (reverse FK order); intent-clear even with
+        # SQLite FK enforcement off.
+        for table in reversed(Base.metadata.sorted_tables):
+            if table.name in ("campaigns", "users"):
+                continue
+            if "campaign_id" in table.c:
+                db.execute(table.delete().where(table.c.campaign_id.in_(camp_ids)))
+        db.query(Campaign).filter(Campaign.id.in_(camp_ids)).delete(
+            synchronize_session=False
+        )
+
+    db.delete(user)
+    db.commit()
+    return None
