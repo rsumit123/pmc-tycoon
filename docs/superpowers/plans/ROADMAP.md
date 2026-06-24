@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-06-22 (Plan 25 done)
+**Last updated:** 2026-06-24 (Play Console prep done)
 
 ---
 
@@ -30,6 +30,8 @@
 | 23 | Auth + Release Readiness | 🟢 done | 2026-06-20-auth-release-readiness-plan.md |
 | 24 | Capacitor Android Packaging | 🟢 done | 2026-06-20-capacitor-android-plan.md |
 | 25 | Platform Imagery (Visual Engagement P1) | 🟢 done | 2026-06-22-platform-imagery-plan.md |
+
+**Note (2026-06-24):** Store-readiness / Google Play Console prep landed as release-prep work (not a numbered plan) — `DELETE /api/auth/me` account deletion, public `/privacy` + `/account-deletion` pages + in-app Delete Account, loading-state guards on 5 screens, API timeout 10s→30s, Android release signing + signed AAB, Play Store assets (`frontend/store/`) + 5 screenshots, store listing copy in `docs/store-listing.md`. See CLAUDE.md "Current status" for detail.
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 
