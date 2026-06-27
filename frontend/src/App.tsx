@@ -19,6 +19,7 @@ import { Login } from "./pages/Login";
 import { ImageCredits } from "./pages/ImageCredits";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import { AccountDeletion } from "./pages/AccountDeletion";
+import { Glossary } from "./pages/Glossary";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ToastStack } from "./components/primitives/ToastStack";
 
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/credits" element={<ImageCredits />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/account-deletion" element={<AccountDeletion />} />
+        <Route path="/glossary" element={<Glossary />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Landing />} />
           <Route path="/campaign/:id" element={<CampaignMapView />} />
