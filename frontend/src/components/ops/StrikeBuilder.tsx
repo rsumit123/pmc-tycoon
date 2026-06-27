@@ -8,6 +8,7 @@ import type {
 } from "../../lib/types";
 import { CommitHoldButton } from "../primitives/CommitHoldButton";
 import { Stepper } from "../primitives/Stepper";
+import { Term } from "../primitives/Term";
 import { StrikeRiskPreview } from "./StrikeRiskPreview";
 import { Loader } from "../primitives/Loader";
 
@@ -293,7 +294,9 @@ export function StrikeBuilder() {
               ].join(" ")}
             >
               <div className="text-base">{p.emoji}</div>
-              <div className="text-xs font-semibold mt-0.5">{p.name}</div>
+              <div className="text-xs font-semibold mt-0.5">
+                {p.id === "sead_suppression" ? <Term k="sead">{p.name}</Term> : p.name}
+              </div>
               <div className="text-[10px] opacity-60">{p.tag}</div>
               {p.minSquadrons > 1 && (
                 <div className="text-[10px] opacity-50 mt-0.5">Min {p.minSquadrons} sqns</div>
@@ -463,7 +466,11 @@ export function StrikeBuilder() {
                 />
                 <div className="min-w-0">
                   <div className="font-semibold">{r.name}</div>
-                  <div className="text-[10px] opacity-70">{r.tag}</div>
+                  <div className="text-[10px] opacity-70">
+                    {r.id === "decapitation"
+                      ? <>Command targets only · critical <Term k="blowback">blowback</Term></>
+                      : r.tag}
+                  </div>
                 </div>
               </label>
             );
@@ -484,7 +491,7 @@ export function StrikeBuilder() {
               <>Munitions: {Object.entries(weapons).filter(([, n]) => n > 0).map(([w, n]) => `${n}× ${w}`).join(", ")}. </>
             )}
             {(awacs || tanker) && <>Support: {[awacs && "AWACS", tanker && "Tanker"].filter(Boolean).join(" + ")}. </>}
-            ROE: {ROES.find((r) => r.id === roe)?.name}.
+            <Term k="roe">ROE</Term>: {ROES.find((r) => r.id === roe)?.name}.
           </p>
           <StrikeRiskPreview preview={preview} loading={previewLoading} />
         </section>

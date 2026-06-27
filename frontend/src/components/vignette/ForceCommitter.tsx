@@ -1,6 +1,7 @@
 // frontend/src/components/vignette/ForceCommitter.tsx
 import { useMemo, useState } from "react";
 import type { EligibleSquadron, PlanningState, VignetteCommitPayload, ROE, Platform } from "../../lib/types";
+import { Term } from "../primitives/Term";
 import { Stepper } from "../primitives/Stepper";
 import { useCampaignStore } from "../../store/campaignStore";
 import { AD_STARTING_INTERCEPTORS } from "../procurement/AcquisitionPipeline";
@@ -192,7 +193,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
                   onChange={(e) => setSupport("awacs", e.target.checked)}
                 />
                 <span className="flex-1">
-                  <span className="font-semibold">AWACS</span>
+                  <span className="font-semibold"><Term k="awacs">AWACS</Term></span>
                   <span className="block text-xs opacity-70 mt-0.5">
                     {awacsCovering[0].base_name} • {awacsCovering[0].distance_km}km • +5% missile PK
                   </span>
@@ -216,7 +217,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
             <input type="checkbox" className="mt-0.5 w-5 h-5" checked={value.support.tanker}
               onChange={(e) => setSupport("tanker", e.target.checked)} />
             <span className="flex-1">
-              <span className="font-semibold">Tanker (IL-78)</span>
+              <span className="font-semibold"><Term k="tanker">Tanker</Term> (IL-78)</span>
               {tankerBlocking && <span className="ml-2 text-[10px] bg-amber-700 text-slate-900 rounded px-1.5 py-0.5 font-bold">REQUIRED</span>}
               <span className="block text-xs opacity-70 mt-0.5">
                 {tankerBlocking
@@ -229,7 +230,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
             <input type="checkbox" className="mt-0.5 w-5 h-5" checked={value.support.sead_package}
               onChange={(e) => setSupport("sead_package", e.target.checked)} />
             <span className="flex-1">
-              <span className="font-semibold">SEAD package</span>
+              <span className="font-semibold"><Term k="sead">SEAD</Term> package</span>
               <span className="block text-xs opacity-70 mt-0.5">Suppresses enemy AD threat</span>
             </span>
           </label>
@@ -317,7 +318,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
                     )}
                   </div>
                   <div className="text-[10px] opacity-60 truncate mt-0.5">
-                    📍 {sq.base_name} • {sq.distance_km} km • {sq.readiness_pct}% ready • {sq.airframes_available} airframes
+                    📍 {sq.base_name} • {sq.distance_km} km • {sq.readiness_pct}% <Term k="readiness">ready</Term> • {sq.airframes_available} airframes
                   </div>
                   {primaryWeapon && (
                     <div className={`text-[10px] mt-0.5 ${depotClass}`}>
@@ -367,7 +368,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
       </section>
 
       <section>
-        <h3 className="text-sm font-semibold mb-2 text-slate-300 font-tech uppercase tracking-wider">Rules of Engagement</h3>
+        <h3 className="text-sm font-semibold mb-2 text-slate-300 font-tech uppercase tracking-wider">Rules of Engagement (<Term k="roe">ROE</Term>)</h3>
         <select
           aria-label="ROE"
           value={value.roe}
