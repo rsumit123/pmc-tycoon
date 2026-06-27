@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-06-27 (v2 Phase 1 onboarding & legibility done)
+**Last updated:** 2026-06-27 (v2 Phase 2 core-loop streamlining done)
 
 ---
 
@@ -33,7 +33,7 @@
 
 **Note (2026-06-24):** Store-readiness / Google Play Console prep landed as release-prep work (not a numbered plan) — `DELETE /api/auth/me` account deletion, public `/privacy` + `/account-deletion` pages + in-app Delete Account, loading-state guards on 5 screens, API timeout 10s→30s, Android release signing + signed AAB, Play Store assets (`frontend/store/`) + 5 screenshots, store listing copy in `docs/store-listing.md`. See CLAUDE.md "Current status" for detail.
 
-**Note (2026-06-27):** **v2 simplification** effort kicked off (make the game learnable for casual users; "easy to learn, deep if you want it"). **Phase 1 — Onboarding & Legibility done**: glossary + `<Term>` tap-to-define + `/glossary` screen, `CoachMarks` first-run map tour + Ops Room coach-mark (+ replay), Landing setup clarity (real grant figures, objective cost/time hints + Quick Start), How-to-Play rewrite (J-20/J-35 fix). Frontend-only, 235 frontend tests. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-27-v2-onboarding-legibility-*.md`. **Phases 2 (core-loop streamlining), 3 (heavy-screen taming), 4 (easy/story mode) remain.**
+**Note (2026-06-27):** **v2 simplification** effort kicked off (make the game learnable for casual users; "easy to learn, deep if you want it"). **Phase 1 — Onboarding & Legibility done**: glossary + `<Term>` tap-to-define + `/glossary` screen, `CoachMarks` first-run map tour + Ops Room coach-mark (+ replay), Landing setup clarity (real grant figures, objective cost/time hints + Quick Start), How-to-Play rewrite (J-20/J-35 fix). Frontend-only, 235 frontend tests. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-27-v2-onboarding-legibility-*.md`. **Phase 2 — Streamline the Core Loop done** (2026-06-27): budget presets + autopilot + Advanced toggle + readiness bar; live objective tracker (`objective_progress` engine + `GET /objectives` endpoint + Objectives screen); Situation Report in TurnReport. Backend 675 / frontend 242 tests. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-27-v2-core-loop-*.md`. **Phases 3 (heavy-screen taming), 4 (easy/story mode) remain.**
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 
