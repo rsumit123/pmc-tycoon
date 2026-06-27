@@ -8,7 +8,7 @@ describe("BudgetAllocator", () => {
     rd: 38750, acquisition: 54250, om: 31000, spares: 23250, infrastructure: 7750,
   };
 
-  it("renders all 5 buckets with values", () => {
+  it("renders all 5 buckets with values (Advanced expanded)", () => {
     render(
       <BudgetAllocator
         grantCr={155000}
@@ -17,8 +17,11 @@ describe("BudgetAllocator", () => {
         onCommit={() => {}}
       />,
     );
+    // Preset buttons and summary rows always show R&D and Acquisition labels
     expect(screen.getAllByText(/R&D/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Acquisition/).length).toBeGreaterThan(0);
+    // Expand Advanced to see all bucket steppers including Infrastructure
+    fireEvent.click(screen.getByRole("button", { name: /advanced|customize/i }));
     expect(screen.getAllByText(/O&M/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Spares/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Infrastructure/).length).toBeGreaterThan(0);
@@ -54,7 +57,7 @@ describe("BudgetAllocator", () => {
     expect(commit).toBeDisabled();
   });
 
-  it("resets to default allocation on Reset", () => {
+  it("resets to default allocation on Reset (Advanced expanded first)", () => {
     const onCommit = vi.fn();
     render(
       <BudgetAllocator
@@ -66,6 +69,8 @@ describe("BudgetAllocator", () => {
         onCommit={onCommit}
       />,
     );
+    // Reset button is inside the Advanced panel — expand it first
+    fireEvent.click(screen.getByRole("button", { name: /advanced|customize/i }));
     fireEvent.click(screen.getByRole("button", { name: /reset/i }));
     // Reset writes DEFAULT_PCT of 100k: rd=25k, acquisition=35k, om=20k, spares=15k, infrastructure=5k
     expect(screen.getByText("25,000")).toBeInTheDocument();
