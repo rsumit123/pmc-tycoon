@@ -47,7 +47,7 @@ export function CoachMarks({ steps, onDone }: CoachMarksProps) {
   const isLast = i + 1 >= steps.length;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/70 safe-pt safe-pb" role="dialog" aria-label="Tutorial">
+    <div className="fixed inset-0 z-[100] bg-black/70 safe-pt safe-pb" role="dialog" aria-modal="true" aria-label="Tutorial">
       {rect && (
         <div
           className="absolute rounded-lg ring-2 ring-amber-400 pointer-events-none transition-all"

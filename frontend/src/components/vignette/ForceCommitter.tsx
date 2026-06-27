@@ -185,12 +185,18 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
         <div className="space-y-2">
           <div className="bg-slate-900 border border-slate-800 rounded-lg p-3">
             {awacsCovering.length > 0 ? (
-              <label className="flex items-start gap-2 text-sm cursor-pointer p-2">
+              <div
+                role="checkbox"
+                aria-checked={value.support.awacs}
+                onClick={() => setSupport("awacs", !value.support.awacs)}
+                className="flex items-start gap-2 text-sm cursor-pointer p-2"
+              >
                 <input
                   type="checkbox"
-                  className="mt-0.5 w-5 h-5"
+                  readOnly
+                  tabIndex={-1}
+                  className="mt-0.5 w-5 h-5 pointer-events-none"
                   checked={value.support.awacs}
-                  onChange={(e) => setSupport("awacs", e.target.checked)}
                 />
                 <span className="flex-1">
                   <span className="font-semibold"><Term k="awacs">AWACS</Term></span>
@@ -198,7 +204,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
                     {awacsCovering[0].base_name} • {awacsCovering[0].distance_km}km • +5% missile PK
                   </span>
                 </span>
-              </label>
+              </div>
             ) : (
               <div className="text-xs">
                 <div className="font-semibold text-slate-400">AWACS <span className="text-red-400">unavailable</span></div>
@@ -208,14 +214,17 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
               </div>
             )}
           </div>
-          <label className={[
+          <div
+            role="checkbox"
+            aria-checked={value.support.tanker}
+            onClick={() => setSupport("tanker", !value.support.tanker)}
+            className={[
             "flex items-start gap-2 text-sm border rounded-lg p-3 cursor-pointer",
             tankerBlocking
               ? "bg-amber-950/40 border-amber-600"
               : "bg-slate-900 border-slate-800",
           ].join(" ")}>
-            <input type="checkbox" className="mt-0.5 w-5 h-5" checked={value.support.tanker}
-              onChange={(e) => setSupport("tanker", e.target.checked)} />
+            <input type="checkbox" readOnly tabIndex={-1} className="mt-0.5 w-5 h-5 pointer-events-none" checked={value.support.tanker} />
             <span className="flex-1">
               <span className="font-semibold"><Term k="tanker">Tanker</Term> (IL-78)</span>
               {tankerBlocking && <span className="ml-2 text-[10px] bg-amber-700 text-slate-900 rounded px-1.5 py-0.5 font-bold">REQUIRED</span>}
@@ -225,15 +234,18 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
                   : "Extends combat radius 2× so distant squadrons can participate"}
               </span>
             </span>
-          </label>
-          <label className="flex items-start gap-2 text-sm bg-slate-900 border border-slate-800 rounded-lg p-3 cursor-pointer">
-            <input type="checkbox" className="mt-0.5 w-5 h-5" checked={value.support.sead_package}
-              onChange={(e) => setSupport("sead_package", e.target.checked)} />
+          </div>
+          <div
+            role="checkbox"
+            aria-checked={value.support.sead_package}
+            onClick={() => setSupport("sead_package", !value.support.sead_package)}
+            className="flex items-start gap-2 text-sm bg-slate-900 border border-slate-800 rounded-lg p-3 cursor-pointer">
+            <input type="checkbox" readOnly tabIndex={-1} className="mt-0.5 w-5 h-5 pointer-events-none" checked={value.support.sead_package} />
             <span className="flex-1">
               <span className="font-semibold"><Term k="sead">SEAD</Term> package</span>
               <span className="block text-xs opacity-70 mt-0.5">Suppresses enemy AD threat</span>
             </span>
-          </label>
+          </div>
         </div>
       </section>
 
