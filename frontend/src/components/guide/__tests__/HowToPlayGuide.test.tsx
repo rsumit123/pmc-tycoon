@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { HowToPlayGuide } from "../HowToPlayGuide";
 
@@ -14,5 +14,12 @@ describe("HowToPlayGuide", () => {
   it("renders nothing when closed", () => {
     const { container } = render(<MemoryRouter><HowToPlayGuide open={false} onClose={vi.fn()} /></MemoryRouter>);
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("calls onClose when the Got it button is clicked", () => {
+    const onClose = vi.fn();
+    render(<MemoryRouter><HowToPlayGuide open onClose={onClose} /></MemoryRouter>);
+    fireEvent.click(screen.getByText("Got it"));
+    expect(onClose).toHaveBeenCalledOnce();
   });
 });
