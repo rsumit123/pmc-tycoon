@@ -5,6 +5,7 @@ import { HowToPlayGuide } from "../components/guide/HowToPlayGuide";
 import { Loader } from "../components/primitives/Loader";
 import type { Difficulty } from "../lib/types";
 import { startingGrantCr, DIFFICULTY_BLURB } from "../lib/economy";
+import { OBJECTIVE_HINTS, BEGINNER_OBJECTIVE_IDS } from "../lib/objectiveHints";
 
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
   { value: "relaxed", label: "Relaxed" },
@@ -234,6 +235,12 @@ export function Landing() {
                       <div className="text-xs opacity-60 mt-0.5">
                         {obj.description}
                       </div>
+                      {OBJECTIVE_HINTS[obj.id] && (
+                        <div className="text-[11px] text-amber-300/80 mt-1">{OBJECTIVE_HINTS[obj.id]}</div>
+                      )}
+                      {(BEGINNER_OBJECTIVE_IDS as readonly string[]).includes(obj.id) && (
+                        <span className="inline-block mt-1 text-[10px] rounded bg-emerald-700/40 text-emerald-200 px-1.5 py-0.5">Beginner-friendly</span>
+                      )}
                     </button>
                   );
                 })}
