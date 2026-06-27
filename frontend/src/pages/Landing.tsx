@@ -4,6 +4,7 @@ import { useCampaignStore } from "../store/campaignStore";
 import { HowToPlayGuide } from "../components/guide/HowToPlayGuide";
 import { Loader } from "../components/primitives/Loader";
 import type { Difficulty } from "../lib/types";
+import { startingGrantCr, DIFFICULTY_BLURB } from "../lib/economy";
 
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
   { value: "relaxed", label: "Relaxed" },
@@ -193,10 +194,14 @@ export function Landing() {
                         : "bg-slate-800 border-slate-700 hover:border-slate-500"
                     }`}
                   >
-                    {d.label}
+                    <span className="block">{d.label}</span>
+                    <span className="block text-[10px] font-normal opacity-70">
+                      ₹{startingGrantCr(d.value).toLocaleString("en-US")} cr/q
+                    </span>
                   </button>
                 ))}
               </div>
+              <p className="text-xs opacity-60">{DIFFICULTY_BLURB[difficulty]}</p>
             </div>
 
             {/* Objective selector */}
