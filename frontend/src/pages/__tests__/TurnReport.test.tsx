@@ -25,6 +25,10 @@ const defaultStore = {
   bases: [],
   platformsById: {},
   pendingVignettes: [],
+  objectiveProgress: [],
+  loadObjectiveProgress: vi.fn(),
+  notifications: [],
+  loadNotifications: vi.fn(),
 };
 
 function setup(overrides: Record<string, unknown> = {}) {

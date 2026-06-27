@@ -6,6 +6,7 @@ import { AdversaryShiftCard } from "../components/turnreport/AdversaryShiftCard"
 import { IntelCardPreview } from "../components/turnreport/IntelCardPreview";
 import { DeliveryAssignmentStep } from "../components/turnreport/DeliveryAssignmentStep";
 import { UnlockBanner } from "../components/turnreport/UnlockBanner";
+import { ObjectiveTracker } from "../components/objectives/ObjectiveTracker";
 
 export function TurnReport() {
   const { id, year, quarter } = useParams<{ id: string; year: string; quarter: string }>();
@@ -21,13 +22,19 @@ export function TurnReport() {
   const loadBases = useCampaignStore((s) => s.loadBases);
   const loadPlatforms = useCampaignStore((s) => s.loadPlatforms);
   const pendingVignettes = useCampaignStore((s) => s.pendingVignettes);
+  const objectiveProgress = useCampaignStore((s) => s.objectiveProgress);
+  const loadObjectiveProgress = useCampaignStore((s) => s.loadObjectiveProgress);
+  const notifications = useCampaignStore((s) => s.notifications);
+  const loadNotifications = useCampaignStore((s) => s.loadNotifications);
 
   useEffect(() => {
     loadTurnReport(campaignId, y, q);
     if (!campaign || campaign.id !== campaignId) loadCampaign(campaignId);
     loadBases(campaignId);
     loadPlatforms();
-  }, [campaignId, y, q, campaign, loadTurnReport, loadCampaign, loadBases, loadPlatforms]);
+    loadObjectiveProgress(campaignId);
+    loadNotifications(campaignId);
+  }, [campaignId, y, q, campaign, loadTurnReport, loadCampaign, loadBases, loadPlatforms, loadObjectiveProgress, loadNotifications]);
 
   if (!report) return <div className="p-6 text-sm">Compiling turn report…</div>;
 
@@ -97,6 +104,63 @@ export function TurnReport() {
       </header>
 
       <main className="p-4 max-w-2xl mx-auto space-y-5 pb-20">
+        {/* Situation Report */}
+        {(objectiveProgress.length > 0 || notifications.some((n) => n.severity === "warning")) && (
+          <section className="border border-slate-700 rounded-lg p-4 space-y-3 bg-slate-900/50">
+            <h2 className="font-tech text-[10px] uppercase tracking-wider text-slate-400">Situation Report</h2>
+
+            {/* Objective standing */}
+            {objectiveProgress.length > 0 && (() => {
+              const met = objectiveProgress.filter((o) => o.status === "met").length;
+              const inProgress = objectiveProgress.filter((o) => o.status === "in_progress").length;
+              const atRisk = objectiveProgress.filter((o) => o.status === "at_risk").length;
+              const atRiskOnes = objectiveProgress.filter((o) => o.status === "at_risk");
+              return (
+                <div className="space-y-2">
+                  <p className="text-xs text-slate-300">
+                    <span className="text-emerald-400">{met} met</span>
+                    {" · "}
+                    <span className="text-amber-400">{inProgress} in progress</span>
+                    {" · "}
+                    <span className={atRisk > 0 ? "text-rose-400 font-semibold" : "text-slate-400"}>{atRisk} at risk</span>
+                  </p>
+                  {atRiskOnes.length > 0 && <ObjectiveTracker objectives={atRiskOnes} />}
+                  <Link
+                    to={`/campaign/${campaignId}/objectives`}
+                    className="text-xs text-amber-400 hover:text-amber-300 underline"
+                  >
+                    View all objectives →
+                  </Link>
+                </div>
+              );
+            })()}
+
+            {/* Needs your attention */}
+            {(() => {
+              const warnings = notifications.filter((n) => n.severity === "warning");
+              if (warnings.length === 0) return null;
+              return (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-rose-300">Needs your attention</p>
+                  <ul className="space-y-1">
+                    {warnings.map((w) => (
+                      <li key={w.id}>
+                        <Link
+                          to={w.action_url}
+                          className="text-xs text-slate-200 hover:text-amber-300 underline"
+                        >
+                          {w.title}
+                          {w.body ? <span className="opacity-60 ml-1">— {w.body}</span> : null}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
+          </section>
+        )}
+
         <UnlockBanner campaignId={campaignId} completions={report.rd_milestones} />
         {report.vignette_fired && (
           <section className="border border-red-800 rounded-lg p-4 bg-red-950/30">

@@ -102,6 +102,13 @@ export function ProcurementHub() {
 
   const complete = isCampaignComplete(campaign);
 
+  // Compute fleet-average readiness from bases/squadrons in store.
+  const allSquadrons = bases.flatMap((b) => b.squadrons);
+  const fleetReadinessPct =
+    allSquadrons.length > 0
+      ? Math.round(allSquadrons.reduce((sum, s) => sum + s.readiness_pct, 0) / allSquadrons.length)
+      : undefined;
+
   return (
     <div className="min-h-screen flex flex-col">
       {complete && <ReadOnlyBanner campaignId={campaign.id} />}
@@ -161,6 +168,7 @@ export function ProcurementHub() {
             rdCatalog={rdCatalog}
             currentYear={campaign.current_year}
             currentQuarter={campaign.current_quarter}
+            fleetReadinessPct={fleetReadinessPct}
           />
         )}
         {activeTab === "rd" && (
