@@ -1,9 +1,15 @@
+import { Link } from "react-router-dom";
+
 export interface HowToPlayGuideProps {
   open: boolean;
   onClose: () => void;
 }
 
 const SECTIONS = [
+  {
+    title: "The Casual Path",
+    text: "New here? You can win by doing three things: allocate your budget sensibly, buy a few modern jets, and fight the combat events when they appear. Diplomacy, strikes, drones and logistics are optional depth you can grow into.",
+  },
   {
     title: "Your Role",
     text: "You are India's Head of Defense Integration (2026–2036). Over 40 quarterly turns, you'll modernize the IAF through procurement, R&D, and force management to meet strategic objectives.",
@@ -26,7 +32,7 @@ const SECTIONS = [
   },
   {
     title: "Key Tips",
-    text: "• Invest in R&D early — programs take years to complete.\n• Don't neglect maintenance budget — low readiness reduces combat effectiveness.\n• AWACS support gives +5% missile hit probability.\n• Stealth platforms (J-20, J-35) are very hard to kill — you need numbers or your own 5th-gen fighters.",
+    text: "• Invest in R&D early — programs take years to complete.\n• Don't neglect maintenance budget — low readiness reduces combat effectiveness.\n• AWACS support gives +5% missile hit probability.\n• The adversary stealth fighters (J-20/J-35) are very hard to kill — you need numbers or your own 5th-gen (AMCA).",
   },
 ];
 
@@ -57,6 +63,14 @@ export function HowToPlayGuide({ open, onClose }: HowToPlayGuideProps) {
               </div>
             ))}
           </div>
+
+          <Link
+            to="/glossary"
+            onClick={onClose}
+            className="block text-xs text-amber-400 underline"
+          >
+            📖 Open the full glossary
+          </Link>
 
           <button
             onClick={onClose}
