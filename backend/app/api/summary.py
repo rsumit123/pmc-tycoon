@@ -86,14 +86,12 @@ def _aces(db: Session, campaign_id: int) -> list[AceSummary]:
     ]
 
 
-_INDIGENOUS_PLATFORMS = {
-    "tejas_mk1", "tejas_mk1a", "tejas_mk2", "amca_mk1", "tedbf", "ghatak_ucav",
-}
-
-_DETERRENCE_PROGRAMS = {
-    "astra_mk3", "brahmos_ng", "rudram_2", "rudram_3", "pralay_srbm",
-    "long_range_sam", "maya_ew", "ngarm", "air_brahmos2", "mrsam_air", "saaw",
-}
+# Canonical home is app/engine/objectives.py — import to keep the live objective
+# tracker and this endgame scorecard from drifting apart.
+from app.engine.objectives import (
+    INDIGENOUS_PLATFORMS as _INDIGENOUS_PLATFORMS,
+    DETERRENCE_PROGRAMS as _DETERRENCE_PROGRAMS,
+)
 
 
 def _evaluate_objective(obj_id: str, campaign, squads, vigs, db: Session) -> str:
