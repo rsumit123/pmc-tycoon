@@ -34,6 +34,7 @@ from app.api.adversary_bases import router as adversary_bases_router
 from app.api.offensive_ops import router as offensive_router
 from app.api.diplomacy import router as diplomacy_router
 from app.api.posture import router as posture_router
+from app.api.objectives import router as objectives_router
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +108,7 @@ app.include_router(adversary_bases_router, dependencies=_guard)
 app.include_router(offensive_router, dependencies=_guard)
 app.include_router(diplomacy_router, dependencies=_guard)
 app.include_router(posture_router, dependencies=_guard)
+app.include_router(objectives_router, dependencies=_guard)
 
 
 @app.get("/")
