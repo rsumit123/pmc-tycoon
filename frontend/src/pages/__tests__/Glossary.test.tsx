@@ -7,7 +7,9 @@ describe("Glossary page", () => {
   it("lists glossary terms and filters by search", () => {
     render(<MemoryRouter><Glossary /></MemoryRouter>);
     expect(screen.getByText(/BVR \(Beyond Visual Range\)/)).toBeInTheDocument();
-    expect(screen.getByText(/AWACS/)).toBeInTheDocument();
+    // Assert on the AWACS *definition* (unique) — "AWACS" also appears inside
+    // the BVR "why" text, so matching the term alone would be ambiguous.
+    expect(screen.getByText(/flying radar command plane/i)).toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText(/search/i), { target: { value: "stealth" } });
     expect(screen.getByText(/VLO \/ Stealth/)).toBeInTheDocument();
     expect(screen.queryByText(/BVR \(Beyond Visual Range\)/)).not.toBeInTheDocument();

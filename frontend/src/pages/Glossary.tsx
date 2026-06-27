@@ -32,9 +32,7 @@ export function Glossary() {
             <div key={e.term} className="rounded-lg border border-slate-800 bg-slate-900 p-3">
               <div className="text-sm font-semibold text-amber-400">{e.term}</div>
               <div className="mt-1 text-sm text-slate-200">{e.short}</div>
-              {e.why && (
-                <div className="mt-1 text-xs text-slate-400" title={e.why} data-why={e.why} />
-              )}
+              {e.why && <div className="mt-1 text-xs text-slate-400">{e.why}</div>}
             </div>
           ))}
         </div>
