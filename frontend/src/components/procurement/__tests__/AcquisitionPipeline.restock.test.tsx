@@ -12,6 +12,7 @@ const mockNotifications: Notification[] = [
     title: "Low meteor stock at Ambala",
     body: "Depot below 25%",
     action_url: "/campaign/1/procurement?tab=acquisitions&offer=missiles&missile=meteor&base=3&qty=40",
+    created_at: null,
   },
   {
     id: "low_stock:2:astra_mk1",
@@ -20,6 +21,7 @@ const mockNotifications: Notification[] = [
     title: "Low astra_mk1 stock at Jodhpur",
     body: "Depot below 25%",
     action_url: "/campaign/1/procurement?tab=acquisitions&offer=missiles&missile=astra_mk1&base=2&qty=30",
+    created_at: null,
   },
 ];
 
@@ -56,8 +58,8 @@ const platforms: Platform[] = [
 ];
 
 const weaponsById: Record<string, WeaponMeta> = {
-  meteor: { id: "meteor", name: "Meteor", weapon_class: "bvr", nez_km: 60, max_range_km: 150, unit_cost_cr: 30 },
-  astra_mk1: { id: "astra_mk1", name: "Astra Mk1", weapon_class: "bvr", nez_km: 20, max_range_km: 70, unit_cost_cr: 5 },
+  meteor: { id: "meteor", class: "a2a_bvr", nez_km: 60, max_range_km: 150, unit_cost_cr: 30 },
+  astra_mk1: { id: "astra_mk1", class: "a2a_bvr", nez_km: 20, max_range_km: 70, unit_cost_cr: 5 },
 };
 
 describe("AcquisitionPipeline — restock button", () => {
