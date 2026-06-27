@@ -305,6 +305,11 @@ export function CampaignMapView() {
               >🛰 Intel</Link>
               <Link
                 onClick={() => setShowMenu(false)}
+                to={`/campaign/${campaign.id}/objectives`}
+                className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
+              >🎯 Objectives</Link>
+              <Link
+                onClick={() => setShowMenu(false)}
                 to={`/campaign/${campaign.id}/combat-history`}
                 className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
               >⚔ Combat History</Link>
