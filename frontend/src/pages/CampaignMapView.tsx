@@ -308,6 +308,8 @@ export function CampaignMapView() {
                 to={`/campaign/${campaign.id}/objectives`}
                 className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
               >🎯 Objectives</Link>
+
+              <div className="font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-3 pb-1">Records</div>
               <Link
                 onClick={() => setShowMenu(false)}
                 to={`/campaign/${campaign.id}/combat-history`}
