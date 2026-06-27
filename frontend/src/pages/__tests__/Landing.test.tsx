@@ -59,6 +59,9 @@ describe("Landing", () => {
     (useCampaignStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (sel: (s: typeof store) => unknown) => sel(store)
     );
+    // handleStart reads useCampaignStore.getState().campaign after creating —
+    // stub it so the floating promise doesn't throw on the mocked store.
+    (useCampaignStore as unknown as { getState: () => typeof store }).getState = () => store;
     return render(
       <MemoryRouter>
         <Landing />
