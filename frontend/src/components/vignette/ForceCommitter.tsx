@@ -5,6 +5,7 @@ import { Term } from "../primitives/Term";
 import { Stepper } from "../primitives/Stepper";
 import { useCampaignStore } from "../../store/campaignStore";
 import { AD_STARTING_INTERCEPTORS } from "../procurement/AcquisitionPipeline";
+import { recommendPackage, estimateOdds } from "../../lib/forceRecommendation";
 
 const AD_SYSTEM_DISPLAY: Record<string, string> = {
   s400: "S-400 Triumf",
@@ -113,6 +114,7 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
   const advTotal = Math.max(1, Math.round(estimateAdvTotal(planning)));
   const overcommit = totalCommitted > advTotal * 2;
   const awacsCovering = planning.awacs_covering ?? [];
+  const odds = estimateOdds(planning, value);
 
   const combatSquadrons = planning.eligible_squadrons.filter(
     (sq) => !SUPPORT_PLATFORM_IDS.has(sq.platform_id),
@@ -146,8 +148,31 @@ export function ForceCommitter({ planning, value, onChange }: ForceCommitterProp
       }).filter((r) => r.covers)
     : [];
 
+  const oddsColorCls =
+    odds.label === "Strong favorite"
+      ? "bg-emerald-900/60 text-emerald-200 border-emerald-700"
+      : odds.label === "Even"
+      ? "bg-amber-900/60 text-amber-200 border-amber-700"
+      : "bg-rose-950/60 text-rose-300 border-rose-800";
+
   return (
     <div className="flex flex-col gap-5">
+      {/* Auto-fill + odds row */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          type="button"
+          aria-label="Auto-fill recommended package"
+          onClick={() => onChange(recommendPackage(planning))}
+          className="min-h-[44px] flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-sm font-semibold text-slate-200 transition-colors"
+        >
+          ✨ Auto-fill recommended
+        </button>
+        <div className={`flex items-baseline gap-2 border rounded px-2.5 py-1 text-xs font-semibold ${oddsColorCls}`}>
+          <span>{odds.label}</span>
+          <span className="font-normal opacity-80">{odds.reason}</span>
+        </div>
+      </div>
+
       {planning.allows_no_cap && (
         <section className="bg-slate-900 border border-amber-700/50 rounded-lg p-3">
           <h3 className="text-sm font-bold mb-2 flex items-baseline gap-2 font-tech uppercase tracking-wider">
