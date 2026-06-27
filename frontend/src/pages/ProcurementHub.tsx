@@ -52,6 +52,7 @@ export function ProcurementHub() {
   const error = useCampaignStore((s) => s.error);
   const diplomacy = useCampaignStore((s) => s.diplomacy);
   const loadDiplomacy = useCampaignStore((s) => s.loadDiplomacy);
+  const loadNotifications = useCampaignStore((s) => s.loadNotifications);
 
   const [dataLoaded, setDataLoaded] = useState(false);
 
@@ -81,6 +82,7 @@ export function ProcurementHub() {
         loadADBatteries(campaign.id),
         loadArmoryUnlocks(campaign.id),
         loadDiplomacy(campaign.id),
+        loadNotifications(campaign.id),
       ]).finally(() => setDataLoaded(true));
     }
   }, [campaign, loadPlatforms, loadWeapons, loadRdCatalog, loadRdActive, loadAcquisitions, loadBases, loadMissileStocks, loadADBatteries, loadArmoryUnlocks, loadDiplomacy]);

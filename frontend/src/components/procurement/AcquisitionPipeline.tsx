@@ -10,6 +10,8 @@ import { PlatformDossier } from "../primitives/PlatformDossier";
 import { PlatformImage } from "../primitives/PlatformImage";
 import { InfoButton, WeaponInfo, ADSystemInfo } from "../primitives/RoleInfo";
 import { flagFor, WEAPON_ORIGIN, AD_SYSTEM_ORIGIN } from "../../lib/origin";
+import { buildRestockOrders } from "../../lib/restock";
+import { useCampaignStore } from "../../store/campaignStore";
 
 export const AD_STARTING_INTERCEPTORS: Record<string, number> = {
   s400: 16, long_range_sam: 16, project_kusha: 12,
@@ -898,6 +900,64 @@ export function ADReloadOfferCard({
   );
 }
 
+function RestockAllButton({
+  weaponsById,
+  currentYear,
+  currentQuarter,
+  onSign,
+  disabled,
+}: {
+  weaponsById: Record<string, WeaponMeta>;
+  currentYear: number;
+  currentQuarter: number;
+  onSign: AcquisitionPipelineProps["onSign"];
+  disabled?: boolean;
+}) {
+  const notifications = useCampaignStore((s) => s.notifications);
+  const [submitting, setSubmitting] = useState(false);
+
+  const restockOrders = useMemo(
+    () => buildRestockOrders(notifications, weaponsById, currentYear, currentQuarter),
+    [notifications, weaponsById, currentYear, currentQuarter],
+  );
+
+  if (restockOrders.length === 0) return null;
+
+  const handleRestock = async () => {
+    setSubmitting(true);
+    try {
+      for (const order of restockOrders) {
+        await onSign(order);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleRestock}
+      disabled={disabled || submitting}
+      className={[
+        "w-full min-h-[44px] flex items-center justify-center gap-2",
+        "rounded-lg border px-4 py-2 text-sm font-semibold",
+        "bg-rose-900/30 border-rose-700 text-rose-100",
+        "hover:bg-rose-800/40 active:bg-rose-900/50",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
+        "transition-colors",
+      ].join(" ")}
+    >
+      <span>⚡</span>
+      <span>
+        {submitting
+          ? "Submitting…"
+          : `Restock all low depots (${restockOrders.length})`}
+      </span>
+    </button>
+  );
+}
+
 type OfferCategory = "aircraft" | "missiles" | "ad_systems" | "reloads";
 
 type OrderGroupKey = string;
@@ -1292,34 +1352,43 @@ export function AcquisitionPipeline({
           )}
 
           {offerCat === "missiles" && (
-            (!armoryUnlocks || armoryUnlocks.missiles.length === 0) ? (
-              <p className="text-xs opacity-60 py-6 text-center">
-                No missiles unlocked yet. Complete R&D programs to unlock.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {armoryUnlocks.missiles.map((m) => {
-                  const unit = weaponsById[m.target_id]?.unit_cost_cr ?? 0;
-                  const isFocus = focusMissile === m.target_id;
-                  return (
-                    <MissileBatchOfferCard
-                      key={m.target_id}
-                      missile={m}
-                      unitCostCr={unit}
-                      currentYear={currentYear}
-                      currentQuarter={currentQuarter}
-                      bases={bases}
-                      onSign={onSign}
-                      disabled={disabled}
-                      missileStocks={missileStocks}
-                      initialBaseId={isFocus ? focusBaseId : undefined}
-                      initialQty={isFocus ? focusQty : undefined}
-                      highlighted={isFocus}
-                    />
-                  );
-                })}
-              </div>
-            )
+            <div className="space-y-3">
+              <RestockAllButton
+                weaponsById={weaponsById}
+                currentYear={currentYear}
+                currentQuarter={currentQuarter}
+                onSign={onSign}
+                disabled={disabled}
+              />
+              {(!armoryUnlocks || armoryUnlocks.missiles.length === 0) ? (
+                <p className="text-xs opacity-60 py-6 text-center">
+                  No missiles unlocked yet. Complete R&D programs to unlock.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {armoryUnlocks.missiles.map((m) => {
+                    const unit = weaponsById[m.target_id]?.unit_cost_cr ?? 0;
+                    const isFocus = focusMissile === m.target_id;
+                    return (
+                      <MissileBatchOfferCard
+                        key={m.target_id}
+                        missile={m}
+                        unitCostCr={unit}
+                        currentYear={currentYear}
+                        currentQuarter={currentQuarter}
+                        bases={bases}
+                        onSign={onSign}
+                        disabled={disabled}
+                        missileStocks={missileStocks}
+                        initialBaseId={isFocus ? focusBaseId : undefined}
+                        initialQty={isFocus ? focusQty : undefined}
+                        highlighted={isFocus}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
 
           {offerCat === "ad_systems" && (
