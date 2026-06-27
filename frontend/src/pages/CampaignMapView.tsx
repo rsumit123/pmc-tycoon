@@ -26,6 +26,8 @@ import { Loader } from "../components/primitives/Loader";
 import { NotificationBell } from "../components/notifications/NotificationBell";
 import { DeleteAccountButton } from "../components/auth/DeleteAccountButton";
 import type { BaseSquadronSummary, AdversaryBase } from "../lib/types";
+import { CoachMarks } from "../components/onboarding/CoachMarks";
+import { MAP_TOUR_STEPS, isTourSeen, markTourSeen, resetTour } from "../lib/tour";
 
 export function CampaignMapView() {
   const { id } = useParams<{ id: string }>();
@@ -91,6 +93,12 @@ export function CampaignMapView() {
   const [showGuide, setShowGuide] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [flashBaseId, setFlashBaseId] = useState<number | null>(null);
+  const [showTour, setShowTour] = useState(false);
+  useEffect(() => {
+    if (!isTourSeen() && campaign && campaign.current_year === 2026 && campaign.current_quarter === 2) {
+      setShowTour(true);
+    }
+  }, [campaign]);
 
   const isCampaignComplete = isCampComplete(campaign);
 
@@ -202,10 +210,11 @@ export function CampaignMapView() {
   return (
     <div className="fixed inset-0 flex flex-col safe-pt safe-pb">
       {isCampaignComplete && <ReadOnlyBanner campaignId={campaign.id} />}
-      <header className="flex items-center gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
+      <header data-tour="map-statusbar" className="flex items-center gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
         <button
           onClick={() => setShowMenu(true)}
           aria-label="open menu"
+          data-tour="map-menu"
           className="text-base px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 flex-shrink-0"
         >
           ☰
@@ -242,6 +251,7 @@ export function CampaignMapView() {
           <button
             onClick={handleAdvanceTurn}
             disabled={loading || isCampaignComplete}
+            data-tour="map-endturn"
             className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-slate-900 font-semibold rounded px-3 py-1.5 text-xs"
           >
             {loading ? "…" : "End Turn"}
@@ -326,6 +336,11 @@ export function CampaignMapView() {
                 onClick={() => { setShowGuide(true); setShowMenu(false); }}
                 className="w-full text-left flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
               >❓ How to play</button>
+              <button
+                type="button"
+                onClick={() => { resetTour(); setShowTour(true); setShowMenu(false); }}
+                className="w-full text-left flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
+              >🧭 Replay tutorial</button>
               <Link
                 onClick={() => setShowMenu(false)}
                 to="/credits"
@@ -443,6 +458,9 @@ export function CampaignMapView() {
       <YearEndRecapToast />
 
       <HowToPlayGuide open={showGuide} onClose={() => setShowGuide(false)} />
+      {showTour && (
+        <CoachMarks steps={MAP_TOUR_STEPS} onDone={() => { markTourSeen(); setShowTour(false); }} />
+      )}
     </div>
   );
 }
