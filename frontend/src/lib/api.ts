@@ -42,6 +42,7 @@ import type {
   StrikeRead,
   StrikeListResponse,
   TokenResponse,
+  ObjectiveProgressListResponse,
 } from "./types";
 
 const baseURL = import.meta.env.VITE_API_URL ?? "http://localhost:8010";
@@ -291,6 +292,9 @@ export const api = {
     );
     return data;
   },
+
+  getObjectiveProgress: (campaignId: number) =>
+    http.get<ObjectiveProgressListResponse>(`/api/campaigns/${campaignId}/objectives`).then((r) => r.data),
 
   async generateYearRecap(
     campaignId: number,

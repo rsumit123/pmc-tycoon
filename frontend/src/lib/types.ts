@@ -908,6 +908,20 @@ export interface StrikeListResponse {
   strikes: StrikeRead[];
 }
 
+// ---------- Plan 26: objective progress ----------
+
+export interface ObjectiveProgressEntry {
+  id: string;
+  name: string;
+  status: "met" | "in_progress" | "at_risk";
+  progress: number; // 0..1
+  detail: string;
+}
+
+export interface ObjectiveProgressListResponse {
+  objectives: ObjectiveProgressEntry[];
+}
+
 export interface AuthUser {
   id: number;
   email: string;

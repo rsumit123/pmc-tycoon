@@ -23,6 +23,7 @@ import type {
   PostureSnapshot,
   StrikePackagePayload,
   StrikeRead,
+  ObjectiveProgressEntry,
 } from "../lib/types";
 import { api } from "../lib/api";
 
@@ -86,6 +87,8 @@ interface CampaignState {
   loadPosture: (campaignId: number) => Promise<void>;
   loadDiplomacy: (campaignId: number) => Promise<void>;
   loadStrikes: (campaignId: number) => Promise<void>;
+  objectiveProgress: ObjectiveProgressEntry[];
+  loadObjectiveProgress: (campaignId: number) => Promise<void>;
   commitStrike: (payload: StrikePackagePayload) => Promise<StrikeRead>;
   toasts: Toast[];
   rdLoading: Record<string, boolean>;
@@ -204,6 +207,15 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
   posture: null,
   diplomacy: null,
   strikes: [],
+  objectiveProgress: [],
+  loadObjectiveProgress: async (campaignId: number) => {
+    try {
+      const res = await api.getObjectiveProgress(campaignId);
+      set({ objectiveProgress: res.objectives });
+    } catch {
+      /* non-fatal */
+    }
+  },
   loadPosture: async (cid) => {
     try { set({ posture: await api.getPosture(cid) }); }
     catch (e) { console.warn("loadPosture failed", e); }
@@ -757,6 +769,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     readNotificationIds: new Set<string>(),
     adversaryBases: [],
     posture: null, diplomacy: null, strikes: [],
+    objectiveProgress: [],
     toasts: [], rdLoading: {},
     loading: false, error: null,
   }),
