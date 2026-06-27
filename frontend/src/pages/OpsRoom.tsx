@@ -10,6 +10,8 @@ import type { Vignette, VignetteCommitPayload } from "../lib/types";
 import { isCampaignComplete } from "../lib/campaignLifecycle";
 import { Navigate } from "react-router-dom";
 import { Loader } from "../components/primitives/Loader";
+import { CoachMarks } from "../components/onboarding/CoachMarks";
+import { OPS_TOUR_STEPS, isOpsTourSeen, markOpsTourSeen } from "../lib/tour";
 
 export function OpsRoom() {
   const { id, vid } = useParams<{ id: string; vid: string }>();
@@ -38,6 +40,11 @@ export function OpsRoom() {
   });
   const [commitError, setCommitError] = useState<string | null>(null);
   const initROE = useRef(false);
+
+  const [showOpsTour, setShowOpsTour] = useState(false);
+  useEffect(() => {
+    if (!isOpsTourSeen()) setShowOpsTour(true);
+  }, []);
 
   useEffect(() => {
     if (!campaign || campaign.id !== campaignId) loadCampaign(campaignId);
@@ -119,21 +126,25 @@ export function OpsRoom() {
           )}
           faction={ps.adversary_force[0]?.faction ?? "UNKNOWN"}
         />
-        <AdversaryForceFogged
-          observed={ps.adversary_force_observed ?? ps.adversary_force.map(f => ({
-            faction: f.faction, role: f.role, count: f.count,
-            probable_platforms: [f.platform_id], fidelity: "high" as const,
-          }))}
-          tier={ps.intel_quality?.tier ?? "perfect"}
-          score={ps.intel_quality?.score ?? 1}
-        />
+        <div data-tour="ops-adversary">
+          <AdversaryForceFogged
+            observed={ps.adversary_force_observed ?? ps.adversary_force.map(f => ({
+              faction: f.faction, role: f.role, count: f.count,
+              probable_platforms: [f.platform_id], fidelity: "high" as const,
+            }))}
+            tier={ps.intel_quality?.tier ?? "perfect"}
+            score={ps.intel_quality?.score ?? 1}
+          />
+        </div>
 
         <section className="bg-slate-900 border border-slate-700 rounded-lg p-4">
           <h2 className="text-sm font-semibold mb-2 text-slate-300">Objective</h2>
           <p className="text-xs">{ps.objective.kind.replace(/_/g, " ")}</p>
         </section>
 
-        <ForceCommitter planning={ps} value={payload} onChange={setPayload} />
+        <div data-tour="ops-force">
+          <ForceCommitter planning={ps} value={payload} onChange={setPayload} />
+        </div>
 
         {campaign && (
           <MunitionsEstimate
@@ -149,7 +160,7 @@ export function OpsRoom() {
           <p className="text-sm text-red-300">{commitError}</p>
         )}
 
-        <div className="sticky bottom-0 bg-slate-950 pt-3 pb-4 border-t border-slate-800 flex items-center justify-between">
+        <div data-tour="ops-commit" className="sticky bottom-0 bg-slate-950 pt-3 pb-4 border-t border-slate-800 flex items-center justify-between">
           <p className="text-xs opacity-70">
             Committing <span className="font-mono">{totalAirframes}</span> airframes across{" "}
             <span className="font-mono">{payload.squadrons.length}</span> squadrons
@@ -167,6 +178,10 @@ export function OpsRoom() {
           />
         </div>
       </main>
+
+      {showOpsTour && (
+        <CoachMarks steps={OPS_TOUR_STEPS} onDone={() => { markOpsTourSeen(); setShowOpsTour(false); }} />
+      )}
     </div>
   );
 }

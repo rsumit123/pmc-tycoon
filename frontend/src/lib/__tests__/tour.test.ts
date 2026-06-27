@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { MAP_TOUR_STEPS, isTourSeen, markTourSeen, resetTour } from "../tour";
+import { OPS_TOUR_STEPS, isOpsTourSeen, markOpsTourSeen } from "../tour";
 
 describe("tour helpers", () => {
   beforeEach(() => localStorage.clear());
@@ -19,5 +20,17 @@ describe("tour helpers", () => {
     expect(isTourSeen()).toBe(true);
     resetTour();
     expect(isTourSeen()).toBe(false);
+  });
+});
+
+describe("ops tour helpers", () => {
+  beforeEach(() => localStorage.clear());
+  it("defines ops tour steps", () => {
+    expect(OPS_TOUR_STEPS.length).toBeGreaterThanOrEqual(2);
+  });
+  it("tracks ops seen state", () => {
+    expect(isOpsTourSeen()).toBe(false);
+    markOpsTourSeen();
+    expect(isOpsTourSeen()).toBe(true);
   });
 });

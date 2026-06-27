@@ -17,3 +17,18 @@ export function markTourSeen(): void {
 export function resetTour(): void {
   try { localStorage.removeItem(KEY); } catch { /* ignore */ }
 }
+
+const OPS_KEY = "ops_coach_seen_v1";
+
+export const OPS_TOUR_STEPS: CoachStep[] = [
+  { targetId: "ops-adversary", title: "Read the threat", body: "This is the enemy force you're facing — fuzzy if your intel is poor. The objective tells you what counts as a win." },
+  { targetId: "ops-force", title: "Commit your force", body: "Pick squadrons and how many jets, add support (AWACS/tanker/SEAD), and set the rules of engagement. Tap any underlined term to learn it." },
+  { targetId: "ops-commit", title: "Hold to commit", body: "When ready, hold the commit button. Combat resolves automatically and you'll get an after-action report." },
+];
+
+export function isOpsTourSeen(): boolean {
+  try { return localStorage.getItem(OPS_KEY) === "1"; } catch { return false; }
+}
+export function markOpsTourSeen(): void {
+  try { localStorage.setItem(OPS_KEY, "1"); } catch { /* ignore */ }
+}
