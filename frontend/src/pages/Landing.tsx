@@ -53,10 +53,19 @@ export function Landing() {
     });
   }
 
-  async function handleStart() {
-    await createCampaign({ name, difficulty, objectives: selectedObjectives });
+  async function handleStart(cfg?: { name: string; difficulty: Difficulty; objectives: string[] }) {
+    const payload = cfg ?? { name, difficulty, objectives: selectedObjectives };
+    await createCampaign(payload);
     const c = useCampaignStore.getState().campaign;
     if (c) navigate(`/campaign/${c.id}`);
+  }
+
+  function handleQuickStart() {
+    void handleStart({
+      name: "First Command",
+      difficulty: "relaxed",
+      objectives: [...BEGINNER_OBJECTIVE_IDS],
+    });
   }
 
   const canStart =
@@ -171,6 +180,15 @@ export function Landing() {
               </h2>
             )}
 
+            <button
+              onClick={handleQuickStart}
+              disabled={loading}
+              className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-slate-900 font-semibold rounded-lg px-4 py-3 text-sm"
+            >
+              ⚡ Quick Start (recommended for new players)
+            </button>
+            <div className="text-center text-[11px] opacity-50">— or customize below —</div>
+
             {/* Campaign name */}
             <div className="space-y-1">
               <label className="block text-sm opacity-80">Campaign name</label>
@@ -260,7 +278,7 @@ export function Landing() {
 
             {/* Submit */}
             <button
-              onClick={handleStart}
+              onClick={() => handleStart()}
               disabled={loading || !canStart}
               className="w-full bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 font-semibold rounded-lg px-4 py-3 text-sm"
             >

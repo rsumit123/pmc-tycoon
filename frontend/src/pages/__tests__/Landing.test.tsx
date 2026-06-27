@@ -102,4 +102,17 @@ describe("Landing", () => {
     fireEvent.click(screen.getByText("Objective Charlie"));
     expect(startBtn.disabled).toBe(false);
   });
+
+  it("Quick Start creates a campaign with relaxed difficulty + 3 beginner objectives", async () => {
+    const createCampaign = vi.fn().mockResolvedValue(undefined);
+    setup(makeStore({ campaignList: [], createCampaign }));
+    const quick = await screen.findByRole("button", { name: /quick start/i });
+    fireEvent.click(quick);
+    expect(createCampaign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        difficulty: "relaxed",
+        objectives: expect.arrayContaining(["maintain_42_squadrons", "modernize_fleet", "budget_discipline"]),
+      }),
+    );
+  });
 });
