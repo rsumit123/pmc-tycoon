@@ -4,7 +4,8 @@ const KEY = "tutorial_seen_v1";
 
 export const MAP_TOUR_STEPS: CoachStep[] = [
   { targetId: "map-statusbar", title: "Your command status", body: "Treasury, your net budget per quarter, and outstanding orders live up here. Tap any underlined term anywhere to learn what it means." },
-  { targetId: "map-menu", title: "Everything lives here", body: "Open this menu for Procurement (budget, R&D, buying jets), your Hangar, Intel, and more." },
+  { targetId: "map-canvas", title: "You already have an air force", body: "You inherit the real 2026 IAF — 30+ squadrons across 15 bases (Rafale, Su-30 MKI, Tejas, Mirage 2000 and more). Your job is to modernize it, not build from scratch. Tap any base to inspect its squadrons, or open the menu → Hangar." },
+  { targetId: "map-menu", title: "Everything lives here", body: "Open this menu for Procurement (budget, R&D, buying jets), your Hangar (your squadrons), Intel, and more." },
   { targetId: "map-endturn", title: "Advance the quarter", body: "When you're done planning, End Turn moves time forward. Sometimes a combat event will fire — you'll be guided through it." },
 ];
 

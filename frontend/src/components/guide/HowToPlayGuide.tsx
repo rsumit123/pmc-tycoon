@@ -12,7 +12,7 @@ const SECTIONS = [
   },
   {
     title: "Your Role",
-    text: "You are India's Head of Defense Integration (2026–2036). Over 40 quarterly turns, you'll modernize the IAF through procurement, R&D, and force management to meet strategic objectives.",
+    text: "You are India's Head of Defense Integration (2026–2036). You already command the real 2026 IAF — 30+ squadrons across 15 bases (Rafale, Su-30 MKI, Tejas, Mirage 2000 and more) — so your job is to modernize an existing force, not build one from scratch. Tap any base on the map, or open the Hangar, to see what you have. Over 40 quarterly turns you'll modernize through procurement, R&D, and force management to meet your objectives.",
   },
   {
     title: "Each Turn",

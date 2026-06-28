@@ -436,7 +436,7 @@ export function CampaignMapView() {
         </>
       )}
 
-      <div className="relative flex-1">
+      <div className="relative flex-1" data-tour="map-canvas">
         <SubcontinentMap
           markers={bases}
           onMarkerClick={(bid) => setSelectedBase(bid)}
