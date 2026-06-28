@@ -130,7 +130,9 @@ export function SubcontinentMap({
   return (
     <div
       ref={containerRef}
-      className={["w-full h-full bg-slate-900 rounded-lg", className].join(" ")}
+      // Lift the near-black Carto dark tiles to a readable charcoal so the map
+      // doesn't feel oppressively dark, while staying on-theme.
+      className={["w-full h-full bg-slate-900 rounded-lg brightness-[1.35] contrast-[0.92]", className].join(" ")}
     />
   );
 }

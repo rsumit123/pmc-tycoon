@@ -487,7 +487,7 @@ export function CampaignMapView() {
           />
           <div
             className="absolute inset-0"
-            style={{ background: "radial-gradient(130% 100% at 50% 50%, transparent 60%, rgba(10,15,28,0.55) 100%)" }}
+            style={{ background: "radial-gradient(140% 110% at 50% 50%, transparent 72%, rgba(10,15,28,0.32) 100%)" }}
           />
           <div className="absolute left-2 top-2 h-5 w-5 border-l-2 border-t-2 border-amber-400/50" />
           <div className="absolute right-2 top-2 h-5 w-5 border-r-2 border-t-2 border-amber-400/50" />
