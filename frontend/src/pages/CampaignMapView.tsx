@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { Map as MLMap } from "maplibre-gl";
 
@@ -13,6 +13,7 @@ import { AdversaryBaseLayer } from "../components/map/AdversaryBaseLayer";
 import { DroneOrbitLayer } from "../components/map/DroneOrbitLayer";
 import { AdversaryBaseSheet } from "../components/map/AdversaryBaseSheet";
 import { LayerTogglePanel } from "../components/map/LayerTogglePanel";
+import { MapLegend } from "../components/map/MapLegend";
 import { BaseSheet } from "../components/map/BaseSheet";
 import { RebaseOverlay } from "../components/map/RebaseOverlay";
 import { YearEndRecapToast } from "../components/endgame/YearEndRecapToast";
@@ -180,6 +181,8 @@ export function CampaignMapView() {
     [bases, selectedBaseId],
   );
 
+  // Stable so SubcontinentMap doesn't tear down + rebuild every marker each render.
+  const handleMarkerClick = useCallback((bid: number) => setSelectedBase(bid), [setSelectedBase]);
   const intelContacts = useMemo(() => synthesizeContacts(intelCards), [intelCards]);
   const adBaseIdSet = useMemo(() => new Set(adBatteries.map((b) => b.base_id)), [adBatteries]);
 
@@ -438,7 +441,7 @@ export function CampaignMapView() {
       <div className="relative flex-1" data-tour="map-canvas">
         <SubcontinentMap
           markers={bases}
-          onMarkerClick={(bid) => setSelectedBase(bid)}
+          onMarkerClick={handleMarkerClick}
           onReady={(m) => setMapInstance(m)}
           flashBaseId={flashBaseId}
           adBaseIds={adBaseIdSet}
@@ -496,6 +499,7 @@ export function CampaignMapView() {
         </div>
 
         <LayerTogglePanel />
+        <MapLegend />
 
         {error && (
           <div className="absolute top-3 left-3 bg-red-900/80 border border-red-800 rounded-lg p-2 text-xs text-red-200 max-w-xs">

@@ -6,7 +6,7 @@ export interface BBox {
 }
 
 export function subcontinentBounds(): BBox {
-  return { west: 65, east: 100, south: 5, north: 38 };
+  return { west: 66, east: 98, south: 6, north: 38 };
 }
 
 export function fitsInsideSubcontinent(lng: number, lat: number): boolean {

@@ -51,7 +51,7 @@ export function SubcontinentMap({
       container: containerRef.current,
       style: MAP_STYLE,
       bounds: [[b.west, b.south], [b.east, b.north]],
-      fitBoundsOptions: { padding: 40 },
+      fitBoundsOptions: { padding: 12 },
     });
     mapRef.current = m;
     m.on("load", () => onReady?.(m));
@@ -91,8 +91,9 @@ export function SubcontinentMap({
       // Outer wrapper is a ~40px transparent hit area for reliable tapping.
       const wrap = document.createElement("div");
       wrap.className = "flex items-center justify-center";
-      wrap.style.width = "40px";
-      wrap.style.height = "40px";
+      wrap.style.width = "44px";
+      wrap.style.height = "44px";
+      wrap.style.cursor = "pointer";
 
       // 24px relative container holds the readiness ring, the centre dot, and
       // the corner status badges.
@@ -140,7 +141,8 @@ export function SubcontinentMap({
           ? "w-2.5 h-2.5 bg-amber-400 border-amber-950 animate-pulse shadow-[0_0_7px_2px_rgba(245,158,11,0.5)]"
           : "w-2.5 h-2.5 bg-amber-400 border-amber-900 shadow-[0_0_6px_2px_rgba(245,158,11,0.45)]",
       ].join(" ");
-      el.addEventListener("click", () => onMarkerClick?.(b.id));
+      // Click on the full 44px hit area (not just the tiny dot) for reliable taps.
+      wrap.addEventListener("click", () => onMarkerClick?.(b.id));
       dot.appendChild(el);
 
       const addDot = (color: string, pos: string, title: string) => {

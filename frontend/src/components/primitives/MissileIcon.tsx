@@ -31,13 +31,13 @@ export function MissileIcon({ weaponClass, size = 18, className }: MissileIconPr
       style={{ filter: `drop-shadow(0 0 3px ${color}55)` }}
     >
       <g fill={color}>
-        {/* body */}
-        <rect x="5" y="10" width="11" height="4" rx="2" />
-        {/* nose cone (points right) */}
-        <path d="M16 10 L21 12 L16 14 Z" />
-        {/* tail fins */}
-        <path d="M5 9.5 L1.5 7 L5 11 Z" />
-        <path d="M5 14.5 L1.5 17 L5 13 Z" />
+        {/* nose cone + body (sleek vertical missile) */}
+        <path d="M12 1.5 C 14.3 4.2, 14.8 7.5, 14.8 11 L 14.8 16 L 9.2 16 L 9.2 11 C 9.2 7.5, 9.7 4.2, 12 1.5 Z" />
+        {/* swept tail fins */}
+        <path d="M9.2 12.5 L 5.6 17.5 L 9.2 15.5 Z" />
+        <path d="M14.8 12.5 L 18.4 17.5 L 14.8 15.5 Z" />
+        {/* exhaust flame */}
+        <path d="M10.4 16 L 12 21.5 L 13.6 16 Z" opacity="0.9" />
       </g>
     </svg>
   );

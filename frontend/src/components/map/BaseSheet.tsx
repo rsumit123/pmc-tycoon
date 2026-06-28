@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { ADBattery, BaseMarker, BaseSquadronSummary, MissileStock, Platform } from "../../lib/types";
 import { SquadronCard } from "../primitives/SquadronCard";
 import { MissileIcon } from "../primitives/MissileIcon";
+import { AirDefenseIcon } from "../primitives/AirDefenseIcon";
 import { PlatformDossier } from "../primitives/PlatformDossier";
 import { MissileTransferModal } from "./MissileTransferModal";
 import { useCampaignStore } from "../../store/campaignStore";
@@ -176,7 +177,10 @@ export function BaseSheet({
                       key={bat.id}
                       className="flex items-baseline justify-between gap-2 rounded border border-slate-800 bg-slate-900/50 px-2 py-1.5 text-xs"
                     >
-                      <span className="truncate font-semibold">{AD_SYSTEM_NAMES[bat.system_id] ?? bat.system_id}</span>
+                      <span className="flex min-w-0 items-center gap-2">
+                        <AirDefenseIcon size={18} className="flex-shrink-0" />
+                        <span className="truncate font-semibold">{AD_SYSTEM_NAMES[bat.system_id] ?? bat.system_id}</span>
+                      </span>
                       <span className="whitespace-nowrap font-mono opacity-60">
                         {bat.coverage_km} km · {bat.installed_year} Q{bat.installed_quarter}
                       </span>
