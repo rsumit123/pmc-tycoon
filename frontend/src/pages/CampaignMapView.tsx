@@ -232,22 +232,21 @@ export function CampaignMapView() {
         </button>
         <div className="min-w-0 flex-1">
           <h1 className="text-sm font-bold truncate font-display">{campaign.name}</h1>
-          <p className="text-xs leading-tight flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <span className="font-tech text-[10px] uppercase tracking-wider text-slate-500">{campaign.current_year} Q{campaign.current_quarter}</span>
-            <span className="opacity-80">
-              💰 <span className="font-semibold">₹{campaign.budget_cr.toLocaleString("en-US")}</span>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 font-tech text-[10px] uppercase tracking-wider leading-tight">
+            <span className="text-amber-500/80">{campaign.current_year} · Q{campaign.current_quarter}</span>
+            <span className="text-slate-700">|</span>
+            <span className="text-slate-500">
+              TREASURY <span className="font-semibold normal-case text-slate-200">₹{campaign.budget_cr.toLocaleString("en-US")}</span>
             </span>
-            <span className={`${topBarNetQ >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-              {topBarNetQ >= 0 ? "+" : ""}₹{topBarNetQ.toLocaleString("en-US")}
-              <span className="font-tech text-[10px] uppercase tracking-wider text-slate-500">/q</span>
+            <span className="text-slate-500">
+              NET/Q <span className={`font-semibold normal-case ${topBarNetQ >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{topBarNetQ >= 0 ? "+" : ""}₹{topBarNetQ.toLocaleString("en-US")}</span>
             </span>
             {outstandingOrderCount > 0 && (
-              <span title={`${outstandingOrderCount} active orders`}>
-                📜 ₹{topBarOutstanding.toLocaleString("en-US")}{" "}
-                <span className="font-tech text-[10px] uppercase tracking-wider text-slate-500">outstanding</span>
+              <span className="text-slate-500" title={`${outstandingOrderCount} active orders`}>
+                OUTSTANDING <span className="font-semibold normal-case text-slate-300">₹{topBarOutstanding.toLocaleString("en-US")}</span>
               </span>
             )}
-          </p>
+          </div>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <NotificationBell campaignId={campaign.id} />
@@ -476,6 +475,26 @@ export function CampaignMapView() {
             filterCovered
           />
         )}
+        {/* Tactical HUD frame over the map (visual only) */}
+        <div className="pointer-events-none absolute inset-0 z-[5]">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(34,211,238,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.05) 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(130% 100% at 50% 50%, transparent 60%, rgba(10,15,28,0.55) 100%)" }}
+          />
+          <div className="absolute left-2 top-2 h-5 w-5 border-l-2 border-t-2 border-amber-400/50" />
+          <div className="absolute right-2 top-2 h-5 w-5 border-r-2 border-t-2 border-amber-400/50" />
+          <div className="absolute bottom-2 left-2 h-5 w-5 border-b-2 border-l-2 border-amber-400/50" />
+          <div className="absolute bottom-2 right-2 h-5 w-5 border-b-2 border-r-2 border-amber-400/50" />
+        </div>
+
         <LayerTogglePanel />
 
         {error && (

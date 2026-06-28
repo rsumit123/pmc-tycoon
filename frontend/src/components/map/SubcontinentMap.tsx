@@ -3,18 +3,25 @@ import maplibregl, { Map as MLMap, Marker } from "maplibre-gl";
 import type { BaseMarker } from "../../lib/types";
 import { subcontinentBounds } from "./markerProjection";
 
-const OSM_STYLE = {
+// Dark "command chart" basemap (Carto dark-matter) — matches the app's
+// tactical theme far better than the bright default OSM raster. Free for this
+// scale with OSM + CARTO attribution.
+const MAP_STYLE = {
   version: 8 as const,
   sources: {
-    osm: {
+    carto: {
       type: "raster" as const,
-      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tiles: [
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+      ],
       tileSize: 256,
       attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
     },
   },
-  layers: [{ id: "osm", type: "raster" as const, source: "osm" }],
+  layers: [{ id: "carto", type: "raster" as const, source: "carto" }],
 };
 
 const AWACS_PLATFORMS = new Set(["netra_aewc", "phalcon_a50", "netra_aewc_mk2"]);
@@ -42,7 +49,7 @@ export function SubcontinentMap({
     const b = subcontinentBounds();
     const m = new maplibregl.Map({
       container: containerRef.current,
-      style: OSM_STYLE,
+      style: MAP_STYLE,
       bounds: [[b.west, b.south], [b.east, b.north]],
       fitBoundsOptions: { padding: 40 },
     });
@@ -66,6 +73,12 @@ export function SubcontinentMap({
       const hasDrone = b.squadrons.some((s) => DRONE_PLATFORMS.has(s.platform_id));
       const hasAD = adBaseIds?.has(b.id) ?? false;
       const isFlash = flashBaseId === b.id;
+      // "Strained" = average squadron readiness below the amber tier — pulse it
+      // rose so the eye is drawn to bases that need attention.
+      const avgReady = b.squadrons.length
+        ? b.squadrons.reduce((a, s) => a + s.readiness_pct, 0) / b.squadrons.length
+        : null;
+      const strained = avgReady !== null && avgReady < 55;
 
       // Outer wrapper is a ~40px transparent hit area centered around the 12px
       // visual dot, so tapping a base (the primary nav action) is reliable on
@@ -86,10 +99,12 @@ export function SubcontinentMap({
       el.setAttribute("aria-label", `${b.name} airbase`);
       el.setAttribute("data-base-id", String(b.id));
       el.className = [
-        "w-3 h-3 rounded-full border shadow hover:scale-125 transition-transform block",
+        "w-3 h-3 rounded-full border block transition-transform hover:scale-125",
         isFlash
           ? "bg-emerald-400 border-emerald-900 ring-4 ring-emerald-300/60 animate-pulse scale-150"
-          : "bg-amber-400 border-amber-900",
+          : strained
+          ? "bg-rose-400 border-rose-950 ring-2 ring-rose-300/50 animate-pulse shadow-[0_0_9px_2px_rgba(244,63,94,0.55)]"
+          : "bg-amber-400 border-amber-900 ring-2 ring-amber-300/40 shadow-[0_0_8px_2px_rgba(245,158,11,0.45)]",
       ].join(" ");
       el.addEventListener("click", () => onMarkerClick?.(b.id));
       dot.appendChild(el);
