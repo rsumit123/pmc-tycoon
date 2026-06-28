@@ -44,6 +44,30 @@ def commit_vignette(
     if vignette.status != "pending":
         raise AlreadyResolvedError(f"vignette {vignette.id} is {vignette.status}")
 
+    # Stand-down (decline) path — Story mode only. No resolver called.
+    if committed_force.get("decline"):
+        if campaign.difficulty != "story":
+            raise CommitValidationError("Stand down is only available in Story mode")
+        vignette.committed_force = committed_force
+        vignette.outcome = {
+            "ind_kia": 0, "adv_kia": 0,
+            "ind_airframes_lost": 0, "adv_airframes_lost": 0,
+            "objective_met": False, "stand_down": True,
+            "roe": committed_force.get("roe", "weapons_free"),
+            "support": committed_force.get("support", {}),
+            "munitions_expended": [], "munitions_cost_total_cr": 0,
+        }
+        vignette.event_trace = [{"t_min": 0, "kind": "stand_down"}]
+        vignette.aar_text = (
+            "Stand-down ordered — the engagement was declined; "
+            "no forces were committed and no losses were taken."
+        )
+        vignette.status = "resolved"
+        vignette.resolved_at = datetime.now(UTC)
+        db.commit()
+        db.refresh(vignette)
+        return vignette
+
     # Validate against planning_state
     ps = vignette.planning_state or {}
     squadrons_committed = committed_force.get("squadrons", [])

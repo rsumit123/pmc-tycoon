@@ -21,6 +21,7 @@ class VignetteCommitPayload(BaseModel):
     squadrons: list[VignetteCommitSquadron] = Field(default_factory=list)
     support: VignetteCommitSupport = Field(default_factory=VignetteCommitSupport)
     roe: str = "weapons_free"
+    decline: bool = False
 
 
 class VignetteRead(BaseModel):
