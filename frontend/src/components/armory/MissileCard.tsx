@@ -1,6 +1,7 @@
 import type { MissileUnlock } from "../../lib/types";
 import { useCampaignStore } from "../../store/campaignStore";
 import { WEAPON_CLASS_META } from "../../lib/weaponClass";
+import { MissileIcon } from "../primitives/MissileIcon";
 
 export function MissileCard({ m, onEquip }: { m: MissileUnlock; onEquip: () => void }) {
   const weaponsById = useCampaignStore((s) => s.weaponsById);
@@ -13,7 +14,10 @@ export function MissileCard({ m, onEquip }: { m: MissileUnlock; onEquip: () => v
       isStrike ? "bg-slate-900/70 border-sky-900/60" : "bg-slate-900 border-slate-800",
     ].join(" ")}>
       <div className="flex items-baseline justify-between gap-2 mb-1">
-        <div className="text-sm font-semibold">{m.name.replace(/_/g, " ")}</div>
+        <div className="text-sm font-semibold flex items-center gap-2">
+          <MissileIcon weaponClass={m.weapon_class} size={18} />
+          {m.name.replace(/_/g, " ")}
+        </div>
         <span className={`text-[9px] px-1.5 py-0.5 rounded border font-semibold whitespace-nowrap ${meta.badgeClass}`}>
           {meta.label}
         </span>

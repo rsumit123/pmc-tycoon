@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { ADSystemUnlock } from "../../lib/types";
+import { AirDefenseIcon } from "../primitives/AirDefenseIcon";
 
 export interface ADSystemCardProps {
   a: ADSystemUnlock;
@@ -18,7 +19,10 @@ export function ADSystemCard({ a, installedBaseNames, totalBases, campaignId }: 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-lg p-3">
       <div className="flex items-baseline justify-between gap-2 mb-1">
-        <div className="text-sm font-semibold">{a.name}</div>
+        <div className="text-sm font-semibold flex items-center gap-2">
+          <AirDefenseIcon size={18} />
+          {a.name}
+        </div>
         <span className="text-[10px] bg-emerald-900/50 text-emerald-200 px-1.5 py-0.5 rounded whitespace-nowrap">UNLOCKED</span>
       </div>
       <p className="text-xs opacity-80">{a.description}</p>

@@ -9,6 +9,8 @@ import { CommitHoldButton } from "../primitives/CommitHoldButton";
 import { PlatformDossier } from "../primitives/PlatformDossier";
 import { PlatformImage } from "../primitives/PlatformImage";
 import { InfoButton, WeaponInfo, ADSystemInfo } from "../primitives/RoleInfo";
+import { MissileIcon } from "../primitives/MissileIcon";
+import { AirDefenseIcon } from "../primitives/AirDefenseIcon";
 import { flagFor, WEAPON_ORIGIN, AD_SYSTEM_ORIGIN } from "../../lib/origin";
 import { buildRestockOrders } from "../../lib/restock";
 import { useCampaignStore } from "../../store/campaignStore";
@@ -512,6 +514,7 @@ export function MissileBatchOfferCard({
     >
       <p className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-semibold flex items-center gap-1.5">
+          <MissileIcon weaponClass={missile.weapon_class} size={18} />
           {missile.name}
           <InfoButton onClick={() => setInfoOpen(true)} ariaLabel={`${missile.name} info`} />
         </span>
@@ -679,6 +682,7 @@ export function ADBatteryOfferCard({
     >
       <p className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-semibold flex items-center gap-1.5">
+          <AirDefenseIcon size={18} />
           {system.name}
           <InfoButton onClick={() => setInfoOpen(true)} ariaLabel={`${system.name} info`} />
         </span>
@@ -830,6 +834,7 @@ export function ADReloadOfferCard({
     >
       <p className="flex items-baseline justify-between gap-2">
         <span className="text-sm font-semibold flex items-center gap-1.5">
+          <AirDefenseIcon size={18} />
           {displayName}
           <InfoButton onClick={() => setInfoOpen(true)} ariaLabel={`${displayName} info`} />
         </span>
