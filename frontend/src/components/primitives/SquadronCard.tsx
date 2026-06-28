@@ -1,5 +1,6 @@
 import type { BaseSquadronSummary, Platform } from "../../lib/types";
 import { useLongPress } from "./useLongPress";
+import { PlatformImage } from "./PlatformImage";
 
 export interface SquadronCardProps {
   squadron: BaseSquadronSummary;
@@ -29,27 +30,38 @@ export function SquadronCard({
       tabIndex={0}
       {...handlers}
       className={[
-        "bg-slate-900/70 border border-slate-800 rounded-lg p-3 space-y-2 select-none",
+        "bg-slate-900/70 border border-slate-800 rounded-lg p-3 select-none",
         "hover:border-slate-700 active:border-amber-600 cursor-pointer",
         className,
       ].join(" ")}
     >
-      <div className="flex items-baseline justify-between gap-2">
-        <div className="text-sm font-semibold truncate">{squadron.name}</div>
-        <span className="text-xs opacity-60">{squadron.call_sign}</span>
-      </div>
-      <div className="text-xs opacity-80">
-        {platform?.name ?? squadron.platform_id}
-      </div>
-      <div className="flex items-center justify-between text-xs">
-        <span>Strength: <span className="font-semibold">{squadron.strength}</span></span>
-        <span className={readinessHue}>Ready: {squadron.readiness_pct}%</span>
-      </div>
-      {squadron.ace_name && (
-        <div className="text-[11px] italic opacity-80 pt-1 border-t border-slate-800">
-          {squadron.ace_name}
+      <div className="flex gap-3">
+        <PlatformImage
+          platformId={squadron.platform_id}
+          name={platform?.name ?? squadron.platform_id}
+          variant="thumb"
+          fit="cover"
+          className="h-14 w-20 flex-shrink-0 self-start rounded border border-slate-800"
+        />
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="text-sm font-semibold truncate">{squadron.name}</div>
+            <span className="text-xs opacity-60">{squadron.call_sign}</span>
+          </div>
+          <div className="text-xs opacity-80">
+            {platform?.name ?? squadron.platform_id}
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span>Strength: <span className="font-semibold">{squadron.strength}</span></span>
+            <span className={readinessHue}>Ready: {squadron.readiness_pct}%</span>
+          </div>
+          {squadron.ace_name && (
+            <div className="text-[11px] italic opacity-80 pt-1 border-t border-slate-800">
+              {squadron.ace_name}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
