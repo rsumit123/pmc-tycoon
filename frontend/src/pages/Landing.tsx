@@ -24,6 +24,7 @@ export function Landing() {
   const [difficulty, setDifficulty] = useState<Difficulty>("realistic");
   const [selectedObjectives, setSelectedObjectives] = useState<string[]>([]);
   const [showNewForm, setShowNewForm] = useState(false);
+  const [showCustomize, setShowCustomize] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
   const createCampaign = useCampaignStore((s) => s.createCampaign);
@@ -90,8 +91,8 @@ export function Landing() {
   if (!listLoaded) return <Loader label="Loading campaigns" />;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-6">
+    <div className="min-h-screen p-4 safe-pt safe-pb">
+      <div className="max-w-md w-full mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -193,8 +194,28 @@ export function Landing() {
             >
               ⚡ Quick Start (recommended for new players)
             </button>
-            <div className="text-center text-[11px] opacity-50">— or customize below —</div>
+            <p className="text-center text-[11px] opacity-50 leading-relaxed">
+              Story mode · generous budget · a sensible 3-objective set · guided tutorial
+            </p>
 
+            {/* Error (covers both Quick Start and Assume Command) */}
+            {error && (
+              <div className="bg-red-900/30 border border-red-800 rounded-lg p-3 text-sm text-red-200">
+                {error}
+              </div>
+            )}
+
+            {/* Customize disclosure */}
+            <button
+              type="button"
+              onClick={() => setShowCustomize((v) => !v)}
+              className="w-full text-center text-xs text-slate-400 hover:text-slate-200 underline py-1"
+            >
+              {showCustomize ? "▾ Hide custom setup" : "▸ Or set up a custom campaign"}
+            </button>
+
+            {showCustomize && (
+            <div className="space-y-5">
             {/* Campaign name */}
             <div className="space-y-1">
               <label className="block text-sm opacity-80">Campaign name</label>
@@ -275,13 +296,6 @@ export function Landing() {
               )}
             </div>
 
-            {/* Error */}
-            {error && (
-              <div className="bg-red-900/30 border border-red-800 rounded-lg p-3 text-sm text-red-200">
-                {error}
-              </div>
-            )}
-
             {/* Submit */}
             <button
               onClick={() => handleStart()}
@@ -290,6 +304,8 @@ export function Landing() {
             >
               {loading ? "Starting…" : "Assume Command"}
             </button>
+            </div>
+            )}
           </div>
         )}
       </div>

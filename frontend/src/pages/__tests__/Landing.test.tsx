@@ -77,9 +77,11 @@ describe("Landing", () => {
 
   it("shows new campaign form when no existing campaigns", async () => {
     setup(makeStore({ campaignList: [] }));
-    expect(await screen.findByText("Assume Command")).toBeTruthy();
-    expect(screen.getByLabelText !== undefined).toBe(true);
-    // objective buttons visible
+    // Quick Start is always visible; the custom fields are behind a disclosure.
+    expect(await screen.findByRole("button", { name: /quick start/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /custom/i }));
+    expect(screen.getByText("Assume Command")).toBeTruthy();
+    // objective buttons visible once expanded
     expect(screen.getByText("Objective Alpha")).toBeTruthy();
   });
 
@@ -92,6 +94,8 @@ describe("Landing", () => {
   it("disables start button until 3 objectives are selected", async () => {
     setup(makeStore({ campaignList: [] }));
 
+    // Expand the custom-setup disclosure to reach difficulty/objectives/Assume Command.
+    fireEvent.click(await screen.findByRole("button", { name: /custom/i }));
     const startBtn = (await screen.findByText("Assume Command")) as HTMLButtonElement;
     // Initially disabled (0 objectives selected)
     expect(startBtn.disabled).toBe(true);
