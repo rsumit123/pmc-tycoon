@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { ScreenHeader } from "../components/primitives/ScreenHeader";
+import { PlatformImage } from "../components/primitives/PlatformImage";
 import { FleetFilters, type HangarSortMode } from "../components/hangar/FleetFilters";
 import { PlatformSummaryCard } from "../components/hangar/PlatformSummaryCard";
 import { SquadronRow } from "../components/hangar/SquadronRow";
@@ -145,19 +146,28 @@ export function HangarPage() {
           </div>
         ) : (
           <>
-            {platformFilter && (
-              <div className="flex items-center justify-between bg-amber-950/30 border border-amber-800 rounded-lg px-3 py-2 text-xs">
-                <span className="text-amber-200 truncate">
-                  Filtered: {hangar.summary_by_platform.find((s) => s.platform_id === platformFilter)?.platform_name ?? platformFilter}
-                </span>
-                <button
-                  onClick={() => setPlatformFilter(null)}
-                  className="text-amber-300 hover:text-amber-200 underline ml-2 flex-shrink-0"
-                >
-                  Clear
-                </button>
-              </div>
-            )}
+            {platformFilter && (() => {
+              const pname = hangar.summary_by_platform.find((s) => s.platform_id === platformFilter)?.platform_name ?? platformFilter;
+              return (
+                <div className="flex items-center gap-3 bg-amber-950/30 border border-amber-800 rounded-lg px-3 py-2 text-xs">
+                  <PlatformImage
+                    platformId={platformFilter}
+                    name={pname}
+                    variant="thumb"
+                    className="h-10 w-16 flex-shrink-0 rounded border border-amber-800/40"
+                  />
+                  <span className="flex-1 truncate text-amber-200">
+                    Filtered: <span className="font-semibold">{pname}</span>
+                  </span>
+                  <button
+                    onClick={() => setPlatformFilter(null)}
+                    className="ml-2 flex-shrink-0 text-amber-300 underline hover:text-amber-200"
+                  >
+                    Clear
+                  </button>
+                </div>
+              );
+            })()}
             <FleetFilters
               roleFilter={role}
               onRoleChange={(r) => { setRole(r); setPlatformFilter(null); }}
