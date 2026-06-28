@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { ScreenHeader } from "../components/primitives/ScreenHeader";
 import { useCampaignStore } from "../store/campaignStore";
 import { TotalsRibbon } from "../components/performance/TotalsRibbon";
 import { FactionSummary } from "../components/performance/FactionSummary";
@@ -31,12 +32,7 @@ export function PerformancePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
-        <h1 className="text-sm font-bold font-display">📊 Performance</h1>
-        <Link to={`/campaign/${cid}`} className="text-xs underline opacity-80 hover:opacity-100">
-          Map
-        </Link>
-      </header>
+      <ScreenHeader title="Performance" backTo={`/campaign/${cid}`} />
 
       <main className="p-4 max-w-3xl mx-auto space-y-4 pb-20">
         <TotalsRibbon totals={performance.totals} />

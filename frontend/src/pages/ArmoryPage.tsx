@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
+import { ScreenHeader } from "../components/primitives/ScreenHeader";
 import { UnlocksFeed } from "../components/armory/UnlocksFeed";
 import { MissileCard } from "../components/armory/MissileCard";
 import { MissileEquipModal } from "../components/armory/MissileEquipModal";
@@ -75,13 +76,11 @@ export function ArmoryPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       {complete && campaign && <ReadOnlyBanner campaignId={campaign.id} />}
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
-        <div className="min-w-0">
-          <h1 className="text-sm font-bold truncate font-display">Armory</h1>
-          <p className="text-xs opacity-70">Unlocks from completed R&D</p>
-        </div>
-        <Link to={`/campaign/${cid}`} className="text-xs underline opacity-80 hover:opacity-100">Map</Link>
-      </header>
+      <ScreenHeader
+        title="Armory"
+        subtitle="Unlocks from completed R&D"
+        backTo={`/campaign/${cid}`}
+      />
 
       <main className="p-4 max-w-3xl mx-auto space-y-4 pb-20">
         <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 overflow-x-auto">

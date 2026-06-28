@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { ScreenHeader } from "../components/primitives/ScreenHeader";
 import { useCampaignStore } from "../store/campaignStore";
 import { api } from "../lib/api";
 import type { StrikeRead } from "../lib/types";
@@ -57,15 +58,12 @@ export function StrikeAARPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800 sticky top-0 z-20">
-        <div className="min-w-0">
-          <h1 className="text-base font-bold truncate font-display">Strike AAR</h1>
-          <p className="text-xs opacity-70">{strike.year}-Q{strike.quarter}</p>
-        </div>
-        <Link to={`/campaign/${cid}/ops?tab=history`} className="text-xs opacity-60 hover:opacity-100 underline">
-          ← Ops
-        </Link>
-      </header>
+      <ScreenHeader
+        title="Strike Report"
+        subtitle={`${strike.year}-Q${strike.quarter}`}
+        backTo={`/campaign/${cid}/ops`}
+        backLabel="Ops"
+      />
 
       <main className="flex-1 overflow-y-auto p-4 max-w-3xl w-full mx-auto space-y-3 pb-12">
         {/* Outcome banner */}

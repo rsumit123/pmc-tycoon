@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { ScreenHeader } from "../components/primitives/ScreenHeader";
 import { useCampaignStore } from "../store/campaignStore";
 import { Loader } from "../components/primitives/Loader";
 import type { Notification } from "../lib/types";
@@ -66,12 +67,7 @@ export function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
-        <h1 className="text-sm font-bold">🔔 Notifications</h1>
-        <Link to={`/campaign/${cid}`} className="text-xs underline opacity-80 hover:opacity-100">
-          Map
-        </Link>
-      </header>
+      <ScreenHeader title="Notifications" backTo={`/campaign/${cid}`} />
 
       <main className="p-4 max-w-2xl mx-auto space-y-3 pb-20">
         <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 overflow-x-auto">

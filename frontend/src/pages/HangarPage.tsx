@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
+import { ScreenHeader } from "../components/primitives/ScreenHeader";
 import { FleetFilters, type HangarSortMode } from "../components/hangar/FleetFilters";
 import { PlatformSummaryCard } from "../components/hangar/PlatformSummaryCard";
 import { SquadronRow } from "../components/hangar/SquadronRow";
@@ -90,15 +91,11 @@ export function HangarPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       {complete && campaign && <ReadOnlyBanner campaignId={campaign.id} />}
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
-        <div className="min-w-0">
-          <h1 className="text-sm font-bold truncate font-display">Hangar</h1>
-          <p className="text-xs opacity-70">
-            {hangar.squadrons.length} sqns &bull; {totalAirframes} airframes
-          </p>
-        </div>
-        <Link to={`/campaign/${cid}`} className="text-xs underline opacity-80 hover:opacity-100">Map</Link>
-      </header>
+      <ScreenHeader
+        title="Hangar"
+        subtitle={`${hangar.squadrons.length} sqns · ${totalAirframes} airframes`}
+        backTo={`/campaign/${cid}`}
+      />
 
       <main className="p-4 max-w-3xl mx-auto space-y-4 pb-20">
         {totalPending > 0 && (

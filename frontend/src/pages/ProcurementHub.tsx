@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
+import { ScreenHeader } from "../components/primitives/ScreenHeader";
 import { useCampaignStore } from "../store/campaignStore";
 import { BudgetAllocator } from "../components/procurement/BudgetAllocator";
 import { RDDashboard } from "../components/procurement/RDDashboard";
@@ -114,22 +115,11 @@ export function ProcurementHub() {
   return (
     <div className="min-h-screen flex flex-col">
       {complete && <ReadOnlyBanner campaignId={campaign.id} />}
-      <header className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800">
-        <div>
-          <h1 className="text-base font-bold font-display">{campaign.name}</h1>
-          <p className="text-xs opacity-70">
-            Procurement • {campaign.current_year}-Q{campaign.current_quarter}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            to={`/campaign/${campaign.id}`}
-            className="text-xs opacity-60 hover:opacity-100 underline"
-          >
-            ← Map
-          </Link>
-        </div>
-      </header>
+      <ScreenHeader
+        title="Procurement"
+        subtitle={`${campaign.current_year}-Q${campaign.current_quarter}`}
+        backTo={`/campaign/${campaign.id}`}
+      />
 
       <nav className="flex border-b border-slate-800 bg-slate-950/50">
         {TABS.map((t) => (

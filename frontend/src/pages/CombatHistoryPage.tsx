@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { ScreenHeader } from "../components/primitives/ScreenHeader";
 import { api } from "../lib/api";
 import type { CombatHistoryEntry, CombatHistoryResponse } from "../lib/types";
 import { Loader } from "../components/primitives/Loader";
@@ -54,18 +55,11 @@ export function CombatHistoryPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-slate-900 border-b border-slate-800">
-        <div className="min-w-0">
-          <h1 className="text-sm font-bold truncate font-display">Combat History</h1>
-          {data && (
-            <p className="text-xs opacity-70">
-              {data.total} engagement{data.total === 1 ? "" : "s"} · {data.wins} won · {data.losses} lost
-              {data.total > 0 && <> · <span className={winRate >= 50 ? "text-emerald-300" : "text-rose-300"}>{Math.round(winRate)}%</span></>}
-            </p>
-          )}
-        </div>
-        <Link to={`/campaign/${cid}`} className="text-xs underline opacity-80 hover:opacity-100">Map</Link>
-      </header>
+      <ScreenHeader
+        title="Combat History"
+        subtitle={data ? `${data.total} engagement${data.total === 1 ? "" : "s"} · ${data.wins} won · ${data.losses} lost${data.total > 0 ? ` · ${Math.round(winRate)}%` : ""}` : undefined}
+        backTo={`/campaign/${cid}`}
+      />
 
       <main className="p-4 max-w-3xl mx-auto space-y-4 pb-20">
         {loading ? (

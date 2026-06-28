@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
 import { ObjectiveTracker } from "../components/objectives/ObjectiveTracker";
+import { ScreenHeader } from "../components/primitives/ScreenHeader";
 
 export function ObjectivesPage() {
   const { id } = useParams();
@@ -14,12 +15,9 @@ export function ObjectivesPage() {
   }, [cid]);
 
   return (
-    <div className="min-h-screen p-4 safe-pt safe-pb">
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold font-display uppercase tracking-wider">Objectives</h1>
-          <Link to={`/campaign/${cid}`} className="text-xs text-slate-400 underline">← Map</Link>
-        </div>
+    <div className="min-h-screen safe-pb">
+      <ScreenHeader title="Objectives" backTo={`/campaign/${cid}`} />
+      <div className="max-w-2xl mx-auto space-y-4 p-4">
         <p className="text-sm opacity-70">Your campaign objectives and how you're tracking against each.</p>
         <ObjectiveTracker objectives={objectives} />
       </div>

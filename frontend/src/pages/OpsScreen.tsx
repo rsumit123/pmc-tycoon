@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { ScreenHeader } from "../components/primitives/ScreenHeader";
 import { useCampaignStore } from "../store/campaignStore";
 import { PostureDashboard } from "../components/ops/PostureDashboard";
 import { StrikeBuilder } from "../components/ops/StrikeBuilder";
@@ -60,22 +61,11 @@ export function OpsScreen() {
   return (
     <div className="min-h-screen flex flex-col">
       {complete && <ReadOnlyBanner campaignId={campaign.id} />}
-      <header className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800 sticky top-0 z-20">
-        <div className="min-w-0">
-          <h1 className="text-base font-bold truncate font-display">{campaign.name}</h1>
-          <p className="text-xs opacity-70">
-            Strike Command · {campaign.current_year}-Q{campaign.current_quarter}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <Link
-            to={`/campaign/${cid}`}
-            className="text-xs opacity-60 hover:opacity-100 underline"
-          >
-            ← Map
-          </Link>
-        </div>
-      </header>
+      <ScreenHeader
+        title="Strike Command"
+        subtitle={`${campaign.current_year}-Q${campaign.current_quarter}`}
+        backTo={`/campaign/${cid}`}
+      />
 
       <nav className="flex border-b border-slate-800 bg-slate-950/50 sticky top-[3.5rem] z-10">
         {TABS.map((t) => (
