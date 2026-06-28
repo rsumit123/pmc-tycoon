@@ -92,6 +92,17 @@ export function CampaignMapView() {
   const [audioOn, setAudioOn] = useState(getAudioEnabled);
   const [showGuide, setShowGuide] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const DRAWER_DEFAULTS: Record<string, boolean> = { Force: false, Operations: true, Records: false, Settings: false };
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem("drawer_sections_v1");
+      return raw ? { ...DRAWER_DEFAULTS, ...JSON.parse(raw) } : DRAWER_DEFAULTS;
+    } catch { return DRAWER_DEFAULTS; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("drawer_sections_v1", JSON.stringify(openSections)); } catch { /* ignore */ }
+  }, [openSections]);
+  const toggleSection = (name: string) => setOpenSections((s) => ({ ...s, [name]: !s[name] }));
   const [flashBaseId, setFlashBaseId] = useState<number | null>(null);
   const [showTour, setShowTour] = useState(false);
   useEffect(() => {
@@ -275,7 +286,15 @@ export function CampaignMapView() {
               >✕</button>
             </div>
             <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-              <div className="font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-1 pb-1">Force</div>
+              <button
+                type="button"
+                onClick={() => toggleSection("Force")}
+                className="w-full text-left flex items-center justify-between font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-1 pb-1 min-h-[44px]"
+              >
+                <span>Force</span>
+                <span aria-hidden>{openSections.Force ? "▾" : "▸"}</span>
+              </button>
+              {openSections.Force && (<>
               <Link
                 onClick={() => setShowMenu(false)}
                 to={`/campaign/${campaign.id}/hangar`}
@@ -286,8 +305,17 @@ export function CampaignMapView() {
                 to={`/campaign/${campaign.id}/armory`}
                 className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
               >🚀 Armory</Link>
+              </>)}
 
-              <div className="font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-3 pb-1">Operations</div>
+              <button
+                type="button"
+                onClick={() => toggleSection("Operations")}
+                className="w-full text-left flex items-center justify-between font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-3 pb-1 min-h-[44px]"
+              >
+                <span>Operations</span>
+                <span aria-hidden>{openSections.Operations ? "▾" : "▸"}</span>
+              </button>
+              {openSections.Operations && (<>
               <Link
                 onClick={() => setShowMenu(false)}
                 to={`/campaign/${campaign.id}/ops`}
@@ -308,8 +336,24 @@ export function CampaignMapView() {
                 to={`/campaign/${campaign.id}/objectives`}
                 className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
               >🎯 Objectives</Link>
+              {isCampaignComplete && (
+                <Link
+                  onClick={() => setShowMenu(false)}
+                  to={`/campaign/${campaign.id}/white-paper`}
+                  className="flex items-center gap-2 text-sm rounded px-3 py-2 bg-amber-600 text-slate-900 font-semibold"
+                >📰 White Paper</Link>
+              )}
+              </>)}
 
-              <div className="font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-3 pb-1">Records</div>
+              <button
+                type="button"
+                onClick={() => toggleSection("Records")}
+                className="w-full text-left flex items-center justify-between font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-3 pb-1 min-h-[44px]"
+              >
+                <span>Records</span>
+                <span aria-hidden>{openSections.Records ? "▾" : "▸"}</span>
+              </button>
+              {openSections.Records && (<>
               <Link
                 onClick={() => setShowMenu(false)}
                 to={`/campaign/${campaign.id}/combat-history`}
@@ -320,15 +364,17 @@ export function CampaignMapView() {
                 to={`/campaign/${campaign.id}/performance`}
                 className="flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800"
               >📊 Performance</Link>
-              {isCampaignComplete && (
-                <Link
-                  onClick={() => setShowMenu(false)}
-                  to={`/campaign/${campaign.id}/white-paper`}
-                  className="flex items-center gap-2 text-sm rounded px-3 py-2 bg-amber-600 text-slate-900 font-semibold"
-                >📰 White Paper</Link>
-              )}
+              </>)}
 
-              <div className="font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-3 pb-1">Settings</div>
+              <button
+                type="button"
+                onClick={() => toggleSection("Settings")}
+                className="w-full text-left flex items-center justify-between font-tech text-[10px] uppercase tracking-wide text-amber-500/70 px-2 pt-3 pb-1 min-h-[44px]"
+              >
+                <span>Settings</span>
+                <span aria-hidden>{openSections.Settings ? "▾" : "▸"}</span>
+              </button>
+              {openSections.Settings && (<>
               <button
                 type="button"
                 onClick={() => { setAudioEnabled(!audioOn); setAudioOn(!audioOn); }}
@@ -384,6 +430,7 @@ export function CampaignMapView() {
                 onClick={() => { logout(); navigate("/login"); }}
                 className="w-full text-left flex items-center gap-2 text-sm rounded px-3 py-2 hover:bg-slate-800 text-slate-300"
               >🚪 Sign out{user ? ` (${user.display_name})` : ""}</button>
+              </>)}
             </nav>
           </aside>
         </>
