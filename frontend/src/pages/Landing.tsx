@@ -8,6 +8,7 @@ import { startingGrantCr, DIFFICULTY_BLURB } from "../lib/economy";
 import { OBJECTIVE_HINTS, BEGINNER_OBJECTIVE_IDS } from "../lib/objectiveHints";
 
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
+  { value: "story", label: "Story" },
   { value: "relaxed", label: "Relaxed" },
   { value: "realistic", label: "Realistic" },
   { value: "hard_peer", label: "Hard Peer" },

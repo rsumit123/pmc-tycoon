@@ -13,4 +13,10 @@ describe("economy", () => {
       expect(DIFFICULTY_BLURB[d].length).toBeGreaterThan(0);
     });
   });
+  it("computes the Story starting grant (2x base)", () => {
+    expect(startingGrantCr("story")).toBe(90000);
+  });
+  it("has a Story blurb", () => {
+    expect(DIFFICULTY_BLURB.story.length).toBeGreaterThan(0);
+  });
 });
