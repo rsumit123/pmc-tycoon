@@ -147,23 +147,30 @@ export function HangarPage() {
         ) : (
           <>
             {platformFilter && (() => {
-              const pname = hangar.summary_by_platform.find((s) => s.platform_id === platformFilter)?.platform_name ?? platformFilter;
+              const summary = hangar.summary_by_platform.find((s) => s.platform_id === platformFilter);
+              const pname = summary?.platform_name ?? platformFilter;
               return (
-                <div className="flex items-center gap-3 bg-amber-950/30 border border-amber-800 rounded-lg px-3 py-2 text-xs">
+                <div className="relative overflow-hidden rounded-lg border border-amber-800/60">
                   <PlatformImage
                     platformId={platformFilter}
                     name={pname}
-                    variant="thumb"
-                    className="h-10 w-16 flex-shrink-0 rounded border border-amber-800/40"
+                    variant="hero"
+                    fit="cover"
+                    className="h-32 w-full"
                   />
-                  <span className="flex-1 truncate text-amber-200">
-                    Filtered: <span className="font-semibold">{pname}</span>
-                  </span>
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3">
+                    <div className="font-display text-lg font-bold uppercase leading-none tracking-wide text-slate-50">{pname}</div>
+                    {summary && (
+                      <div className="font-tech mt-1 text-[11px] tracking-wider text-slate-300">
+                        {summary.squadron_count} sqn{summary.squadron_count === 1 ? "" : "s"} · {summary.total_airframes} airframes
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => setPlatformFilter(null)}
-                    className="ml-2 flex-shrink-0 text-amber-300 underline hover:text-amber-200"
+                    className="absolute right-2 top-2 rounded border border-amber-700/60 bg-[#0a0f1c]/70 px-2 py-1 font-tech text-[10px] uppercase tracking-wider text-amber-300 hover:text-amber-200"
                   >
-                    Clear
+                    Clear ✕
                   </button>
                 </div>
               );

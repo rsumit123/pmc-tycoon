@@ -9,10 +9,12 @@ interface Props {
   license?: string | null;
   /** Optional HUD sub-tag, e.g. "AIR SUPERIORITY · GEN 4.5" (hero only). */
   tag?: string;
+  /** object-fit for the photo. Default "contain" (whole airframe); "cover" fills a wide band. */
+  fit?: "contain" | "cover";
   className?: string;
 }
 
-export function PlatformImage({ platformId, name, variant = "hero", author, license, tag, className }: Props) {
+export function PlatformImage({ platformId, name, variant = "hero", author, license, tag, fit = "contain", className }: Props) {
   const [broken, setBroken] = useState(false);
   const src = `${import.meta.env.BASE_URL}platforms/${platformId}/hero.webp`;
   const hero = variant === "hero";
@@ -39,7 +41,7 @@ export function PlatformImage({ platformId, name, variant = "hero", author, lice
         alt={name}
         loading="lazy"
         onError={() => setBroken(true)}
-        className="h-full w-full object-contain grayscale-[0.65] contrast-[1.12] brightness-[0.9]"
+        className={`h-full w-full ${fit === "cover" ? "object-cover" : "object-contain"} grayscale-[0.65] contrast-[1.12] brightness-[0.9]`}
       />
       <div className="pointer-events-none absolute inset-0 bg-[#0a0f1c] opacity-40 mix-blend-multiply" />
       <div className="pointer-events-none absolute inset-0 bg-amber-500/15 mix-blend-overlay" />
