@@ -6,6 +6,7 @@ import { Loader } from "../components/primitives/Loader";
 import type { Difficulty } from "../lib/types";
 import { startingGrantCr, DIFFICULTY_BLURB } from "../lib/economy";
 import { OBJECTIVE_HINTS, BEGINNER_OBJECTIVE_IDS } from "../lib/objectiveHints";
+import { resetTour } from "../lib/tour";
 
 const DIFFICULTIES: { value: Difficulty; label: string }[] = [
   { value: "story", label: "Story" },
@@ -62,9 +63,13 @@ export function Landing() {
   }
 
   function handleQuickStart() {
+    // Quick Start is the explicit "I'm new" path: use the most forgiving
+    // (Story) difficulty and always (re)launch the first-run coach-marks,
+    // even for a returning device that already dismissed the tour.
+    resetTour();
     void handleStart({
       name: "First Command",
-      difficulty: "relaxed",
+      difficulty: "story",
       objectives: [...BEGINNER_OBJECTIVE_IDS],
     });
   }

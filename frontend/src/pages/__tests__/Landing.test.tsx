@@ -106,14 +106,14 @@ describe("Landing", () => {
     expect(startBtn.disabled).toBe(false);
   });
 
-  it("Quick Start creates a campaign with relaxed difficulty + 3 beginner objectives", async () => {
+  it("Quick Start creates a Story-mode campaign with 3 beginner objectives", async () => {
     const createCampaign = vi.fn().mockResolvedValue(undefined);
     setup(makeStore({ campaignList: [], createCampaign }));
     const quick = await screen.findByRole("button", { name: /quick start/i });
     fireEvent.click(quick);
     expect(createCampaign).toHaveBeenCalledWith(
       expect.objectContaining({
-        difficulty: "relaxed",
+        difficulty: "story",
         objectives: expect.arrayContaining(["maintain_42_squadrons", "modernize_fleet", "budget_discipline"]),
       }),
     );
