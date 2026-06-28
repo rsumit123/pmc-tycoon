@@ -3,7 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
-Difficulty = Literal["relaxed", "realistic", "hard_peer", "worst_case"]
+Difficulty = Literal["story", "relaxed", "realistic", "hard_peer", "worst_case"]
 
 
 class CampaignCreate(BaseModel):

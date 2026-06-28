@@ -12,6 +12,7 @@ BUCKETS: list[str] = ["rd", "acquisition", "om", "spares", "infrastructure"]
 BASE_QUARTERLY_GRANT_CR = 45000
 
 DIFFICULTY_GRANT_MULTIPLIER: dict[str, float] = {
+    "story":      2.0,
     "relaxed":    1.5,
     "realistic":  1.0,
     "hard_peer":  0.7,

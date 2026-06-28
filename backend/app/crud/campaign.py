@@ -14,6 +14,7 @@ from app.models.loadout_upgrade import LoadoutUpgrade
 from app.models.ad_battery import ADBattery
 from app.schemas.campaign import CampaignCreate
 from app.engine.budget import compute_quarterly_grant
+from app.engine.vignette.threat import DIFFICULTY_THREAT_MULTIPLIER
 from app.engine.turn import advance as engine_advance
 from app.engine.delivery_assignment import pick_base_for_delivery
 from app.content.registry import rd_programs as rd_program_specs
@@ -203,6 +204,7 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
              "status": u.status}
             for u in upgrade_rows
         ],
+        "threat_multiplier": DIFFICULTY_THREAT_MULTIPLIER.get(campaign.difficulty, 1.0),
     }
 
     # Capture the FROM clock so events that describe this turn are tagged

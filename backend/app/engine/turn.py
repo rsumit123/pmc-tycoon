@@ -126,7 +126,7 @@ def advance(ctx: dict[str, Any]) -> EngineResult:
     platforms_reg = ctx.get("platforms_registry", {})
     if not pending_exists and scenario_templates_list:
         vignette_rng = subsystem_rng(seed, "vignette", year, quarter)
-        if should_fire_vignette(vignette_rng, year, quarter):
+        if should_fire_vignette(vignette_rng, year, quarter, ctx.get("threat_multiplier", 1.0)):
             scenario = pick_scenario(scenario_templates_list, next_adversary,
                                      year, quarter, vignette_rng)
             if scenario is not None:

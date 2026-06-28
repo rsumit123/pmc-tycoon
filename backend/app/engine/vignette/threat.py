@@ -51,20 +51,32 @@ def threat_curve_prob_for_faction(faction: str, year: int, quarter: int) -> floa
     return base
 
 
+# Story mode fires vignettes less often; all other tiers unchanged (1.0).
+DIFFICULTY_THREAT_MULTIPLIER: dict[str, float] = {
+    "story": 0.3,
+}
+
+
 def should_fire_vignette_for_faction(
     rng: random.Random, faction: str, year: int, quarter: int,
+    threat_multiplier: float = 1.0,
 ) -> bool:
-    return rng.random() < threat_curve_prob_for_faction(faction, year, quarter)
+    prob = threat_curve_prob_for_faction(faction, year, quarter) * threat_multiplier
+    return rng.random() < prob
 
 
-def any_faction_fires(rng: random.Random, year: int, quarter: int) -> bool:
+def any_faction_fires(
+    rng: random.Random, year: int, quarter: int, threat_multiplier: float = 1.0,
+) -> bool:
     """Roll independently per faction; return True if any fires."""
     for f in FACTIONS:
-        if should_fire_vignette_for_faction(rng, f, year, quarter):
+        if should_fire_vignette_for_faction(rng, f, year, quarter, threat_multiplier):
             return True
     return False
 
 
-def should_fire_vignette(rng: random.Random, year: int, quarter: int) -> bool:
+def should_fire_vignette(
+    rng: random.Random, year: int, quarter: int, threat_multiplier: float = 1.0,
+) -> bool:
     """Legacy helper — now delegates to any_faction_fires."""
-    return any_faction_fires(rng, year, quarter)
+    return any_faction_fires(rng, year, quarter, threat_multiplier)
