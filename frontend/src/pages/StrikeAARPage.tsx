@@ -61,7 +61,7 @@ export function StrikeAARPage() {
       <ScreenHeader
         title="Strike Report"
         subtitle={`${strike.year}-Q${strike.quarter}`}
-        backTo={`/campaign/${cid}/ops`}
+        backTo={`/campaign/${cid}/ops?tab=history`}
         backLabel="Ops"
       />
 
