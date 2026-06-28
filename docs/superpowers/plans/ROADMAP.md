@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-06-27 (v2 Phase 3 heavy-screen taming done)
+**Last updated:** 2026-06-28 (v2 COMPLETE — all 4 phases done)
 
 ---
 
@@ -35,7 +35,9 @@
 
 **Note (2026-06-27):** **v2 simplification** effort kicked off (make the game learnable for casual users; "easy to learn, deep if you want it"). **Phase 1 — Onboarding & Legibility done**: glossary + `<Term>` tap-to-define + `/glossary` screen, `CoachMarks` first-run map tour + Ops Room coach-mark (+ replay), Landing setup clarity (real grant figures, objective cost/time hints + Quick Start), How-to-Play rewrite (J-20/J-35 fix). Frontend-only, 235 frontend tests. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-27-v2-onboarding-legibility-*.md`. **Phase 2 — Streamline the Core Loop done** (2026-06-27): budget presets + autopilot + Advanced toggle + readiness bar; live objective tracker (`objective_progress` engine + `GET /objectives` endpoint + Objectives screen); Situation Report in TurnReport. Backend 675 / frontend 242 tests. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-27-v2-core-loop-*.md`.
 
-**Phase 3 — Tame the Heavy Screens done** (2026-06-27): recommended force-package auto-fill + plain odds chip (`forceRecommendation.ts` → ForceCommitter); one-tap "Restock all low depots" (`restock.ts` → AcquisitionPipeline); side-menu regroup into Force/Operations/Records/Settings. Frontend-only, 253 frontend tests. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-27-v2-heavy-screens-*.md`. **Phase 4 (easy/story mode) remains** — and folds in a **collapsible/accordion side drawer** (the menu got dense after adding Objectives + the Records group; make section headers Force/Operations/Records/Settings tap-to-expand/collapse, persist state in localStorage, sensible defaults).
+**Phase 3 — Tame the Heavy Screens done** (2026-06-27): recommended force-package auto-fill + plain odds chip (`forceRecommendation.ts` → ForceCommitter); one-tap "Restock all low depots" (`restock.ts` → AcquisitionPipeline); side-menu regroup into Force/Operations/Records/Settings. Frontend-only, 253 frontend tests. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-27-v2-heavy-screens-*.md`.
+
+**Phase 4 — Easy/Story Mode done** (2026-06-28) → **v2 COMPLETE**: Story difficulty (2× grant, 0.3× threat, story-only & determinism-safe); Story-only "Stand down" to decline a vignette (skips the resolver, zero losses); collapsible/accordion side drawer (localStorage-persisted). Backend 681 / frontend 257 tests. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-28-v2-easy-mode-*.md`. **All four v2 phases (onboarding, core loop, heavy screens, easy mode) shipped.**
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 
