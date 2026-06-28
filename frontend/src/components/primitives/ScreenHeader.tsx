@@ -21,7 +21,7 @@ export interface ScreenHeaderProps {
  */
 export function ScreenHeader({ title, subtitle, backTo, backLabel = "Map", right }: ScreenHeaderProps) {
   return (
-    <header className="safe-pt border-b border-slate-800/80 bg-[#0a0f1c]/80">
+    <header className="border-b border-slate-800/80 bg-[#0a0f1c]/80">
       <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
         <Link
           to={backTo}
