@@ -198,6 +198,7 @@ export interface VignetteOutcome {
   munitions_expended?: MunitionsExpendedEntry[];
   munitions_cost_total_cr?: number;
   ad_contributions?: ADContribution[];
+  stand_down?: boolean;
 }
 
 export interface VignetteCommitSquadron {
@@ -209,6 +210,7 @@ export interface VignetteCommitPayload {
   squadrons: VignetteCommitSquadron[];
   support: { awacs: boolean; tanker: boolean; sead_package: boolean };
   roe: ROE;
+  decline?: boolean;
 }
 
 export interface Vignette {

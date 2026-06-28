@@ -88,6 +88,24 @@ export function OpsRoom() {
     }
   };
 
+  const onStandDown = async () => {
+    if (!vignette) return;
+    setCommitError(null);
+    const declinePayload: VignetteCommitPayload = {
+      squadrons: [],
+      support: { awacs: false, tanker: false, sead_package: false },
+      roe: (vignette.planning_state.roe_options[0] as typeof payload.roe) ?? "weapons_free",
+      decline: true,
+    };
+    try {
+      const resolved = await commitVignette(campaignId, vignette.id, declinePayload);
+      navigate(`/campaign/${campaignId}/vignette/${resolved.id}/aar`);
+    } catch (e) {
+      const err = e as { response?: { data?: { detail?: string } }; message?: string };
+      setCommitError(err?.response?.data?.detail ?? err?.message ?? "Stand down failed");
+    }
+  };
+
   if (isCampaignComplete(campaign)) {
     return <Navigate to={`/campaign/${campaignId}/performance`} replace />;
   }
@@ -160,22 +178,34 @@ export function OpsRoom() {
           <p className="text-sm text-red-300">{commitError}</p>
         )}
 
-        <div data-tour="ops-commit" className="sticky bottom-0 bg-slate-950 pt-3 pb-4 border-t border-slate-800 flex items-center justify-between">
+        <div data-tour="ops-commit" className="sticky bottom-0 bg-slate-950 pt-3 pb-4 border-t border-slate-800 flex items-center justify-between gap-2">
           <p className="text-xs opacity-70">
             Committing <span className="font-mono">{totalAirframes}</span> airframes across{" "}
             <span className="font-mono">{payload.squadrons.length}</span> squadrons
           </p>
-          <CommitHoldButton
-            onCommit={onCommit}
-            disabled={loading || (payload.squadrons.length === 0 && !ps.allows_no_cap)}
-            label={
-              ps.allows_no_cap && payload.squadrons.length === 0
-                ? "Hold to commit (AD only)"
-                : payload.squadrons.length > 0
-                  ? `Hold to commit (${totalAirframes} airframes)`
-                  : "Hold to commit"
-            }
-          />
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {campaign?.difficulty === "story" && (
+              <button
+                onClick={onStandDown}
+                disabled={loading}
+                className="min-h-[44px] px-3 py-2 text-xs rounded border border-slate-600 text-slate-400 hover:text-slate-200 hover:border-slate-400 disabled:opacity-40 transition-colors"
+                aria-label="Stand down"
+              >
+                🏳 Stand down
+              </button>
+            )}
+            <CommitHoldButton
+              onCommit={onCommit}
+              disabled={loading || (payload.squadrons.length === 0 && !ps.allows_no_cap)}
+              label={
+                ps.allows_no_cap && payload.squadrons.length === 0
+                  ? "Hold to commit (AD only)"
+                  : payload.squadrons.length > 0
+                    ? `Hold to commit (${totalAirframes} airframes)`
+                    : "Hold to commit"
+              }
+            />
+          </div>
         </div>
       </main>
 
