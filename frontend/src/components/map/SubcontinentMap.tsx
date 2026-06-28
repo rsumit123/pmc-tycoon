@@ -79,32 +79,66 @@ export function SubcontinentMap({
         ? b.squadrons.reduce((a, s) => a + s.readiness_pct, 0) / b.squadrons.length
         : null;
       const strained = avgReady !== null && avgReady < 55;
+      // Readiness gauge: a ring around the base dot that fills + colours by
+      // average squadron readiness (good/ok/low), so base health reads at a glance.
+      const ringColor =
+        avgReady === null ? "#64748b"
+        : avgReady >= 75 ? "#34d399"
+        : avgReady >= 55 ? "#f59e0b"
+        : "#fb7185";
+      const frac = avgReady === null ? 0 : Math.max(0, Math.min(1, avgReady / 100));
 
-      // Outer wrapper is a ~40px transparent hit area centered around the 12px
-      // visual dot, so tapping a base (the primary nav action) is reliable on
-      // touch screens while the dot still reads as 12px.
+      // Outer wrapper is a ~40px transparent hit area for reliable tapping.
       const wrap = document.createElement("div");
       wrap.className = "flex items-center justify-center";
       wrap.style.width = "40px";
       wrap.style.height = "40px";
 
-      // Inner 12px relative container keeps the corner status badges anchored to
-      // the visual dot rather than the enlarged hit area.
+      // 24px relative container holds the readiness ring, the centre dot, and
+      // the corner status badges.
       const dot = document.createElement("div");
-      dot.className = "relative w-3 h-3";
+      dot.className = "relative";
+      dot.style.width = "24px";
+      dot.style.height = "24px";
       wrap.appendChild(dot);
+
+      // SVG readiness ring (track + arc).
+      const NS = "http://www.w3.org/2000/svg";
+      const R = 9;
+      const CIRC = 2 * Math.PI * R;
+      const ring = document.createElementNS(NS, "svg");
+      ring.setAttribute("viewBox", "0 0 24 24");
+      ring.setAttribute("width", "24");
+      ring.setAttribute("height", "24");
+      ring.style.position = "absolute";
+      ring.style.inset = "0";
+      ring.style.pointerEvents = "none";
+      const track = document.createElementNS(NS, "circle");
+      track.setAttribute("cx", "12"); track.setAttribute("cy", "12"); track.setAttribute("r", String(R));
+      track.setAttribute("fill", "none"); track.setAttribute("stroke", "rgba(148,163,184,0.28)"); track.setAttribute("stroke-width", "2");
+      ring.appendChild(track);
+      if (frac > 0) {
+        const arc = document.createElementNS(NS, "circle");
+        arc.setAttribute("cx", "12"); arc.setAttribute("cy", "12"); arc.setAttribute("r", String(R));
+        arc.setAttribute("fill", "none"); arc.setAttribute("stroke", ringColor); arc.setAttribute("stroke-width", "2.5");
+        arc.setAttribute("stroke-linecap", "round");
+        arc.setAttribute("stroke-dasharray", `${(CIRC * frac).toFixed(2)} ${CIRC.toFixed(2)}`);
+        arc.setAttribute("transform", "rotate(-90 12 12)");
+        ring.appendChild(arc);
+      }
+      dot.appendChild(ring);
 
       const el = document.createElement("button");
       el.type = "button";
       el.setAttribute("aria-label", `${b.name} airbase`);
       el.setAttribute("data-base-id", String(b.id));
       el.className = [
-        "w-3 h-3 rounded-full border block transition-transform hover:scale-125",
+        "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border block transition-transform hover:scale-125",
         isFlash
-          ? "bg-emerald-400 border-emerald-900 ring-4 ring-emerald-300/60 animate-pulse scale-150"
+          ? "w-3 h-3 bg-emerald-400 border-emerald-900 ring-2 ring-emerald-300/60 animate-pulse"
           : strained
-          ? "bg-rose-400 border-rose-950 ring-2 ring-rose-300/50 animate-pulse shadow-[0_0_9px_2px_rgba(244,63,94,0.55)]"
-          : "bg-amber-400 border-amber-900 ring-2 ring-amber-300/40 shadow-[0_0_8px_2px_rgba(245,158,11,0.45)]",
+          ? "w-2.5 h-2.5 bg-amber-400 border-amber-950 animate-pulse shadow-[0_0_7px_2px_rgba(245,158,11,0.5)]"
+          : "w-2.5 h-2.5 bg-amber-400 border-amber-900 shadow-[0_0_6px_2px_rgba(245,158,11,0.45)]",
       ].join(" ");
       el.addEventListener("click", () => onMarkerClick?.(b.id));
       dot.appendChild(el);
@@ -115,10 +149,10 @@ export function SubcontinentMap({
         d.className = `absolute w-1.5 h-1.5 rounded-full border border-slate-900 ${color} ${pos} pointer-events-none`;
         dot.appendChild(d);
       };
-      if (hasAwacs) addDot("bg-emerald-400", "-top-1 -right-1", "AWACS");
-      if (hasTanker) addDot("bg-orange-400", "-bottom-1 -right-1", "Tanker");
-      if (hasAD) addDot("bg-yellow-300", "-top-1 -left-1", "AD battery");
-      if (hasDrone) addDot("bg-sky-400", "-bottom-1 -left-1", "ISR/UCAV");
+      if (hasAwacs) addDot("bg-emerald-400", "top-0 right-0", "AWACS");
+      if (hasTanker) addDot("bg-orange-400", "bottom-0 right-0", "Tanker");
+      if (hasAD) addDot("bg-yellow-300", "top-0 left-0", "AD battery");
+      if (hasDrone) addDot("bg-sky-400", "bottom-0 left-0", "ISR/UCAV");
 
       const mk = new maplibregl.Marker({ element: wrap })
         .setLngLat([b.lon, b.lat])

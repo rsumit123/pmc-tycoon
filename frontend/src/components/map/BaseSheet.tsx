@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { ADBattery, BaseMarker, BaseSquadronSummary, MissileStock, Platform } from "../../lib/types";
 import { SquadronCard } from "../primitives/SquadronCard";
+import { MissileIcon } from "../primitives/MissileIcon";
 import { PlatformDossier } from "../primitives/PlatformDossier";
 import { MissileTransferModal } from "./MissileTransferModal";
 import { useCampaignStore } from "../../store/campaignStore";
@@ -43,6 +44,7 @@ export function BaseSheet({
   const [dossierFor, setDossierFor] = useState<Platform | null>(null);
   const [transferFor, setTransferFor] = useState<{ weaponId: string; stock: number } | null>(null);
   const allBases = useCampaignStore((s) => s.bases);
+  const weaponsById = useCampaignStore((s) => s.weaponsById);
   const transferMissileStock = useCampaignStore((s) => s.transferMissileStock);
   useBackButtonClose(base !== null, onClose);
   if (!base) return null;
@@ -138,7 +140,10 @@ export function BaseSheet({
                           key={s.weapon_id}
                           className="flex items-center justify-between gap-2 rounded border border-slate-800 bg-slate-900/50 px-2 py-1.5 text-xs"
                         >
-                          <span className="truncate font-semibold">{s.weapon_id.toUpperCase().replace(/_/g, "-")}</span>
+                          <span className="flex min-w-0 items-center gap-2">
+                            <MissileIcon weaponClass={weaponsById[s.weapon_id]?.class} size={18} className="flex-shrink-0" />
+                            <span className="truncate font-semibold">{s.weapon_id.toUpperCase().replace(/_/g, "-")}</span>
+                          </span>
                           <div className="flex items-center gap-2">
                             <span className="font-mono opacity-80">{s.stock}</span>
                             <button
