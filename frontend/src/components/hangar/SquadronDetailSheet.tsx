@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { HangarSquadron } from "../../lib/types";
 import { shortBaseName } from "./SquadronRow";
 import { useBackButtonClose } from "../../lib/useBackButtonClose";
+import { PlatformImage } from "../primitives/PlatformImage";
 
 export interface SquadronDetailSheetProps {
   squadron: HangarSquadron | null;
@@ -58,6 +59,13 @@ export function SquadronDetailSheet({ squadron, onClose, onRebaseStart, onSplitS
         className="bg-slate-900 border border-slate-700 rounded-xl max-w-md w-full max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        <PlatformImage
+          platformId={squadron.platform_id}
+          name={squadron.platform_name}
+          variant="hero"
+          fit="cover"
+          className="h-28 w-full rounded-t-xl"
+        />
         <div className="sticky top-0 bg-slate-900 border-b border-slate-800 p-4">
           <div className="flex items-baseline justify-between gap-2">
             <div className="min-w-0 flex-1">

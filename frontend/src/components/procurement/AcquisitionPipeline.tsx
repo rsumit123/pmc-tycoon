@@ -168,7 +168,8 @@ function OfferCard({
       <PlatformImage
         platformId={platform.id}
         name={platform.name}
-        variant="thumb"
+        variant="hero"
+        fit="cover"
         className="w-full aspect-video rounded mb-2"
       />
       <p className="flex items-baseline justify-between gap-2">
@@ -276,9 +277,19 @@ function TimelineBar({
   const isPreDelivery = !order.cancelled && !isCompleted && nowIdx < firstIdx;
   const cancellable = !order.cancelled && !isCompleted && !!onCancel;
   const quartersUntilStart = Math.max(0, firstIdx - nowIdx);
+  const isPlatform = (order.kind ?? "platform") === "platform";
 
   return (
     <div className="space-y-1.5 bg-slate-900/40 border border-slate-800 rounded-lg p-3">
+      {isPlatform && (
+        <PlatformImage
+          platformId={order.platform_id}
+          name={platformName}
+          variant="thumb"
+          fit="cover"
+          className="mb-1.5 h-16 w-full rounded"
+        />
+      )}
       <div className="flex items-baseline justify-between gap-2 text-xs">
         <div className="min-w-0 flex-1">
           {originFlag && <span className="mr-1">{originFlag}</span>}
