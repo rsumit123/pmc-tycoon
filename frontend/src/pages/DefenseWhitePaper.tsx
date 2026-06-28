@@ -1,6 +1,8 @@
 import { useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useCampaignStore } from "../store/campaignStore";
+import { ScreenHeader } from "../components/primitives/ScreenHeader";
+import { ChakravyuhRings } from "../components/brand/ChakravyuhRings";
 import { ObjectiveScoreCard } from "../components/endgame/ObjectiveScoreCard";
 import { TreasurySparkline } from "../components/endgame/TreasurySparkline";
 import { EmergingAceCard } from "../components/endgame/EmergingAceCard";
@@ -36,18 +38,42 @@ export function DefenseWhitePaper() {
       }));
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
-        <div>
-          <h1 className="text-base font-bold font-display">Defense White Paper</h1>
-          <p className="text-xs opacity-70">
-            {campaign.name} • {summary.starting_year}–{summary.current_year}
+    <div className="relative min-h-screen bg-[#0a0f1c] text-slate-100">
+      <ScreenHeader
+        title="Defense White Paper"
+        subtitle={`${campaign.name} · ${summary.starting_year}–${summary.current_year}`}
+        backTo={`/campaign/${campaignId}`}
+      />
+
+      {/* Ceremonial hero — bookends the Login/Landing entry */}
+      <div className="relative overflow-hidden border-b border-slate-800/80">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(148,163,184,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.06) 1px, transparent 1px)",
+            backgroundSize: "34px 34px",
+          }}
+        />
+        <div className="pointer-events-none absolute inset-0">
+          <ChakravyuhRings />
+        </div>
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "radial-gradient(120% 95% at 50% 32%, transparent 34%, #0a0f1c 90%)" }}
+        />
+        <div className="relative z-10 mx-auto max-w-3xl px-4 py-10 text-center">
+          <div className="font-tech text-[11px] tracking-[0.3em] text-amber-500/80">IAF · DEFENSE INTEGRATION COMMAND</div>
+          <div className="font-display mt-3 text-xl leading-none text-amber-400/70">चक्रव्यूह</div>
+          <h2 className="font-display mt-1 text-3xl font-bold uppercase tracking-[0.1em] text-slate-50">Defense White Paper</h2>
+          <p className="font-tech mt-2 text-xs tracking-wider text-slate-400">
+            {campaign.name} · {summary.starting_year}–{summary.current_year}
+          </p>
+          <p className="font-tech mt-3 text-[11px] tracking-[0.2em] text-slate-500">
+            CAMPAIGN CONCLUDED · {summary.vignettes_won}–{summary.vignettes_lost} RECORD
           </p>
         </div>
-        <Link to={`/campaign/${campaignId}`} className="text-xs underline opacity-80 hover:opacity-100">
-          Back to map
-        </Link>
-      </header>
+      </div>
 
       <main className="p-4 max-w-3xl mx-auto space-y-8 pb-12">
         <section>
