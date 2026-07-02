@@ -52,8 +52,8 @@ Rotatable realistic models in the platform dossier, with AR on Android.
 
 - **Viewer:** `@google/model-viewer` web component inside `PlatformDossier` — drag-to-rotate, idle auto-rotate, exposure/lighting tuned to the command-UI look, and the native **AR button** on Android (Scene Viewer).
 - **Asset pipeline (new script `scripts/generate_platform_models.py` + manifest):**
-  1. Reference image per platform — real photo for existing aircraft; AI concept render for AMCA/prototypes.
-  2. Image-to-3D via Tripo or Meshy (decision: **free-tier PoC first** — generate AMCA on free credits, drop it into the preview hangar, judge quality; only then one paid month (~$25) with commercial license to batch ~12–15 platforms). Open-source Hunyuan3D/TRELLIS is the fallback route if SaaS quality disappoints.
+  1. Reference image per platform — real photo for existing aircraft; AI concept render for AMCA/prototypes, generated via **OpenRouter image models using the existing `OPENROUTER_API_KEY`** (proven 2026-07-02: Gemini image model produced a clean studio-style AMCA render for ~cents).
+  2. Image-to-3D via the **Tripo API** — **PoC PASSED 2026-07-02**: full pipeline (upload → `image_to_model` task → poll → GLB download) ran hands-free off the API **free wallet** (600 credits, expires **2026-07-16**); the AMCA task cost **30 credits** and returned a 6.9 MB textured GLB with correct stealth geometry, canopy, and wing roundel. ~570 credits remain ≈ ~19 more models → the whole hero fleet is effectively free if batched before expiry. License caveat: free-wallet outputs may carry free-tier (CC-BY-style) terms rather than paid commercial terms — fine for a free game with the existing `/credits` attribution page; buy one paid month if the game ever monetizes. Open-source fallback also validated: Hunyuan3D-2 (HF space) produced good untextured geometry at zero cost; TRELLIS spaces were down/quota-blocked.
   3. Cleanup: decimate to two LODs (hero ≤30k tris, replay ≤4k tris), Draco-compress via `gltf-transform`, bake to ≤2 MB (hero) / ≤150 KB (replay).
   4. Manifest records generator, input image source, and license terms; surfaces on the existing `/credits` page.
 - **Delivery:** hero GLBs are lazy-fetched (served with the frontend, HTTP-cached), NOT baked into the APK; replay LODs (small) ship in-bundle. Fallback chain per platform: generated model → stylized class model → photo → silhouette.
@@ -69,9 +69,13 @@ Rotatable realistic models in the platform dossier, with AR on Android.
 | B | ~1.5 plans | mid-range Android scene perf; compiler fidelity | low-poly LODs, pixel cap, 2D fallback; compiler is pure + unit-tested against real traces |
 | C | ~1 plan | AI model quality/cleanup effort | free-tier PoC gates the spend; stylized fallback fills gaps |
 
-- Order: **A → C-PoC (owner task, cheap, parallel) → B → C**. Phase B consumes Phase C's replay LODs, so the model PoC happens early even though the full Hangar Bay ships last; if the PoC disappoints, Phase B falls back to stylized class models with no schedule impact.
+- Order: **A → C-PoC (✅ done 2026-07-02) → fleet batch generation (time-boxed: free credits expire 2026-07-16) → B → C**. Phase B consumes Phase C's replay LODs; the PoC proved quality, so the batch should run early even though the full Hangar Bay ships last.
 - Each phase: own plan doc, subagent-driven execution, commit to `main`, versionCode-bumped closed-testing AAB.
-- Owner tasks: Tripo/Meshy account + free-tier PoC generation (agent prepares prompts/reference images and integrates the GLB).
+- Owner tasks: ~~Tripo account + PoC~~ (done — account created, API key issued, PoC run agent-side). Remaining owner call: regenerate the Tripo API key after the batch (it was pasted in a chat session), and decide on a paid month only if the game monetizes.
+
+### PoC verdict (2026-07-02)
+
+Riskiest unknown resolved: realistic AI-generated models are viable at ~zero cost. Textured Tripo AMCA judged in the preview hangar — approved look; pipeline scripted end-to-end (OpenRouter concept image → Tripo API → GLB → three.js viewer). Interactive preview artifact: `chakravyuh-3d-preview.html` (session scratchpad / owner's Desktop), with GLB drag-and-drop in the Hangar Bay tab.
 
 ## Non-goals
 
