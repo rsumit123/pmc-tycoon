@@ -1,0 +1,4 @@
+# Raw Tripo outputs (~7 MB each) and regenerable concept renders stay local;
+# only optimized hero.glb + manifest.json are committed.
+*/original.glb
+*/concept.png

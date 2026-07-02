@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "note": "AI-generated 3D platform models for the 3D roadmap (Phase B/C). original.glb + concept.png are local-only (gitignored).",
+  "variant_aliases": {
+    "rafale_f5": "rafale_f4",
+    "tejas_mk1": "tejas_mk1a",
+    "tejas_mk2": "tejas_mk1a",
+    "amca_mk2": "amca_mk1",
+    "j20s": "j20a",
+    "j35a": "j35e",
+    "j10ce": "j10c",
+    "h6n": "h6kj"
+  },
+  "models": {
+    "amca_mk1": {
+      "hero_glb": "amca_mk1/hero.glb",
+      "hero_kb": 546,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "brahmos_ng": {
+      "hero_glb": "brahmos_ng/hero.glb",
+      "hero_kb": 345,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "f16_blk52": {
+      "hero_glb": "f16_blk52/hero.glb",
+      "hero_kb": 495,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "ghatak_ucav": {
+      "hero_glb": "ghatak_ucav/hero.glb",
+      "hero_kb": 706,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "h6kj": {
+      "hero_glb": "h6kj/hero.glb",
+      "hero_kb": 380,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "il78_tanker": {
+      "hero_glb": "il78_tanker/hero.glb",
+      "hero_kb": 583,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "j10c": {
+      "hero_glb": "j10c/hero.glb",
+      "hero_kb": 506,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "j20a": {
+      "hero_glb": "j20a/hero.glb",
+      "hero_kb": 409,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "j35e": {
+      "hero_glb": "j35e/hero.glb",
+      "hero_kb": 427,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "jaguar_darin3": {
+      "hero_glb": "jaguar_darin3/hero.glb",
+      "hero_kb": 498,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "jf17_blk3": {
+      "hero_glb": "jf17_blk3/hero.glb",
+      "hero_kb": 598,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "mig21_bison": {
+      "hero_glb": "mig21_bison/hero.glb",
+      "hero_kb": 554,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "mig29_upg": {
+      "hero_glb": "mig29_upg/hero.glb",
+      "hero_kb": 515,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "mirage2000": {
+      "hero_glb": "mirage2000/hero.glb",
+      "hero_kb": 508,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "mq9b_seaguardian": {
+      "hero_glb": "mq9b_seaguardian/hero.glb",
+      "hero_kb": 459,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "netra_aewc": {
+      "hero_glb": "netra_aewc/hero.glb",
+      "hero_kb": 660,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "rafale_f4": {
+      "hero_glb": "rafale_f4/hero.glb",
+      "hero_kb": 646,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "s400_battery": {
+      "hero_glb": "s400_battery/hero.glb",
+      "hero_kb": 1427,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "su30_mki": {
+      "hero_glb": "su30_mki/hero.glb",
+      "hero_kb": 834,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    },
+    "tejas_mk1a": {
+      "hero_glb": "tejas_mk1a/hero.glb",
+      "hero_kb": 654,
+      "generated": "2026-07-02",
+      "pipeline": "OpenRouter google/gemini-2.5-flash-image concept render -> Tripo image_to_model (30 credits) -> gltf-transform optimize (draco + webp)",
+      "license_note": "Generated on Tripo free API wallet; verify/upgrade to paid commercial terms before monetizing (see 3D roadmap spec)."
+    }
+  }
+}
