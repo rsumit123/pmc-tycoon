@@ -55,7 +55,7 @@ Skill-driven battles cannot replay from a seed. The interactive battle's **resul
 
 | Phase | Scope | Risk |
 |---|---|---|
-| E1 backend | commit `mode`, briefing payload, engagement-result endpoint + caps + residual-resolve merge, `engaged` fallback, determinism tests | resolver-adjacent — heavy test gating |
+| E1 backend ✅ (done 2026-07-02) | commit `mode`, briefing payload, engagement-result endpoint + caps + residual-resolve merge, `engaged` state, determinism tests. Deviation: abandoned engagements block turn advance + stay listed (no silent auto-resolve); re-commit auto = escape hatch | resolver-adjacent — heavy test gating |
 | E2 combat runtime | `frontend/src/combat/` port of the prototype with real-data adapters (briefing → entities), pure-module tests, E2E screenshot+delta harness | biggest code chunk |
 | E3 integration | Ops Room entry, squadron switching, AWACS/fog layer, outcome→AAR flow, Android perf pass, debug APK | UX polish |
 
