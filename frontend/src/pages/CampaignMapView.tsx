@@ -10,6 +10,7 @@ import { useAuthStore } from "../store/authStore";
 
 import { SubcontinentMap } from "../components/map/SubcontinentMap";
 import { ADCoverageLayer } from "../components/map/ADCoverageLayer";
+import { ADDomeLayer } from "../components/map/ADDomeLayer";
 import { IntelContactsLayer } from "../components/map/IntelContactsLayer";
 import { AdversaryBaseLayer } from "../components/map/AdversaryBaseLayer";
 import { DroneOrbitLayer } from "../components/map/DroneOrbitLayer";
@@ -72,6 +73,7 @@ export function CampaignMapView() {
   const selectedBaseId = useMapStore((s) => s.selectedBaseId);
   const setSelectedBase = useMapStore((s) => s.setSelectedBase);
   const activeLayers = useMapStore((s) => s.activeLayers);
+  const terrain3d = useMapStore((s) => s.terrain3d);
 
   const rebaseSquadron = useCampaignStore((s) => s.rebaseSquadron);
 
@@ -464,7 +466,10 @@ export function CampaignMapView() {
           adBaseIds={adBaseIdSet}
         />
         <AOAlertLayer map={mapInstance} pendingVignettes={pendingVignettes} />
-        {activeLayers.ad_coverage && (
+        {activeLayers.ad_coverage && terrain3d && (
+          <ADDomeLayer map={mapInstance} bases={bases} batteries={adBatteries} />
+        )}
+        {activeLayers.ad_coverage && !terrain3d && (
           <ADCoverageLayer
             map={mapInstance}
             bases={bases}
