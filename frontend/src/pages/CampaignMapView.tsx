@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { Map as MLMap } from "maplibre-gl";
+import { baseFocusPose, flyOptions, prefersReducedMotion } from "../components/map/mapCamera";
 
 import { useCampaignStore } from "../store/campaignStore";
 import { useMapStore } from "../store/mapStore";
@@ -74,6 +75,7 @@ export function CampaignMapView() {
   const rebaseSquadron = useCampaignStore((s) => s.rebaseSquadron);
 
   const [mapInstance, setMapInstance] = useState<MLMap | null>(null);
+  const overviewPoseRef = useRef<{ center: { lng: number; lat: number }; zoom: number; pitch: number; bearing: number } | null>(null);
   const [projectionVersion, setProjectionVersion] = useState(0);
   const [rebaseTarget, setRebaseTarget] = useState<{ squadron: BaseSquadronSummary; baseId: number } | null>(null);
   const [selectedAdversaryBase, setSelectedAdversaryBase] = useState<AdversaryBase | null>(null);
@@ -182,7 +184,16 @@ export function CampaignMapView() {
   );
 
   // Stable so SubcontinentMap doesn't tear down + rebuild every marker each render.
-  const handleMarkerClick = useCallback((bid: number) => setSelectedBase(bid), [setSelectedBase]);
+  const handleMarkerClick = useCallback(
+    (bid: number) => {
+      setSelectedBase(bid);
+      const b = bases.find((x) => x.id === bid);
+      if (b && mapInstance) {
+        mapInstance.flyTo(flyOptions(baseFocusPose(b.lon, b.lat), prefersReducedMotion()));
+      }
+    },
+    [setSelectedBase, bases, mapInstance],
+  );
   const intelContacts = useMemo(() => synthesizeContacts(intelCards), [intelCards]);
   const adBaseIdSet = useMemo(() => new Set(adBatteries.map((b) => b.base_id)), [adBatteries]);
 
@@ -442,7 +453,12 @@ export function CampaignMapView() {
         <SubcontinentMap
           markers={bases}
           onMarkerClick={handleMarkerClick}
-          onReady={(m) => setMapInstance(m)}
+          onReady={(m) => {
+            overviewPoseRef.current = {
+              center: m.getCenter(), zoom: m.getZoom(), pitch: m.getPitch(), bearing: m.getBearing(),
+            };
+            setMapInstance(m);
+          }}
           flashBaseId={flashBaseId}
           adBaseIds={adBaseIdSet}
         />
@@ -514,7 +530,13 @@ export function CampaignMapView() {
         adBatteries={adBatteries}
         missileStocks={missileStocks}
         campaignId={campaign?.id}
-        onClose={() => setSelectedBase(null)}
+        onClose={() => {
+          setSelectedBase(null);
+          const o = overviewPoseRef.current;
+          if (o && mapInstance) {
+            mapInstance.flyTo({ center: o.center, zoom: o.zoom, pitch: o.pitch, bearing: o.bearing, duration: prefersReducedMotion() ? 0 : 2200, essential: true });
+          }
+        }}
         onRebaseStart={(sq, baseId) => setRebaseTarget({ squadron: sq, baseId })}
       />
 
