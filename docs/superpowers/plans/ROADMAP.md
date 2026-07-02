@@ -4,7 +4,7 @@
 
 **Status legend:** `🔴 not started` • `🟡 in progress` • `🟢 done` • `⏸️ deferred`
 
-**Last updated:** 2026-06-28 (v2 COMPLETE — all 4 phases done)
+**Last updated:** 2026-07-02 (3D Phase A — Theater Command done)
 
 ---
 
@@ -30,6 +30,7 @@
 | 23 | Auth + Release Readiness | 🟢 done | 2026-06-20-auth-release-readiness-plan.md |
 | 24 | Capacitor Android Packaging | 🟢 done | 2026-06-20-capacitor-android-plan.md |
 | 25 | Platform Imagery (Visual Engagement P1) | 🟢 done | 2026-06-22-platform-imagery-plan.md |
+| 3D-A | 3D Roadmap Phase A — Theater Command (3D terrain map) | 🟢 done | 2026-07-02-3d-theater-command-plan.md |
 
 **Note (2026-06-24):** Store-readiness / Google Play Console prep landed as release-prep work (not a numbered plan) — `DELETE /api/auth/me` account deletion, public `/privacy` + `/account-deletion` pages + in-app Delete Account, loading-state guards on 5 screens, API timeout 10s→30s, Android release signing + signed AAB, Play Store assets (`frontend/store/`) + 5 screenshots, store listing copy in `docs/store-listing.md`. See CLAUDE.md "Current status" for detail.
 
@@ -38,6 +39,8 @@
 **Phase 3 — Tame the Heavy Screens done** (2026-06-27): recommended force-package auto-fill + plain odds chip (`forceRecommendation.ts` → ForceCommitter); one-tap "Restock all low depots" (`restock.ts` → AcquisitionPipeline); side-menu regroup into Force/Operations/Records/Settings. Frontend-only, 253 frontend tests. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-27-v2-heavy-screens-*.md`.
 
 **Phase 4 — Easy/Story Mode done** (2026-06-28) → **v2 COMPLETE**: Story difficulty (2× grant, 0.3× threat, story-only & determinism-safe); Story-only "Stand down" to decline a vignette (skips the resolver, zero losses); collapsible/accordion side drawer (localStorage-persisted). Backend 681 / frontend 257 tests. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-28-v2-easy-mode-*.md`. **All four v2 phases (onboarding, core loop, heavy screens, easy mode) shipped.**
+
+**Note (2026-07-02):** **3D roadmap** started (spec: `docs/superpowers/specs/2026-07-02-3d-roadmap-design.md` — three render-layer-only phases, zero backend changes). **Phase A — Theater Command done**: maplibre-gl v5, real 3D terrain (AWS terrarium DEM) + hillshade + sky behind a persisted default-on "3D terrain" toggle, pitched cinematic camera (fly-to on base tap / return-to-overview on sheet close / one-shot AO snap + red pulse when a vignette fires), 3D AD-coverage domes via a three.js custom layer (SVG circles remain the flat-mode fallback). Frontend-only, 273 frontend tests. Asset groundwork for Phases B/C also done: 20 AI-generated 3D models (18 aircraft + S-400 + BrahMos) committed under `assets3d/` via `scripts/generate_platform_models.py` (OpenRouter concept render → Tripo image-to-3D → gltf-transform optimize). **Remaining: Phase B (Combat Cinema — trace-accurate 3D vignette replay), Phase C (Hangar Bay — model-viewer dossiers + AR).**
 
 **Post-V1 backlog** tracked in *V1.5+ Backlog* section below.
 

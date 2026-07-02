@@ -65,7 +65,7 @@ Rotatable realistic models in the platform dossier, with AR on Android.
 
 | Phase | Effort | Key risk | Mitigation |
 |---|---|---|---|
-| A | ~1 plan | maplibre v5 regressions; WebView terrain perf | projection tests + Android device check; persisted toggle + flat fallback |
+| A ✅ (done 2026-07-02) | ~1 plan | maplibre v5 regressions; WebView terrain perf | projection tests + Android device check; persisted toggle + flat fallback |
 | B | ~1.5 plans | mid-range Android scene perf; compiler fidelity | low-poly LODs, pixel cap, 2D fallback; compiler is pure + unit-tested against real traces |
 | C | ~1 plan | AI model quality/cleanup effort | free-tier PoC gates the spend; stylized fallback fills gaps |
 
