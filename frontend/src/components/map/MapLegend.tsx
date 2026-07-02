@@ -36,6 +36,8 @@ export function MapLegend() {
           <Row kind="dot" color="#fb923c" label="Tanker" />
           <Row kind="dot" color="#fde047" label="AD battery" />
           <Row kind="dot" color="#38bdf8" label="ISR / UCAV" />
+          <div className="pt-1 tracking-widest text-amber-500/70">VIEW</div>
+          <div className="text-slate-400">Drag to pan · two-finger drag to tilt</div>
         </div>
       )}
     </div>

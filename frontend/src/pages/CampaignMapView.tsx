@@ -464,6 +464,7 @@ export function CampaignMapView() {
           }}
           flashBaseId={flashBaseId}
           adBaseIds={adBaseIdSet}
+          terrain3d={terrain3d}
         />
         <AOAlertLayer map={mapInstance} pendingVignettes={pendingVignettes} />
         {activeLayers.ad_coverage && terrain3d && (
