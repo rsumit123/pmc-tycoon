@@ -7,9 +7,17 @@ from app.crud.campaign import get_campaign
 from app.crud.vignette import (
     list_pending_vignettes, get_vignette,
     commit_vignette, CommitValidationError, AlreadyResolvedError,
+    submit_engagement_result, _squadron_rows,
 )
+from app.content.registry import platforms as platforms_reg
+from app.engine.engagement import build_briefing, EngagementResultError
+from app.engine.vignette.bvr import PLATFORM_LOADOUTS
+from app.models.missile_stock import MissileStock
 from app.models.vignette import Vignette
-from app.schemas.vignette import VignetteRead, VignetteListResponse, VignetteCommitPayload
+from app.schemas.vignette import (
+    VignetteRead, VignetteListResponse, VignetteCommitPayload,
+    EngagementResultPayload, EngagementBriefingResponse,
+)
 
 router = APIRouter(prefix="/api/campaigns", tags=["vignettes"])
 
@@ -128,6 +136,72 @@ def commit_vignette_endpoint(
         resolved = commit_vignette(db, campaign, v, payload.model_dump())
     except CommitValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except AlreadyResolvedError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    return VignetteRead.model_validate(resolved)
+
+
+@router.get(
+    "/{campaign_id}/vignettes/{vignette_id}/engagement-briefing",
+    response_model=EngagementBriefingResponse,
+)
+def engagement_briefing_endpoint(
+    campaign_id: int,
+    vignette_id: int,
+    db: Session = Depends(get_db),
+):
+    if get_campaign(db, campaign_id) is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    v = get_vignette(db, campaign_id, vignette_id)
+    if v is None:
+        raise HTTPException(status_code=404, detail="Vignette not found")
+    if v.status != "engaged":
+        raise HTTPException(status_code=409, detail=f"vignette {v.id} is {v.status}, not engaged")
+
+    ps = v.planning_state or {}
+    committed_force = v.committed_force or {}
+    squadron_rows = _squadron_rows(db, committed_force)
+    depot_stock = {
+        (r.base_id, r.weapon_id): r.stock
+        for r in db.query(MissileStock).filter_by(campaign_id=campaign_id).all()
+    }
+    platform_specs = {
+        pid: {
+            "radar_range_km": p.radar_range_km,
+            "rcs_band": p.rcs_band,
+            "generation": p.generation,
+        }
+        for pid, p in platforms_reg().items()
+    }
+    briefing = build_briefing(
+        ps, committed_force, squadron_rows, depot_stock, platform_specs, PLATFORM_LOADOUTS,
+    )
+    briefing["vignette_id"] = v.id
+    return EngagementBriefingResponse.model_validate(briefing)
+
+
+@router.post(
+    "/{campaign_id}/vignettes/{vignette_id}/engagement-result",
+    response_model=VignetteRead,
+)
+def engagement_result_endpoint(
+    campaign_id: int,
+    vignette_id: int,
+    payload: EngagementResultPayload,
+    db: Session = Depends(get_db),
+):
+    campaign = get_campaign(db, campaign_id)
+    if campaign is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    v = get_vignette(db, campaign_id, vignette_id)
+    if v is None:
+        raise HTTPException(status_code=404, detail="Vignette not found")
+    try:
+        resolved = submit_engagement_result(db, campaign, v, payload.model_dump())
+    except EngagementResultError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except CommitValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except AlreadyResolvedError as e:
         raise HTTPException(status_code=409, detail=str(e))
     return VignetteRead.model_validate(resolved)
