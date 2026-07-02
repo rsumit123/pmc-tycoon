@@ -76,7 +76,8 @@ export function ADDomeLayer({ map, bases, batteries }: ADDomeLayerProps) {
           );
           renderer.resetState();
           renderer.render(scene, camera);
-          map.triggerRepaint();
+          // No triggerRepaint(): the domes are static, so rendering only on the
+          // map's own repaints avoids a continuous 60fps loop (mobile battery).
         },
       };
       try {
