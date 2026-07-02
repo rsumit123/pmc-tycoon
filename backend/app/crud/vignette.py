@@ -107,9 +107,12 @@ def _squadron_rows(db: Session, committed_force: dict) -> list[dict]:
 
 
 def list_pending_vignettes(db: Session, campaign_id: int) -> list[Vignette]:
+    # "engaged" is included so a client that reloads mid-engagement can always
+    # re-discover the in-flight battle (it also blocks new vignette rolls, so
+    # hiding it would soft-strand the campaign — review finding I2).
     return db.query(Vignette).filter(
         Vignette.campaign_id == campaign_id,
-        Vignette.status == "pending",
+        Vignette.status.in_(["pending", "engaged"]),
     ).order_by(Vignette.year.desc(), Vignette.quarter.desc(), Vignette.id.desc()).all()
 
 
@@ -197,6 +200,12 @@ def commit_vignette(
     if committed_force.get("mode") == "interactive":
         if is_non_combat(ps.get("objective", {})):
             raise CommitValidationError("interactive mode is only available for combat vignettes")
+        # AD-only commits (allows_no_cap) have no flight to fly — an engaged
+        # vignette with zero squadrons could never be resolved (review I1).
+        if not committed_force.get("squadrons"):
+            raise CommitValidationError(
+                "interactive mode requires at least one committed squadron (no flight to fly)"
+            )
         vignette.status = "engaged"
         vignette.committed_force = committed_force
         db.commit()
@@ -344,6 +353,10 @@ def submit_engagement_result(
         residual_outcome, residual_trace = None, []
 
     # Decrement depot stock for the player's flown munitions.
+    # Known economy leniency (review M1): caps validated the player's count
+    # against PRE-residual stock, so when the residual battle drew from the
+    # same (base, weapon) pool the combined draw can exceed stock — the
+    # max(0, ...) clamp forgives the excess. Acceptable for single-player.
     player_row = squadron_rows_by_id.get(result["player_squadron_id"])
     player_base_id = player_row["base_id"] if player_row else None
     for weapon, count in (result.get("munitions_expended", {}) or {}).items():

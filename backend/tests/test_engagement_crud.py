@@ -435,13 +435,15 @@ def test_engaged_vignette_blocks_new_vignette_generation(client):
     assert r.json()["status"] == "engaged"
 
     # Advance several more turns while the vignette sits engaged (unresolved).
-    # No NEW pending vignette should ever appear — the engaged one still
-    # occupies the backpressure slot exactly like a pending one would.
+    # No NEW vignette should ever appear — the engaged one still occupies the
+    # backpressure slot, and (review I2) remains discoverable in the pending
+    # list so a reloading client can find its way back into the battle.
     for _ in range(5):
         adv = client.post(f"/api/campaigns/{campaign_id}/advance")
         assert adv.status_code == 200
         pending = client.get(f"/api/campaigns/{campaign_id}/vignettes/pending").json()
-        assert pending["vignettes"] == []
+        assert [v["id"] for v in pending["vignettes"]] == [vignette_id]
+        assert pending["vignettes"][0]["status"] == "engaged"
 
     # The original vignette is still there, still engaged (untouched by
     # turn advance — no silent auto-resolve).
@@ -471,3 +473,27 @@ def test_plain_auto_commit_still_resolves_normally(client):
     assert resolved["status"] == "resolved"
     assert resolved["outcome"]
     assert resolved["event_trace"]
+
+
+def test_interactive_commit_requires_at_least_one_squadron(client):
+    """Review I1: a zero-squadron interactive commit would park an engaged
+    vignette that can never be resolved (no flight to fly) while blocking
+    all new vignettes — reject it at commit time."""
+    c = _create_campaign(client, seed=7)
+    v = _advance_until_vignette(client, c["id"])
+    if v is None:
+        pytest.skip("no vignette fired")
+    body = {
+        "squadrons": [],
+        "support": {"awacs": False, "tanker": False, "sead_package": False},
+        "roe": v["planning_state"]["roe_options"][0],
+        "mode": "interactive",
+    }
+    r = client.post(f"/api/campaigns/{c['id']}/vignettes/{v['id']}/commit", json=body)
+    # commit maps CommitValidationError -> 400 (existing endpoint convention)
+    assert r.status_code == 400
+    assert "at least one committed squadron" in r.json()["detail"]
+
+    # Vignette must remain pending and commitable.
+    r = client.get(f"/api/campaigns/{c['id']}/vignettes/{v['id']}")
+    assert r.json()["status"] == "pending"
