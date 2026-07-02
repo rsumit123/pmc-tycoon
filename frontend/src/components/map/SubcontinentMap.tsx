@@ -1,16 +1,21 @@
 import { useEffect, useRef } from "react";
 import maplibregl, { Map as MLMap, Marker } from "maplibre-gl";
+import type { StyleSpecification } from "maplibre-gl";
 import type { BaseMarker } from "../../lib/types";
 import { subcontinentBounds } from "./markerProjection";
 
 // Dark "command chart" basemap (Carto dark-matter) — matches the app's
 // tactical theme far better than the bright default OSM raster. Free for this
 // scale with OSM + CARTO attribution.
-const MAP_STYLE = {
-  version: 8 as const,
+const DEM_TILES = ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"];
+const DEM_ATTRIBUTION =
+  'Terrain: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles (Mapzen/AWS)</a>';
+
+const MAP_STYLE: StyleSpecification = {
+  version: 8,
   sources: {
     carto: {
-      type: "raster" as const,
+      type: "raster",
       tiles: [
         "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
         "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
@@ -20,9 +25,58 @@ const MAP_STYLE = {
       attribution:
         '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
     },
+    dem: {
+      type: "raster-dem",
+      encoding: "terrarium",
+      tiles: DEM_TILES,
+      tileSize: 256,
+      maxzoom: 13,
+      attribution: DEM_ATTRIBUTION,
+    },
+    demHillshade: {
+      type: "raster-dem",
+      encoding: "terrarium",
+      tiles: DEM_TILES,
+      tileSize: 256,
+      maxzoom: 13,
+    },
   },
-  layers: [{ id: "carto", type: "raster" as const, source: "carto" }],
+  layers: [
+    { id: "carto", type: "raster", source: "carto" },
+    {
+      id: "hillshade",
+      type: "hillshade",
+      source: "demHillshade",
+      paint: {
+        "hillshade-exaggeration": 0.45,
+        "hillshade-shadow-color": "#020617",
+        "hillshade-highlight-color": "#334155",
+        "hillshade-accent-color": "#0ea5e9",
+      },
+    },
+  ],
 };
+
+function applyTerrain(m: MLMap, on: boolean) {
+  try {
+    if (on) {
+      m.setTerrain({ source: "dem", exaggeration: 1.5 });
+      m.setSky({
+        "sky-color": "#0a0f1c",
+        "horizon-color": "#1e293b",
+        "fog-color": "#0a0f1c",
+        "sky-horizon-blend": 0.6,
+        "horizon-fog-blend": 0.6,
+      });
+      if (m.getLayer("hillshade")) m.setLayoutProperty("hillshade", "visibility", "visible");
+    } else {
+      m.setTerrain(null);
+      if (m.getLayer("hillshade")) m.setLayoutProperty("hillshade", "visibility", "none");
+    }
+  } catch {
+    /* WebGL/terrain unavailable — flat map still works */
+  }
+}
 
 const AWACS_PLATFORMS = new Set(["netra_aewc", "phalcon_a50", "netra_aewc_mk2"]);
 const TANKER_PLATFORMS = new Set(["il78_tanker", "il78mki"]);
@@ -35,14 +89,17 @@ export interface SubcontinentMapProps {
   flashBaseId?: number | null;
   adBaseIds?: Set<number>;
   className?: string;
+  terrain3d?: boolean;
 }
 
 export function SubcontinentMap({
-  markers, onMarkerClick, onReady, flashBaseId, adBaseIds, className = "",
+  markers, onMarkerClick, onReady, flashBaseId, adBaseIds, className = "", terrain3d = false,
 }: SubcontinentMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MLMap | null>(null);
   const markerObjsRef = useRef<Marker[]>([]);
+  const terrainRef = useRef(terrain3d);
+  terrainRef.current = terrain3d;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -52,9 +109,27 @@ export function SubcontinentMap({
       style: MAP_STYLE,
       bounds: [[b.west, b.south], [b.east, b.north]],
       fitBoundsOptions: { padding: 12 },
+      pitch: terrainRef.current ? 55 : 0,
+      maxPitch: 70,
+      pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
     });
     mapRef.current = m;
-    m.on("load", () => onReady?.(m));
+    // Terrain fallback: if DEM tiles error out (offline, blocked), drop back to flat.
+    m.on("error", (e) => {
+      const sourceId = (e as { sourceId?: string }).sourceId;
+      if (sourceId === "dem" || sourceId === "demHillshade") {
+        try {
+          m.setTerrain(null);
+          if (m.getLayer("hillshade")) m.setLayoutProperty("hillshade", "visibility", "none");
+        } catch {
+          /* already flat */
+        }
+      }
+    });
+    m.on("load", () => {
+      applyTerrain(m, terrainRef.current);
+      onReady?.(m);
+    });
     return () => {
       m.remove();
       mapRef.current = null;
@@ -162,6 +237,13 @@ export function SubcontinentMap({
       markerObjsRef.current.push(mk);
     }
   }, [markers, onMarkerClick, flashBaseId, adBaseIds]);
+
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !m.isStyleLoaded()) return;
+    applyTerrain(m, terrain3d);
+    m.easeTo({ pitch: terrain3d ? 55 : 0, duration: 800 });
+  }, [terrain3d]);
 
   return (
     <div
