@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { Map as MLMap } from "maplibre-gl";
 import { baseFocusPose, flyOptions, prefersReducedMotion } from "../components/map/mapCamera";
+import { AOAlertLayer } from "../components/map/AOAlertLayer";
 
 import { useCampaignStore } from "../store/campaignStore";
 import { useMapStore } from "../store/mapStore";
@@ -462,6 +463,7 @@ export function CampaignMapView() {
           flashBaseId={flashBaseId}
           adBaseIds={adBaseIdSet}
         />
+        <AOAlertLayer map={mapInstance} pendingVignettes={pendingVignettes} />
         {activeLayers.ad_coverage && (
           <ADCoverageLayer
             map={mapInstance}
