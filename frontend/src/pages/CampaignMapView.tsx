@@ -11,6 +11,7 @@ import { useAuthStore } from "../store/authStore";
 import { SubcontinentMap } from "../components/map/SubcontinentMap";
 import { ADCoverageLayer } from "../components/map/ADCoverageLayer";
 import { ADDomeLayer } from "../components/map/ADDomeLayer";
+import { SquadronMiniLayer } from "../components/map/SquadronMiniLayer";
 import { IntelContactsLayer } from "../components/map/IntelContactsLayer";
 import { AdversaryBaseLayer } from "../components/map/AdversaryBaseLayer";
 import { DroneOrbitLayer } from "../components/map/DroneOrbitLayer";
@@ -470,6 +471,7 @@ export function CampaignMapView() {
         {activeLayers.ad_coverage && terrain3d && (
           <ADDomeLayer map={mapInstance} bases={bases} batteries={adBatteries} />
         )}
+        {terrain3d && <SquadronMiniLayer map={mapInstance} bases={bases} />}
         {activeLayers.ad_coverage && !terrain3d && (
           <ADCoverageLayer
             map={mapInstance}
