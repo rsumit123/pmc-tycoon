@@ -114,18 +114,11 @@ export function SubcontinentMap({
       pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
     });
     mapRef.current = m;
-    // Terrain fallback: if DEM tiles error out (offline, blocked), drop back to flat.
-    m.on("error", (e) => {
-      const sourceId = (e as { sourceId?: string }).sourceId;
-      if (sourceId === "dem" || sourceId === "demHillshade") {
-        try {
-          m.setTerrain(null);
-          if (m.getLayer("hillshade")) m.setLayoutProperty("hillshade", "visibility", "none");
-        } catch {
-          /* already flat */
-        }
-      }
-    });
+    // No per-tile DEM error fallback: maplibre fires a map-level "error" for
+    // every individual failed tile fetch, so flattening terrain on the first
+    // one would permanently disable 3D on a single flaky request. Missing DEM
+    // tiles already degrade gracefully (rendered as zero elevation), and
+    // applyTerrain() catches genuine terrain-unavailable failures.
     m.on("load", () => {
       applyTerrain(m, terrainRef.current);
       onReady?.(m);

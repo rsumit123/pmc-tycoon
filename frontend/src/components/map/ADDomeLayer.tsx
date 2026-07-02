@@ -19,6 +19,12 @@ export function ADDomeLayer({ map, bases, batteries }: ADDomeLayerProps) {
     if (!map) return;
     let cancelled = false;
     let layer: CustomLayerInterface | null = null;
+    // Hoisted so the effect cleanup can dispose GPU resources (the effect
+    // re-runs whenever bases/batteries change — without disposal each run
+    // would orphan a geometry + two materials in GPU memory).
+    let geo: import("three").SphereGeometry | null = null;
+    let fill: import("three").MeshBasicMaterial | null = null;
+    let rim: import("three").MeshBasicMaterial | null = null;
 
     (async () => {
       const THREE = await import("three");
@@ -28,12 +34,12 @@ export function ADDomeLayer({ map, bases, batteries }: ADDomeLayerProps) {
 
       const camera = new THREE.Camera();
       const scene = new THREE.Scene();
-      const geo = new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
-      const fill = new THREE.MeshBasicMaterial({
+      geo = new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+      fill = new THREE.MeshBasicMaterial({
         color: 0x38bdf8, transparent: true, opacity: 0.09, side: THREE.DoubleSide,
         depthWrite: false,
       });
-      const rim = new THREE.MeshBasicMaterial({
+      rim = new THREE.MeshBasicMaterial({
         color: 0x38bdf8, transparent: true, opacity: 0.22, wireframe: true, depthWrite: false,
       });
       for (const s of specs) {
@@ -90,6 +96,10 @@ export function ADDomeLayer({ map, bases, batteries }: ADDomeLayerProps) {
       try {
         if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID);
       } catch { /* map already torn down */ }
+      geo?.dispose();
+      fill?.dispose();
+      rim?.dispose();
+      geo = fill = rim = null;
     };
   }, [map, bases, batteries]);
 
