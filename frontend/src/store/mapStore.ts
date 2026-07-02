@@ -22,20 +22,38 @@ function loadLayers(): Record<MapLayerKey, boolean> {
   return { ...DEFAULT_LAYERS };
 }
 
+const TERRAIN_KEY = "map_terrain3d_v1";
+
+function loadTerrain3d(): boolean {
+  try {
+    const stored = localStorage.getItem(TERRAIN_KEY);
+    if (stored !== null) return stored === "true";
+  } catch { /* ignore */ }
+  return true;
+}
+
 interface MapState {
   selectedBaseId: number | null;
   activeLayers: Record<MapLayerKey, boolean>;
+  terrain3d: boolean;
   setSelectedBase: (id: number | null) => void;
   toggleLayer: (key: MapLayerKey) => void;
+  toggleTerrain3d: () => void;
 }
 
 export const useMapStore = create<MapState>((set) => ({
   selectedBaseId: null,
   activeLayers: loadLayers(),
+  terrain3d: loadTerrain3d(),
   setSelectedBase: (id) => set({ selectedBaseId: id }),
   toggleLayer: (key) => set((s) => {
     const next = { ...s.activeLayers, [key]: !s.activeLayers[key] };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
     return { activeLayers: next };
+  }),
+  toggleTerrain3d: () => set((s) => {
+    const next = !s.terrain3d;
+    try { localStorage.setItem(TERRAIN_KEY, String(next)); } catch { /* ignore */ }
+    return { terrain3d: next };
   }),
 }));
