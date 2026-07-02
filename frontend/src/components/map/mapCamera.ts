@@ -17,6 +17,15 @@ export function baseFocusPose(lon: number, lat: number): CameraPose {
   return { center: [lon, lat], zoom: 9.3, pitch: 62, bearing: 18 };
 }
 
+/** flyTo padding that keeps the focused base (and its parked minis) inside
+ * the strip of map left visible above the bottom sheet (~72vh tall). The
+ * base lands at ~20% of viewport height instead of dead center. */
+export function baseFocusPadding(viewportHeight: number): { top: number; left: number; right: number; bottom: number } {
+  return { top: 0, left: 0, right: 0, bottom: Math.round(viewportHeight * 0.6) };
+}
+
+export const NO_PADDING = { top: 0, left: 0, right: 0, bottom: 0 };
+
 /** Frame a vignette AO — wider than a base focus so the sector reads. */
 export function aoAlertPose(lon: number, lat: number): CameraPose {
   return { center: [lon, lat], zoom: 8.2, pitch: 60, bearing: 30 };

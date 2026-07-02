@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { Map as MLMap } from "maplibre-gl";
-import { baseFocusPose, flyOptions, prefersReducedMotion } from "../components/map/mapCamera";
+import { baseFocusPadding, baseFocusPose, flyOptions, NO_PADDING, prefersReducedMotion } from "../components/map/mapCamera";
 import { AOAlertLayer } from "../components/map/AOAlertLayer";
 
 import { useCampaignStore } from "../store/campaignStore";
@@ -193,7 +193,7 @@ export function CampaignMapView() {
       setSelectedBase(bid);
       const b = bases.find((x) => x.id === bid);
       if (b && mapInstance) {
-        mapInstance.flyTo(flyOptions(baseFocusPose(b.lon, b.lat), prefersReducedMotion()));
+        mapInstance.flyTo({ ...flyOptions(baseFocusPose(b.lon, b.lat), prefersReducedMotion()), padding: baseFocusPadding(window.innerHeight) });
       }
     },
     [setSelectedBase, bases, mapInstance],
@@ -544,7 +544,7 @@ export function CampaignMapView() {
           setSelectedBase(null);
           const o = overviewPoseRef.current;
           if (o && mapInstance) {
-            mapInstance.flyTo({ center: o.center, zoom: o.zoom, pitch: o.pitch, bearing: o.bearing, duration: prefersReducedMotion() ? 0 : 2200, essential: true });
+            mapInstance.flyTo({ center: o.center, zoom: o.zoom, pitch: o.pitch, bearing: o.bearing, duration: prefersReducedMotion() ? 0 : 2200, essential: true, padding: NO_PADDING });
           }
         }}
         onRebaseStart={(sq, baseId) => setRebaseTarget({ squadron: sq, baseId })}
