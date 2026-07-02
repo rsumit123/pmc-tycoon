@@ -6,8 +6,8 @@ def _ps():
         "ao": {"region": "north", "name": "Sargodha AO", "lat": 32.0, "lon": 72.6},
         "roe_options": ["weapons_free", "weapons_tight"],
         "adversary_force": [
-            {"platform": "jf17_blk3", "count": 6, "role": "strike"},
-            {"platform": "j10c", "count": 4, "role": "escort"},
+            {"platform_id": "jf17_blk3", "count": 6, "role": "strike"},
+            {"platform_id": "j10c", "count": 4, "role": "escort"},
         ],
     }
 

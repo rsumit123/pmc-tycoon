@@ -94,7 +94,7 @@ def validate_result(
     flight_kills = result.get("flight_kills", {}) or {}
     adv_counts: dict[str, int] = {}
     for entry in ps.get("adversary_force", []):
-        adv_counts[entry["platform"]] = adv_counts.get(entry["platform"], 0) + entry["count"]
+        adv_counts[entry["platform_id"]] = adv_counts.get(entry["platform_id"], 0) + entry["count"]
     adv_total = sum(adv_counts.values())
     total_kills = 0
     for platform, kills in flight_kills.items():
@@ -148,7 +148,7 @@ def residual_forces(ps: dict, committed_force: dict, result: dict) -> tuple[dict
     remaining_kills = dict(flight_kills)
     new_adversary_force = []
     for entry in ps_res.get("adversary_force", []):
-        platform = entry["platform"]
+        platform = entry["platform_id"]
         kill = remaining_kills.get(platform, 0)
         if kill > 0:
             applied = min(kill, entry["count"])

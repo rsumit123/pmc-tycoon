@@ -11,8 +11,8 @@ from app.engine.engagement import (
 def _ps():
     return {
         "adversary_force": [
-            {"platform": "jf17_blk3", "count": 6, "role": "strike"},
-            {"platform": "j10c", "count": 4, "role": "escort"},
+            {"platform_id": "jf17_blk3", "count": 6, "role": "strike"},
+            {"platform_id": "j10c", "count": 4, "role": "escort"},
         ],
         "objective": {
             "success_threshold": {"adv_kills_min": 3, "ind_losses_max": 2},
@@ -159,14 +159,14 @@ def test_validate_result_rejects_negative_munitions():
 
 def test_residual_forces_reduces_adversary_counts_and_removes_zeroed_entries():
     ps_res, cf_res = residual_forces(_ps(), _committed_force(), _result(flight_kills={"jf17_blk3": 6}))
-    platforms = {e["platform"]: e["count"] for e in ps_res["adversary_force"]}
+    platforms = {e["platform_id"]: e["count"] for e in ps_res["adversary_force"]}
     assert "jf17_blk3" not in platforms
     assert platforms["j10c"] == 4
 
 
 def test_residual_forces_reduces_adversary_counts_partial():
     ps_res, _ = residual_forces(_ps(), _committed_force(), _result(flight_kills={"jf17_blk3": 2}))
-    platforms = {e["platform"]: e["count"] for e in ps_res["adversary_force"]}
+    platforms = {e["platform_id"]: e["count"] for e in ps_res["adversary_force"]}
     assert platforms["jf17_blk3"] == 4
     assert platforms["j10c"] == 4
 
