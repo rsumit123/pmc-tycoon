@@ -151,7 +151,7 @@ def advance_turn(db: Session, campaign: Campaign) -> Campaign:
 
     pending_exists = db.query(Vignette).filter(
         Vignette.campaign_id == campaign.id,
-        Vignette.status == "pending",
+        Vignette.status.in_(["pending", "engaged"]),
     ).first() is not None
 
     ad_battery_rows = db.query(ADBattery).filter_by(campaign_id=campaign.id).all()

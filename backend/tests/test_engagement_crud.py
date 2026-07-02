@@ -422,6 +422,33 @@ def test_submit_engagement_result_already_resolved_raises():
         Base.metadata.drop_all(bind=engine)
 
 
+def test_engaged_vignette_blocks_new_vignette_generation(client):
+    """Mirrors test_orchestrator_skips_vignette_when_pending_exists (engine
+    level): an engaged vignette must suppress rolling a brand-new one on
+    turn advance, exactly like a pending vignette does — no stuck/duplicate
+    campaigns, no silent auto-resolve."""
+    campaign_id, vignette_id, body = _fire_and_commit_interactive(client)
+    if vignette_id is None:
+        pytest.skip("no eligible-squadron vignette fired for this seed")
+
+    r = client.get(f"/api/campaigns/{campaign_id}/vignettes/{vignette_id}")
+    assert r.json()["status"] == "engaged"
+
+    # Advance several more turns while the vignette sits engaged (unresolved).
+    # No NEW pending vignette should ever appear — the engaged one still
+    # occupies the backpressure slot exactly like a pending one would.
+    for _ in range(5):
+        adv = client.post(f"/api/campaigns/{campaign_id}/advance")
+        assert adv.status_code == 200
+        pending = client.get(f"/api/campaigns/{campaign_id}/vignettes/pending").json()
+        assert pending["vignettes"] == []
+
+    # The original vignette is still there, still engaged (untouched by
+    # turn advance — no silent auto-resolve).
+    r = client.get(f"/api/campaigns/{campaign_id}/vignettes/{vignette_id}")
+    assert r.json()["status"] == "engaged"
+
+
 def test_plain_auto_commit_still_resolves_normally(client):
     """Regression: auto-mode commit (mode omitted) is byte-identical in
     behavior to pre-engagement-feature commits."""
