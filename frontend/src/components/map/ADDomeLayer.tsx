@@ -74,11 +74,13 @@ export function ADDomeLayer({ map, bases, batteries }: ADDomeLayerProps) {
         },
         render(_gl, options: CustomRenderMethodInput) {
           if (!renderer) return;
-          // maplibre-gl v5's CustomRenderMethodInput exposes a ready-made
-          // world-space -> clip-space matrix as `modelViewProjectionMatrix`
-          // (v4 passed a raw matrix array as a second positional arg instead).
+          // maplibre-gl v5: the matrix that actually maps mercator-world space
+          // to clip space for custom layers is defaultProjectionData.mainMatrix.
+          // (options.modelViewProjectionMatrix exists but produces no visible
+          // output for mercator-space geometry — verified empirically in the
+          // living-airbase prototype, 2026-07-02.)
           camera.projectionMatrix = new THREE.Matrix4().fromArray(
-            options.modelViewProjectionMatrix as unknown as number[],
+            options.defaultProjectionData.mainMatrix as unknown as number[],
           );
           renderer.resetState();
           renderer.render(scene, camera);
